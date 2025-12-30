@@ -8,7 +8,8 @@
     "dev": "nodemon backend/server.js",
     "setup": "bash setup.sh",
     "db:install": "cd database && bash install.sh",
-    "db:backup": "mysqldump -u soul -pSatina2025 silypro > backup_$(date +%Y%m%d_%H%M%S).sql",
+    "db:backup": "pg_dump -U soul -d silypro -F c -f backup_$(date +%Y%m%d_%H%M%S).dump",
+    "db:backup:sql": "pg_dump -U soul -d silypro > backup_$(date +%Y%m%d_%H%M%S).sql",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
@@ -37,7 +38,7 @@
     "jsonwebtoken": "^9.0.2",
     "moment": "^2.29.4",
     "multer": "^1.4.5-lts.1",
-    "mysql2": "^3.6.5",
+    "pg": "^8.11.3",
     "nodemailer": "^6.9.7",
     "pdfkit": "^0.17.2",
     "xlsx": "^0.18.5"
