@@ -1,0 +1,262 @@
+const express = require('express');
+const pool = require('../config/database');
+const { authenticate } = require('../middleware/auth');
+const { validateCommande, validateId } = require('../middleware/validation');
+const { createNotification } = require('./notifications');
+const { enregistrerInteraction } = require('../utils/historiqueClient');
+const router = express.Router();
+
+router.use(authenticate);
+
+// Liste des commandes
+router.get('/', async (req, res) => {
+    try {
+        const { type, statut, fournisseur_id } = req.query;
+        let query = `
+            SELECT c.*, 
+                   u.nom as commandeur_nom, u.prenom as commandeur_prenom,
+                   e.nom as fournisseur_nom
+            FROM commandes c
+            LEFT JOIN utilisateurs u ON c.commandeur_id = u.id
+            LEFT JOIN entreprises e ON c.fournisseur_id = e.id
+            WHERE 1=1
+        `;
+        const params = [];
+
+        if (type) {
+            query += ' AND c.type_commande = ?';
+            params.push(type);
+        }
+
+        if (statut) {
+            query += ' AND c.statut = ?';
+            params.push(statut);
+        }
+
+        if (fournisseur_id) {
+            query += ' AND c.fournisseur_id = ?';
+            params.push(fournisseur_id);
+        }
+
+        query += ' ORDER BY c.date_commande DESC';
+
+        const [commandes] = await pool.execute(query, params);
+        res.json(commandes);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Détails d'une commande
+router.get('/:id', validateId, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [commandes] = await pool.execute(
+            `SELECT c.*, 
+                    u.nom as commandeur_nom, u.prenom as commandeur_prenom,
+                    e.nom as fournisseur_nom
+             FROM commandes c
+             LEFT JOIN utilisateurs u ON c.commandeur_id = u.id
+             LEFT JOIN entreprises e ON c.fournisseur_id = e.id
+             WHERE c.id = ?`,
+            [id]
+        );
+
+        if (commandes.length === 0) {
+            return res.status(404).json({ error: 'Commande non trouvée' });
+        }
+
+        const commande = commandes[0];
+
+        // Récupérer les lignes
+        const [lignes] = await pool.execute(
+            'SELECT * FROM commande_lignes WHERE commande_id = ? ORDER BY ordre',
+            [id]
+        );
+        commande.lignes = lignes;
+
+        res.json(commande);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Créer une commande
+router.post('/', validateCommande, async (req, res) => {
+    try {
+        const {
+            numero, type_commande, date_commande, date_livraison_souhaitee,
+            fournisseur_id, contact_fournisseur_id, devis_id, rfq_id,
+            adresse_livraison_id, contact_livraison, telephone_livraison,
+            heure_livraison, incoterms, mode_transport, instructions_livraison,
+            conditions_paiement, delai_paiement_jours, mode_paiement,
+            projet_id, centre_cout_id, budget_approuve, lignes
+        } = req.body;
+
+        const commandeur_id = req.user.id;
+
+        // Calculer les totaux
+        let total_ht = 0;
+        let total_tva = 0;
+        let total_ttc = 0;
+
+        if (lignes && lignes.length > 0) {
+            for (const ligne of lignes) {
+                const prix_ht = ligne.prix_unitaire_ht * ligne.quantite;
+                const remise = prix_ht * (ligne.remise || 0) / 100;
+                const ligne_ht = prix_ht - remise;
+                const ligne_tva = ligne_ht * (ligne.tva_taux || 20) / 100;
+                total_ht += ligne_ht;
+                total_tva += ligne_tva;
+            }
+            total_ttc = total_ht + total_tva;
+        }
+
+        const [result] = await pool.execute(
+            `INSERT INTO commandes (numero, type_commande, date_commande, date_livraison_souhaitee,
+              commandeur_id, fournisseur_id, contact_fournisseur_id, devis_id, rfq_id,
+              adresse_livraison_id, contact_livraison, telephone_livraison, heure_livraison,
+              incoterms, mode_transport, instructions_livraison, conditions_paiement,
+              delai_paiement_jours, mode_paiement, projet_id, centre_cout_id, budget_approuve,
+              total_ht, total_tva, total_ttc, statut)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'brouillon')`,
+            [numero, type_commande, date_commande, date_livraison_souhaitee,
+             commandeur_id, fournisseur_id, contact_fournisseur_id, devis_id, rfq_id,
+             adresse_livraison_id, contact_livraison, telephone_livraison, heure_livraison,
+             incoterms, mode_transport, instructions_livraison, conditions_paiement,
+             delai_paiement_jours, mode_paiement, projet_id, centre_cout_id, budget_approuve,
+             total_ht, total_tva, total_ttc]
+        );
+
+        const commande_id = result.insertId;
+
+        // Enregistrer dans l'historique du client si la commande est liée à une demande client
+        if (devis_id) {
+            try {
+                const [devisData] = await pool.execute(
+                    `SELECT dd.client_id, d.numero as devis_numero 
+                     FROM devis d 
+                     LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id 
+                     WHERE d.id = ?`,
+                    [devis_id]
+                );
+                
+                if (devisData.length > 0 && devisData[0].client_id) {
+                    await enregistrerInteraction({
+                        client_id: devisData[0].client_id,
+                        type_interaction: 'commande_creee',
+                        reference_document: numero,
+                        document_id: commande_id,
+                        description: `Commande créée depuis le devis ${devisData[0].devis_numero || devis_id}`,
+                        utilisateur_id: req.user?.id || null,
+                        metadata: {
+                            commande_id: commande_id,
+                            devis_id: devis_id,
+                            montant_ttc: total_ttc || null
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error('Erreur enregistrement historique commande:', err);
+            }
+        }
+
+        // Insérer les lignes
+        if (lignes && lignes.length > 0) {
+            for (const ligne of lignes) {
+                const prix_ht = ligne.prix_unitaire_ht * ligne.quantite;
+                const remise = prix_ht * (ligne.remise || 0) / 100;
+                const total_ht_ligne = prix_ht - remise;
+
+                await pool.execute(
+                    'INSERT INTO commande_lignes (commande_id, produit_id, reference, description, quantite, unite, prix_unitaire_ht, remise, total_ht, tva_taux, ordre) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [commande_id, ligne.produit_id, ligne.reference, ligne.description, ligne.quantite, ligne.unite || 'unité', ligne.prix_unitaire_ht, ligne.remise || 0, total_ht_ligne, ligne.tva_taux || 20, ligne.ordre || 0]
+                );
+            }
+        }
+
+        // Notifier le fournisseur qu'une commande a été créée
+        // Note: Pour l'instant, on notifie l'utilisateur connecté. 
+        // Dans un système complet, on devrait trouver l'utilisateur lié au fournisseur
+        try {
+            await createNotification(
+                commandeur_id,
+                'commande_créée',
+                'Commande créée',
+                `Une nouvelle commande ${numero || commande_id} a été créée pour un montant de ${total_ttc} GNF`,
+                'commande',
+                commande_id
+            );
+        } catch (error) {
+            console.error('Erreur création notification commande:', error);
+        }
+
+        res.status(201).json({ id: commande_id, message: 'Commande créée avec succès' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Mettre à jour le statut d'une commande
+router.patch('/:id/statut', validateId, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { statut } = req.body;
+
+        // Valider le statut
+        const statutsValides = ['brouillon', 'envoye', 'en_preparation', 'partiellement_livre', 'livre', 'annule'];
+        if (!statut || !statutsValides.includes(statut)) {
+            return res.status(400).json({ 
+                error: 'Statut invalide', 
+                statutsValides: statutsValides 
+            });
+        }
+
+        // Vérifier que la commande existe et récupérer les infos
+        const [commandes] = await pool.execute(
+            `SELECT c.*, dd.client_id 
+             FROM commandes c 
+             LEFT JOIN devis d ON c.devis_id = d.id 
+             LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id 
+             WHERE c.id = ?`,
+            [id]
+        );
+        if (commandes.length === 0) {
+            return res.status(404).json({ error: 'Commande non trouvée' });
+        }
+
+        const commandeData = commandes[0];
+
+        // Mettre à jour le statut
+        await pool.execute('UPDATE commandes SET statut = ? WHERE id = ?', [statut, id]);
+
+        // Enregistrer dans l'historique du client si la commande est livrée
+        if (commandeData.client_id && statut === 'livre') {
+            try {
+                await enregistrerInteraction({
+                    client_id: commandeData.client_id,
+                    type_interaction: 'commande_livree',
+                    reference_document: commandeData.numero,
+                    document_id: id,
+                    description: `Commande livrée - ${commandeData.numero}`,
+                    utilisateur_id: req.user?.id || null,
+                    metadata: {
+                        commande_id: id,
+                        montant_ttc: commandeData.total_ttc || null
+                    }
+                });
+            } catch (err) {
+                console.error('Erreur enregistrement historique livraison:', err);
+            }
+        }
+
+        res.json({ message: 'Statut mis à jour avec succès' });
+    } catch (error) {
+        console.error('Erreur mise à jour statut commande:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+module.exports = router;
+

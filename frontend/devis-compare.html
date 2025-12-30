@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparer les devis - SilyProcure</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/workflow.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
+        <div class="user-info">
+            <span id="user-name"></span>
+            <button onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="rfq.html">RFQ</a>
+        <a href="devis.html" class="active">Devis</a>
+        <a href="commandes.html">Commandes</a>
+        <a href="factures.html">Factures</a>
+        <a href="entreprises.html">Entreprises</a>
+        <a href="produits.html">Produits</a>
+        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section" style="text-align: left; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <button class="btn btn-secondary" onclick="window.history.back()" style="margin-bottom: 1rem;">
+                        ← Retour
+                    </button>
+                    <h1 class="hero-title" style="font-size: 2rem; margin: 0;"><i class="fas fa-chart-bar"></i> Comparaison des devis</h1>
+                    <p class="hero-description" style="text-align: left; margin: 0.5rem 0 0 0; max-width: 100%;">
+                        Comparez côte à côte plusieurs devis pour prendre la meilleure décision
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-clipboard-list"></i> Tableau comparatif</h2>
+            </div>
+
+            <div id="comparison-table">
+                <div class="loading"><div class="loading-spinner"></div> Chargement...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+        <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
+<script>
+        checkAuth();
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const devisIds = urlParams.get('ids').split(',').map(id => parseInt(id));
+        let rfqId = null;
+        let aiAnalysis = null;
+
+        async function loadDevisForComparison() {
+            try {
+                showLoading('Chargement des devis...');
+                const devisPromises = devisIds.map(id => apiCall(`/api/devis/${id}`));
+                const responses = await Promise.all(devisPromises);
+                
+                const devis = [];
+                for (const response of responses) {
+                    if (response && response.ok) {
+                        const devisData = await response.json();
+                        devis.push(devisData);
+                        // Récupérer le RFQ ID depuis le premier devis
+                        if (!rfqId && devisData.rfq_id) {
+                            rfqId = devisData.rfq_id;
+                        }
+                    }
+                }
+
+                hideLoading();
+                
+                // Charger l'analyse IA si on a un RFQ ID
+                if (rfqId) {
+                    await loadAIAnalysis(rfqId);
+                }
+                
+                displayComparison(devis);
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors du chargement');
+                console.error('Erreur:', error);
+            }
+        }
+
+        async function loadAIAnalysis(rfqId) {
+            try {
+                // Essayer de récupérer une analyse existante
+                const cachedResponse = await apiCall(`/api/ai/analyze-quotes/${rfqId}`);
+                if (cachedResponse && cachedResponse.ok) {
+                    aiAnalysis = await cachedResponse.json();
+                    return;
+                }
+                
+                // Sinon, lancer une nouvelle analyse
+                const analysisResponse = await apiCall(`/api/ai/analyze-quotes/${rfqId}`, {
+                    method: 'POST'
+                });
+                
+                if (analysisResponse && analysisResponse.ok) {
+                    aiAnalysis = await analysisResponse.json();
+                }
+            } catch (error) {
+                console.warn('Impossible de charger l\'analyse IA:', error);
+                // On continue sans l'analyse IA
+            }
+        }
+
+        function displayComparison(devis) {
+            const container = document.getElementById('comparison-table');
+
+            if (devis.length === 0) {
+                container.innerHTML = '<div class="empty-state">Aucun devis à comparer</div>';
+                return;
+            }
+
+            // Tableau de comparaison
+            let html = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Critère</th>
+                                ${devis.map(d => `<th>${d.fournisseur_nom || 'Fournisseur'}<br><small>${d.numero || ''}</small></th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Total HT</strong></td>
+                                ${devis.map(d => `<td>${formatCurrency(d.total_ht)}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td><strong>Total TVA</strong></td>
+                                ${devis.map(d => `<td>${formatCurrency(d.total_tva)}</td>`).join('')}
+                            </tr>
+                            <tr style="background: var(--color-background-blue);">
+                                <td><strong>Total TTC</strong></td>
+                                ${devis.map(d => `<td><strong>${formatCurrency(d.total_ttc)}</strong></td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td><strong>Remise globale</strong></td>
+                                ${devis.map(d => `<td>${d.remise_globale || 0}%</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td><strong>Délai de livraison</strong></td>
+                                ${devis.map(d => `<td>${d.delai_livraison ? d.delai_livraison + ' jours' : '-'}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td><strong>Date de validité</strong></td>
+                                ${devis.map(d => `<td>${formatDate(d.date_validite) || '-'}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td><strong>Conditions de paiement</strong></td>
+                                ${devis.map(d => `<td>${d.conditions_paiement || '-'}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td><strong>Garanties</strong></td>
+                                ${devis.map(d => `<td>${d.garanties || '-'}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td><strong>Statut</strong></td>
+                                ${devis.map(d => `<td><span class="badge ${getStatusBadge(d.statut)}">${getStatusLabel(d.statut)}</span></td>`).join('')}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Trouver le meilleur prix
+            const meilleurPrix = Math.min(...devis.map(d => d.total_ttc));
+            const meilleurDevis = devis.find(d => d.total_ttc === meilleurPrix);
+
+            // Section Analyse IA
+            if (aiAnalysis && aiAnalysis.scores && aiAnalysis.scores.length > 0) {
+                html += `
+                    <div style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="margin: 0; color: white;"><i class="fas fa-robot"></i> Analyse IA</h3>
+                            <button class="btn btn-secondary" onclick="refreshAIAnalysis()" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
+                                <i class="fas fa-sync-alt"></i> Actualiser
+                            </button>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                            ${aiAnalysis.scores.map(score => {
+                                const devisData = devis.find(d => d.id === score.devis_id);
+                                const scoreColor = score.total_score >= 80 ? '#4ade80' : score.total_score >= 60 ? '#fbbf24' : '#f87171';
+                                return `
+                                    <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; border: 2px solid ${scoreColor};">
+                                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">${score.fournisseur_nom}</div>
+                                        <div style="font-size: 2rem; font-weight: bold; color: ${scoreColor};">${score.total_score}/100</div>
+                                        <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.5rem;">
+                                            ${Object.entries(score.criteria).map(([key, crit]) => 
+                                                `<div style="margin-top: 0.25rem;"><strong>${key}:</strong> ${crit.value}/100</div>`
+                                            ).join('')}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        ${aiAnalysis.recommendations && aiAnalysis.recommendations.length > 0 ? `
+                            <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                <h4 style="margin: 0 0 0.5rem 0; color: white;"><i class="fas fa-lightbulb"></i> Recommandations</h4>
+                                ${aiAnalysis.recommendations.map(rec => `
+                                    <div style="margin-top: 0.5rem; padding: 0.75rem; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                                        <strong>${rec.type === 'best_overall' ? 'Meilleur devis global' : 'Meilleur rapport qualité/prix'}:</strong> ${rec.message}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        ${aiAnalysis.anomalies && aiAnalysis.anomalies.length > 0 ? `
+                            <div style="background: rgba(239, 68, 68, 0.2); padding: 1rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.5);">
+                                <h4 style="margin: 0 0 0.5rem 0; color: white;"><i class="fas fa-exclamation-triangle"></i> Anomalies détectées</h4>
+                                ${aiAnalysis.anomalies.map(anomaly => `
+                                    <div style="margin-top: 0.5rem; padding: 0.75rem; background: rgba(255,255,255,0.1); border-radius: 4px; border-left: 3px solid ${anomaly.severity === 'error' ? '#ef4444' : anomaly.severity === 'warning' ? '#f59e0b' : '#3b82f6'};">
+                                        <strong>${anomaly.fournisseur_nom} (${anomaly.devis_numero}):</strong> ${anomaly.message}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            html += `
+                <div style="margin-top: 2rem; padding: 1.5rem; background: var(--color-background-blue); border-radius: 8px;">
+                    <h3 style="margin-bottom: 1rem;"><i class="fas fa-trophy"></i> Recommandation</h3>
+                    <p><strong>Meilleur prix:</strong> ${meilleurDevis.fournisseur_nom} - ${formatCurrency(meilleurPrix)}</p>
+                    <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        ${devis.map(d => {
+                            const aiScore = aiAnalysis && aiAnalysis.scores ? aiAnalysis.scores.find(s => s.devis_id === d.id) : null;
+                            const isBestAI = aiScore && aiAnalysis.scores[0] && aiScore.devis_id === aiAnalysis.scores[0].devis_id;
+                            return `
+                            <button class="btn ${d.id === meilleurDevis.id || isBestAI ? 'btn-success' : 'btn-secondary'}" 
+                                    onclick="accepterDevis(${d.id})">
+                                ${d.id === meilleurDevis.id || isBestAI ? '<i class="fas fa-check"></i> ' : ''}Accepter ${d.fournisseur_nom}
+                                ${aiScore ? ` <span style="font-size: 0.8em; opacity: 0.8;">(${aiScore.total_score}/100)</span>` : ''}
+                            </button>
+                        `;
+                        }).join('')}
+                    </div>
+                </div>
+                <div style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 8px; border: 2px solid var(--color-primary);">
+                    <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-file-invoice-dollar"></i> Créer un devis consolidé pour le client</h3>
+                    <p style="margin-bottom: 1rem; color: var(--color-neutral);">
+                        Sélectionnez les meilleures offres de chaque fournisseur et créez un devis unique pour votre client avec marge commerciale.
+                    </p>
+                    <button class="btn btn-primary" onclick="openCreateDevisClientModal([${devis.map(d => d.id).join(',')}])">
+                        <i class="fas fa-plus-circle"></i> Créer devis client consolidé
+                    </button>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        async function accepterDevis(devisId) {
+            confirmAction(
+                'Voulez-vous accepter ce devis et créer une commande ?',
+                async () => {
+                    try {
+                        showLoading('Création de la commande...');
+                        const devisResponse = await apiCall(`/api/devis/${devisId}`);
+                        if (!devisResponse) {
+                            hideLoading();
+                            return;
+                        }
+
+                        const devis = await devisResponse.json();
+                        
+                        const commandeData = {
+                            numero: `BC-${new Date().getFullYear()}-${Date.now()}`,
+                            type_commande: 'BC',
+                            date_commande: new Date().toISOString().split('T')[0],
+                            devis_id: devisId,
+                            rfq_id: devis.rfq_id,
+                            lignes: devis.lignes.map(l => ({
+                                produit_id: l.produit_id,
+                                reference: l.reference,
+                                description: l.description,
+                                quantite: l.quantite,
+                                unite: l.unite,
+                                prix_unitaire_ht: l.prix_unitaire_ht,
+                                remise: l.remise,
+                                tva_taux: l.tva_taux
+                            }))
+                        };
+
+                        const commandeResponse = await apiCall('/api/commandes', {
+                            method: 'POST',
+                            body: JSON.stringify(commandeData)
+                        });
+
+                        if (commandeResponse && commandeResponse.ok) {
+                            await apiCall(`/api/devis/${devisId}`, {
+                                method: 'PATCH',
+                                body: JSON.stringify({ statut: 'accepte' })
+                            });
+
+                            Toast.success('Commande créée avec succès');
+                            setTimeout(() => {
+                                window.location.href = 'commandes.html';
+                            }, 1500);
+                        } else {
+                            const error = await commandeResponse.json();
+                            Toast.error(error.error || 'Erreur lors de la création');
+                        }
+                    } catch (error) {
+                        Toast.error('Erreur de connexion');
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            );
+        }
+
+        // Modal pour créer devis client consolidé
+        let allDevisForClient = [];
+        let demandeDevisId = null;
+
+        async function openCreateDevisClientModal(devisIds) {
+            try {
+                // Charger les devis complets avec leurs lignes
+                showLoading('Chargement des devis...');
+                const devisPromises = devisIds.map(id => apiCall(`/api/devis/${id}`));
+                const responses = await Promise.all(devisPromises);
+                
+                allDevisForClient = [];
+                for (const response of responses) {
+                    if (response && response.ok) {
+                        const devis = await response.json();
+                        allDevisForClient.push(devis);
+                    }
+                }
+
+                hideLoading();
+
+                // Charger la marge active
+                const margeResponse = await apiCall('/api/marges/active');
+                const margeActive = margeResponse && margeResponse.ok ? await margeResponse.json() : { pourcentage: 20 };
+
+                // Charger les clients (entreprises de type acheteur)
+                const clientsResponse = await apiCall('/api/entreprises?type=acheteur');
+                const clients = clientsResponse && clientsResponse.ok ? await clientsResponse.json() : [];
+
+                // Afficher le modal
+                displayCreateDevisClientModal(allDevisForClient, margeActive.pourcentage, clients);
+            } catch (error) {
+                hideLoading();
+                console.error('Erreur:', error);
+                Toast.error('Erreur lors du chargement des données');
+            }
+        }
+
+        function displayCreateDevisClientModal(devis, margeParDefaut, clients) {
+            const modal = document.createElement('div');
+            modal.id = 'createDevisClientModal';
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto;">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-file-invoice-dollar"></i> Créer un devis consolidé pour le client</h2>
+                        <button class="modal-close" onclick="closeCreateDevisClientModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createDevisClientForm" onsubmit="submitCreateDevisClient(event)">
+                            <div class="form-group">
+                                <label><i class="fas fa-building"></i> Client *</label>
+                                <select id="client_id" name="client_id" required class="form-control">
+                                    <option value="">Sélectionner un client</option>
+                                    ${clients.map(c => `<option value="${c.id}">${c.nom}</option>`).join('')}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-percent"></i> Marge commerciale (%) *</label>
+                                <input type="number" id="marge_pourcentage" name="marge_pourcentage" 
+                                       value="${margeParDefaut}" min="0" max="100" step="0.01" required 
+                                       class="form-control" onchange="updateDevisClientPreview()">
+                                <small style="color: var(--color-neutral); margin-top: 0.5rem; display: block;">
+                                    Pourcentage de marge à appliquer sur les prix fournisseurs
+                                </small>
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-calendar"></i> Date d'émission</label>
+                                <input type="date" id="date_emission" name="date_emission" 
+                                       value="${new Date().toISOString().split('T')[0]}" class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-calendar-check"></i> Date de validité</label>
+                                <input type="date" id="date_validite" name="date_validite" class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-truck"></i> Délai de livraison (jours)</label>
+                                <input type="number" id="delai_livraison" name="delai_livraison" 
+                                       min="1" class="form-control" placeholder="Ex: 30">
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-money-bill-wave"></i> Conditions de paiement</label>
+                                <input type="text" id="conditions_paiement" name="conditions_paiement" 
+                                       class="form-control" placeholder="Ex: 30% à la commande, 70% à la livraison">
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-comment"></i> Notes</label>
+                                <textarea id="notes" name="notes" rows="3" class="form-control" 
+                                          placeholder="Notes additionnelles pour le client..."></textarea>
+                            </div>
+
+                            <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--color-primary);">
+                                <i class="fas fa-list"></i> Sélectionner les lignes à inclure
+                            </h3>
+
+                            <div id="lignes-selection-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 1rem;">
+                                ${generateLignesSelectionHTML(devis)}
+                            </div>
+
+                            <div id="preview-totals" style="margin-top: 2rem; padding: 1.5rem; background: var(--color-background-light); border-radius: 8px;">
+                                <h4 style="margin-bottom: 1rem;">Aperçu des totaux</h4>
+                                <div id="preview-content">
+                                    <p>Total HT: <strong id="preview-total-ht">0 GNF</strong></p>
+                                    <p>Total TVA: <strong id="preview-total-tva">0 GNF</strong></p>
+                                    <p>Total TTC: <strong id="preview-total-ttc">0 GNF</strong></p>
+                                    <p style="color: var(--color-accent); margin-top: 0.5rem;">
+                                        Marge totale: <strong id="preview-marge">0 GNF</strong>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                                <button type="button" class="btn btn-secondary" onclick="closeCreateDevisClientModal()">Annuler</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-check"></i> Créer le devis client
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            updateDevisClientPreview();
+        }
+
+        function generateLignesSelectionHTML(devis) {
+            let html = '';
+            
+            devis.forEach((devisItem) => {
+                html += `
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: white; border-radius: 8px; border: 2px solid var(--color-primary);">
+                        <h4 style="margin-bottom: 1rem; color: var(--color-primary);">
+                            <i class="fas fa-building"></i> ${devisItem.fournisseur_nom || 'Fournisseur'} - ${devisItem.numero || ''}
+                        </h4>
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" class="select-all-devis" data-devis-id="${devisItem.id}" 
+                                       onchange="toggleAllLignesDevis(${devisItem.id}, this.checked)">
+                                <strong>Sélectionner tout</strong>
+                            </label>
+                        </div>
+                        <table class="table" style="font-size: 0.9rem;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">Sel.</th>
+                                    <th>Description</th>
+                                    <th>Qté</th>
+                                    <th>Prix unit. HT</th>
+                                    <th>Total HT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${(devisItem.lignes || []).map((ligne) => `
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" 
+                                                   class="ligne-checkbox" 
+                                                   data-devis-id="${devisItem.id}"
+                                                   data-ligne-id="${ligne.id}"
+                                                   checked
+                                                   onchange="updateDevisClientPreview()">
+                                        </td>
+                                        <td>${ligne.description || '-'}</td>
+                                        <td>${ligne.quantite || 0} ${ligne.unite || 'unité'}</td>
+                                        <td>${formatCurrency(ligne.prix_unitaire_ht || 0)}</td>
+                                        <td>${formatCurrency((ligne.prix_unitaire_ht || 0) * (ligne.quantite || 0))}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            });
+
+            return html || '<p style="text-align: center; color: var(--color-neutral);">Aucune ligne disponible</p>';
+        }
+
+        function toggleAllLignesDevis(devisId, checked) {
+            document.querySelectorAll(`.ligne-checkbox[data-devis-id="${devisId}"]`).forEach(cb => {
+                cb.checked = checked;
+            });
+            updateDevisClientPreview();
+        }
+
+        function updateDevisClientPreview() {
+            const marge = parseFloat(document.getElementById('marge_pourcentage')?.value || 20);
+            const checkboxes = document.querySelectorAll('.ligne-checkbox:checked');
+            
+            let totalAchatHT = 0;
+            let totalVenteHT = 0;
+            let totalTVA = 0;
+
+            checkboxes.forEach(cb => {
+                const devisId = parseInt(cb.dataset.devisId);
+                const ligneId = parseInt(cb.dataset.ligneId);
+                
+                const devis = allDevisForClient.find(d => d.id === devisId);
+                if (devis && devis.lignes) {
+                    const ligne = devis.lignes.find(l => l.id === ligneId);
+                    if (ligne) {
+                        const prixAchatHT = ligne.prix_unitaire_ht || 0;
+                        const quantite = ligne.quantite || 0;
+                        const prixAchatTotal = prixAchatHT * quantite;
+                        totalAchatHT += prixAchatTotal;
+
+                        const prixVenteHT = prixAchatHT * (1 + marge / 100);
+                        const prixVenteTotal = prixVenteHT * quantite;
+                        totalVenteHT += prixVenteTotal;
+
+                        const tva = prixVenteTotal * (ligne.tva_taux || 20) / 100;
+                        totalTVA += tva;
+                    }
+                }
+            });
+
+            const totalTTC = totalVenteHT + totalTVA;
+            const margeTotale = totalVenteHT - totalAchatHT;
+
+            const previewTotalHT = document.getElementById('preview-total-ht');
+            const previewTotalTVA = document.getElementById('preview-total-tva');
+            const previewTotalTTC = document.getElementById('preview-total-ttc');
+            const previewMarge = document.getElementById('preview-marge');
+
+            if (previewTotalHT) previewTotalHT.textContent = formatCurrency(totalVenteHT);
+            if (previewTotalTVA) previewTotalTVA.textContent = formatCurrency(totalTVA);
+            if (previewTotalTTC) previewTotalTTC.textContent = formatCurrency(totalTTC);
+            if (previewMarge) previewMarge.textContent = formatCurrency(margeTotale);
+        }
+
+        function closeCreateDevisClientModal() {
+            const modal = document.getElementById('createDevisClientModal');
+            if (modal) {
+                modal.remove();
+            }
+            allDevisForClient = [];
+            demandeDevisId = null;
+        }
+
+        async function submitCreateDevisClient(event) {
+            event.preventDefault();
+            
+            const clientId = document.getElementById('client_id').value;
+            if (!clientId) {
+                Toast.error('Veuillez sélectionner un client');
+                return;
+            }
+
+            // Collecter les lignes sélectionnées par devis
+            const devisFournisseurs = [];
+            allDevisForClient.forEach(devis => {
+                const checkboxes = document.querySelectorAll(`.ligne-checkbox[data-devis-id="${devis.id}"]:checked`);
+                if (checkboxes.length > 0) {
+                    const lignesSelectionnees = Array.from(checkboxes).map(cb => parseInt(cb.dataset.ligneId));
+                    devisFournisseurs.push({
+                        devis_id: devis.id,
+                        lignes_selectionnees: lignesSelectionnees
+                    });
+                }
+            });
+
+            if (devisFournisseurs.length === 0) {
+                Toast.error('Veuillez sélectionner au moins une ligne');
+                return;
+            }
+
+            // Récupérer demande_devis_id depuis le premier devis (via RFQ si disponible)
+            let demandeDevisIdValue = null;
+            if (allDevisForClient.length > 0 && allDevisForClient[0].rfq_id) {
+                try {
+                    const rfqResponse = await apiCall(`/api/rfq/${allDevisForClient[0].rfq_id}`);
+                    if (rfqResponse && rfqResponse.ok) {
+                        const rfq = await rfqResponse.json();
+                        // Note: demande_devis_id pourrait être ajouté dans RFQ plus tard
+                    }
+                } catch (e) {
+                    console.log('Impossible de récupérer demande_devis_id depuis RFQ');
+                }
+            }
+
+            const formData = {
+                demande_devis_id: demandeDevisIdValue,
+                devis_fournisseurs: devisFournisseurs,
+                client_id: parseInt(clientId),
+                marge_pourcentage: parseFloat(document.getElementById('marge_pourcentage').value),
+                date_emission: document.getElementById('date_emission').value || null,
+                date_validite: document.getElementById('date_validite').value || null,
+                delai_livraison: document.getElementById('delai_livraison').value ? parseInt(document.getElementById('delai_livraison').value) : null,
+                conditions_paiement: document.getElementById('conditions_paiement').value || null,
+                notes: document.getElementById('notes').value || null
+            };
+
+            try {
+                const submitButton = event.target.querySelector('button[type="submit"]');
+                const originalText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création en cours...';
+
+                const response = await apiCall('/api/devis/create-for-client', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Erreur lors de la création du devis client');
+                }
+
+                const result = await response.json();
+                
+                Toast.success(`Devis client ${result.numero} créé avec succès !`);
+                closeCreateDevisClientModal();
+                
+                setTimeout(() => {
+                    window.location.href = `devis-detail.html?id=${result.id}`;
+                }, 1500);
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error(error.message || 'Erreur lors de la création du devis client');
+            } finally {
+                const submitButton = event.target.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-check"></i> Créer le devis client';
+                }
+            }
+        }
+
+        async function refreshAIAnalysis() {
+            if (!rfqId) {
+                Toast.error('RFQ ID non disponible');
+                return;
+            }
+            
+            try {
+                showLoading('Analyse IA en cours...');
+                const analysisResponse = await apiCall(`/api/ai/analyze-quotes/${rfqId}`, {
+                    method: 'POST'
+                });
+                
+                if (analysisResponse && analysisResponse.ok) {
+                    aiAnalysis = await analysisResponse.json();
+                    // Recharger la page pour afficher la nouvelle analyse
+                    loadDevisForComparison();
+                    Toast.success('Analyse IA actualisée');
+                } else {
+                    Toast.error('Erreur lors de l\'analyse IA');
+                }
+            } catch (error) {
+                console.error('Erreur analyse IA:', error);
+                Toast.error('Erreur lors de l\'analyse IA');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        loadDevisForComparison();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facture - SilyProcure Pro Confiance</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            color: #1E3A8A;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            border-bottom: 3px solid #3B82F6;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            color: #3B82F6;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .subtitle {
+            color: #64748B;
+            font-size: 14px;
+        }
+        .invoice-number {
+            text-align: right;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1E3A8A;
+        }
+        h1 {
+            color: #1E3A8A;
+            font-size: 32px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .info-box {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .info-column {
+            width: 48%;
+            background-color: #F8FAFC;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .info-column h2 {
+            color: #3B82F6;
+            font-size: 16px;
+            margin-top: 0;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #3B82F6;
+            padding-bottom: 5px;
+        }
+        .info-row {
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background-color: #1E3A8A;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+        }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #E0E7FF;
+            font-size: 12px;
+        }
+        tr:nth-child(even) {
+            background-color: #F8FAFC;
+        }
+        .totals {
+            margin-top: 20px;
+            margin-left: auto;
+            width: 300px;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid #E0E7FF;
+        }
+        .total-row.final {
+            background-color: #1E3A8A;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            border: none;
+        }
+        .payment-info {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #F8FAFC;
+            border-left: 4px solid #3B82F6;
+        }
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #E0E7FF;
+            font-size: 10px;
+            color: #64748B;
+            text-align: center;
+        }
+        .signature-box {
+            margin-top: 40px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <div class="logo">SilyProcure</div>
+            <div class="subtitle">Pro Confiance</div>
+        </div>
+        <div class="invoice-number">
+            FACT-[YYYY]-[NNNN]
+        </div>
+    </div>
+
+    <h1>FACTURE</h1>
+
+    <div class="info-box">
+        <div class="info-column">
+            <h2>Informations facturier</h2>
+            <div class="info-row"><strong>Société :</strong> [Nom de l'entreprise]</div>
+            <div class="info-row">[Adresse complète]</div>
+            <div class="info-row">SIRET : [Numéro SIRET]</div>
+            <div class="info-row">TVA : [Numéro TVA]</div>
+            <div class="info-row">Tél : [Numéro]</div>
+            <div class="info-row">Email : [email@exemple.com]</div>
+        </div>
+        <div class="info-column">
+            <h2>Informations client</h2>
+            <div class="info-row"><strong>Client :</strong> [Nom du client]</div>
+            <div class="info-row">[Adresse complète]</div>
+            <div class="info-row">SIRET : [Numéro SIRET]</div>
+            <div class="info-row">TVA : [Numéro TVA]</div>
+            <div class="info-row">Contact : [Nom du contact]</div>
+            <div class="info-row">Email : [email@exemple.com]</div>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <strong>Date d'émission :</strong> [JJ/MM/AAAA] | 
+        <strong>Date d'échéance :</strong> [JJ/MM/AAAA] | 
+        <strong>Réf. commande :</strong> [Réf. commande]
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Réf.</th>
+                <th>Description</th>
+                <th>Qté</th>
+                <th>Prix unitaire HT</th>
+                <th>Remise</th>
+                <th>Total HT</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>[REF]</td>
+                <td>[Description article]</td>
+                <td>[Q]</td>
+                <td>[Prix] €</td>
+                <td>[%]</td>
+                <td>[Total] €</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <div class="total-row">
+            <span>Total HT</span>
+            <span>[Montant] €</span>
+        </div>
+        <div class="total-row">
+            <span>TVA (20%)</span>
+            <span>[Montant] €</span>
+        </div>
+        <div class="total-row final">
+            <span>TOTAL TTC</span>
+            <span>[Montant] €</span>
+        </div>
+    </div>
+
+    <div class="payment-info">
+        <h3 style="color: #3B82F6; margin-top: 0;">Conditions de paiement</h3>
+        <p><strong>Mode :</strong> [Virement bancaire / Chèque]</p>
+        <p><strong>Délai :</strong> [X] jours | <strong>Date limite :</strong> [JJ/MM/AAAA]</p>
+        <p><strong>IBAN :</strong> [Numéro IBAN]</p>
+        <p><strong>BIC :</strong> [Code BIC]</p>
+    </div>
+
+    <div class="signature-box">
+        <p>Fait à [Lieu], le [Date]</p>
+        <br><br>
+        <p>_________________________</p>
+        <p>[Nom et fonction]</p>
+    </div>
+
+    <div class="footer">
+        Document généré par SilyProcure - Direction A : Pro Confiance | Version 1.0
+    </div>
+</body>
+</html>
+

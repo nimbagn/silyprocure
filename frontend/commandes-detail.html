@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails Commande - SilyProcure</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
+        <div class="user-info">
+            <span id="user-name"></span>
+            <button onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="rfq.html">RFQ</a>
+        <a href="devis.html">Devis</a>
+        <a href="commandes.html" class="active">Commandes</a>
+        <a href="factures.html">Factures</a>
+        <a href="entreprises.html">Entreprises</a>
+        <a href="produits.html">Produits</a>
+        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section" style="text-align: left; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <button class="btn btn-secondary" onclick="window.location.href='commandes.html'" style="margin-bottom: 1rem;">
+                        ← Retour à la liste
+                    </button>
+                    <h1 class="hero-title" style="font-size: 2rem; margin: 0;"><i class="fas fa-box"></i> Détails de la commande</h1>
+                    <p class="hero-description" style="text-align: left; margin: 0.5rem 0 0 0; max-width: 100%;">
+                        Consultez les détails complets de la commande et effectuez les actions nécessaires
+                    </p>
+                </div>
+                <div id="commande-actions"></div>
+            </div>
+        </div>
+
+        <div id="commande-details">
+            <div class="loading"><div class="loading-spinner"></div> Chargement...</div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/fileUpload.js"></script>
+        <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
+    <script>
+        checkAuth();
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const commandeId = urlParams.get('id');
+
+        // Définir les fonctions AVANT de charger les détails
+        async function marquerLivree(id) {
+            console.log('marquerLivree appelé avec id:', id);
+            if (!confirm('Voulez-vous marquer cette commande comme livrée ?')) {
+                return;
+            }
+            
+            try {
+                showLoading('Mise à jour du statut...');
+                console.log('Envoi de la requête PATCH...');
+                const response = await apiCall(`/api/commandes/${id}/statut`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ statut: 'livre' })
+                });
+                
+                console.log('Réponse reçue:', response);
+                
+                if (!response) {
+                    hideLoading();
+                    Toast.error('Erreur de connexion');
+                    return;
+                }
+                
+                if (response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    console.log('Statut mis à jour:', data);
+                    Toast.success('Commande marquée comme livrée');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    console.error('Erreur API:', errorData);
+                    Toast.error(errorData.error || 'Erreur lors de la mise à jour');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur de connexion: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Exposer la fonction globalement
+        window.marquerLivree = marquerLivree;
+
+        // Fonction pour afficher le modal de création de facture
+        function showCreateFactureModal(commandeId, margeParDefaut, clients) {
+            const modalContent = `
+                <div style="max-width: 800px;">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--color-primary);"><i class="fas fa-file-invoice"></i> Créer une facture depuis la commande</h3>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Client *</label>
+                        <select id="facture-client-id" class="form-control" required>
+                            <option value="">Sélectionner un client</option>
+                            ${clients.map(c => `<option value="${c.id}">${c.nom}</option>`).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div class="form-group">
+                            <label>Marge commerciale (%) *</label>
+                            <input type="number" id="facture-marge" class="form-control" value="${margeParDefaut}" min="0" max="100" step="0.01" required 
+                                   onchange="if(typeof window.updateFacturePreview==='function'){window.updateFacturePreview(${commandeId});}">
+                            <small style="color: #666;">Pourcentage à ajouter au prix d'achat</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Date d'émission</label>
+                            <input type="date" id="facture-date-emission" class="form-control" 
+                                   value="${new Date().toISOString().split('T')[0]}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Conditions de paiement</label>
+                        <textarea id="facture-conditions" class="form-control" rows="2" placeholder="Ex: Paiement à 30 jours"></textarea>
+                    </div>
+                    
+                    <div id="facture-preview" style="margin-top: 1.5rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <p style="color: #666; font-style: italic;">Aperçu de la facture...</p>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button class="btn btn-secondary" onclick="Modal.hide('create-facture')">Annuler</button>
+                        <button class="btn btn-primary" onclick="if(typeof window.submitCreateFacture==='function'){window.submitCreateFacture(${commandeId});}else{alert('Fonction non disponible');}"><i class="fas fa-save"></i> Créer la facture</button>
+                    </div>
+                </div>
+            `;
+            
+            const modal = new Modal('create-facture', 'Créer une facture', modalContent);
+            modal.show();
+            
+            // Charger l'aperçu initial
+            setTimeout(() => {
+                if (typeof window.updateFacturePreview === 'function') {
+                    window.updateFacturePreview(commandeId);
+                }
+            }, 100);
+        }
+
+        // Fonction pour créer une facture depuis une commande avec majoration
+        async function creerFactureDepuisCommande(commandeId) {
+            console.log('creerFactureDepuisCommande appelé avec id:', commandeId);
+            
+            try {
+                // Récupérer la marge active par défaut
+                const margeResponse = await apiCall('/api/marges/active');
+                const margeActive = margeResponse && margeResponse.ok ? await margeResponse.json() : { pourcentage: 20 };
+                
+                // Récupérer les clients (acheteurs)
+                const clientsResponse = await apiCall('/api/entreprises?type=acheteur');
+                const clients = clientsResponse && clientsResponse.ok ? await clientsResponse.json() : [];
+                
+                // Afficher le modal de création de facture
+                showCreateFactureModal(commandeId, margeActive.pourcentage, clients);
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur lors du chargement des données: ' + error.message);
+            }
+        }
+        
+        // Exposer la fonction globalement
+        window.creerFactureDepuisCommande = creerFactureDepuisCommande;
+
+        async function loadCommandeDetails() {
+            if (!commandeId) {
+                Toast.error('Commande non spécifiée');
+                window.location.href = 'commandes.html';
+                return;
+            }
+
+            try {
+                showLoading('Chargement...');
+                const response = await apiCall(`/api/commandes/${commandeId}`);
+                if (!response) {
+                    hideLoading();
+                    return;
+                }
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    hideLoading();
+                    Toast.error('Erreur: ' + (errorData.error || 'Commande non trouvée'));
+                    setTimeout(() => window.location.href = 'commandes.html', 2000);
+                    return;
+                }
+
+                const commande = await response.json();
+                hideLoading();
+                displayCommandeDetails(commande);
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors du chargement');
+                console.error('Erreur:', error);
+            }
+        }
+
+        function displayCommandeDetails(commande) {
+            const container = document.getElementById('commande-details');
+            const actionsContainer = document.getElementById('commande-actions');
+
+            // Actions selon le statut
+            let actionsHTML = `<button class="btn btn-secondary" onclick="window.open('/api/pdf/commande/${commande.id}', '_blank')" style="margin-right: 0.5rem;"><i class="fas fa-file-pdf"></i> PDF</button>`;
+            if (commande.statut === 'brouillon') {
+                actionsHTML += `
+                    <button class="btn btn-primary" onclick="editCommande(${commande.id})"><i class="fas fa-edit"></i> Modifier</button>
+                `;
+            } else if (commande.statut === 'envoye') {
+                // Utiliser onclick directement dans le HTML pour éviter les problèmes de cache
+                actionsHTML = `
+                    <button class="btn btn-success" onclick="if(typeof window.marquerLivree==='function'){window.marquerLivree(${commande.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-check"></i> Marquer comme livrée</button>
+                `;
+            } else if (commande.statut === 'livre') {
+                actionsHTML = `
+                    <button class="btn btn-primary" onclick="if(typeof window.creerFactureDepuisCommande==='function'){window.creerFactureDepuisCommande(${commande.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-file-invoice"></i> Créer une facture pour le client</button>
+                `;
+            }
+            actionsContainer.innerHTML = actionsHTML;
+
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">${commande.numero || 'Commande-' + commande.id}</h2>
+                        <span class="badge ${getStatusBadge(commande.statut)}">${getStatusLabel(commande.statut)}</span>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                            <div>
+                                <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-clipboard-list"></i> Informations générales</h3>
+                                <div style="line-height: 2;">
+                                    <div><strong>Type:</strong> ${commande.type_commande || '-'}</div>
+                                    <div><strong>Fournisseur:</strong> ${commande.fournisseur_nom || '-'}</div>
+                                    <div><strong>Date de commande:</strong> ${formatDate(commande.date_commande)}</div>
+                                    ${commande.date_livraison_souhaitee ? `<div><strong>Date de livraison souhaitée:</strong> ${formatDate(commande.date_livraison_souhaitee)}</div>` : ''}
+                                    ${commande.commandeur_nom ? `<div><strong>Commandeur:</strong> ${commande.commandeur_prenom || ''} ${commande.commandeur_nom || ''}</div>` : ''}
+                                    ${commande.devis_id ? `<div><strong>Devis associé:</strong> <a href="devis-detail.html?id=${commande.devis_id}" class="link-primary">Voir le devis</a></div>` : ''}
+                                    ${commande.rfq_id ? `<div><strong>RFQ associée:</strong> <a href="rfq-detail.html?id=${commande.rfq_id}" class="link-primary">Voir la RFQ</a></div>` : ''}
+                                </div>
+                            </div>
+                            <div>
+                                <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-money-bill-wave"></i> Montants</h3>
+                                <div style="line-height: 2;">
+                                    <div><strong>Total HT:</strong> ${formatCurrency(commande.total_ht || 0)}</div>
+                                    <div><strong>Total TVA:</strong> ${formatCurrency(commande.total_tva || 0)}</div>
+                                    <div style="font-size: 1.25rem; font-weight: bold; color: var(--color-primary); margin-top: 0.5rem;">
+                                        Total TTC: ${formatCurrency(commande.total_ttc || 0)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${commande.lignes && commande.lignes.length > 0 ? `
+                            <h3 style="margin: 1.5rem 0 1rem 0; color: var(--color-primary);"><i class="fas fa-box"></i> Lignes de commande</h3>
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Description</th>
+                                            <th>Référence</th>
+                                            <th>Quantité</th>
+                                            <th>Unité</th>
+                                            <th>Prix unitaire HT</th>
+                                            <th>Remise</th>
+                                            <th>TVA</th>
+                                            <th>Total HT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${commande.lignes.map(ligne => {
+                                            const prixUnitaire = parseFloat(ligne.prix_unitaire_ht || 0);
+                                            const quantite = parseFloat(ligne.quantite || 0);
+                                            const remise = parseFloat(ligne.remise || 0);
+                                            const tva = parseFloat(ligne.tva_taux || 20);
+                                            const montantHT = prixUnitaire * quantite * (1 - remise / 100);
+                                            const montantTVA = montantHT * (tva / 100);
+                                            const totalHT = montantHT;
+                                            
+                                            return `
+                                                <tr>
+                                                    <td>${ligne.description || '-'}</td>
+                                                    <td>${ligne.reference || '-'}</td>
+                                                    <td>${quantite}</td>
+                                                    <td>${ligne.unite || '-'}</td>
+                                                    <td>${formatCurrency(prixUnitaire)}</td>
+                                                    <td>${remise > 0 ? remise + '%' : '-'}</td>
+                                                    <td>${tva}%</td>
+                                                    <td><strong>${formatCurrency(totalHT)}</strong></td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : ''}
+
+                        ${commande.conditions_paiement ? `
+                            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--color-background-blue); border-radius: 8px;">
+                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-credit-card"></i> Conditions de paiement</h4>
+                                <p style="margin: 0;">${commande.conditions_paiement}</p>
+                                ${commande.delai_paiement_jours ? `<p style="margin: 0.5rem 0 0 0;"><strong>Délai:</strong> ${commande.delai_paiement_jours} jours</p>` : ''}
+                                ${commande.mode_paiement ? `<p style="margin: 0.5rem 0 0 0;"><strong>Mode:</strong> ${commande.mode_paiement}</p>` : ''}
+                            </div>
+                        ` : ''}
+
+                        ${commande.instructions_livraison ? `
+                            <div style="margin-top: 1rem; padding: 1rem; background: var(--color-background-blue); border-radius: 8px;">
+                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-truck"></i> Instructions de livraison</h4>
+                                <p style="margin: 0;">${commande.instructions_livraison}</p>
+                                ${commande.mode_transport ? `<p style="margin: 0.5rem 0 0 0;"><strong>Mode de transport:</strong> ${commande.mode_transport}</p>` : ''}
+                                ${commande.incoterms ? `<p style="margin: 0.5rem 0 0 0;"><strong>Incoterms:</strong> ${commande.incoterms}</p>` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            // Ajouter la section fichiers joints
+            container.innerHTML += '<div id="fichiers-joints-container"></div>';
+            
+            // Initialiser le gestionnaire de fichiers
+            if (commandeId) {
+                initFileUpload('commande', commandeId, 'fichiers-joints-container');
+            }
+        }
+
+        function editCommande(id) {
+            Toast.info('Fonction d\'édition à venir');
+        }
+        
+        // Fonction pour mettre à jour l'aperçu de la facture
+        async function updateFacturePreview(commandeId) {
+            const margeInput = document.getElementById('facture-marge');
+            const previewDiv = document.getElementById('facture-preview');
+            
+            if (!margeInput || !previewDiv) return;
+            
+            const marge = parseFloat(margeInput.value || 20);
+            
+            try {
+                // Récupérer les détails de la commande
+                const response = await apiCall(`/api/commandes/${commandeId}`);
+                if (!response || !response.ok) {
+                    previewDiv.innerHTML = '<p style="color: var(--color-danger);">Erreur lors du chargement de la commande</p>';
+                    return;
+                }
+                
+                const commande = await response.json();
+                
+                if (!commande.lignes || commande.lignes.length === 0) {
+                    previewDiv.innerHTML = '<p style="color: var(--color-danger);">La commande n\'a pas de lignes</p>';
+                    return;
+                }
+                
+                // Calculer les totaux
+                let totalAchatHT = 0;
+                let totalVenteHT = 0;
+                let totalTVA = 0;
+                
+                const lignesHTML = commande.lignes.map(ligne => {
+                    const prixAchatHT = parseFloat(ligne.prix_unitaire_ht || 0);
+                    const quantite = parseFloat(ligne.quantite || 0);
+                    const prixVenteHT = prixAchatHT * (1 + marge / 100);
+                    const tvaTaux = parseFloat(ligne.tva_taux || 20);
+                    
+                    const totalAchatLigne = prixAchatHT * quantite;
+                    const totalVenteLigne = prixVenteHT * quantite;
+                    const tvaLigne = totalVenteLigne * (tvaTaux / 100);
+                    
+                    totalAchatHT += totalAchatLigne;
+                    totalVenteHT += totalVenteLigne;
+                    totalTVA += tvaLigne;
+                    
+                    return `
+                        <tr>
+                            <td>${ligne.reference || '-'}</td>
+                            <td>${ligne.description || '-'}</td>
+                            <td>${quantite}</td>
+                            <td>${formatCurrency(prixAchatHT)}</td>
+                            <td><strong>${formatCurrency(prixVenteHT)}</strong></td>
+                            <td>${marge.toFixed(2)}%</td>
+                            <td><strong>${formatCurrency(totalVenteLigne)}</strong></td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                const totalTTC = totalVenteHT + totalTVA;
+                const margeTotale = totalVenteHT - totalAchatHT;
+                
+                previewDiv.innerHTML = `
+                    <h4 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-eye"></i> Aperçu de la facture</h4>
+                    <div style="overflow-x: auto;">
+                        <table class="table" style="font-size: 0.9rem;">
+                            <thead>
+                                <tr>
+                                    <th>Référence</th>
+                                    <th>Description</th>
+                                    <th>Qté</th>
+                                    <th>Prix achat HT</th>
+                                    <th>Prix vente HT</th>
+                                    <th>Marge</th>
+                                    <th>Total HT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${lignesHTML}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <p><strong>Total achat HT:</strong> ${formatCurrency(totalAchatHT)}</p>
+                                <p><strong>Total vente HT:</strong> ${formatCurrency(totalVenteHT)}</p>
+                                <p><strong>Marge totale:</strong> <span style="color: var(--color-success); font-weight: bold;">${formatCurrency(margeTotale)}</span></p>
+                            </div>
+                            <div>
+                                <p><strong>TVA:</strong> ${formatCurrency(totalTVA)}</p>
+                                <p style="font-size: 1.2rem; font-weight: bold; color: var(--color-primary);">
+                                    <strong>Total TTC:</strong> ${formatCurrency(totalTTC)}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erreur aperçu facture:', error);
+                previewDiv.innerHTML = '<p style="color: var(--color-danger);">Erreur lors du calcul de l\'aperçu</p>';
+            }
+        }
+        
+        // Fonction pour soumettre la création de facture
+        async function submitCreateFacture(commandeId) {
+            const clientId = document.getElementById('facture-client-id')?.value;
+            const marge = parseFloat(document.getElementById('facture-marge')?.value || 20);
+            const dateEmission = document.getElementById('facture-date-emission')?.value;
+            const conditions = document.getElementById('facture-conditions')?.value;
+            
+            if (!clientId) {
+                Toast.error('Veuillez sélectionner un client');
+                return;
+            }
+            
+            if (!marge || marge < 0) {
+                Toast.error('Veuillez saisir une marge valide');
+                return;
+            }
+            
+            try {
+                showLoading('Création de la facture...');
+                
+                const response = await apiCall(`/api/factures/from-commande/${commandeId}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        marge_pourcentage: marge,
+                        client_id: parseInt(clientId),
+                        date_emission: dateEmission,
+                        conditions_paiement: conditions || null,
+                        delai_paiement_jours: 30,
+                        mode_paiement: 'Virement bancaire'
+                    })
+                });
+                
+                if (!response) {
+                    hideLoading();
+                    Toast.error('Erreur de connexion');
+                    return;
+                }
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Facture créée:', data);
+                    Toast.success(`Facture créée avec succès (Marge: ${marge}%)`);
+                    Modal.hide('create-facture');
+                    setTimeout(() => {
+                        window.location.href = `factures.html`;
+                    }, 1500);
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    console.error('Erreur création facture:', errorData);
+                    Toast.error(errorData.error || 'Erreur lors de la création de la facture');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur de connexion: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Exposer les fonctions globalement
+        window.updateFacturePreview = updateFacturePreview;
+        window.submitCreateFacture = submitCreateFacture;
+
+        loadCommandeDetails();
+    </script>
+</body>
+</html>
+

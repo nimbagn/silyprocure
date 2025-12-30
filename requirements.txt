@@ -1,0 +1,4 @@
+# Scripts Python pour SilyProcure
+# Pas de dépendances Python requises pour le moment
+# Ce fichier est ici pour la structure du projet
+

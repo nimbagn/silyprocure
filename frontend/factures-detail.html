@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails Facture - SilyProcure</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
+        <div class="user-info">
+            <span id="user-name"></span>
+            <button onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="rfq.html">RFQ</a>
+        <a href="devis.html">Devis</a>
+        <a href="commandes.html">Commandes</a>
+        <a href="factures.html" class="active">Factures</a>
+        <a href="entreprises.html">Entreprises</a>
+        <a href="produits.html">Produits</a>
+        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section" style="text-align: left; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <button class="btn btn-secondary" onclick="window.location.href='factures.html'" style="margin-bottom: 1rem;">
+                        ← Retour à la liste
+                    </button>
+                    <h1 class="hero-title" style="font-size: 2rem; margin: 0;"><i class="fas fa-file-invoice"></i> Détails de la facture</h1>
+                    <p class="hero-description" style="text-align: left; margin: 0.5rem 0 0 0; max-width: 100%;">
+                        Consultez les détails complets de la facture
+                    </p>
+                </div>
+                <div id="facture-actions"></div>
+            </div>
+        </div>
+
+        <div id="facture-details">
+            <div class="loading"><div class="loading-spinner"></div> Chargement...</div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/fileUpload.js"></script>
+        <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
+    <script>
+        checkAuth();
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const factureId = urlParams.get('id');
+
+        async function loadFactureDetails() {
+            if (!factureId) {
+                Toast.error('Facture non spécifiée');
+                window.location.href = 'factures.html';
+                return;
+            }
+
+            try {
+                showLoading('Chargement...');
+                const response = await apiCall(`/api/factures/${factureId}`);
+                if (!response) {
+                    hideLoading();
+                    return;
+                }
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    hideLoading();
+                    Toast.error('Erreur: ' + (errorData.error || 'Facture non trouvée'));
+                    setTimeout(() => window.location.href = 'factures.html', 2000);
+                    return;
+                }
+
+                const facture = await response.json();
+                hideLoading();
+                displayFactureDetails(facture);
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors du chargement');
+                console.error('Erreur:', error);
+            }
+        }
+
+        function displayFactureDetails(facture) {
+            const container = document.getElementById('facture-details');
+            const actionsContainer = document.getElementById('facture-actions');
+
+            // Actions
+            let actionsHTML = `
+                <button class="btn btn-secondary" onclick="window.open('/api/pdf/facture/${facture.id}', '_blank')" style="margin-right: 0.5rem;">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+            `;
+            
+            // Bouton pour ajouter un paiement si la facture n'est pas payée
+            if (facture.statut !== 'payee' && facture.statut !== 'annulee') {
+                actionsHTML += `
+                    <button class="btn btn-success" onclick="showAddPaiementModal(${facture.id}, ${facture.reste_a_payer || 0})">
+                        <i class="fas fa-money-check"></i> Enregistrer un paiement
+                    </button>
+                `;
+            }
+            
+            actionsContainer.innerHTML = actionsHTML;
+
+            // Vérifier si l'utilisateur est admin/superviseur pour afficher les informations de marge
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const isAdmin = user.role === 'admin' || user.role === 'superviseur' || user.role === 'comptable';
+
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">${facture.numero || 'Facture-' + facture.id}</h2>
+                        <span class="badge ${getStatusBadge(facture.statut)}">${getStatusLabel(facture.statut)}</span>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                            <div>
+                                <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-clipboard-list"></i> Informations générales</h3>
+                                <div style="line-height: 2;">
+                                    <div><strong>Type:</strong> ${facture.type_facture || '-'}</div>
+                                    <div><strong>Client:</strong> ${facture.client_nom || '-'}</div>
+                                    <div><strong>Date d'émission:</strong> ${formatDate(facture.date_emission)}</div>
+                                    ${facture.date_echeance ? `<div><strong>Date d'échéance:</strong> ${formatDate(facture.date_echeance)}</div>` : ''}
+                                    ${facture.commande_id ? `<div><strong>Commande associée:</strong> <a href="commandes-detail.html?id=${facture.commande_id}" class="link-primary">Voir la commande</a></div>` : ''}
+                                </div>
+                            </div>
+                            <div>
+                                <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-money-bill-wave"></i> Montants</h3>
+                                <div style="line-height: 2;">
+                                    <div><strong>Total HT:</strong> ${formatCurrency(facture.total_ht || 0)}</div>
+                                    <div><strong>Total TVA:</strong> ${formatCurrency(facture.total_tva || 0)}</div>
+                                    <div style="font-size: 1.25rem; font-weight: bold; color: var(--color-primary); margin-top: 0.5rem;">
+                                        Total TTC: ${formatCurrency(facture.total_ttc || 0)}
+                                    </div>
+                                    ${facture.montant_regle > 0 ? `<div><strong>Montant réglé:</strong> <span style="color: var(--color-success);">${formatCurrency(facture.montant_regle || 0)}</span></div>` : ''}
+                                    <div style="font-size: 1.1rem; font-weight: bold; margin-top: 0.5rem;">
+                                        <strong>Reste à payer:</strong> 
+                                        <span style="color: ${facture.reste_a_payer > 0 ? 'var(--color-danger)' : 'var(--color-success)'}; font-size: 1.3rem;">
+                                            ${formatCurrency(facture.reste_a_payer || 0)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${isAdmin && (facture.total_achat_ht || facture.marge_totale) ? `
+                            <div style="margin-bottom: 1.5rem; padding: 1rem; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                                <h4 style="margin-bottom: 0.5rem; color: #856404;"><i class="fas fa-chart-line"></i> Informations internes (non visibles par le client)</h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div>
+                                        <p><strong>Total achat HT:</strong> ${formatCurrency(facture.total_achat_ht || 0)}</p>
+                                        <p><strong>Marge totale:</strong> <span style="color: var(--color-success); font-weight: bold;">${formatCurrency(facture.marge_totale || 0)}</span></p>
+                                    </div>
+                                    <div>
+                                        <p><strong>Taux de marge:</strong> ${facture.total_achat_ht > 0 ? ((facture.marge_totale / facture.total_achat_ht) * 100).toFixed(2) : 0}%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${facture.lignes && facture.lignes.length > 0 ? `
+                            <h3 style="margin: 1.5rem 0 1rem 0; color: var(--color-primary);"><i class="fas fa-box"></i> Lignes de facture</h3>
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Référence</th>
+                                            <th>Description</th>
+                                            <th>Quantité</th>
+                                            <th>Unité</th>
+                                            <th>Prix unitaire HT</th>
+                                            ${isAdmin ? '<th>Prix achat HT</th>' : ''}
+                                            ${isAdmin ? '<th>Marge</th>' : ''}
+                                            <th>Remise</th>
+                                            <th>TVA</th>
+                                            <th>Total HT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${facture.lignes.map(ligne => {
+                                            const prixUnitaire = parseFloat(ligne.prix_unitaire_ht || 0);
+                                            const quantite = parseFloat(ligne.quantite || 0);
+                                            const remise = parseFloat(ligne.remise || 0);
+                                            const tva = parseFloat(ligne.tva_taux || 20);
+                                            const prixAchat = parseFloat(ligne.prix_achat_ht || 0);
+                                            const margeAppliquee = parseFloat(ligne.marge_appliquee || 0);
+                                            
+                                            const montantHT = prixUnitaire * quantite * (1 - remise / 100);
+                                            const montantTVA = montantHT * (tva / 100);
+                                            const totalHT = montantHT;
+                                            
+                                            const margeLigne = prixAchat > 0 ? (montantHT - (prixAchat * quantite)) : 0;
+                                            
+                                            return `
+                                                <tr>
+                                                    <td>${ligne.reference || '-'}</td>
+                                                    <td>${ligne.description || '-'}</td>
+                                                    <td>${quantite}</td>
+                                                    <td>${ligne.unite || '-'}</td>
+                                                    <td><strong>${formatCurrency(prixUnitaire)}</strong></td>
+                                                    ${isAdmin ? `<td>${prixAchat > 0 ? formatCurrency(prixAchat) : '-'}</td>` : ''}
+                                                    ${isAdmin ? `<td>${margeAppliquee > 0 ? margeAppliquee.toFixed(2) + '%' : '-'}</td>` : ''}
+                                                    <td>${remise > 0 ? remise + '%' : '-'}</td>
+                                                    <td>${tva}%</td>
+                                                    <td><strong>${formatCurrency(totalHT)}</strong></td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : ''}
+
+                        ${facture.conditions_paiement ? `
+                            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--color-background-blue); border-radius: 8px;">
+                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-credit-card"></i> Conditions de paiement</h4>
+                                <p style="margin: 0;">${facture.conditions_paiement}</p>
+                                ${facture.delai_paiement_jours ? `<p style="margin: 0.5rem 0 0 0;"><strong>Délai:</strong> ${facture.delai_paiement_jours} jours</p>` : ''}
+                                ${facture.mode_paiement ? `<p style="margin: 0.5rem 0 0 0;"><strong>Mode:</strong> ${facture.mode_paiement}</p>` : ''}
+                            </div>
+                        ` : ''}
+
+                        <div style="margin-top: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h3 style="margin: 0; color: var(--color-primary);"><i class="fas fa-money-check"></i> Historique des paiements</h3>
+                                ${facture.statut !== 'payee' && facture.statut !== 'annulee' ? `
+                                    <button class="btn btn-primary btn-sm" onclick="showAddPaiementModal(${facture.id}, ${facture.reste_a_payer || 0})">
+                                        <i class="fas fa-plus"></i> Ajouter un paiement
+                                    </button>
+                                ` : ''}
+                            </div>
+                            ${facture.paiements && facture.paiements.length > 0 ? `
+                                <div class="table-container">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Montant</th>
+                                                <th>Mode</th>
+                                                <th>Référence</th>
+                                                ${facture.statut !== 'payee' && facture.statut !== 'annulee' ? '<th>Actions</th>' : ''}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${facture.paiements.map(p => `
+                                                <tr>
+                                                    <td>${formatDate(p.date_paiement)}</td>
+                                                    <td><strong>${formatCurrency(p.montant)}</strong></td>
+                                                    <td>${p.mode_paiement || '-'}</td>
+                                                    <td>${p.reference_paiement || '-'}</td>
+                                                    ${facture.statut !== 'payee' && facture.statut !== 'annulee' ? `
+                                                        <td>
+                                                            <button class="btn btn-secondary btn-sm" onclick="editPaiement(${p.id}, ${facture.id})" title="Modifier">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button class="btn btn-danger btn-sm" onclick="deletePaiement(${p.id}, ${facture.id})" title="Supprimer" style="margin-left: 0.25rem;">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </td>
+                                                    ` : ''}
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr style="background: #f5f5f5; font-weight: bold;">
+                                                <td colspan="${facture.statut !== 'payee' && facture.statut !== 'annulee' ? '4' : '3'}">Total payé</td>
+                                                <td><strong>${formatCurrency(facture.montant_regle || 0)}</strong></td>
+                                                ${facture.statut !== 'payee' && facture.statut !== 'annulee' ? '<td></td>' : ''}
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            ` : `
+                                <div class="empty-state" style="padding: 2rem;">
+                                    <div class="empty-state-icon"><i class="fas fa-money-check"></i></div>
+                                    <div class="empty-state-text">Aucun paiement enregistré</div>
+                                    ${facture.statut !== 'payee' && facture.statut !== 'annulee' ? `
+                                        <button class="btn btn-primary" onclick="showAddPaiementModal(${facture.id}, ${facture.reste_a_payer || 0})" style="margin-top: 1rem;">
+                                            <i class="fas fa-plus"></i> Enregistrer le premier paiement
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Ajouter la section fichiers joints
+            container.innerHTML += '<div id="fichiers-joints-container"></div>';
+            
+            // Initialiser le gestionnaire de fichiers
+            if (factureId) {
+                initFileUpload('facture', factureId, 'fichiers-joints-container');
+            }
+        }
+
+        // Fonction pour afficher le modal d'ajout de paiement
+        function showAddPaiementModal(factureId, resteAPayer) {
+            const modalContent = `
+                <form id="add-paiement-form" onsubmit="handleAddPaiement(event, ${factureId})">
+                    <div class="form-group">
+                        <label>Montant *</label>
+                        <input type="number" id="paiement-montant" class="form-control" 
+                               step="0.01" min="0.01" max="${resteAPayer}" 
+                               value="${resteAPayer}" required>
+                        <small style="color: #666;">Reste à payer: ${formatCurrency(resteAPayer)}</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Date de paiement *</label>
+                        <input type="date" id="paiement-date" class="form-control" 
+                               value="${new Date().toISOString().split('T')[0]}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mode de paiement *</label>
+                        <select id="paiement-mode" class="form-control" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="Virement bancaire">Virement bancaire</option>
+                            <option value="Chèque">Chèque</option>
+                            <option value="Espèces">Espèces</option>
+                            <option value="Carte bancaire">Carte bancaire</option>
+                            <option value="Traite">Traite</option>
+                            <option value="Autre">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Référence du paiement</label>
+                        <input type="text" id="paiement-reference" class="form-control" 
+                               placeholder="Ex: VIR-2025-001, CHQ-12345...">
+                    </div>
+                    <div class="form-group">
+                        <label>Banque</label>
+                        <input type="text" id="paiement-banque" class="form-control" 
+                               placeholder="Nom de la banque">
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="paiement-notes" class="form-control" rows="3" 
+                                  placeholder="Notes supplémentaires..."></textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                        <button type="button" class="btn btn-secondary" onclick="Modal.hide('add-paiement')">Annuler</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Enregistrer le paiement
+                        </button>
+                    </div>
+                </form>
+            `;
+
+            const modal = new Modal('add-paiement', 'Enregistrer un paiement', modalContent);
+            modal.show();
+        }
+
+        // Fonction pour gérer l'ajout de paiement
+        async function handleAddPaiement(event, factureId) {
+            event.preventDefault();
+
+            const montant = parseFloat(document.getElementById('paiement-montant').value);
+            const datePaiement = document.getElementById('paiement-date').value;
+            const modePaiement = document.getElementById('paiement-mode').value;
+            const reference = document.getElementById('paiement-reference').value;
+            const banque = document.getElementById('paiement-banque').value;
+            const notes = document.getElementById('paiement-notes').value;
+
+            if (!modePaiement) {
+                Toast.error('Veuillez sélectionner un mode de paiement');
+                return;
+            }
+
+            try {
+                showLoading('Enregistrement du paiement...');
+
+                const response = await apiCall('/api/paiements', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        facture_id: factureId,
+                        montant: montant,
+                        date_paiement: datePaiement,
+                        mode_paiement: modePaiement,
+                        reference_paiement: reference || null,
+                        banque: banque || null,
+                        notes: notes || null
+                    })
+                });
+
+                if (!response) {
+                    hideLoading();
+                    Toast.error('Erreur de connexion');
+                    return;
+                }
+
+                if (response.ok) {
+                    const data = await response.json();
+                    hideLoading();
+                    Toast.success('Paiement enregistré avec succès');
+                    Modal.hide('add-paiement');
+                    
+                    // Recharger les détails de la facture
+                    setTimeout(() => {
+                        loadFactureDetails();
+                    }, 500);
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    hideLoading();
+                    Toast.error(errorData.error || 'Erreur lors de l\'enregistrement');
+                }
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur de connexion: ' + error.message);
+                console.error('Erreur:', error);
+            }
+        }
+
+        // Fonction pour modifier un paiement
+        async function editPaiement(paiementId, factureId) {
+            try {
+                // Récupérer les détails du paiement
+                const response = await apiCall(`/api/paiements/facture/${factureId}`);
+                if (!response || !response.ok) {
+                    Toast.error('Erreur lors du chargement du paiement');
+                    return;
+                }
+
+                const paiements = await response.json();
+                const paiement = paiements.find(p => p.id === paiementId);
+
+                if (!paiement) {
+                    Toast.error('Paiement non trouvé');
+                    return;
+                }
+
+                // Récupérer la facture pour connaître le reste à payer
+                const factureResponse = await apiCall(`/api/factures/${factureId}`);
+                if (!factureResponse || !factureResponse.ok) {
+                    Toast.error('Erreur lors du chargement de la facture');
+                    return;
+                }
+
+                const facture = await factureResponse.json();
+                const resteAPayer = parseFloat(facture.reste_a_payer || 0) + parseFloat(paiement.montant);
+
+                const modalContent = `
+                    <form id="edit-paiement-form" onsubmit="handleEditPaiement(event, ${paiementId}, ${factureId})">
+                        <div class="form-group">
+                            <label>Montant *</label>
+                            <input type="number" id="paiement-montant-edit" class="form-control" 
+                                   step="0.01" min="0.01" max="${resteAPayer}" 
+                                   value="${paiement.montant}" required>
+                            <small style="color: #666;">Reste à payer disponible: ${formatCurrency(resteAPayer)}</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Date de paiement *</label>
+                            <input type="date" id="paiement-date-edit" class="form-control" 
+                                   value="${paiement.date_paiement}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Mode de paiement *</label>
+                            <select id="paiement-mode-edit" class="form-control" required>
+                                <option value="">Sélectionner...</option>
+                                <option value="Virement bancaire" ${paiement.mode_paiement === 'Virement bancaire' ? 'selected' : ''}>Virement bancaire</option>
+                                <option value="Chèque" ${paiement.mode_paiement === 'Chèque' ? 'selected' : ''}>Chèque</option>
+                                <option value="Espèces" ${paiement.mode_paiement === 'Espèces' ? 'selected' : ''}>Espèces</option>
+                                <option value="Carte bancaire" ${paiement.mode_paiement === 'Carte bancaire' ? 'selected' : ''}>Carte bancaire</option>
+                                <option value="Traite" ${paiement.mode_paiement === 'Traite' ? 'selected' : ''}>Traite</option>
+                                <option value="Autre" ${paiement.mode_paiement === 'Autre' ? 'selected' : ''}>Autre</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Référence du paiement</label>
+                            <input type="text" id="paiement-reference-edit" class="form-control" 
+                                   value="${paiement.reference_paiement || ''}" 
+                                   placeholder="Ex: VIR-2025-001, CHQ-12345...">
+                        </div>
+                        <div class="form-group">
+                            <label>Banque</label>
+                            <input type="text" id="paiement-banque-edit" class="form-control" 
+                                   value="${paiement.banque || ''}" 
+                                   placeholder="Nom de la banque">
+                        </div>
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <textarea id="paiement-notes-edit" class="form-control" rows="3" 
+                                      placeholder="Notes supplémentaires...">${paiement.notes || ''}</textarea>
+                        </div>
+                        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                            <button type="button" class="btn btn-secondary" onclick="Modal.hide('edit-paiement')">Annuler</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Modifier le paiement
+                            </button>
+                        </div>
+                    </form>
+                `;
+
+                const modal = new Modal('edit-paiement', 'Modifier le paiement', modalContent);
+                modal.show();
+            } catch (error) {
+                Toast.error('Erreur: ' + error.message);
+                console.error('Erreur:', error);
+            }
+        }
+
+        // Fonction pour gérer la modification de paiement
+        async function handleEditPaiement(event, paiementId, factureId) {
+            event.preventDefault();
+
+            const montant = parseFloat(document.getElementById('paiement-montant-edit').value);
+            const datePaiement = document.getElementById('paiement-date-edit').value;
+            const modePaiement = document.getElementById('paiement-mode-edit').value;
+            const reference = document.getElementById('paiement-reference-edit').value;
+            const banque = document.getElementById('paiement-banque-edit').value;
+            const notes = document.getElementById('paiement-notes-edit').value;
+
+            if (!modePaiement) {
+                Toast.error('Veuillez sélectionner un mode de paiement');
+                return;
+            }
+
+            try {
+                showLoading('Modification du paiement...');
+
+                const response = await apiCall(`/api/paiements/${paiementId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        montant: montant,
+                        date_paiement: datePaiement,
+                        mode_paiement: modePaiement,
+                        reference_paiement: reference || null,
+                        banque: banque || null,
+                        notes: notes || null
+                    })
+                });
+
+                if (!response) {
+                    hideLoading();
+                    Toast.error('Erreur de connexion');
+                    return;
+                }
+
+                if (response.ok) {
+                    hideLoading();
+                    Toast.success('Paiement modifié avec succès');
+                    Modal.hide('edit-paiement');
+                    
+                    // Recharger les détails de la facture
+                    setTimeout(() => {
+                        loadFactureDetails();
+                    }, 500);
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    hideLoading();
+                    Toast.error(errorData.error || 'Erreur lors de la modification');
+                }
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur de connexion: ' + error.message);
+                console.error('Erreur:', error);
+            }
+        }
+
+        // Fonction pour supprimer un paiement
+        async function deletePaiement(paiementId, factureId) {
+            if (!confirm('Voulez-vous supprimer ce paiement ? Cette action mettra à jour le statut de la facture.')) {
+                return;
+            }
+
+            try {
+                showLoading('Suppression du paiement...');
+
+                const response = await apiCall(`/api/paiements/${paiementId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response) {
+                    hideLoading();
+                    Toast.error('Erreur de connexion');
+                    return;
+                }
+
+                if (response.ok) {
+                    hideLoading();
+                    Toast.success('Paiement supprimé avec succès');
+                    
+                    // Recharger les détails de la facture
+                    setTimeout(() => {
+                        loadFactureDetails();
+                    }, 500);
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    hideLoading();
+                    Toast.error(errorData.error || 'Erreur lors de la suppression');
+                }
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur de connexion: ' + error.message);
+                console.error('Erreur:', error);
+            }
+        }
+
+        loadFactureDetails();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SilyProcure - Plateforme de Gestion d'Achats Professionnels</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Page d'accueil - Style moderne et captivant */
+        .home-page {
+            min-height: 100vh;
+            background: #00387A;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .home-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 56, 122, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .home-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .home-logo i {
+            color: var(--color-accent);
+            font-size: 2rem;
+        }
+
+        .home-nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .home-nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .home-nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn-login {
+            background: var(--color-accent);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn-login:hover {
+            background: var(--color-accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            position: relative;
+            z-index: 5;
+            padding: 12rem 2rem 6rem; /* Augmenté le padding-top pour compenser le header fixe */
+            text-align: center;
+            color: white;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.95;
+            font-weight: 300;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 1.2s ease-out;
+        }
+
+        .btn-primary-large {
+            background: var(--color-accent);
+            color: white;
+            padding: 1.25rem 3rem;
+            border-radius: 16px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(255, 102, 0, 0.4);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary-large:hover {
+            background: var(--color-accent-dark);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px rgba(255, 102, 0, 0.5);
+        }
+
+        .btn-secondary-large {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 1.25rem 3rem;
+            border-radius: 16px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary-large:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-4px);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Services Section */
+        .services-section {
+            position: relative;
+            z-index: 5;
+            padding: 6rem 2rem;
+            background: white;
+        }
+
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.25rem;
+            color: var(--color-neutral);
+            margin-bottom: 4rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+            margin-top: 3rem;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--color-primary);
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .service-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            border-color: var(--color-accent);
+        }
+
+        .service-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .service-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--color-primary);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .service-card:hover .service-icon {
+            background: var(--color-accent);
+            transform: scale(1.05);
+        }
+
+        .service-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 1rem;
+        }
+
+        .service-description {
+            color: var(--color-neutral);
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        /* Contact Section */
+        .contact-section {
+            position: relative;
+            z-index: 5;
+            padding: 6rem 2rem;
+            background: white;
+        }
+
+        @media (max-width: 768px) {
+            .contact-section > .section-container > div[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+                gap: 2rem !important;
+            }
+        }
+
+        /* Features Section */
+        .features-section {
+            position: relative;
+            z-index: 5;
+            padding: 6rem 2rem;
+            background: var(--color-background-light);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .feature-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--color-accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .feature-content h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-content p {
+            color: var(--color-neutral);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            position: relative;
+            z-index: 5;
+            padding: 6rem 2rem;
+            background: var(--color-primary);
+            color: white;
+            text-align: center;
+        }
+
+        .cta-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-text {
+            font-size: 1.25rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.95;
+            line-height: 1.8;
+        }
+
+        /* Footer */
+        .home-footer {
+            position: relative;
+            z-index: 5;
+            padding: 3rem 2rem;
+            background: var(--color-primary-dark);
+            color: white;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--color-accent);
+        }
+
+        .footer-copyright {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .home-header {
+                padding: 1rem 1.5rem;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.25rem;
+            }
+
+            .hero-section {
+                padding-top: 10rem; /* Ajuster pour mobile */
+            }
+
+            .home-nav {
+                gap: 1rem;
+            }
+
+            .home-nav a {
+                font-size: 0.9rem;
+                padding: 0.5rem;
+            }
+
+            .btn-primary-large,
+            .btn-secondary-large {
+                padding: 1rem 2rem;
+                font-size: 1rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-title {
+                font-size: 2rem;
+            }
+        }
+
+        /* Modal pour demande de devis */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--color-neutral);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--color-primary);
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 1rem;
+        }
+
+        .modal-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .modal-form input,
+        .modal-form textarea,
+        .modal-form select {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #E0E7FF;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s;
+            background: white;
+            color: var(--color-neutral-dark);
+            box-sizing: border-box;
+        }
+
+        .modal-form select {
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300387A' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-color: white;
+            padding-right: 3rem;
+        }
+
+        .modal-form select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(0, 56, 122, 0.1);
+        }
+
+        .modal-form input:focus,
+        .modal-form textarea:focus,
+        .modal-form select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(0, 56, 122, 0.1);
+        }
+
+        .modal-form textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        /* Styles pour les lignes d'articles */
+        .article-ligne {
+            background: var(--color-background-light);
+            border: 2px solid #E0E7FF;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .article-ligne-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .article-ligne-number {
+            font-weight: 700;
+            color: var(--color-primary);
+            font-size: 1.1rem;
+        }
+
+        .btn-remove-ligne {
+            background: var(--color-danger);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .btn-remove-ligne:hover {
+            background: #C00;
+            transform: scale(1.05);
+        }
+
+        .article-ligne-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .article-ligne-fields {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn-add-ligne {
+            background: var(--color-success);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            transition: all 0.3s;
+        }
+
+        .btn-add-ligne:hover {
+            background: #008040;
+            transform: translateY(-2px);
+        }
+
+        .section-title-form {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin: 2rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--color-primary);
+        }
+
+        /* Section Suivi sur la page d'accueil - Design moderne */
+        .tracking-section {
+            position: relative;
+            z-index: 5;
+            padding: 5rem 2rem;
+            background: white;
+            overflow: hidden;
+        }
+
+        .tracking-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--color-primary);
+            z-index: 1;
+        }
+
+        .tracking-section .section-container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .tracking-box-home {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 3rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tracking-box-home::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(0, 56, 122, 0.05);
+            z-index: 0;
+        }
+
+        .tracking-box-home > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .tracking-box-home form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 1.5rem;
+            align-items: flex-end;
+        }
+
+        .tracking-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tracking-input-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            font-size: 0.95rem;
+        }
+
+        .tracking-input-group label i {
+            color: var(--color-accent);
+            font-size: 1.1rem;
+        }
+
+        .tracking-input-group input {
+            width: 100%;
+            padding: 1.125rem 1.25rem;
+            border: 2px solid #E0E7FF;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+            color: var(--color-neutral-dark);
+            transition: all 0.3s;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        .tracking-input-group input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(0, 56, 122, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .tracking-input-group input::placeholder {
+            font-family: inherit;
+            font-weight: normal;
+            opacity: 0.6;
+        }
+
+        .tracking-input-group input[pattern] {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-track-home {
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            padding: 1.125rem 2.5rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .btn-track-home:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 102, 0, 0.4);
+        }
+
+        .btn-track-home:active {
+            transform: translateY(-1px);
+        }
+
+        .tracking-error {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            background: #FEE;
+            border: 2px solid var(--color-danger);
+            border-radius: 12px;
+            color: var(--color-danger);
+            text-align: center;
+            font-weight: 600;
+            animation: shake 0.5s;
+        }
+
+        .tracking-error.active {
+            display: block;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .tracking-section .section-title {
+            color: var(--color-primary);
+            margin-bottom: 0.75rem;
+            font-size: 2.25rem;
+        }
+
+        .tracking-section .section-subtitle {
+            color: var(--color-neutral);
+            margin-bottom: 2.5rem;
+            font-size: 1.125rem;
+        }
+
+        @media (max-width: 768px) {
+            .tracking-box-home {
+                padding: 2rem 1.5rem;
+            }
+
+            .tracking-box-home form {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+
+            .btn-track-home {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .tracking-section {
+                padding: 3rem 1.5rem;
+            }
+
+            .tracking-section .section-title {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="home-page">
+        <!-- Header -->
+        <header class="home-header">
+            <a href="home.html" class="home-logo">
+                <i class="fas fa-shopping-cart"></i>
+                <span>SilyProcure</span>
+            </a>
+            <nav class="home-nav">
+                <a href="#tracking">Suivi</a>
+                <a href="#services">Services</a>
+                <a href="#features">Fonctionnalités</a>
+                <a href="#contact">Contact</a>
+                <a href="index.html" id="auth-link" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span id="auth-text">Connexion</span>
+                </a>
+            </nav>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div style="background: rgba(255, 102, 0, 0.15); padding: 0.75rem 1.5rem; border-radius: 50px; display: inline-block; margin-bottom: 1.5rem; border: 2px solid rgba(255, 102, 0, 0.3);">
+                <span style="color: var(--color-accent); font-weight: 600; font-size: 0.9rem;">
+                    <i class="fas fa-bolt"></i> Devis en 30 min - 1h maximum
+                </span>
+            </div>
+            <h1 class="hero-title">
+                Vos achats professionnels simplifiés en un clic
+            </h1>
+            <p class="hero-subtitle">
+                <strong>Ne perdez plus de temps à chercher des fournisseurs.</strong> Décrivez vos besoins, nous nous occupons de tout : contact des fournisseurs, négociation et comparaison des offres. Vous recevez un devis consolidé optimal dans les <strong style="color: var(--color-accent);">30 minutes à 1 heure maximum</strong>.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem;">
+                <div style="background: rgba(255, 255, 255, 0.15); padding: 0.75rem 1.25rem; border-radius: 12px; backdrop-filter: blur(10px);">
+                    <i class="fas fa-check-circle" style="color: #4ade80; margin-right: 0.5rem;"></i>
+                    <span style="font-size: 0.9rem;">Aucun compte requis</span>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.15); padding: 0.75rem 1.25rem; border-radius: 12px; backdrop-filter: blur(10px);">
+                    <i class="fas fa-check-circle" style="color: #4ade80; margin-right: 0.5rem;"></i>
+                    <span style="font-size: 0.9rem;">Suivi en temps réel</span>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.15); padding: 0.75rem 1.25rem; border-radius: 12px; backdrop-filter: blur(10px);">
+                    <i class="fas fa-check-circle" style="color: #4ade80; margin-right: 0.5rem;"></i>
+                    <span style="font-size: 0.9rem;">100% gratuit pour les clients</span>
+                </div>
+            </div>
+            <div class="hero-cta">
+                <button class="btn-primary-large" onclick="openDevisModal()">
+                    <i class="fas fa-file-invoice"></i>
+                    Demander un devis gratuitement
+                </button>
+                <a href="#services" class="btn-secondary-large">
+                    <i class="fas fa-info-circle"></i>
+                    Découvrir comment ça marche
+                </a>
+            </div>
+        </section>
+
+        <!-- Section Suivi de Demande -->
+        <section id="tracking" class="tracking-section">
+            <div class="section-container">
+                <div style="text-align: center; margin-bottom: 3rem;">
+                    <h2 class="section-title">
+                        <i class="fas fa-shipping-fast" style="color: var(--color-accent); margin-right: 0.75rem;"></i> 
+                        Suivez votre demande de devis
+                    </h2>
+                    <p class="section-subtitle">
+                        Entrez votre référence et votre code de suivi pour consulter l'état de votre demande en temps réel
+                    </p>
+                </div>
+                <div class="tracking-box-home">
+                    <form id="trackingFormHome" onsubmit="trackFromHome(event)">
+                        <div class="tracking-input-group">
+                            <label for="ref-home">
+                                <i class="fas fa-barcode"></i> 
+                                <span>Référence de votre demande</span>
+                            </label>
+                            <input type="text" id="ref-home" name="reference" required 
+                                   placeholder="DEV-XXXXX-XXXXX" 
+                                   pattern="[A-Z0-9-]+"
+                                   autocomplete="off">
+                        </div>
+                        <div class="tracking-input-group">
+                            <label for="token-home">
+                                <i class="fas fa-key"></i> 
+                                <span>Code de suivi</span>
+                            </label>
+                            <input type="text" id="token-home" name="token" required 
+                                   placeholder="Code reçu par email/SMS/WhatsApp"
+                                   autocomplete="off">
+                        </div>
+                        <button type="submit" class="btn-track-home">
+                            <i class="fas fa-search"></i> 
+                            <span>Suivre</span>
+                        </button>
+                    </form>
+                    <div id="trackingErrorHome" class="tracking-error"></div>
+                    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #E0E7FF; text-align: center;">
+                        <p style="color: var(--color-neutral); font-size: 0.9rem; margin: 0;">
+                            <i class="fas fa-info-circle" style="color: var(--color-accent);"></i>
+                            Vous avez reçu ces informations par email, SMS ou WhatsApp après avoir soumis votre demande
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Services Section -->
+        <section id="services" class="services-section">
+            <div class="section-container">
+                <h2 class="section-title">Ce que nous proposons</h2>
+                <p class="section-subtitle">
+                    Des outils concrets pour améliorer votre gestion des achats
+                </p>
+                <div class="services-grid">
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h3 class="service-title">Devis ultra-rapide</h3>
+                        <p class="service-description">
+                            <strong>30 minutes à 1 heure maximum</strong> pour recevoir votre devis consolidé. Décrivez vos besoins en quelques clics, notre équipe contacte les fournisseurs et vous présente la meilleure offre. <strong>Gain de temps garanti !</strong>
+                        </p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <h3 class="service-title">Intermediation complète</h3>
+                        <p class="service-description">
+                            <strong>Vous ne contactez aucun fournisseur.</strong> Nous gérons tout : recherche des meilleurs fournisseurs, négociation des prix, comparaison des offres. Vous recevez une seule offre optimale, prête à valider.
+                        </p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <h3 class="service-title">Suivi transparent</h3>
+                        <p class="service-description">
+                            Suivez votre demande en temps réel avec une référence unique. Recevez des notifications par email, SMS ou WhatsApp à chaque étape : demande reçue, devis prêt, commande validée, livraison effectuée.
+                        </p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <h3 class="service-title">Aucun compte requis</h3>
+                        <p class="service-description">
+                            <strong>Commencez immédiatement</strong> sans créer de compte. Remplissez le formulaire, recevez votre référence de suivi, et suivez votre demande en toute simplicité. Accès sécurisé avec votre code de suivi.
+                        </p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3 class="service-title">Sécurisé et confidentiel</h3>
+                        <p class="service-description">
+                            Vos données sont protégées et chaque action est tracée. Suivi sécurisé avec référence unique et code confidentiel. Vos informations ne sont partagées qu'avec les fournisseurs pertinents pour votre demande.
+                        </p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <h3 class="service-title">100% gratuit</h3>
+                        <p class="service-description">
+                            <strong>Le service est entièrement gratuit pour les clients.</strong> Aucun frais caché, aucune commission à votre charge. Vous payez uniquement le prix du devis validé, rien de plus.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features-section">
+            <div class="section-container">
+                <div style="text-align: center; margin-bottom: 4rem;">
+                    <h2 class="section-title">Pourquoi choisir SilyProcure ?</h2>
+                    <p class="section-subtitle" style="font-size: 1.35rem; max-width: 800px; margin: 0 auto;">
+                        <strong style="color: var(--color-primary);">L'intermédiaire d'achats qui vous fait gagner du temps et de l'argent</strong>
+                    </p>
+                    <p style="color: var(--color-neutral); font-size: 1.1rem; margin-top: 1rem; max-width: 700px; margin-left: auto; margin-right: auto;">
+                        Au lieu de perdre des heures à chercher et contacter des fournisseurs, déposez une seule demande. Nous nous occupons de tout et vous présentons le meilleur devis.
+                    </p>
+                </div>
+
+                <!-- Catégorie 1: Gain de temps -->
+                <div style="margin-bottom: 4rem;">
+                    <div style="text-align: center; margin-bottom: 2.5rem;">
+                        <div style="display: inline-flex; align-items: center; gap: 0.75rem; background: rgba(255, 102, 0, 0.1); padding: 1rem 2rem; border-radius: 50px; border: 2px solid rgba(255, 102, 0, 0.2);">
+                            <i class="fas fa-clock" style="font-size: 1.5rem; color: var(--color-accent);"></i>
+                            <h3 style="margin: 0; font-size: 1.5rem; color: var(--color-primary); font-weight: 700;">Gain de temps garanti</h3>
+                        </div>
+                    </div>
+                    <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                        <div class="feature-item">
+                            <div class="feature-icon" style="background: var(--color-accent);">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">⚡ Devis en 30 min - 1h</h3>
+                                <p style="font-size: 1rem; line-height: 1.6;">Au lieu de contacter 10 ou 20 fournisseurs, déposez <strong>une seule demande</strong>. Notre équipe fait le travail et vous présente le meilleur devis en <strong style="color: var(--color-accent);">30 minutes à 1 heure maximum</strong>.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon" style="background: var(--color-accent);">
+                                <i class="fas fa-handshake"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">🎯 Offre optimale garantie</h3>
+                                <p style="font-size: 1rem; line-height: 1.6;">Nous <strong>négocions et comparons</strong> les offres de plusieurs fournisseurs. Vous recevez <strong>une seule offre consolidée</strong> avec les meilleures conditions, sans effort.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Catégorie 2: Simplicité -->
+                <div style="margin-bottom: 4rem;">
+                    <div style="text-align: center; margin-bottom: 2.5rem;">
+                        <div style="display: inline-flex; align-items: center; gap: 0.75rem; background: rgba(0, 56, 122, 0.1); padding: 1rem 2rem; border-radius: 50px; border: 2px solid rgba(0, 56, 122, 0.2);">
+                            <i class="fas fa-check-circle" style="font-size: 1.5rem; color: var(--color-primary);"></i>
+                            <h3 style="margin: 0; font-size: 1.5rem; color: var(--color-primary); font-weight: 700;">Simple et accessible</h3>
+                        </div>
+                    </div>
+                    <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                        <div class="feature-item">
+                            <div class="feature-icon" style="background: var(--color-primary);">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">✅ Aucun compte requis</h3>
+                                <p style="font-size: 1rem; line-height: 1.6;">Commencez <strong>immédiatement</strong> sans créer de compte. Remplissez le formulaire, recevez votre référence de suivi, c'est tout !</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon" style="background: var(--color-primary);">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">📱 Accessible partout</h3>
+                                <p style="font-size: 1rem; line-height: 1.6;">Utilisez la plateforme sur <strong>ordinateur, tablette ou smartphone</strong>. Suivez votre demande depuis n'importe où, à tout moment.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon" style="background: var(--color-primary);">
+                                <i class="fas fa-paperclip"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">📎 Joignez vos fichiers</h3>
+                                <p style="font-size: 1rem; line-height: 1.6;">Simplifiez votre demande en joignant des <strong>fichiers PDF, Excel ou images</strong>. Pas besoin de tout retaper !</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Catégorie 3: Transparence et sécurité -->
+                <div>
+                    <div style="text-align: center; margin-bottom: 2.5rem;">
+                        <div style="display: inline-flex; align-items: center; gap: 0.75rem; background: rgba(34, 197, 94, 0.1); padding: 1rem 2rem; border-radius: 50px; border: 2px solid rgba(34, 197, 94, 0.2);">
+                            <i class="fas fa-shield-alt" style="font-size: 1.5rem; color: #22c55e;"></i>
+                            <h3 style="margin: 0; font-size: 1.5rem; color: var(--color-primary); font-weight: 700;">Transparent et sécurisé</h3>
+                        </div>
+                    </div>
+                    <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                        <div class="feature-item">
+                            <div class="feature-icon" style="background: #22c55e;">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">🔔 Notifications en temps réel</h3>
+                                <p style="font-size: 1rem; line-height: 1.6;">Recevez des notifications par <strong>email, SMS ou WhatsApp</strong> à chaque étape : demande reçue, devis prêt, commande validée, livraison effectuée.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon" style="background: #22c55e;">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">🔒 Sécurisé et confidentiel</h3>
+                                <p style="font-size: 1rem; line-height: 1.6;">Vos données sont <strong>protégées</strong>. Suivi sécurisé avec référence unique. Vos informations ne sont partagées qu'avec les fournisseurs pertinents.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="cta-content">
+                <h2 class="cta-title">Prêt à simplifier vos achats ?</h2>
+                <p class="cta-text">
+                    <strong>Ne perdez plus de temps à chercher des fournisseurs.</strong> Décrivez vos besoins en quelques clics. Notre équipe s'occupe de tout : contact des fournisseurs, négociation et comparaison des offres. 
+                    <br><br>
+                    <span style="font-size: 1.1rem; color: var(--color-accent); font-weight: 600;">
+                        <i class="fas fa-bolt"></i> Devis consolidé optimal en 30 minutes à 1 heure maximum
+                    </span>
+                    <br><br>
+                    <strong style="color: white;">100% gratuit • Aucun compte requis • Suivi en temps réel</strong>
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem;">
+                    <button class="btn-primary-large" onclick="openDevisModal()" style="font-size: 1.125rem; padding: 1.5rem 3rem;">
+                        <i class="fas fa-paper-plane"></i>
+                        Demander un devis gratuitement
+                    </button>
+                    <a href="#tracking" class="btn-secondary-large" style="font-size: 1.125rem; padding: 1.5rem 3rem;">
+                        <i class="fas fa-search"></i>
+                        Suivre une demande existante
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="contact-section">
+            <div class="section-container">
+                <div style="text-align: center; margin-bottom: 3rem;">
+                    <h2 class="section-title">Contactez-nous</h2>
+                    <p class="section-subtitle">
+                        Une question ? Un besoin spécifique ? Notre équipe est là pour vous aider
+                    </p>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; max-width: 1200px; margin: 0 auto; align-items: start;">
+                    <!-- Informations de contact -->
+                    <div>
+                        <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+                            <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary); margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                                <i class="fas fa-info-circle" style="color: var(--color-accent);"></i>
+                                Nos coordonnées
+                            </h3>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                                <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                                    <div style="width: 50px; height: 50px; background: var(--color-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fas fa-envelope" style="color: white; font-size: 1.25rem;"></i>
+                                    </div>
+                                    <div>
+                                        <h4 style="font-size: 1rem; font-weight: 600; color: var(--color-primary); margin-bottom: 0.25rem;">Email</h4>
+                                        <p style="color: var(--color-neutral); font-size: 0.95rem; margin: 0;">
+                                            <a href="mailto:contact@silyprocure.com" style="color: var(--color-primary); text-decoration: none;">contact@silyprocure.com</a>
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                                    <div style="width: 50px; height: 50px; background: var(--color-accent); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fas fa-phone" style="color: white; font-size: 1.25rem;"></i>
+                                    </div>
+                                    <div>
+                                        <h4 style="font-size: 1rem; font-weight: 600; color: var(--color-primary); margin-bottom: 0.25rem;">Téléphone</h4>
+                                        <p style="color: var(--color-neutral); font-size: 0.95rem; margin: 0;">
+                                            <a href="tel:+224000000000" style="color: var(--color-primary); text-decoration: none;">+224 XXX XXX XXX</a>
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                                    <div style="width: 50px; height: 50px; background: #22c55e; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fab fa-whatsapp" style="color: white; font-size: 1.25rem;"></i>
+                                    </div>
+                                    <div>
+                                        <h4 style="font-size: 1rem; font-weight: 600; color: var(--color-primary); margin-bottom: 0.25rem;">WhatsApp</h4>
+                                        <p style="color: var(--color-neutral); font-size: 0.95rem; margin: 0;">
+                                            <a href="https://wa.me/224000000000" target="_blank" style="color: var(--color-primary); text-decoration: none;">Discuter sur WhatsApp</a>
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                                    <div style="width: 50px; height: 50px; background: var(--color-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fas fa-clock" style="color: white; font-size: 1.25rem;"></i>
+                                    </div>
+                                    <div>
+                                        <h4 style="font-size: 1rem; font-weight: 600; color: var(--color-primary); margin-bottom: 0.25rem;">Horaires</h4>
+                                        <p style="color: var(--color-neutral); font-size: 0.95rem; margin: 0;">
+                                            Lundi - Vendredi : 8h - 18h<br>
+                                            Samedi : 9h - 13h
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Formulaire de contact -->
+                    <div>
+                        <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+                            <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary); margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                                <i class="fas fa-paper-plane" style="color: var(--color-accent);"></i>
+                                Envoyez-nous un message
+                            </h3>
+                            
+                            <form id="contactForm" onsubmit="submitContactForm(event)" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="contact-nom" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-primary);">
+                                        <i class="fas fa-user"></i> Nom complet *
+                                    </label>
+                                    <input type="text" id="contact-nom" name="nom" required 
+                                           placeholder="Votre nom complet"
+                                           style="width: 100%; padding: 1rem; border: 2px solid #E0E7FF; border-radius: 12px; font-size: 1rem; font-family: inherit; transition: all 0.3s; box-sizing: border-box;"
+                                           onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 3px rgba(0, 56, 122, 0.1)'"
+                                           onblur="this.style.borderColor='#E0E7FF'; this.style.boxShadow='none'">
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="contact-email" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-primary);">
+                                        <i class="fas fa-envelope"></i> Email *
+                                    </label>
+                                    <input type="email" id="contact-email" name="email" required 
+                                           placeholder="votre.email@exemple.com"
+                                           style="width: 100%; padding: 1rem; border: 2px solid #E0E7FF; border-radius: 12px; font-size: 1rem; font-family: inherit; transition: all 0.3s; box-sizing: border-box;"
+                                           onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 3px rgba(0, 56, 122, 0.1)'"
+                                           onblur="this.style.borderColor='#E0E7FF'; this.style.boxShadow='none'">
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="contact-telephone" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-primary);">
+                                        <i class="fas fa-phone"></i> Téléphone
+                                    </label>
+                                    <input type="tel" id="contact-telephone" name="telephone" 
+                                           placeholder="+224 XXX XXX XXX"
+                                           style="width: 100%; padding: 1rem; border: 2px solid #E0E7FF; border-radius: 12px; font-size: 1rem; font-family: inherit; transition: all 0.3s; box-sizing: border-box;"
+                                           onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 3px rgba(0, 56, 122, 0.1)'"
+                                           onblur="this.style.borderColor='#E0E7FF'; this.style.boxShadow='none'">
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="contact-sujet" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-primary);">
+                                        <i class="fas fa-tag"></i> Sujet *
+                                    </label>
+                                    <select id="contact-sujet" name="sujet" required
+                                            style="width: 100%; padding: 1rem; border: 2px solid #E0E7FF; border-radius: 12px; font-size: 1rem; font-family: inherit; transition: all 0.3s; box-sizing: border-box; cursor: pointer; background: white;"
+                                            onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 3px rgba(0, 56, 122, 0.1)'"
+                                            onblur="this.style.borderColor='#E0E7FF'; this.style.boxShadow='none'">
+                                        <option value="">Sélectionnez un sujet</option>
+                                        <option value="demande-info">Demande d'information</option>
+                                        <option value="support">Support technique</option>
+                                        <option value="partenariat">Partenariat</option>
+                                        <option value="autre">Autre</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="contact-message" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-primary);">
+                                        <i class="fas fa-comment-alt"></i> Message *
+                                    </label>
+                                    <textarea id="contact-message" name="message" required rows="5"
+                                              placeholder="Décrivez votre demande ou votre question..."
+                                              style="width: 100%; padding: 1rem; border: 2px solid #E0E7FF; border-radius: 12px; font-size: 1rem; font-family: inherit; transition: all 0.3s; box-sizing: border-box; resize: vertical;"
+                                              onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 3px rgba(0, 56, 122, 0.1)'"
+                                              onblur="this.style.borderColor='#E0E7FF'; this.style.boxShadow='none'"></textarea>
+                                </div>
+                                
+                                <button type="submit" class="btn-primary-large" style="width: 100%; margin-top: 0.5rem; padding: 1.25rem; font-size: 1.125rem; border: none; cursor: pointer;">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Envoyer le message
+                                </button>
+                                
+                                <div id="contact-form-message" style="margin-top: 1rem; padding: 1rem; border-radius: 12px; display: none;"></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="home-footer">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="#tracking">Suivi</a>
+                    <a href="#services">Services</a>
+                    <a href="#features">Fonctionnalités</a>
+                    <a href="#contact">Contact</a>
+                    <a href="index.html">Connexion</a>
+                </div>
+                <div class="footer-copyright">
+                    <p>&copy; 2024 SilyProcure - Tous droits réservés</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal Demande de Devis -->
+    <div id="devisModal" class="modal-overlay" onclick="closeModalOnOverlay(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeDevisModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="modal-title">Demander un devis</h2>
+            <p style="color: var(--color-neutral); margin-bottom: 2rem;">
+                Remplissez le formulaire ci-dessous avec vos besoins. Notre équipe traite votre demande rapidement et vous présente un devis consolidé dans les <strong style="color: var(--color-accent);">30 minutes à 1 heure maximum</strong>.
+            </p>
+            <form id="devisForm" class="modal-form" onsubmit="submitDevisRequest(event)">
+                <!-- Informations du client -->
+                <h3 class="section-title-form"><i class="fas fa-user"></i> Vos informations</h3>
+                <div class="form-group">
+                    <label for="nom"><i class="fas fa-user"></i> Nom complet *</label>
+                    <input type="text" id="nom" name="nom" required placeholder="Votre nom">
+                </div>
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Email *</label>
+                    <input type="email" id="email" name="email" required placeholder="votre.email@exemple.com">
+                </div>
+                <div class="form-group">
+                    <label for="telephone"><i class="fas fa-phone"></i> Téléphone *</label>
+                    <input type="tel" id="telephone" name="telephone" required placeholder="+224 XXX XXX XXX">
+                </div>
+                <div class="form-group" style="background: var(--color-background-light); padding: 1rem; border-radius: 12px; border-left: 4px solid var(--color-accent);">
+                    <label for="mode_notification" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <i class="fas fa-bell" style="color: var(--color-accent);"></i> 
+                        <span>Mode de notification *</span>
+                    </label>
+                    <select id="mode_notification" name="mode_notification" required style="font-weight: 500;">
+                        <option value="email">Email</option>
+                        <option value="sms">SMS</option>
+                        <option value="whatsapp">WhatsApp</option>
+                    </select>
+                    <small style="color: var(--color-neutral); font-size: 0.85rem; margin-top: 0.5rem; display: block; font-style: italic;">
+                        <i class="fas fa-info-circle"></i> Vous recevrez la référence de suivi et le lien de suivi par ce moyen
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label for="entreprise"><i class="fas fa-building"></i> Entreprise</label>
+                    <input type="text" id="entreprise" name="entreprise" placeholder="Nom de votre entreprise">
+                </div>
+
+                <!-- Articles demandés -->
+                <h3 class="section-title-form"><i class="fas fa-box"></i> Articles demandés</h3>
+                <p style="color: var(--color-neutral); font-size: 0.9rem; margin-bottom: 1rem;">
+                    Ajoutez les articles pour lesquels vous souhaitez recevoir un devis. Vous pouvez ajouter plusieurs lignes.
+                </p>
+                <div id="articles-container">
+                    <!-- Les lignes d'articles seront ajoutées ici dynamiquement -->
+                </div>
+                <button type="button" class="btn-add-ligne" onclick="addArticleLigne()">
+                    <i class="fas fa-plus"></i> Ajouter un article
+                </button>
+
+                <!-- Adresse de livraison -->
+                <h3 class="section-title-form"><i class="fas fa-truck"></i> Adresse de livraison</h3>
+                <div class="form-group">
+                    <label for="adresse_livraison"><i class="fas fa-map-marker-alt"></i> Adresse complète *</label>
+                    <textarea id="adresse_livraison" name="adresse_livraison" required rows="3" 
+                              placeholder="Rue, quartier, numéro..."></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="ville_livraison"><i class="fas fa-city"></i> Ville *</label>
+                        <input type="text" id="ville_livraison" name="ville_livraison" required placeholder="Conakry">
+                    </div>
+                    <div class="form-group">
+                        <label for="pays_livraison"><i class="fas fa-globe"></i> Pays *</label>
+                        <input type="text" id="pays_livraison" name="pays_livraison" required value="Guinée" placeholder="Guinée">
+                    </div>
+                </div>
+                
+                <!-- Géolocalisation optionnelle -->
+                <div class="form-group" style="background: var(--color-background-light); padding: 1rem; border-radius: 12px; border-left: 4px solid var(--color-accent);">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <i class="fas fa-map-marked-alt" style="color: var(--color-accent);"></i> 
+                        <span>Géolocalisation (optionnel)</span>
+                    </label>
+                    <p style="color: var(--color-neutral); font-size: 0.85rem; margin-bottom: 1rem; font-style: italic;">
+                        <i class="fas fa-info-circle"></i> 
+                        Partagez votre position GPS pour faciliter la livraison. Vos coordonnées restent confidentielles.
+                    </p>
+                    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-secondary" onclick="getCurrentLocation()" id="btn-geoloc" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-crosshairs"></i> Utiliser ma position
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="clearGeolocation()" id="btn-clear-geoloc" style="display: none; flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-times"></i> Effacer
+                        </button>
+                        <div id="geoloc-status" style="display: none; padding: 0.5rem 1rem; background: white; border-radius: 8px; border: 1px solid #ddd; flex: 1; min-width: 200px;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-success);">
+                                <i class="fas fa-check-circle"></i>
+                                <span style="font-size: 0.9rem; font-weight: 500;">Position enregistrée</span>
+                            </div>
+                            <div id="geoloc-coords" style="font-size: 0.8rem; color: var(--color-neutral); margin-top: 0.25rem;"></div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="latitude" name="latitude">
+                    <input type="hidden" id="longitude" name="longitude">
+                </div>
+
+                <!-- Message optionnel -->
+                <div class="form-group" style="margin-top: 2rem;">
+                    <label for="message"><i class="fas fa-comment"></i> Message ou commentaires (optionnel)</label>
+                    <textarea id="message" name="message" rows="3" 
+                              placeholder="Informations complémentaires, délais souhaités, conditions particulières..."></textarea>
+                </div>
+
+                <!-- Upload de fichiers -->
+                <div class="form-group" style="margin-top: 2rem; background: var(--color-background-light); padding: 1.5rem; border-radius: 12px; border: 2px dashed var(--color-primary);">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: var(--color-primary); font-weight: 600;">
+                        <i class="fas fa-paperclip"></i> 
+                        <span>Fichiers joints (optionnel)</span>
+                    </label>
+                    <p style="color: var(--color-neutral); font-size: 0.9rem; margin-bottom: 1rem;">
+                        <i class="fas fa-info-circle"></i> 
+                        Vous pouvez joindre des fichiers PDF, Excel ou des images pour faciliter notre compréhension de vos besoins.
+                        Formats acceptés : PDF, Excel (.xlsx, .xls), Images (JPG, PNG, GIF, WebP)
+                    </p>
+                    <div id="file-upload-area" style="position: relative;">
+                        <input type="file" id="fichiers" name="fichiers" multiple 
+                               accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.webp"
+                               style="display: none;"
+                               onchange="handleFileSelect(event)">
+                        <div id="file-drop-zone" 
+                             style="border: 2px dashed var(--color-primary); border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s; background: white;"
+                             ondrop="handleFileDrop(event)" 
+                             ondragover="handleDragOver(event)" 
+                             ondragleave="handleDragLeave(event)"
+                             onclick="document.getElementById('fichiers').click()">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: var(--color-primary); margin-bottom: 1rem;"></i>
+                            <p style="color: var(--color-neutral); margin: 0.5rem 0; font-weight: 500;">
+                                Cliquez ici ou glissez-déposez vos fichiers
+                            </p>
+                            <p style="color: var(--color-neutral); font-size: 0.85rem; margin: 0;">
+                                Taille maximale : 10 MB par fichier
+                            </p>
+                        </div>
+                        <div id="file-list" style="margin-top: 1rem; display: none;">
+                            <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--color-neutral);">
+                                <i class="fas fa-list"></i> Fichiers sélectionnés :
+                            </h4>
+                            <div id="file-items" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary-large" style="width: 100%; margin-top: 1.5rem;">
+                    <i class="fas fa-paper-plane"></i>
+                    Envoyer la demande de devis
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Fonction de déconnexion
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+
+        // Vérifier si l'utilisateur est connecté et mettre à jour le menu
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const authLink = document.getElementById('auth-link');
+            const authText = document.getElementById('auth-text');
+            
+            if (token && (user.role === 'admin' || user.role === 'superviseur')) {
+                // L'utilisateur est connecté (admin ou superviseur)
+                // Modifier le bouton pour afficher "Déconnexion"
+                if (authLink && authText) {
+                    authLink.href = '#';
+                    authLink.onclick = (e) => {
+                        e.preventDefault();
+                        logout();
+                    };
+                    authLink.innerHTML = `
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span id="auth-text">Déconnexion</span>
+                    `;
+                    authText.textContent = 'Déconnexion';
+                    
+                    // Ajouter un message de bienvenue dans le nav
+                    const nav = document.querySelector('.home-nav');
+                    if (nav) {
+                        const userInfo = document.createElement('span');
+                        userInfo.style.cssText = 'color: white; font-size: 0.9rem; margin-right: 0.5rem;';
+                        userInfo.textContent = `Bonjour, ${user.prenom || user.nom || 'Utilisateur'}`;
+                        nav.insertBefore(userInfo, authLink);
+                        
+                        // Ajouter un lien vers le dashboard
+                        const dashboardLink = document.createElement('a');
+                        dashboardLink.href = 'dashboard.html';
+                        dashboardLink.className = 'btn-login';
+                        dashboardLink.style.cssText = 'padding: 0.5rem 1rem; font-size: 0.9rem; margin-right: 0.5rem;';
+                        dashboardLink.innerHTML = '<i class="fas fa-tachometer-alt"></i> Dashboard';
+                        nav.insertBefore(dashboardLink, authLink);
+                    }
+                }
+            } else {
+                // L'utilisateur n'est pas connecté ou n'est pas admin/superviseur
+                // Le bouton reste "Se connecter"
+                if (authLink) {
+                    authLink.href = 'index.html';
+                    authLink.onclick = null;
+                }
+            }
+        });
+
+        // Compteur pour les lignes d'articles
+        let articleLigneCount = 0;
+
+        // Ouvrir le modal de demande de devis
+        function openDevisModal() {
+            document.getElementById('devisModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            // Réinitialiser le formulaire et ajouter une première ligne
+            document.getElementById('devisForm').reset();
+            document.getElementById('articles-container').innerHTML = '';
+            articleLigneCount = 0;
+            selectedFiles = [];
+            displayFileList();
+            clearGeolocation();
+            addArticleLigne(); // Ajouter une première ligne par défaut
+        }
+
+        // Fermer le modal
+        function closeDevisModal() {
+            document.getElementById('devisModal').classList.remove('active');
+            document.body.style.overflow = '';
+            // Réinitialiser le formulaire
+            document.getElementById('devisForm').reset();
+            document.getElementById('articles-container').innerHTML = '';
+            articleLigneCount = 0;
+            selectedFiles = [];
+            displayFileList();
+            clearGeolocation();
+        }
+
+        // Géolocalisation
+        function getCurrentLocation() {
+            const btn = document.getElementById('btn-geoloc');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Récupération...';
+
+            if (!navigator.geolocation) {
+                alert('❌ La géolocalisation n\'est pas supportée par votre navigateur.');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    document.getElementById('latitude').value = lat;
+                    document.getElementById('longitude').value = lng;
+                    
+                    // Afficher le statut
+                    document.getElementById('geoloc-status').style.display = 'block';
+                    document.getElementById('geoloc-coords').textContent = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+                    document.getElementById('btn-clear-geoloc').style.display = 'flex';
+                    
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    
+                    // Afficher un message de succès (si Toast est disponible)
+                    if (typeof Toast !== 'undefined' && Toast.success) {
+                        Toast.success('Position GPS enregistrée avec succès');
+                    }
+                },
+                (error) => {
+                    let errorMsg = 'Impossible de récupérer votre position';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMsg = 'Permission de géolocalisation refusée';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMsg = 'Position indisponible';
+                            break;
+                        case error.TIMEOUT:
+                            errorMsg = 'Délai d\'attente dépassé';
+                            break;
+                    }
+                    
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    
+                    if (typeof Toast !== 'undefined' && Toast.error) {
+                        Toast.error(errorMsg);
+                    } else {
+                        alert('❌ ' + errorMsg);
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        function clearGeolocation() {
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+            document.getElementById('geoloc-status').style.display = 'none';
+            document.getElementById('btn-clear-geoloc').style.display = 'none';
+        }
+
+        // Ajouter une ligne d'article
+        function addArticleLigne() {
+            articleLigneCount++;
+            const container = document.getElementById('articles-container');
+            const ligneDiv = document.createElement('div');
+            ligneDiv.className = 'article-ligne';
+            ligneDiv.id = `article-ligne-${articleLigneCount}`;
+            
+            ligneDiv.innerHTML = `
+                <div class="article-ligne-header">
+                    <span class="article-ligne-number">Article #${articleLigneCount}</span>
+                    ${articleLigneCount > 1 ? `<button type="button" class="btn-remove-ligne" onclick="removeArticleLigne(${articleLigneCount})">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>` : ''}
+                </div>
+                <div class="article-ligne-fields">
+                    <div class="form-group">
+                        <label>Description de l'article *</label>
+                        <input type="text" name="article-description[]" required 
+                               placeholder="Ex: Ordinateur portable, Riz, Produit chimique...">
+                    </div>
+                    <div class="form-group">
+                        <label>Secteur/Catégorie *</label>
+                        <select name="article-secteur[]" required>
+                            <option value="">Sélectionner un secteur</option>
+                            <option value="alimentation">Alimentation</option>
+                            <option value="electronique">Électronique</option>
+                            <option value="chimique">Chimique</option>
+                            <option value="informatique">Informatique</option>
+                            <option value="bureau">Fournitures de bureau</option>
+                            <option value="construction">Construction</option>
+                            <option value="textile">Textile</option>
+                            <option value="pharmaceutique">Pharmaceutique</option>
+                            <option value="automobile">Automobile</option>
+                            <option value="agriculture">Agriculture</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantité *</label>
+                        <input type="number" name="article-quantite[]" required min="0.01" step="0.01" 
+                               placeholder="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Unité</label>
+                        <select name="article-unite[]">
+                            <option value="unité">Unité</option>
+                            <option value="kg">Kilogramme (kg)</option>
+                            <option value="g">Gramme (g)</option>
+                            <option value="L">Litre (L)</option>
+                            <option value="mL">Millilitre (mL)</option>
+                            <option value="m">Mètre (m)</option>
+                            <option value="m²">Mètre carré (m²)</option>
+                            <option value="m³">Mètre cube (m³)</option>
+                            <option value="paquet">Paquet</option>
+                            <option value="carton">Carton</option>
+                            <option value="palette">Palette</option>
+                            <option value="lot">Lot</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(ligneDiv);
+        }
+
+        // Supprimer une ligne d'article
+        function removeArticleLigne(id) {
+            const ligne = document.getElementById(`article-ligne-${id}`);
+            if (ligne) {
+                ligne.remove();
+                // Renuméroter les lignes restantes
+                updateArticleLigneNumbers();
+            }
+        }
+
+        // Renuméroter les lignes d'articles
+        function updateArticleLigneNumbers() {
+            const lignes = document.querySelectorAll('.article-ligne');
+            lignes.forEach((ligne, index) => {
+                const number = index + 1;
+                const header = ligne.querySelector('.article-ligne-header');
+                if (header) {
+                    const numberSpan = header.querySelector('.article-ligne-number');
+                    if (numberSpan) {
+                        numberSpan.textContent = `Article #${number}`;
+                    }
+                    // Afficher le bouton supprimer si plus d'une ligne
+                    const removeBtn = header.querySelector('.btn-remove-ligne');
+                    if (number > 1) {
+                        if (!removeBtn) {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'btn-remove-ligne';
+                            btn.onclick = () => removeArticleLigne(number);
+                            btn.innerHTML = '<i class="fas fa-trash"></i> Supprimer';
+                            header.appendChild(btn);
+                        } else {
+                            removeBtn.onclick = () => removeArticleLigne(number);
+                        }
+                    } else if (removeBtn) {
+                        removeBtn.remove();
+                    }
+                }
+            });
+        }
+
+        // Fermer en cliquant sur l'overlay
+        function closeModalOnOverlay(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                closeDevisModal();
+            }
+        }
+
+        // Gestion des fichiers uploadés
+        let selectedFiles = [];
+
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            addFiles(files);
+        }
+
+        function handleFileDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const dropZone = document.getElementById('file-drop-zone');
+            dropZone.style.borderColor = 'var(--color-primary)';
+            dropZone.style.background = 'white';
+            
+            const files = Array.from(event.dataTransfer.files);
+            addFiles(files);
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const dropZone = document.getElementById('file-drop-zone');
+            dropZone.style.borderColor = 'var(--color-accent)';
+            dropZone.style.background = 'var(--color-background-light)';
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const dropZone = document.getElementById('file-drop-zone');
+            dropZone.style.borderColor = 'var(--color-primary)';
+            dropZone.style.background = 'white';
+        }
+
+        function addFiles(files) {
+            const maxSize = 10 * 1024 * 1024; // 10 MB
+            const allowedTypes = [
+                'application/pdf',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.ms-excel',
+                'image/jpeg',
+                'image/jpg',
+                'image/png',
+                'image/gif',
+                'image/webp'
+            ];
+
+            files.forEach(file => {
+                // Vérifier la taille
+                if (file.size > maxSize) {
+                    alert(`❌ Le fichier "${file.name}" dépasse la taille maximale de 10 MB.`);
+                    return;
+                }
+
+                // Vérifier le type
+                if (!allowedTypes.includes(file.type)) {
+                    alert(`❌ Le fichier "${file.name}" n'est pas dans un format accepté. Formats acceptés : PDF, Excel, Images.`);
+                    return;
+                }
+
+                // Vérifier si le fichier n'est pas déjà sélectionné
+                if (selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
+                    return;
+                }
+
+                selectedFiles.push(file);
+            });
+
+            displayFileList();
+        }
+
+        function displayFileList() {
+            const fileList = document.getElementById('file-list');
+            const fileItems = document.getElementById('file-items');
+
+            if (selectedFiles.length === 0) {
+                fileList.style.display = 'none';
+                return;
+            }
+
+            fileList.style.display = 'block';
+            fileItems.innerHTML = selectedFiles.map((file, index) => {
+                const fileIcon = getFileIcon(file.type);
+                const fileSize = formatFileSize(file.size);
+                return `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: white; border-radius: 8px; border: 1px solid #ddd;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
+                            <i class="${fileIcon}" style="font-size: 1.5rem; color: var(--color-primary);"></i>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 500; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    ${file.name}
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--color-neutral);">
+                                    ${fileSize}
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="removeFile(${index})" 
+                                style="background: none; border: none; color: var(--color-danger); cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;"
+                                onmouseover="this.style.background='#fee2e2'" 
+                                onmouseout="this.style.background='none'">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getFileIcon(mimeType) {
+            if (mimeType === 'application/pdf') return 'fas fa-file-pdf';
+            if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fas fa-file-excel';
+            if (mimeType.includes('image')) return 'fas fa-file-image';
+            return 'fas fa-file';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            displayFileList();
+            // Réinitialiser l'input file
+            document.getElementById('fichiers').value = '';
+        }
+
+        // Soumettre le formulaire de demande de devis
+        async function submitDevisRequest(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            // Collecter les lignes d'articles
+            const articles = [];
+            const descriptions = formData.getAll('article-description[]');
+            const secteurs = formData.getAll('article-secteur[]');
+            const quantites = formData.getAll('article-quantite[]');
+            const unites = formData.getAll('article-unite[]');
+            
+            for (let i = 0; i < descriptions.length; i++) {
+                if (descriptions[i] && descriptions[i].trim()) {
+                    articles.push({
+                        description: descriptions[i].trim(),
+                        secteur: secteurs[i] || null,
+                        quantite: parseFloat(quantites[i]) || 1,
+                        unite: unites[i] || 'unité',
+                        ordre: i + 1
+                    });
+                }
+            }
+            
+            // Vérifier qu'au moins un article est présent
+            if (articles.length === 0) {
+                alert('❌ Veuillez ajouter au moins un article à votre demande.');
+                return;
+            }
+            
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            
+            // Désactiver le bouton et afficher le chargement
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+            
+            try {
+                // Créer un FormData pour envoyer les fichiers
+                const uploadFormData = new FormData();
+                uploadFormData.append('nom', formData.get('nom'));
+                uploadFormData.append('email', formData.get('email'));
+                uploadFormData.append('telephone', formData.get('telephone'));
+                uploadFormData.append('entreprise', formData.get('entreprise') || '');
+                uploadFormData.append('message', formData.get('message') || '');
+                uploadFormData.append('adresse_livraison', formData.get('adresse_livraison'));
+                uploadFormData.append('ville_livraison', formData.get('ville_livraison'));
+                uploadFormData.append('pays_livraison', formData.get('pays_livraison'));
+                uploadFormData.append('mode_notification', formData.get('mode_notification') || 'email');
+                
+                // Ajouter géolocalisation si disponible
+                const latitude = document.getElementById('latitude').value;
+                const longitude = document.getElementById('longitude').value;
+                if (latitude && longitude) {
+                    uploadFormData.append('latitude', latitude);
+                    uploadFormData.append('longitude', longitude);
+                }
+                
+                uploadFormData.append('articles', JSON.stringify(articles));
+                
+                // Ajouter les fichiers
+                selectedFiles.forEach((file, index) => {
+                    uploadFormData.append(`fichiers`, file);
+                });
+
+                // Envoyer les données à l'API backend
+                const response = await fetch('/api/contact/devis-request', {
+                    method: 'POST',
+                    body: uploadFormData
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Afficher un message de succès avec la référence
+                    const message = result.reference 
+                        ? `✅ ${result.message}\n\nRéférence: ${result.reference}\n\nVous pouvez suivre votre demande en utilisant cette référence et le code que vous recevrez.`
+                        : result.message;
+                    
+                    alert(message);
+                    
+                    // Si une URL de suivi est fournie, proposer d'y aller
+                    if (result.trackingUrl) {
+                        if (confirm('Voulez-vous accéder à la page de suivi maintenant ?')) {
+                            window.open(result.trackingUrl, '_blank');
+                        }
+                    }
+                    
+                    // Réinitialiser le formulaire
+                    form.reset();
+                    selectedFiles = [];
+                    displayFileList();
+                    closeDevisModal();
+                } else {
+                    alert('❌ ' + (result.error || 'Une erreur est survenue lors de l\'envoi. Veuillez réessayer.'));
+                }
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('❌ Une erreur est survenue lors de l\'envoi. Veuillez réessayer ou nous contacter directement.');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            }
+        }
+
+        // Fonction pour suivre une demande depuis la page d'accueil
+        function trackFromHome(event) {
+            event.preventDefault();
+            
+            const reference = document.getElementById('ref-home').value.trim().toUpperCase();
+            const token = document.getElementById('token-home').value.trim();
+            const errorDiv = document.getElementById('trackingErrorHome');
+
+            if (!reference || !token) {
+                errorDiv.textContent = 'Veuillez remplir tous les champs';
+                errorDiv.classList.add('active');
+                return;
+            }
+
+            // Masquer l'erreur précédente
+            errorDiv.classList.remove('active');
+
+            // Rediriger vers la page de suivi avec les paramètres
+            window.location.href = `/suivi?ref=${encodeURIComponent(reference)}&token=${encodeURIComponent(token)}`;
+        }
+
+        // Smooth scroll pour les liens d'ancrage
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Animation au scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observer les cartes de services
+        document.querySelectorAll('.service-card, .feature-item').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+            observer.observe(el);
+        });
+
+        // Fonction pour soumettre le formulaire de contact
+        async function submitContactForm(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const messageDiv = document.getElementById('contact-form-message');
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            
+            // Désactiver le bouton et afficher le chargement
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+            messageDiv.style.display = 'none';
+            
+            try {
+                // Préparer les données
+                const data = {
+                    nom: formData.get('nom'),
+                    email: formData.get('email'),
+                    telephone: formData.get('telephone') || null,
+                    sujet: formData.get('sujet'),
+                    message: formData.get('message')
+                };
+                
+                // Envoyer la requête à l'API
+                const response = await fetch('/api/contact/message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erreur lors de l\'envoi du message');
+                }
+                
+                const result = await response.json();
+                
+                // Afficher le message de succès
+                messageDiv.style.display = 'block';
+                messageDiv.style.background = '#d1fae5';
+                messageDiv.style.border = '2px solid #22c55e';
+                messageDiv.style.color = '#065f46';
+                messageDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-check-circle" style="font-size: 1.25rem;"></i>
+                        <div>
+                            <strong>Message envoyé avec succès !</strong>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Nous vous répondrons dans les plus brefs délais.</p>
+                        </div>
+                    </div>
+                `;
+                
+                // Réinitialiser le formulaire
+                form.reset();
+                
+                // Scroll vers le message
+                messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+            } catch (error) {
+                console.error('Erreur envoi message:', error);
+                
+                // Afficher le message d'erreur
+                messageDiv.style.display = 'block';
+                messageDiv.style.background = '#fee2e2';
+                messageDiv.style.border = '2px solid #ef4444';
+                messageDiv.style.color = '#991b1b';
+                messageDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 1.25rem;"></i>
+                        <div>
+                            <strong>Erreur lors de l'envoi</strong>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Veuillez réessayer ou nous contacter directement par email ou téléphone.</p>
+                        </div>
+                    </div>
+                `;
+                
+                messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } finally {
+                // Réactiver le bouton
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+            }
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SilyProcure - Connexion</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link rel="stylesheet" href="css/animations.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: #00387A;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes slide {
+            0% {
+                transform: translate(0, 0);
+            }
+            100% {
+                transform: translate(100px, 100px);
+            }
+        }
+
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 24px;
+            padding: 3rem;
+            width: auto;
+            min-width: 400px;
+            max-width: 480px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #00387A;
+            border-radius: 24px 24px 0 0;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-box .logo {
+            text-align: center;
+            font-size: 2.75rem;
+            font-weight: 800;
+            color: #00387A;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.03em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .login-box .logo i {
+            color: #FF6600;
+            font-size: 2.5rem;
+            animation: floatIcon 3s ease-in-out infinite;
+        }
+
+        @keyframes floatIcon {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-8px) rotate(5deg);
+            }
+        }
+
+        .login-box h1 {
+            text-align: center;
+            color: #00387A;
+            margin-bottom: 0.5rem;
+            font-size: 1.875rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .login-box .subtitle {
+            text-align: center;
+            color: #6B7280;
+            margin-bottom: 2.5rem;
+            font-size: 0.9375rem;
+            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        .login-box .form-group {
+            margin-bottom: 1.75rem;
+            position: relative;
+        }
+
+        .login-box .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #00387A;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .login-box .form-group .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 3.25rem;
+            color: #6B7280;
+            font-size: 1.125rem;
+            transition: all 0.3s;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .login-box .form-group input:focus ~ .input-icon,
+        .login-box .form-group input:not(:placeholder-shown) ~ .input-icon {
+            color: #00387A;
+        }
+
+        .login-box .form-group input {
+            width: 100%;
+            padding: 1rem 1.25rem 1rem 3rem;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+            background: #F9FAFB;
+            color: #1F2937;
+        }
+
+        .login-box .form-group input:focus {
+            outline: none;
+            border-color: #00387A;
+            box-shadow: 0 0 0 4px rgba(0, 56, 122, 0.1);
+            background: white;
+            transform: translateY(-2px);
+        }
+
+
+        .login-box .form-group input::placeholder {
+            color: #94a3b8;
+        }
+
+        .login-box button[type="submit"] {
+            width: auto;
+            min-width: 200px;
+            padding: 1.125rem 3rem;
+            background: #00387A;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 56, 122, 0.3);
+            margin: 0.5rem auto 0;
+            text-transform: none;
+            letter-spacing: 0.02em;
+            position: relative;
+            overflow: hidden;
+            display: block;
+        }
+
+        .login-box button[type="submit"]::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.5s;
+        }
+
+        .login-box button[type="submit"]:hover::before {
+            left: 100%;
+        }
+
+        .login-box button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 56, 122, 0.4);
+            background: #00387A;
+        }
+
+        .login-box button[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        .login-box button[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        .login-box button[type="submit"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid #E5E7EB;
+            color: #6B7280;
+            font-size: 0.875rem;
+        }
+
+        .login-footer a {
+            color: #00387A;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .login-footer a:hover {
+            color: #FF6600;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .login-box {
+                padding: 2rem 1.5rem;
+                border-radius: 20px;
+                min-width: auto;
+                width: calc(100% - 2rem);
+                max-width: 100%;
+                margin: 1rem;
+            }
+
+            .login-box button[type="submit"] {
+                width: 100%;
+                min-width: auto;
+            }
+
+            .login-box .logo {
+                font-size: 2.25rem;
+            }
+
+            .login-box .logo i {
+                font-size: 2rem;
+            }
+
+            .login-box h1 {
+                font-size: 1.625rem;
+            }
+
+            .login-box .subtitle {
+                font-size: 0.875rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-box {
+                padding: 1.75rem 1.25rem;
+                border-radius: 16px;
+            }
+        }
+
+        /* Animation de chargement */
+        .loading-spinner-login {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="logo">
+                <i class="fas fa-rocket"></i>
+                <span>SilyProcure</span>
+            </div>
+            <h1>Bienvenue</h1>
+            <p class="subtitle">
+                Connectez-vous pour accéder à votre espace de gestion
+            </p>
+            <div id="alert-container"></div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="votre.email@exemple.com"
+                           autocomplete="email">
+                    <i class="fas fa-envelope input-icon"></i>
+                </div>
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Votre mot de passe"
+                           autocomplete="current-password">
+                    <i class="fas fa-lock input-icon"></i>
+                </div>
+                <button type="submit" class="btn btn-primary" id="login-submit">
+                    <span id="login-text">Se connecter</span>
+                </button>
+            </form>
+            <div class="login-footer">
+                <p>© 2024 SilyProcure - Plateforme de gestion d'achats</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script>
+        // Vérifier si l'utilisateur est déjà connecté
+        const token = localStorage.getItem('token');
+        if (token) {
+            window.location.href = 'dashboard.html';
+        }
+
+        // Gestion du formulaire de connexion
+        const loginForm = document.getElementById('login-form');
+        const submitButton = document.getElementById('login-submit');
+        const loginText = document.getElementById('login-text');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Désactiver le bouton et afficher le chargement
+            submitButton.disabled = true;
+            loginText.innerHTML = '<span class="loading-spinner-login"></span>Connexion en cours...';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, mot_de_passe: password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    Toast.success('Connexion réussie ! Redirection...');
+                    
+                    // Animation de succès
+                    submitButton.style.background = '#10B981';
+                    loginText.innerHTML = '<i class="fas fa-check"></i> Connexion réussie';
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    // Réactiver le bouton
+                    submitButton.disabled = false;
+                    loginText.innerHTML = 'Se connecter';
+                    Toast.error(data.error || 'Erreur de connexion');
+                    
+                    // Animation d'erreur
+                    submitButton.style.animation = 'shake 0.5s';
+                    setTimeout(() => {
+                        submitButton.style.animation = '';
+                    }, 500);
+                }
+            } catch (error) {
+                // Réactiver le bouton
+                submitButton.disabled = false;
+                loginText.innerHTML = 'Se connecter';
+                Toast.error('Erreur de connexion au serveur');
+                console.error('Erreur:', error);
+            }
+        });
+
+        // Animation shake pour les erreurs
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                75% { transform: translateX(10px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Focus automatique sur le premier champ
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('email').focus();
+        });
+    </script>
+</body>
+</html>
+

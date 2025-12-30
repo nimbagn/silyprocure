@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - SilyProcure</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
+        <div class="user-info">
+            <span id="user-name"></span>
+            <button onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+        <a href="demandes-devis.html"><i class="fas fa-inbox"></i> Demandes Devis</a>
+        <a href="clients.html"><i class="fas fa-users"></i> Clients</a>
+        <a href="rfq.html"><i class="fas fa-file-alt"></i> RFQ</a>
+        <a href="devis.html"><i class="fas fa-briefcase"></i> Devis</a>
+        <a href="commandes.html"><i class="fas fa-shopping-cart"></i> Commandes</a>
+        <a href="factures.html"><i class="fas fa-file-invoice"></i> Factures</a>
+        <a href="entreprises.html"><i class="fas fa-building"></i> Entreprises</a>
+        <a href="produits.html"><i class="fas fa-box"></i> Produits</a>
+        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
+        <a href="notifications.html" class="active"><i class="fas fa-bell"></i> Notifications</a>
+    </nav>
+
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1><i class="fas fa-bell"></i> Notifications</h1>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-secondary" onclick="markAllAsRead()">
+                    <i class="fas fa-check-double"></i> Tout marquer comme lu
+                </button>
+                <button class="btn btn-secondary" onclick="loadNotifications()">
+                    <i class="fas fa-sync-alt"></i> Actualiser
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Mes notifications</h2>
+                <div class="filter-group">
+                    <select class="filter-select" id="filter-read" onchange="filterNotifications()">
+                        <option value="">Toutes</option>
+                        <option value="false">Non lues</option>
+                        <option value="true">Lues</option>
+                    </select>
+                </div>
+            </div>
+            <div id="notifications-container">
+                <div class="loading">Chargement des notifications...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
+    <script>
+        checkAuth();
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+
+        let allNotifications = [];
+
+        async function loadNotifications() {
+            try {
+                showLoading('Chargement...');
+                const filterRead = document.getElementById('filter-read')?.value;
+                let url = '/api/notifications?limit=100';
+                if (filterRead) {
+                    url += `&lu=${filterRead}`;
+                }
+
+                const response = await apiCall(url);
+                if (!response) {
+                    hideLoading();
+                    return;
+                }
+
+                if (!response.ok) {
+                    hideLoading();
+                    Toast.error('Erreur lors du chargement');
+                    return;
+                }
+
+                allNotifications = await response.json();
+                hideLoading();
+                displayNotifications(allNotifications);
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors du chargement');
+                console.error('Erreur:', error);
+            }
+        }
+
+        function displayNotifications(notifications) {
+            const container = document.getElementById('notifications-container');
+
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div style="padding: 3rem; text-align: center;">
+                        <div style="font-size: 4rem; color: #ccc; margin-bottom: 1rem;">
+                            <i class="fas fa-bell-slash"></i>
+                        </div>
+                        <h3 style="color: #666;">Aucune notification</h3>
+                        <p style="color: #999;">Vous n'avez pas encore de notifications</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const icons = {
+                'rfq_reçue': '<i class="fas fa-file-alt"></i>',
+                'devis_reçu': '<i class="fas fa-briefcase"></i>',
+                'commande_créée': '<i class="fas fa-shopping-cart"></i>',
+                'statut_modifié': '<i class="fas fa-sync-alt"></i>',
+                'facture_créée': '<i class="fas fa-file-invoice"></i>',
+                'paiement_reçu': '<i class="fas fa-money-check"></i>'
+            };
+
+            const links = {
+                'rfq': 'rfq-detail.html',
+                'devis': 'devis-detail.html',
+                'commande': 'commandes-detail.html',
+                'facture': 'factures-detail.html'
+            };
+
+            container.innerHTML = `
+                <div style="padding: 1rem;">
+                    ${notifications.map(notif => {
+                        const date = new Date(notif.date_creation);
+                        const dateStr = date.toLocaleDateString('fr-FR', { 
+                            day: 'numeric', 
+                            month: 'long', 
+                            year: 'numeric',
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        });
+                        
+                        const icon = icons[notif.type_notification] || '<i class="fas fa-info-circle"></i>';
+                        const unreadClass = notif.lu ? '' : 'unread';
+                        const unreadStyle = notif.lu ? '' : 'background: #f0f9ff; border-left: 4px solid #3B82F6;';
+
+                        let actionButton = '';
+                        if (notif.type_document && notif.document_id) {
+                            const link = links[notif.type_document];
+                            if (link) {
+                                actionButton = `<a href="${link}?id=${notif.document_id}" class="btn btn-sm btn-primary">Voir le document</a>`;
+                            }
+                        }
+
+                        return `
+                            <div class="notification-item ${unreadClass}" style="padding: 1.5rem; margin-bottom: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; ${unreadStyle}">
+                                <div style="display: flex; gap: 1.5rem;">
+                                    <div style="font-size: 2rem; color: #3B82F6; flex-shrink: 0;">${icon}</div>
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                            <div>
+                                                <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">${notif.titre}</h3>
+                                                <p style="margin: 0.5rem 0 0 0; color: #666;">${notif.message || ''}</p>
+                                            </div>
+                                            ${!notif.lu ? '<span style="background: #3B82F6; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Nouveau</span>' : ''}
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                                            <span style="color: #999; font-size: 0.9rem;"><i class="fas fa-clock"></i> ${dateStr}</span>
+                                            <div style="display: flex; gap: 0.5rem;">
+                                                ${actionButton}
+                                                ${!notif.lu ? `<button class="btn btn-sm btn-secondary" onclick="markAsRead(${notif.id})">Marquer comme lu</button>` : ''}
+                                                <button class="btn btn-sm btn-danger" onclick="deleteNotification(${notif.id})" title="Supprimer"><i class="fas fa-trash"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        async function markAsRead(id) {
+            try {
+                const response = await apiCall(`/api/notifications/${id}/read`, { method: 'PATCH' });
+                if (response && response.ok) {
+                    Toast.success('Notification marquée comme lue');
+                    loadNotifications();
+                    // Mettre à jour le badge si le gestionnaire existe
+                    if (window.notificationsManager) {
+                        window.notificationsManager.loadUnreadCount();
+                    }
+                } else {
+                    Toast.error('Erreur lors du marquage');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur de connexion');
+            }
+        }
+
+        async function markAllAsRead() {
+            if (!confirm('Voulez-vous marquer toutes les notifications comme lues ?')) {
+                return;
+            }
+
+            try {
+                const response = await apiCall('/api/notifications/read-all', { method: 'PATCH' });
+                if (response && response.ok) {
+                    Toast.success('Toutes les notifications ont été marquées comme lues');
+                    loadNotifications();
+                    // Mettre à jour le badge si le gestionnaire existe
+                    if (window.notificationsManager) {
+                        window.notificationsManager.loadUnreadCount();
+                    }
+                } else {
+                    Toast.error('Erreur lors du marquage');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur de connexion');
+            }
+        }
+
+        async function deleteNotification(id) {
+            if (!confirm('Voulez-vous supprimer cette notification ?')) {
+                return;
+            }
+
+            try {
+                const response = await apiCall(`/api/notifications/${id}`, { method: 'DELETE' });
+                if (response && response.ok) {
+                    Toast.success('Notification supprimée');
+                    loadNotifications();
+                    // Mettre à jour le badge si le gestionnaire existe
+                    if (window.notificationsManager) {
+                        window.notificationsManager.loadUnreadCount();
+                    }
+                } else {
+                    Toast.error('Erreur lors de la suppression');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur de connexion');
+            }
+        }
+
+        function filterNotifications() {
+            loadNotifications();
+        }
+
+        loadNotifications();
+    </script>
+</body>
+</html>
+

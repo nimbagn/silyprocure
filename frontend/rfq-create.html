@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer une RFQ - SilyProcure</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/workflow.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
+        <div class="user-info">
+            <span id="user-name"></span>
+            <button onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="rfq.html">RFQ</a>
+        <a href="devis.html">Devis</a>
+        <a href="commandes.html">Commandes</a>
+        <a href="factures.html">Factures</a>
+        <a href="entreprises.html">Entreprises</a>
+        <a href="produits.html">Produits</a>
+        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section" style="text-align: left; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <button class="btn btn-secondary" onclick="window.location.href='rfq.html'" style="margin-bottom: 1rem;">
+                        ← Retour
+                    </button>
+                    <h1 class="hero-title" style="font-size: 2rem; margin: 0;"><i class="fas fa-clipboard-list"></i> Nouvelle demande de devis (RFQ)</h1>
+                    <p class="hero-description" style="text-align: left; margin: 0.5rem 0 0 0; max-width: 100%;">
+                        Créez une nouvelle demande de devis en suivant les étapes ci-dessous
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Formulaire de création RFQ</h2>
+            </div>
+
+            <form id="rfq-form" onsubmit="handleCreateRFQ(event)">
+                <!-- Étape 1 : Informations générales -->
+                <div class="form-section" id="step-1">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--color-primary); border-bottom: 2px solid var(--color-background-blue); padding-bottom: 0.5rem;">
+                        <i class="fas fa-clipboard-list"></i> Étape 1 : Informations générales
+                    </h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rfq-numero">Numéro RFQ</label>
+                            <input type="text" id="rfq-numero" name="numero" readonly 
+                                   style="background: #f0f0f0; cursor: not-allowed;"
+                                   placeholder="Génération automatique...">
+                            <small style="color: var(--color-neutral); font-size: 0.75rem;">Généré automatiquement</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="rfq-date">Date d'émission *</label>
+                            <input type="date" id="rfq-date" name="date_emission" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rfq-date-limite">Date limite de réponse *</label>
+                            <input type="date" id="rfq-date-limite" name="date_limite_reponse" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="rfq-categorie">Catégorie</label>
+                            <select id="rfq-categorie" name="categorie_id">
+                                <option value="">Sélectionner une catégorie</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rfq-description">Description de la demande *</label>
+                        <textarea id="rfq-description" name="description" required rows="4" 
+                                  placeholder="Décrivez en détail vos besoins..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rfq-projet">Projet (optionnel)</label>
+                            <select id="rfq-projet" name="projet_id">
+                                <option value="">Aucun projet</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="rfq-centre-cout">Centre de coût (optionnel)</label>
+                            <select id="rfq-centre-cout" name="centre_cout_id">
+                                <option value="">Aucun centre de coût</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-primary" onclick="nextStep(2)" style="margin-top: 1rem;">
+                        Suivant : Rechercher des fournisseurs →
+                    </button>
+                </div>
+
+                <!-- Étape 2 : Recherche et sélection de fournisseurs -->
+                <div class="form-section hidden" id="step-2">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--color-primary); border-bottom: 2px solid var(--color-background-blue); padding-bottom: 0.5rem;">
+                        <i class="fas fa-search"></i> Étape 2 : Recherche de fournisseurs
+                    </h3>
+
+                    <div class="search-bar">
+                        <div class="search-input">
+                            <input type="text" id="search-fournisseur" placeholder="Rechercher un fournisseur par nom, secteur..." 
+                                   onkeyup="searchFournisseurs()">
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="searchFournisseurs()"><i class="fas fa-search"></i> Rechercher</button>
+                    </div>
+
+                    <div id="fournisseurs-suggestions" style="margin-top: 1.5rem;">
+                        <div class="loading">Recherche de fournisseurs...</div>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                        <button type="button" class="btn btn-secondary" onclick="previousStep(1)">← Précédent</button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep(3)">Suivant : Détails produits →</button>
+                    </div>
+                </div>
+
+                <!-- Étape 3 : Détails produits/services -->
+                <div class="form-section hidden" id="step-3">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--color-primary); border-bottom: 2px solid var(--color-background-blue); padding-bottom: 0.5rem;">
+                        <i class="fas fa-box"></i> Étape 3 : Produits/Services demandés
+                    </h3>
+
+                    <div id="lignes-rfq">
+                        <div class="card" style="margin-bottom: 1rem;">
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 2;">
+                                    <label>Description *</label>
+                                    <input type="text" name="ligne-description[]" required placeholder="Description du produit/service">
+                                </div>
+                                <div class="form-group">
+                                    <label>Quantité *</label>
+                                    <input type="number" name="ligne-quantite[]" required min="0.01" step="0.01" placeholder="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unité</label>
+                                    <input type="text" name="ligne-unite[]" placeholder="unité" value="unité">
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label>Produit (optionnel)</label>
+                                    <select name="ligne-produit[]" class="produit-select">
+                                        <option value="">Sélectionner un produit</option>
+                                    </select>
+                                    <small style="color: var(--color-neutral); font-size: 0.75rem; display: block; margin-top: 0.25rem;">
+                                        <i class="fas fa-info-circle"></i> Les produits disponibles dépendent des fournisseurs sélectionnés
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Spécifications techniques</label>
+                                <textarea name="ligne-specifications[]" rows="2" placeholder="Spécifications détaillées..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-secondary" onclick="addLigneRFQ()" style="margin-bottom: 1rem;">
+                        <i class="fas fa-plus"></i> Ajouter une ligne
+                    </button>
+
+                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                        <button type="button" class="btn btn-secondary" onclick="previousStep(2)">← Précédent</button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep(4)">Suivant : Conditions →</button>
+                    </div>
+                </div>
+
+                <!-- Étape 4 : Conditions de livraison -->
+                <div class="form-section hidden" id="step-4">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--color-primary); border-bottom: 2px solid var(--color-background-blue); padding-bottom: 0.5rem;">
+                        <i class="fas fa-truck"></i> Étape 4 : Conditions de livraison et paiement
+                    </h3>
+
+                    <!-- Adresse de livraison -->
+                    <div class="card" style="background: var(--color-background-light); margin-bottom: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark); display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-map-marker-alt"></i> Adresse de livraison
+                        </h4>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label for="rfq-adresse-livraison">Sélectionner une adresse existante</label>
+                                <select id="rfq-adresse-livraison" name="lieu_livraison_id" onchange="updateAdresseLivraison()">
+                                    <option value="">Chargement des adresses...</option>
+                                </select>
+                                <small style="color: var(--color-neutral); font-size: 0.75rem;">
+                                    💡 Sélectionnez une adresse enregistrée. Si aucune adresse n'est disponible :<br>
+                                    1. Allez sur la page <a href="entreprises.html" style="color: var(--color-primary); text-decoration: underline;">Entreprises</a><br>
+                                    2. Cliquez sur une entreprise pour voir ses détails<br>
+                                    3. Cliquez sur "<i class="fas fa-plus"></i> Ajouter une adresse" et créez une adresse de type "Livraison"
+                                </small>
+                            </div>
+                            <div class="form-group" style="flex: 0 0 auto; display: flex; align-items: flex-end; gap: 0.5rem;">
+                                <button type="button" class="btn btn-secondary" onclick="showCreateAdresseModal()" style="white-space: nowrap;">
+                                    <i class="fas fa-plus"></i> Nouvelle adresse
+                                </button>
+                                <a href="entreprises.html" class="btn btn-secondary" style="white-space: nowrap; text-decoration: none;">
+                                    <i class="fas fa-building"></i> Gérer entreprises
+                                </a>
+                            </div>
+                        </div>
+                        <div id="adresse-livraison-preview" style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px; border: 2px dashed #E0E7FF; display: none;">
+                            <div style="font-weight: 600; margin-bottom: 0.5rem; color: var(--color-primary-dark);"><i class="fas fa-map-marker-alt"></i> Adresse sélectionnée :</div>
+                            <div id="adresse-livraison-details" style="color: var(--color-neutral-dark); line-height: 1.6;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Dates et délais -->
+                    <div class="card" style="background: var(--color-background-light); margin-bottom: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark); display: flex; align-items: center; gap: 0.5rem;">
+                            📅 Dates et délais
+                        </h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="rfq-date-livraison">📆 Date de livraison souhaitée *</label>
+                                <input type="date" id="rfq-date-livraison" name="date_livraison_souhaitee" required>
+                                <small style="color: var(--color-neutral); font-size: 0.75rem;">
+                                    Date à laquelle vous souhaitez recevoir la commande
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label for="rfq-delai-livraison">⏱️ Délai de livraison (jours)</label>
+                                <input type="number" id="rfq-delai-livraison" name="delai_livraison" min="1" 
+                                       placeholder="Ex: 30" style="width: 100%;">
+                                <small style="color: var(--color-neutral); font-size: 0.75rem;">
+                                    Nombre de jours pour la livraison
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conditions commerciales -->
+                    <div class="card" style="background: var(--color-background-light); margin-bottom: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark); display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-briefcase"></i> Conditions commerciales
+                        </h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="rfq-incoterms">🌍 Incoterms</label>
+                                <select id="rfq-incoterms" name="incoterms">
+                                    <option value="">Sélectionner un Incoterm</option>
+                                    <option value="EXW">EXW - Ex Works (À l'usine)</option>
+                                    <option value="FCA">FCA - Free Carrier (Franco transporteur)</option>
+                                    <option value="CPT">CPT - Carriage Paid To (Port payé jusqu'à)</option>
+                                    <option value="CIP">CIP - Carriage and Insurance Paid (Port payé, assurance comprise)</option>
+                                    <option value="DAP">DAP - Delivered At Place (Rendu au lieu de destination)</option>
+                                    <option value="DPU">DPU - Delivered at Place Unloaded (Rendu au lieu de destination déchargé)</option>
+                                    <option value="DDP">DDP - Delivered Duty Paid (Rendu droits acquittés)</option>
+                                    <option value="FAS">FAS - Free Alongside Ship (Franco le long du navire)</option>
+                                    <option value="FOB">FOB - Free On Board (Franco à bord)</option>
+                                    <option value="CFR">CFR - Cost and Freight (Coût et fret)</option>
+                                    <option value="CIF">CIF - Cost, Insurance and Freight (Coût, assurance et fret)</option>
+                                </select>
+                                <small style="color: var(--color-neutral); font-size: 0.75rem;">
+                                    Termes de livraison internationaux
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label for="rfq-conditions-paiement"><i class="fas fa-credit-card"></i> Conditions de paiement *</label>
+                                <select id="rfq-conditions-paiement" name="conditions_paiement" required>
+                                    <option value="">Sélectionner</option>
+                                    <option value="comptant">Comptant</option>
+                                    <option value="30_jours_net">30 jours net</option>
+                                    <option value="60_jours_net">60 jours net</option>
+                                    <option value="90_jours_net">90 jours net</option>
+                                    <option value="acompte_30">Acompte 30% + solde 30 jours</option>
+                                    <option value="acompte_50">Acompte 50% + solde 30 jours</option>
+                                    <option value="autre">Autre (à préciser)</option>
+                                </select>
+                                <small style="color: var(--color-neutral); font-size: 0.75rem;">
+                                    Modalités de paiement acceptées
+                                </small>
+                            </div>
+                        </div>
+                        <div class="form-group" id="conditions-paiement-autre" style="display: none; margin-top: 1rem;">
+                            <label for="rfq-conditions-paiement-detail">Précisez les conditions de paiement</label>
+                            <input type="text" id="rfq-conditions-paiement-detail" name="conditions_paiement_detail" 
+                                   placeholder="Ex: 30% à la commande, 70% à la livraison">
+                        </div>
+                    </div>
+
+                    <!-- Informations complémentaires -->
+                    <div class="card" style="background: var(--color-background-light); margin-bottom: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark); display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-edit"></i> Informations complémentaires
+                        </h4>
+                        <div class="form-group">
+                            <label for="rfq-notes-livraison">Notes de livraison</label>
+                            <textarea id="rfq-notes-livraison" name="notes_livraison" rows="3" 
+                                      placeholder="Instructions spéciales pour la livraison, horaires de réception, contact sur place, etc."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="rfq-garanties">Garanties demandées</label>
+                            <textarea id="rfq-garanties" name="garanties" rows="2" 
+                                      placeholder="Garanties de qualité, de conformité, de performance, etc."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Récapitulatif -->
+                    <div class="card" style="background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%); border: 2px solid var(--color-primary);">
+                        <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark); display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-check"></i> Récapitulatif
+                        </h4>
+                        <div id="recap-summary" style="color: var(--color-neutral-dark); line-height: 1.8;">
+                            <div><i class="fas fa-clipboard-list"></i> <strong>Lignes de commande:</strong> <span id="recap-lignes">-</span></div>
+                            <div>🏭 <strong>Fournisseurs sélectionnés:</strong> <span id="recap-fournisseurs">-</span></div>
+                            <div>📅 <strong>Date limite de réponse:</strong> <span id="recap-date-limite">-</span></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: space-between;">
+                        <button type="button" class="btn btn-secondary" onclick="previousStep(3)">
+                            ← Précédent
+                        </button>
+                        <button type="submit" class="btn btn-success" style="padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600;">
+                            ✨ Créer la RFQ
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+        <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
+<script src="js/forms.js"></script>
+    <script>
+        checkAuth();
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+
+        let selectedFournisseurs = [];
+
+        // Initialiser les dates
+        document.getElementById('rfq-date').valueAsDate = new Date();
+        const dateLimite = new Date();
+        dateLimite.setDate(dateLimite.getDate() + 14);
+        document.getElementById('rfq-date-limite').valueAsDate = dateLimite;
+
+        // Générer le numéro RFQ automatiquement
+        async function generateRFQNumber() {
+            try {
+                const response = await apiCall('/api/rfq/generate-number');
+                if (response && response.ok) {
+                    const data = await response.json();
+                    document.getElementById('rfq-numero').value = data.numero;
+                } else {
+                    // Fallback : générer côté client
+                    const year = new Date().getFullYear();
+                    const timestamp = Date.now().toString().slice(-6);
+                    document.getElementById('rfq-numero').value = `RFQ-${year}-${timestamp}`;
+                }
+            } catch (error) {
+                // Fallback : générer côté client
+                const year = new Date().getFullYear();
+                const timestamp = Date.now().toString().slice(-6);
+                document.getElementById('rfq-numero').value = `RFQ-${year}-${timestamp}`;
+            }
+        }
+        
+        generateRFQNumber();
+
+        // Charger les catégories, projets, centres de coût
+        loadCategories('rfq-categorie');
+        loadProjets();
+        loadCentresCout();
+        // Ne pas charger tous les produits au début - ils seront chargés après sélection des fournisseurs
+        searchFournisseurs();
+        
+        // Charger les adresses de livraison (attendre que le DOM soit prêt)
+        setTimeout(() => {
+            loadAdressesLivraison();
+        }, 500);
+        
+        // Initialiser la date de livraison (30 jours après aujourd'hui)
+        const dateLivraison = new Date();
+        dateLivraison.setDate(dateLivraison.getDate() + 30);
+        document.getElementById('rfq-date-livraison').valueAsDate = dateLivraison;
+        
+        // Gérer l'affichage conditionnel des conditions de paiement
+        document.getElementById('rfq-conditions-paiement').addEventListener('change', function() {
+            const autreDiv = document.getElementById('conditions-paiement-autre');
+            if (this.value === 'autre') {
+                autreDiv.style.display = 'block';
+            } else {
+                autreDiv.style.display = 'none';
+            }
+        });
+
+        async function loadProjets() {
+            try {
+                const response = await apiCall('/api/projets');
+                if (response && response.ok) {
+                    const projets = await response.json();
+                    const select = document.getElementById('rfq-projet');
+                    projets.forEach(proj => {
+                        const option = document.createElement('option');
+                        option.value = proj.id;
+                        option.textContent = `${proj.code || ''} - ${proj.libelle}`.trim();
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Erreur chargement projets:', error);
+            }
+        }
+
+        async function loadCentresCout() {
+            try {
+                const response = await apiCall('/api/projets/centres-cout');
+                if (response && response.ok) {
+                    const centres = await response.json();
+                    const select = document.getElementById('rfq-centre-cout');
+                    centres.forEach(centre => {
+                        const option = document.createElement('option');
+                        option.value = centre.id;
+                        option.textContent = `${centre.code} - ${centre.libelle}`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Erreur chargement centres de coût:', error);
+            }
+        }
+
+        // Variable pour stocker tous les produits disponibles (tous fournisseurs confondus)
+        let allAvailableProduits = [];
+
+        async function loadProduits() {
+            // Si aucun fournisseur n'est sélectionné, vider les selects
+            if (selectedFournisseurs.length === 0) {
+                document.querySelectorAll('.produit-select').forEach(select => {
+                    select.innerHTML = '<option value="">Sélectionner</option>';
+                });
+                allAvailableProduits = [];
+                return;
+            }
+
+            try {
+                // Charger les produits de tous les fournisseurs sélectionnés
+                const allProduits = [];
+                const produitsMap = new Map(); // Pour éviter les doublons
+
+                for (const fournisseurId of selectedFournisseurs) {
+                    try {
+                        const response = await apiCall(`/api/produits/fournisseur/${fournisseurId}?limit=1000`);
+                        if (response && response.ok) {
+                            const result = await response.json();
+                            const produits = Array.isArray(result) ? result : (result.data || []);
+                            
+                            // Ajouter uniquement les produits disponibles et non dupliqués
+                            produits.forEach(prod => {
+                                if (prod.disponible !== 0 && !produitsMap.has(prod.id)) {
+                                    produitsMap.set(prod.id, prod);
+                                    allProduits.push(prod);
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error(`Erreur chargement produits pour fournisseur ${fournisseurId}:`, error);
+                    }
+                }
+
+                allAvailableProduits = allProduits;
+
+                // Mettre à jour tous les selects
+                document.querySelectorAll('.produit-select').forEach(select => {
+                    // Sauvegarder la valeur sélectionnée
+                    const currentValue = select.value;
+                    
+                    // Vider et réinitialiser
+                    select.innerHTML = '<option value="">Sélectionner</option>';
+                    
+                    // Ajouter les produits
+                    allProduits.forEach(prod => {
+                        const option = document.createElement('option');
+                        option.value = prod.id;
+                        option.textContent = `${prod.reference} - ${prod.libelle}${prod.prix_fournisseur ? ` (${formatCurrency(prod.prix_fournisseur)})` : ''}`;
+                        select.appendChild(option);
+                    });
+
+                    // Restaurer la sélection si elle existe toujours
+                    if (currentValue && allProduits.find(p => p.id == currentValue)) {
+                        select.value = currentValue;
+                    }
+                });
+
+                if (allProduits.length === 0) {
+                    Toast.info('Aucun produit disponible pour les fournisseurs sélectionnés', 3000);
+                }
+            } catch (error) {
+                console.error('Erreur chargement produits:', error);
+                Toast.error('Erreur lors du chargement des produits');
+            }
+        }
+
+        function formatCurrency(amount) {
+            if (!amount) return '';
+            return new Intl.NumberFormat('fr-GN', { 
+                style: 'currency', 
+                currency: 'GNF',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        async function searchFournisseurs() {
+            const search = document.getElementById('search-fournisseur').value;
+            const container = document.getElementById('fournisseurs-suggestions');
+            
+            try {
+                container.innerHTML = '<div class="loading"><div class="loading-spinner"></div> Recherche...</div>';
+                
+                const response = await apiCall(`/api/entreprises?type=fournisseur${search ? '&search=' + encodeURIComponent(search) : ''}`);
+                if (!response) {
+                    container.innerHTML = '<div class="empty-state">Erreur de chargement</div>';
+                    return;
+                }
+
+                const fournisseurs = await response.json();
+                
+                if (fournisseurs.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏭</div><div class="empty-state-title">Aucun fournisseur trouvé</div></div>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+                        ${fournisseurs.map(f => `
+                            <div class="card" style="cursor: pointer; transition: var(--transition); ${selectedFournisseurs.includes(f.id) ? 'border: 2px solid var(--color-primary);' : ''}" 
+                                 onclick="toggleFournisseur(${f.id}, '${f.nom.replace(/'/g, "\\'")}')">
+                                <div style="display: flex; justify-content: space-between; align-items: start;">
+                                    <div>
+                                        <h4 style="margin: 0 0 0.5rem 0;">${f.nom}</h4>
+                                        ${f.rccm ? `<div style="font-size: 0.75rem; color: var(--color-neutral);">RCCM: ${f.rccm}</div>` : ''}
+                                        ${f.secteur_activite ? `<div style="font-size: 0.75rem; color: var(--color-neutral); margin-top: 0.25rem;">${f.secteur_activite}</div>` : ''}
+                                        ${f.email ? `<div style="font-size: 0.75rem; color: var(--color-neutral); margin-top: 0.25rem;"><i class="fas fa-envelope"></i> ${f.email}</div>` : ''}
+                                    </div>
+                                    <div style="font-size: 1.5rem;">
+                                        ${selectedFournisseurs.includes(f.id) ? '<i class="fas fa-check"></i>' : '☐'}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: var(--color-background-blue); border-radius: 8px;">
+                        <strong>Fournisseurs sélectionnés :</strong> <span id="selected-count">${selectedFournisseurs.length}</span>
+                    </div>
+                `;
+            } catch (error) {
+                container.innerHTML = '<div class="alert alert-error">Erreur lors de la recherche</div>';
+                console.error('Erreur:', error);
+            }
+        }
+
+        function toggleFournisseur(id, nom) {
+            const index = selectedFournisseurs.indexOf(id);
+            if (index > -1) {
+                selectedFournisseurs.splice(index, 1);
+            } else {
+                selectedFournisseurs.push(id);
+            }
+            searchFournisseurs();
+            // Recharger les produits après changement de sélection
+            loadProduits();
+        }
+
+        function addLigneRFQ() {
+            const container = document.getElementById('lignes-rfq');
+            const ligne = document.createElement('div');
+            ligne.className = 'card';
+            ligne.style.marginBottom = '1rem';
+            ligne.innerHTML = `
+                <div class="form-row">
+                    <div class="form-group" style="flex: 2;">
+                        <label>Description *</label>
+                        <input type="text" name="ligne-description[]" required placeholder="Description du produit/service">
+                    </div>
+                    <div class="form-group">
+                        <label>Quantité *</label>
+                        <input type="number" name="ligne-quantite[]" required min="0.01" step="0.01" placeholder="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Unité</label>
+                        <input type="text" name="ligne-unite[]" placeholder="unité" value="unité">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Produit (optionnel)</label>
+                        <select name="ligne-produit[]" class="produit-select">
+                            <option value="">Sélectionner</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.card').remove()" style="margin-top: 1.75rem;"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Spécifications techniques</label>
+                    <textarea name="ligne-specifications[]" rows="2" placeholder="Spécifications détaillées..."></textarea>
+                </div>
+            `;
+            container.appendChild(ligne);
+            // Charger les produits pour le nouveau select (utilise les produits déjà chargés)
+            const newSelect = ligne.querySelector('.produit-select');
+            if (newSelect && allAvailableProduits.length > 0) {
+                newSelect.innerHTML = '<option value="">Sélectionner</option>';
+                allAvailableProduits.forEach(prod => {
+                    const option = document.createElement('option');
+                    option.value = prod.id;
+                    option.textContent = `${prod.reference} - ${prod.libelle}${prod.prix_fournisseur ? ` (${formatCurrency(prod.prix_fournisseur)})` : ''}`;
+                    newSelect.appendChild(option);
+                });
+            } else {
+                // Si aucun produit n'est encore chargé, charger maintenant
+                loadProduits();
+            }
+        }
+
+        function nextStep(step) {
+            // Valider l'étape actuelle
+            const currentStep = step - 1;
+            const currentSection = document.getElementById(`step-${currentStep}`);
+            const inputs = currentSection.querySelectorAll('input[required], select[required], textarea[required]');
+            let valid = true;
+
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    valid = false;
+                    input.style.borderColor = 'var(--color-danger)';
+                } else {
+                    input.style.borderColor = '';
+                }
+            });
+
+            if (!valid) {
+                Toast.error('Veuillez remplir tous les champs obligatoires');
+                return;
+            }
+
+            // Vérifications spécifiques
+            if (currentStep === 2 && selectedFournisseurs.length === 0) {
+                Toast.error('Veuillez sélectionner au moins un fournisseur');
+                return;
+            }
+
+            // Masquer l'étape actuelle
+            currentSection.classList.add('hidden');
+            // Afficher l'étape suivante
+            const nextSection = document.getElementById(`step-${step}`);
+            nextSection.classList.remove('hidden');
+            
+            // Charger les produits si on arrive à l'étape 3
+            if (step === 3) {
+                loadProduits();
+            }
+
+            // Mettre à jour le récapitulatif si on arrive à l'étape 4
+            if (step === 4) {
+                updateRecap();
+                // Recharger les adresses si nécessaire
+                setTimeout(() => {
+                    const select = document.getElementById('rfq-adresse-livraison');
+                    if (select && (select.options.length <= 1 || select.innerHTML.includes('Chargement'))) {
+                        loadAdressesLivraison();
+                    }
+                }, 300);
+            }
+        }
+
+        function previousStep(step) {
+            document.getElementById(`step-${step + 1}`).classList.add('hidden');
+            document.getElementById(`step-${step}`).classList.remove('hidden');
+        }
+
+        async function loadAdressesLivraison() {
+            try {
+                const select = document.getElementById('rfq-adresse-livraison');
+                
+                if (!select) {
+                    console.warn('Select rfq-adresse-livraison non trouvé');
+                    return;
+                }
+
+                // Afficher un message de chargement
+                select.innerHTML = '<option value="">Chargement des adresses...</option>';
+
+                // Charger toutes les adresses (pas seulement livraison, pour plus de flexibilité)
+                const response = await apiCall('/api/adresses');
+                
+                if (!response) {
+                    select.innerHTML = '<option value="">Erreur d\'authentification</option>';
+                    Toast.error('Erreur d\'authentification. Veuillez vous reconnecter.');
+                    return;
+                }
+                
+                if (response.ok) {
+                    const adresses = await response.json();
+                    select.innerHTML = '<option value="">Sélectionner une adresse</option>';
+                    
+                    if (!adresses || adresses.length === 0) {
+                        select.innerHTML = '<option value="">Aucune adresse disponible</option>';
+                        // Afficher un message informatif avec instructions claires
+                        Toast.info('Aucune adresse trouvée. Vous avez des entreprises mais sans adresses. Allez sur la page Entreprises, cliquez sur une entreprise, puis ajoutez une adresse de livraison.', 8000);
+                    } else {
+                        // Filtrer les adresses de livraison en priorité, puis toutes les autres
+                        const adressesLivraison = adresses.filter(a => a.type_adresse === 'livraison');
+                        const autresAdresses = adresses.filter(a => a.type_adresse !== 'livraison');
+                        
+                        const adressesTriees = [...adressesLivraison, ...autresAdresses];
+                        
+                        adressesTriees.forEach(addr => {
+                            const option = document.createElement('option');
+                            option.value = addr.id;
+                            const typeLabel = addr.type_adresse === 'livraison' ? '<i class="fas fa-box"></i> Livraison' : 
+                                            addr.type_adresse === 'facturation' ? '<i class="fas fa-file-invoice"></i> Facturation' :
+                                            addr.type_adresse === 'siege' ? '<i class="fas fa-building"></i> Siège' : '<i class="fas fa-map-marker-alt"></i> Autre';
+                            const ville = addr.ville || 'Ville non spécifiée';
+                            const libelle = addr.libelle || addr.type_adresse || 'Adresse';
+                            option.textContent = `${typeLabel} - ${libelle} - ${ville}`;
+                            option.dataset.adresse = JSON.stringify(addr);
+                            select.appendChild(option);
+                        });
+                    }
+                } else {
+                    // Gérer les erreurs HTTP
+                    let errorMessage = 'Erreur de chargement';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.error || errorMessage;
+                        console.error('Erreur API adresses:', errorData);
+                    } catch (e) {
+                        console.error('Erreur parsing réponse:', e);
+                    }
+                    
+                    select.innerHTML = `<option value="">${errorMessage}</option>`;
+                    
+                    if (response.status === 401) {
+                        Toast.error('Session expirée. Veuillez vous reconnecter.');
+                    } else if (response.status === 403) {
+                        Toast.error('Accès refusé. Vérifiez vos permissions.');
+                    } else {
+                        Toast.error(`Erreur lors du chargement des adresses: ${errorMessage}`);
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur chargement adresses:', error);
+                const select = document.getElementById('rfq-adresse-livraison');
+                if (select) {
+                    select.innerHTML = '<option value="">Erreur de connexion au serveur</option>';
+                }
+                Toast.error('Impossible de charger les adresses. Vérifiez votre connexion.');
+            }
+        }
+
+        function updateAdresseLivraison() {
+            try {
+                const select = document.getElementById('rfq-adresse-livraison');
+                const preview = document.getElementById('adresse-livraison-preview');
+                const details = document.getElementById('adresse-livraison-details');
+                
+                if (!select || !preview || !details) {
+                    console.warn('Éléments DOM non trouvés pour updateAdresseLivraison');
+                    return;
+                }
+                
+                if (select.value) {
+                    const option = select.options[select.selectedIndex];
+                    if (!option || !option.dataset.adresse) {
+                        preview.style.display = 'none';
+                        return;
+                    }
+                    
+                    const adresse = JSON.parse(option.dataset.adresse);
+                    
+                    details.innerHTML = `
+                        <div><strong>${adresse.libelle || adresse.type_adresse}</strong></div>
+                        <div>${adresse.adresse_ligne1 || ''}</div>
+                        ${adresse.adresse_ligne2 ? `<div>${adresse.adresse_ligne2}</div>` : ''}
+                        <div>${adresse.code_postal || ''} ${adresse.ville || ''}</div>
+                        <div>${adresse.pays || 'Guinée'}</div>
+                        ${adresse.latitude && adresse.longitude ? `
+                            <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--color-primary);">
+                                <i class="fas fa-map-marker-alt"></i> ${parseFloat(adresse.latitude).toFixed(6)}, ${parseFloat(adresse.longitude).toFixed(6)}
+                            </div>
+                        ` : ''}
+                    `;
+                    preview.style.display = 'block';
+                } else {
+                    preview.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Erreur updateAdresseLivraison:', error);
+            }
+        }
+
+        function showCreateAdresseModal() {
+            const message = 'Pour créer une adresse de livraison :\n\n1. Allez sur la page Entreprises\n2. Cliquez sur une entreprise pour voir ses détails\n3. Cliquez sur "<i class="fas fa-plus"></i> Ajouter une adresse"\n4. Sélectionnez le type "Livraison" et remplissez les informations';
+            Toast.info(message, 8000);
+            
+            // Proposer de rediriger
+            setTimeout(() => {
+                if (confirm('Souhaitez-vous être redirigé vers la page Entreprises pour ajouter une adresse ?')) {
+                    window.location.href = 'entreprises.html';
+                }
+            }, 2000);
+        }
+
+        function updateRecap() {
+            try {
+                // Mettre à jour le récapitulatif
+                const lignesCount = document.querySelectorAll('[name="ligne-description[]"]').length;
+                const recapLignes = document.getElementById('recap-lignes');
+                const recapFournisseurs = document.getElementById('recap-fournisseurs');
+                const recapDateLimite = document.getElementById('recap-date-limite');
+                
+                if (recapLignes) recapLignes.textContent = lignesCount;
+                if (recapFournisseurs) recapFournisseurs.textContent = selectedFournisseurs.length;
+                
+                const dateLimite = document.getElementById('rfq-date-limite');
+                if (dateLimite && recapDateLimite) {
+                    if (dateLimite.value) {
+                        const date = new Date(dateLimite.value);
+                        recapDateLimite.textContent = date.toLocaleDateString('fr-FR');
+                    } else {
+                        recapDateLimite.textContent = 'Non définie';
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur updateRecap:', error);
+            }
+        }
+
+        async function handleCreateRFQ(event) {
+            event.preventDefault();
+            
+            if (selectedFournisseurs.length === 0) {
+                Toast.error('Veuillez sélectionner au moins un fournisseur');
+                return;
+            }
+
+            // Vérifier qu'au moins une ligne est présente
+            const descriptionInputs = event.target.querySelectorAll('input[name="ligne-description[]"]');
+            if (descriptionInputs.length === 0 || Array.from(descriptionInputs).every(d => !d.value.trim())) {
+                Toast.error('Veuillez ajouter au moins une ligne de produit/service');
+                return;
+            }
+
+            const formData = new FormData(event.target);
+            const data = {
+                numero: formData.get('numero') || null, // null = génération automatique côté serveur
+                date_emission: formData.get('date_emission'),
+                date_limite_reponse: formData.get('date_limite_reponse'),
+                categorie_id: formData.get('categorie_id') || null,
+                description: formData.get('description'),
+                projet_id: formData.get('projet_id') || null,
+                centre_cout_id: formData.get('centre_cout_id') || null,
+                lieu_livraison_id: formData.get('lieu_livraison_id') || null,
+                date_livraison_souhaitee: formData.get('date_livraison_souhaitee') || null,
+                incoterms: formData.get('incoterms') || null,
+                conditions_paiement: formData.get('conditions_paiement') || null,
+                lignes: []
+            };
+
+            // Récupérer les lignes
+            const descriptions = formData.getAll('ligne-description[]');
+            const quantites = formData.getAll('ligne-quantite[]');
+            const unites = formData.getAll('ligne-unite[]');
+            const produits = formData.getAll('ligne-produit[]');
+            const specifications = formData.getAll('ligne-specifications[]');
+            const references = formData.getAll('ligne-reference[]');
+
+            for (let i = 0; i < descriptions.length; i++) {
+                // Récupérer la référence du produit si un produit est sélectionné
+                let reference = references[i] || null;
+                if (!reference && produits[i]) {
+                    // Trouver le select correspondant à cette ligne
+                    const ligneCards = document.querySelectorAll('#lignes-rfq > .card');
+                    if (ligneCards[i]) {
+                        const produitSelect = ligneCards[i].querySelector('select[name="ligne-produit[]"]');
+                        if (produitSelect && produitSelect.value) {
+                            const option = produitSelect.options[produitSelect.selectedIndex];
+                            if (option && option.textContent) {
+                                reference = option.textContent.split(' - ')[0] || null;
+                            }
+                        }
+                    }
+                }
+
+                data.lignes.push({
+                    description: descriptions[i],
+                    quantite: parseFloat(quantites[i]),
+                    unite: unites[i] || 'unité',
+                    produit_id: produits[i] || null,
+                    reference: reference || null,
+                    specifications: specifications[i] || null,
+                    ordre: i
+                });
+            }
+
+            showLoading('Création de la RFQ...');
+
+            try {
+                // Créer la RFQ pour chaque fournisseur sélectionné
+                const rfqIds = [];
+                const errors = [];
+                
+                for (const fournisseurId of selectedFournisseurs) {
+                    const rfqData = { ...data, destinataire_id: fournisseurId };
+                    const response = await apiCall('/api/rfq', {
+                        method: 'POST',
+                        body: JSON.stringify(rfqData)
+                    });
+
+                    if (response && response.ok) {
+                        const result = await response.json();
+                        rfqIds.push(result.id);
+                    } else {
+                        // Récupérer le message d'erreur
+                        let errorMsg = 'Erreur inconnue';
+                        try {
+                            const errorData = await response.json();
+                            errorMsg = errorData.error || errorMsg;
+                        } catch (e) {
+                            errorMsg = `Erreur ${response.status}: ${response.statusText}`;
+                        }
+                        errors.push(`Fournisseur ID ${fournisseurId}: ${errorMsg}`);
+                        console.error('Erreur création RFQ pour fournisseur', fournisseurId, ':', errorMsg);
+                    }
+                }
+
+                hideLoading();
+                
+                if (rfqIds.length > 0) {
+                    if (errors.length > 0) {
+                        Toast.warning(`${rfqIds.length} RFQ créée(s), ${errors.length} erreur(s)`);
+                        console.error('Erreurs:', errors);
+                    } else {
+                        Toast.success(`${rfqIds.length} RFQ créée(s) avec succès`);
+                    }
+                    setTimeout(() => {
+                        window.location.href = 'rfq.html';
+                    }, 1500);
+                } else {
+                    Toast.error('Aucune RFQ n\'a pu être créée. ' + (errors.length > 0 ? errors[0] : 'Vérifiez les données saisies.'));
+                    console.error('Toutes les créations ont échoué:', errors);
+                }
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors de la création: ' + error.message);
+                console.error('Erreur:', error);
+            }
+        }
+    </script>
+</body>
+</html>
+

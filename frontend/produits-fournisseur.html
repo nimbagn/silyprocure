@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalogue Produits Fournisseur - SilyProcure</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
+        <div class="user-info">
+            <span id="user-name"></span>
+            <button onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+        <a href="rfq.html"><i class="fas fa-file-alt"></i> RFQ</a>
+        <a href="devis.html"><i class="fas fa-briefcase"></i> Devis</a>
+        <a href="commandes.html"><i class="fas fa-shopping-cart"></i> Commandes</a>
+        <a href="factures.html"><i class="fas fa-file-invoice"></i> Factures</a>
+        <a href="entreprises.html" class="active"><i class="fas fa-building"></i> Entreprises</a>
+        <a href="produits.html"><i class="fas fa-box"></i> Produits</a>
+        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section" style="text-align: left; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <button class="btn btn-secondary" onclick="window.history.back()" style="margin-bottom: 1rem;">
+                        ← Retour
+                    </button>
+                    <h1 class="hero-title" style="font-size: 2rem; margin: 0;"><i class="fas fa-box"></i> Catalogue Produits</h1>
+                    <p class="hero-description" style="text-align: left; margin: 0.5rem 0 0 0; max-width: 100%;">
+                        Gérez votre catalogue de produits et importez depuis Excel
+                    </p>
+                </div>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn-success" onclick="downloadTemplate()">
+                        <i class="fas fa-download"></i> Télécharger Template Excel
+                    </button>
+                    <button class="btn btn-primary" onclick="showUploadModal()">
+                        <i class="fas fa-upload"></i> Importer depuis Excel
+                    </button>
+                    <button class="btn btn-primary" onclick="showAddProductModal()">
+                        <i class="fas fa-plus"></i> Ajouter un produit
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--color-neutral); pointer-events: none;"></i>
+                        <input type="text" id="search-input" placeholder="Rechercher (référence, libellé)..." 
+                               class="input" onkeyup="filterProducts()" style="padding-left: 2.5rem;">
+                    </div>
+                </div>
+                <div style="min-width: 200px;">
+                    <select id="categorie-filter" class="input" onchange="filterProducts()">
+                        <option value="">Toutes les catégories</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="disponible-filter" class="input" onchange="filterProducts()">
+                        <option value="">Tous</option>
+                        <option value="1">Disponibles</option>
+                        <option value="0">Non disponibles</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des produits -->
+        <div id="produits-container">
+            <div class="loading"><div class="loading-spinner"></div> Chargement...</div>
+        </div>
+    </div>
+
+    <!-- Modal Upload Excel -->
+    <div id="upload-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-upload"></i> Importer des produits depuis Excel</h2>
+                <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1rem;">
+                    Téléchargez d'abord le template Excel, remplissez-le avec vos produits, puis importez-le ici.
+                </p>
+                <div style="margin-bottom: 1rem;">
+                    <label class="label">Fichier Excel (.xlsx, .xls)</label>
+                    <input type="file" id="excel-file" accept=".xlsx,.xls" class="input">
+                </div>
+                <div id="upload-progress" style="display: none;">
+                    <div class="loading"><div class="loading-spinner"></div> Import en cours...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeUploadModal()">Annuler</button>
+                <button class="btn btn-primary" onclick="uploadExcel()"><i class="fas fa-upload"></i> Importer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ajouter/Modifier Produit -->
+    <div id="product-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2 id="product-modal-title"><i class="fas fa-plus"></i> Ajouter un produit</h2>
+                <button class="modal-close" onclick="closeProductModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="product-form">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label class="label">Référence *</label>
+                            <input type="text" id="product-reference" class="input" required>
+                        </div>
+                        <div>
+                            <label class="label">Référence Fournisseur</label>
+                            <input type="text" id="product-reference-fournisseur" class="input">
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label class="label">Libellé *</label>
+                            <input type="text" id="product-libelle" class="input" required>
+                        </div>
+                        <div>
+                            <label class="label">Catégorie *</label>
+                            <select id="product-categorie" class="input" required>
+                                <option value="">Sélectionner...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label">Unité</label>
+                            <input type="text" id="product-unite" class="input" value="unité">
+                        </div>
+                        <div>
+                            <label class="label">Prix HT (GNF)</label>
+                            <input type="number" id="product-prix-ht" class="input" step="0.01" min="0">
+                        </div>
+                        <div>
+                            <label class="label">Prix Fournisseur (GNF)</label>
+                            <input type="number" id="product-prix-fournisseur" class="input" step="0.01" min="0">
+                        </div>
+                        <div>
+                            <label class="label">TVA %</label>
+                            <input type="number" id="product-tva" class="input" value="18" step="0.01" min="0" max="100">
+                        </div>
+                        <div>
+                            <label class="label">Délai Livraison (jours)</label>
+                            <input type="number" id="product-delai" class="input" min="0">
+                        </div>
+                        <div>
+                            <label class="label">Quantité Minimale</label>
+                            <input type="number" id="product-qte-min" class="input" step="0.01" min="0">
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label class="label">Description</label>
+                            <textarea id="product-description" class="input" rows="3"></textarea>
+                        </div>
+                        <div>
+                            <label class="label">
+                                <input type="checkbox" id="product-disponible" checked> Disponible
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeProductModal()">Annuler</button>
+                <button class="btn btn-primary" onclick="saveProduct()"><i class="fas fa-save"></i> Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+        <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
+<script>
+        checkAuth();
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+
+        // Récupérer l'ID du fournisseur depuis l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const fournisseurId = urlParams.get('fournisseur_id');
+        let currentProductId = null;
+        let currentPage = 1;
+        let categories = [];
+
+        if (!fournisseurId) {
+            Toast.error('ID fournisseur manquant');
+            window.location.href = 'entreprises.html';
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await apiCall('/api/produits/categories');
+                if (response) {
+                    categories = await response.json();
+                    const select = document.getElementById('product-categorie');
+                    const filterSelect = document.getElementById('categorie-filter');
+                    
+                    categories.forEach(cat => {
+                        const option1 = document.createElement('option');
+                        option1.value = cat.id;
+                        option1.textContent = cat.libelle;
+                        select.appendChild(option1);
+
+                        const option2 = document.createElement('option');
+                        option2.value = cat.id;
+                        option2.textContent = cat.libelle;
+                        filterSelect.appendChild(option2);
+                    });
+                }
+            } catch (error) {
+                console.error('Erreur chargement catégories:', error);
+            }
+        }
+
+        async function loadProducts(page = 1) {
+            try {
+                showLoading('Chargement des produits...');
+                const search = document.getElementById('search-input').value;
+                const categorie = document.getElementById('categorie-filter').value;
+                const disponible = document.getElementById('disponible-filter').value;
+
+                let url = `/api/produits/fournisseur/${fournisseurId}?page=${page}&limit=20`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                if (categorie) url += `&categorie_id=${categorie}`;
+                if (disponible) url += `&disponible=${disponible}`;
+
+                const response = await apiCall(url);
+                if (!response) {
+                    hideLoading();
+                    return;
+                }
+
+                const data = await response.json();
+                hideLoading();
+                displayProducts(data);
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors du chargement');
+                console.error('Erreur:', error);
+            }
+        }
+
+        function displayProducts(data) {
+            const container = document.getElementById('produits-container');
+            
+            if (!data.data || data.data.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-box"></i></div>
+                        <div class="empty-state-title">Aucun produit</div>
+                        <div class="empty-state-description">Commencez par ajouter un produit ou importer depuis Excel</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Produits (${data.pagination.total})</h2>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Réf.</th>
+                                <th>Réf. Fournisseur</th>
+                                <th>Libellé</th>
+                                <th>Catégorie</th>
+                                <th>Prix HT</th>
+                                <th>Prix Fournisseur</th>
+                                <th>Disponible</th>
+                                <th>Délai</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            data.data.forEach(produit => {
+                html += `
+                    <tr>
+                        <td><strong>${produit.reference}</strong></td>
+                        <td>${produit.reference_fournisseur || '-'}</td>
+                        <td>${produit.libelle}</td>
+                        <td>${produit.categorie_libelle || '-'}</td>
+                        <td>${produit.prix_unitaire_ht ? formatCurrency(produit.prix_unitaire_ht) : '-'}</td>
+                        <td>${produit.prix_fournisseur ? formatCurrency(produit.prix_fournisseur) : '-'}</td>
+                        <td>${produit.disponible ? '<span class="badge badge-success">Oui</span>' : '<span class="badge badge-danger">Non</span>'}</td>
+                        <td>${produit.delai_livraison_jours ? produit.delai_livraison_jours + ' j' : '-'}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="editProduct(${produit.id})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${produit.id})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Pagination
+            if (data.pagination.pages > 1) {
+                html += `
+                    <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 1rem;">
+                        <button class="btn btn-secondary" onclick="loadProducts(${data.pagination.page - 1})" 
+                                ${data.pagination.page === 1 ? 'disabled' : ''}>← Précédent</button>
+                        <span style="padding: 0.5rem 1rem; display: flex; align-items: center;">
+                            Page ${data.pagination.page} / ${data.pagination.pages}
+                        </span>
+                        <button class="btn btn-secondary" onclick="loadProducts(${data.pagination.page + 1})" 
+                                ${data.pagination.page === data.pagination.pages ? 'disabled' : ''}>Suivant →</button>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+            currentPage = data.pagination.page;
+        }
+
+        function filterProducts() {
+            loadProducts(1);
+        }
+
+        function downloadTemplate() {
+            window.location.href = '/api/upload/template';
+        }
+
+        function showUploadModal() {
+            document.getElementById('upload-modal').style.display = 'flex';
+        }
+
+        function closeUploadModal() {
+            document.getElementById('upload-modal').style.display = 'none';
+            document.getElementById('excel-file').value = '';
+            document.getElementById('upload-progress').style.display = 'none';
+        }
+
+        async function uploadExcel() {
+            const fileInput = document.getElementById('excel-file');
+            if (!fileInput.files || !fileInput.files[0]) {
+                Toast.error('Veuillez sélectionner un fichier');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                document.getElementById('upload-progress').style.display = 'block';
+                const token = localStorage.getItem('token');
+                
+                const response = await fetch(`/api/upload/produits/${fournisseurId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+                document.getElementById('upload-progress').style.display = 'none';
+
+                if (response.ok) {
+                    Toast.success(result.message);
+                    closeUploadModal();
+                    loadProducts();
+                } else {
+                    Toast.error(result.error || 'Erreur lors de l\'import');
+                }
+            } catch (error) {
+                document.getElementById('upload-progress').style.display = 'none';
+                Toast.error('Erreur lors de l\'import');
+                console.error('Erreur:', error);
+            }
+        }
+
+        function showAddProductModal() {
+            currentProductId = null;
+            document.getElementById('product-modal-title').textContent = '<i class="fas fa-plus"></i> Ajouter un produit';
+            document.getElementById('product-form').reset();
+            document.getElementById('product-disponible').checked = true;
+            document.getElementById('product-modal').style.display = 'flex';
+        }
+
+        function closeProductModal() {
+            document.getElementById('product-modal').style.display = 'none';
+            currentProductId = null;
+        }
+
+        async function editProduct(id) {
+            try {
+                showLoading('Chargement...');
+                const response = await apiCall(`/api/produits/${id}`);
+                if (!response) {
+                    hideLoading();
+                    return;
+                }
+
+                const produit = await response.json();
+                hideLoading();
+
+                currentProductId = id;
+                document.getElementById('product-modal-title').textContent = '<i class="fas fa-edit"></i> Modifier le produit';
+                document.getElementById('product-reference').value = produit.reference || '';
+                document.getElementById('product-reference-fournisseur').value = produit.reference_fournisseur || '';
+                document.getElementById('product-libelle').value = produit.libelle || '';
+                document.getElementById('product-categorie').value = produit.categorie_id || '';
+                document.getElementById('product-unite').value = produit.unite || 'unité';
+                document.getElementById('product-prix-ht').value = produit.prix_unitaire_ht || '';
+                document.getElementById('product-prix-fournisseur').value = produit.prix_fournisseur || '';
+                document.getElementById('product-tva').value = produit.tva_taux || 18;
+                document.getElementById('product-delai').value = produit.delai_livraison_jours || '';
+                document.getElementById('product-qte-min').value = produit.quantite_minimale || '';
+                document.getElementById('product-description').value = produit.description || '';
+                document.getElementById('product-disponible').checked = produit.disponible !== false;
+
+                document.getElementById('product-modal').style.display = 'flex';
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors du chargement');
+                console.error('Erreur:', error);
+            }
+        }
+
+        async function saveProduct() {
+            const form = document.getElementById('product-form');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const data = {
+                reference: document.getElementById('product-reference').value,
+                reference_fournisseur: document.getElementById('product-reference-fournisseur').value,
+                libelle: document.getElementById('product-libelle').value,
+                categorie_id: document.getElementById('product-categorie').value,
+                unite: document.getElementById('product-unite').value,
+                prix_unitaire_ht: document.getElementById('product-prix-ht').value || null,
+                prix_fournisseur: document.getElementById('product-prix-fournisseur').value || null,
+                tva_taux: document.getElementById('product-tva').value,
+                description: document.getElementById('product-description').value,
+                disponible: document.getElementById('product-disponible').checked,
+                delai_livraison_jours: document.getElementById('product-delai').value || null,
+                quantite_minimale: document.getElementById('product-qte-min').value || null
+            };
+
+            try {
+                showLoading('Enregistrement...');
+                let response;
+                if (currentProductId) {
+                    response = await apiCall(`/api/produits/fournisseur/${fournisseurId}/${currentProductId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    response = await apiCall(`/api/produits/fournisseur/${fournisseurId}`, {
+                        method: 'POST',
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                hideLoading();
+                if (response && response.ok) {
+                    Toast.success('Produit enregistré avec succès');
+                    closeProductModal();
+                    loadProducts();
+                } else {
+                    const error = await response.json();
+                    Toast.error(error.error || 'Erreur lors de l\'enregistrement');
+                }
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors de l\'enregistrement');
+                console.error('Erreur:', error);
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
+                return;
+            }
+
+            try {
+                showLoading('Suppression...');
+                const response = await apiCall(`/api/produits/fournisseur/${fournisseurId}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                hideLoading();
+                if (response && response.ok) {
+                    Toast.success('Produit supprimé avec succès');
+                    loadProducts();
+                } else {
+                    const error = await response.json();
+                    Toast.error(error.error || 'Erreur lors de la suppression');
+                }
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors de la suppression');
+                console.error('Erreur:', error);
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('fr-FR', {
+                style: 'currency',
+                currency: 'GNF',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // Initialisation
+        loadCategories();
+        loadProducts();
+    </script>
+</body>
+</html>
+

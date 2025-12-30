@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails Devis - SilyProcure</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
+        <div class="user-info">
+            <span id="user-name"></span>
+            <button onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="rfq.html">RFQ</a>
+        <a href="devis.html" class="active">Devis</a>
+        <a href="commandes.html">Commandes</a>
+        <a href="factures.html">Factures</a>
+        <a href="entreprises.html">Entreprises</a>
+        <a href="produits.html">Produits</a>
+        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section" style="text-align: left; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <button class="btn btn-secondary" onclick="window.location.href='devis.html'" style="margin-bottom: 1rem;">
+                        ← Retour à la liste
+                    </button>
+                    <h1 class="hero-title" style="font-size: 2rem; margin: 0;"><i class="fas fa-briefcase"></i> Détails du devis</h1>
+                    <p class="hero-description" style="text-align: left; margin: 0.5rem 0 0 0; max-width: 100%;">
+                        Consultez les détails complets du devis et effectuez les actions nécessaires
+                    </p>
+                </div>
+                <div id="devis-actions"></div>
+            </div>
+        </div>
+
+        <div id="devis-details">
+            <div class="loading"><div class="loading-spinner"></div> Chargement...</div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/forms.js"></script>
+    <script src="js/fileUpload.js"></script>
+        <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
+    <script>
+        checkAuth();
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const devisId = urlParams.get('id');
+
+        // Définir les fonctions AVANT de charger les détails
+        async function accepterDevis(id) {
+            console.log('accepterDevis appelé avec id:', id);
+            if (!confirm('Voulez-vous accepter ce devis et créer une commande ?')) {
+                return;
+            }
+            
+            try {
+                showLoading('Création de la commande...');
+                
+                // Récupérer les détails du devis
+                const devisResponse = await apiCall(`/api/devis/${id}`);
+                if (!devisResponse || !devisResponse.ok) {
+                    hideLoading();
+                    const errorData = await devisResponse.json().catch(() => ({ error: 'Erreur lors de la récupération du devis' }));
+                    Toast.error(errorData.error || 'Erreur lors de la récupération du devis');
+                    return;
+                }
+                
+                const devis = await devisResponse.json();
+                console.log('Devis récupéré:', devis);
+                
+                // Créer la commande depuis le devis
+                const commandeData = {
+                    numero: `BC-${new Date().getFullYear()}-${Date.now()}`,
+                    type_commande: 'BC',
+                    date_commande: new Date().toISOString().split('T')[0],
+                    devis_id: id,
+                    rfq_id: devis.rfq_id,
+                    fournisseur_id: devis.fournisseur_id,
+                    lignes: (devis.lignes || []).map(l => ({
+                        produit_id: l.produit_id,
+                        reference: l.reference,
+                        description: l.description,
+                        quantite: l.quantite,
+                        unite: l.unite,
+                        prix_unitaire_ht: l.prix_unitaire_ht,
+                        remise: l.remise || 0,
+                        tva_taux: l.tva_taux || 20
+                    }))
+                };
+                
+                console.log('Création de la commande avec les données:', commandeData);
+                
+                const commandeResponse = await apiCall('/api/commandes', {
+                    method: 'POST',
+                    body: JSON.stringify(commandeData)
+                });
+                
+                if (!commandeResponse) {
+                    hideLoading();
+                    Toast.error('Erreur de connexion');
+                    return;
+                }
+                
+                if (commandeResponse.ok) {
+                    // Mettre à jour le statut du devis à "accepte"
+                    const statutResponse = await apiCall(`/api/devis/${id}/statut`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ statut: 'accepte' })
+                    });
+                    
+                    if (statutResponse && statutResponse.ok) {
+                        const commandeData = await commandeResponse.json();
+                        const statutData = await statutResponse.json();
+                        console.log('Commande créée:', commandeData);
+                        console.log('Statut devis mis à jour:', statutData);
+                        Toast.success('Devis accepté et commande créée avec succès');
+                        setTimeout(() => {
+                            // Option 1: Rediriger vers commandes
+                            // window.location.href = 'commandes.html';
+                            // Option 2: Recharger la page pour voir le statut mis à jour
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        const errorStatut = await statutResponse.json().catch(() => ({ error: 'Erreur inconnue' }));
+                        console.error('Erreur mise à jour statut:', errorStatut);
+                        Toast.warning('Commande créée mais erreur lors de la mise à jour du statut du devis: ' + (errorStatut.error || 'Erreur inconnue'));
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    }
+                } else {
+                    const errorData = await commandeResponse.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    console.error('Erreur création commande:', errorData);
+                    Toast.error(errorData.error || 'Erreur lors de la création de la commande');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur de connexion: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        async function refuserDevis(id) {
+            console.log('refuserDevis appelé avec id:', id);
+            if (!confirm('Êtes-vous sûr de vouloir refuser ce devis ?')) {
+                return;
+            }
+            
+            try {
+                showLoading('Refus du devis...');
+                console.log('Envoi de la requête PATCH...');
+                const response = await apiCall(`/api/devis/${id}/statut`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ statut: 'refuse' })
+                });
+                
+                console.log('Réponse reçue:', response);
+                
+                if (!response) {
+                    hideLoading();
+                    Toast.error('Erreur de connexion');
+                    return;
+                }
+                
+                if (response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    console.log('Devis refusé:', data);
+                    Toast.success('Devis refusé');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    console.error('Erreur API:', errorData);
+                    Toast.error(errorData.error || 'Erreur lors du refus');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur de connexion: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Exposer les fonctions globalement
+        window.accepterDevis = accepterDevis;
+        window.refuserDevis = refuserDevis;
+
+        async function loadDevisDetails() {
+            if (!devisId) {
+                Toast.error('Devis non spécifié');
+                window.location.href = 'devis.html';
+                return;
+            }
+
+            try {
+                showLoading('Chargement...');
+                const response = await apiCall(`/api/devis/${devisId}`);
+                if (!response) {
+                    hideLoading();
+                    return;
+                }
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    hideLoading();
+                    Toast.error('Erreur: ' + (errorData.error || 'Devis non trouvé'));
+                    setTimeout(() => window.location.href = 'devis.html', 2000);
+                    return;
+                }
+
+                const devis = await response.json();
+                hideLoading();
+                displayDevisDetails(devis);
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors du chargement');
+                console.error('Erreur:', error);
+            }
+        }
+
+        function displayDevisDetails(devis) {
+            console.log('displayDevisDetails appelé avec devis:', devis);
+            const container = document.getElementById('devis-details');
+            const actionsContainer = document.getElementById('devis-actions');
+
+            // Actions selon le statut
+            console.log('Statut du devis:', devis.statut);
+            let actionsHTML = `<button class="btn btn-secondary" onclick="window.open('/api/pdf/devis/${devis.id}', '_blank')" style="margin-right: 0.5rem;"><i class="fas fa-file-pdf"></i> PDF</button>`;
+            if (devis.statut === 'brouillon') {
+                actionsHTML += `
+                    <button class="btn btn-primary" onclick="if(typeof editDevisForm==='function'){editDevisForm(${devis.id});}else{alert('Fonction non disponible');}"><i class="fas fa-edit"></i> Modifier</button>
+                `;
+            } else if (devis.statut === 'envoye') {
+                console.log('Statut est "envoye", création des boutons Accepter/Refuser');
+                // Utiliser onclick directement dans le HTML pour éviter les problèmes de cache
+                actionsHTML = `
+                    <button class="btn btn-success" onclick="if(typeof window.accepterDevis==='function'){window.accepterDevis(${devis.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-check"></i> Accepter</button>
+                    <button class="btn btn-danger" onclick="if(typeof window.refuserDevis==='function'){window.refuserDevis(${devis.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}" style="margin-left: 0.5rem;"><i class="fas fa-times"></i> Refuser</button>
+                `;
+            } else {
+                console.log('Statut non géré:', devis.statut, '- Aucun bouton d\'action affiché');
+            }
+            actionsContainer.innerHTML = actionsHTML;
+
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">${devis.numero || 'Devis-' + devis.id}</h2>
+                        <span class="badge ${getStatusBadge(devis.statut)}">${getStatusLabel(devis.statut)}</span>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                            <div>
+                                <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-clipboard-list"></i> Informations générales</h3>
+                                <div style="line-height: 2;">
+                                    <div><strong>RFQ:</strong> ${devis.rfq_numero || '-'}</div>
+                                    <div><strong>Fournisseur:</strong> ${devis.fournisseur_nom || '-'}</div>
+                                    <div><strong>Date d'émission:</strong> ${formatDate(devis.date_emission)}</div>
+                                    <div><strong>Date de validité:</strong> ${formatDate(devis.date_validite) || 'Non spécifiée'}</div>
+                                    <div><strong>Délai de livraison:</strong> ${devis.delai_livraison ? devis.delai_livraison + ' jours' : '-'}</div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-money-bill-wave"></i> Montants</h3>
+                                <div style="line-height: 2;">
+                                    <div><strong>Total HT:</strong> ${formatCurrency(devis.total_ht || 0)}</div>
+                                    <div><strong>Total TVA:</strong> ${formatCurrency(devis.total_tva || 0)}</div>
+                                    <div style="font-size: 1.25rem; font-weight: bold; color: var(--color-primary); margin-top: 0.5rem;">
+                                        Total TTC: ${formatCurrency(devis.total_ttc || 0)}
+                                    </div>
+                                    ${devis.remise_globale ? `<div><strong>Remise globale:</strong> ${devis.remise_globale}%</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        ${devis.lignes && devis.lignes.length > 0 ? `
+                            <h3 style="margin: 1.5rem 0 1rem 0; color: var(--color-primary);"><i class="fas fa-box"></i> Lignes de devis</h3>
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Description</th>
+                                            <th>Quantité</th>
+                                            <th>Unité</th>
+                                            <th>Prix unitaire HT</th>
+                                            <th>Remise</th>
+                                            <th>TVA</th>
+                                            <th>Total HT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${devis.lignes.map(ligne => {
+                                            const prixUnitaire = parseFloat(ligne.prix_unitaire_ht || 0);
+                                            const quantite = parseFloat(ligne.quantite || 0);
+                                            const remise = parseFloat(ligne.remise || 0);
+                                            const tva = parseFloat(ligne.tva_taux || 20);
+                                            const montantHT = prixUnitaire * quantite * (1 - remise / 100);
+                                            const montantTVA = montantHT * (tva / 100);
+                                            const totalHT = montantHT;
+                                            
+                                            return `
+                                                <tr>
+                                                    <td>${ligne.description || '-'}</td>
+                                                    <td>${quantite}</td>
+                                                    <td>${ligne.unite || '-'}</td>
+                                                    <td>${formatCurrency(prixUnitaire)}</td>
+                                                    <td>${remise > 0 ? remise + '%' : '-'}</td>
+                                                    <td>${tva}%</td>
+                                                    <td><strong>${formatCurrency(totalHT)}</strong></td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : ''}
+
+                        ${devis.conditions_paiement ? `
+                            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--color-background-blue); border-radius: 8px;">
+                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-credit-card"></i> Conditions de paiement</h4>
+                                <p style="margin: 0;">${devis.conditions_paiement}</p>
+                            </div>
+                        ` : ''}
+
+                        ${devis.garanties ? `
+                            <div style="margin-top: 1rem; padding: 1rem; background: var(--color-background-blue); border-radius: 8px;">
+                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-shield"></i>️ Garanties</h4>
+                                <p style="margin: 0;">${devis.garanties}</p>
+                            </div>
+                        ` : ''}
+
+                        ${devis.certifications ? `
+                            <div style="margin-top: 1rem; padding: 1rem; background: var(--color-background-blue); border-radius: 8px;">
+                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-check"></i> Certifications</h4>
+                                <p style="margin: 0;">${devis.certifications}</p>
+                            </div>
+                        ` : ''}
+
+                        ${devis.notes ? `
+                            <div style="margin-top: 1rem; padding: 1rem; background: var(--color-background-light); border-radius: 8px;">
+                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-edit"></i> Notes</h4>
+                                <p style="margin: 0;">${devis.notes}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            // Ajouter la section fichiers joints
+            container.innerHTML += '<div id="fichiers-joints-container"></div>';
+            
+            // Initialiser le gestionnaire de fichiers
+            if (devisId) {
+                initFileUpload('devis', devisId, 'fichiers-joints-container');
+            }
+        }
+
+        function editDevis(id) {
+            if (typeof window.editDevisForm === 'function') {
+                window.editDevisForm(id);
+            } else {
+                Toast.error('Fonction d\'édition non disponible');
+            }
+        }
+
+        // Charger les détails du devis au chargement de la page
+        loadDevisDetails();
+    </script>
+</body>
+</html>
+

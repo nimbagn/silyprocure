@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demandes de Devis - SilyProcure</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/auth.js"></script>
+    <style>
+        /* Centrer le contenu principal de la page - Mode Paysage */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: var(--color-background-light);
+        }
+
+        .container {
+            max-width: 95%;
+            margin: 0 auto;
+            width: 100%;
+            padding: 1.5rem;
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto 1fr;
+            gap: 1.5rem;
+            grid-template-areas: 
+                "hero hero"
+                "stats actions"
+                "table table";
+        }
+
+        /* Centrer les éléments principaux */
+        .demandes-hero {
+            grid-area: hero;
+            width: 100%;
+            margin: 0;
+        }
+
+        .demandes-stats {
+            grid-area: stats;
+            width: 100%;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .demandes-actions-bar {
+            grid-area: actions;
+            width: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            justify-content: flex-start;
+        }
+
+        .card {
+            grid-area: table;
+            width: 100%;
+            margin: 0;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                max-width: 100%;
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+                gap: 1.5rem;
+            }
+        }
+
+        /* Styles spécifiques pour la page Demandes Devis */
+        .demandes-hero {
+            background: var(--color-primary);
+            color: white;
+            padding: 2.5rem 2rem;
+            border-radius: 16px;
+            margin: 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .demandes-hero-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .demandes-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .demandes-hero p {
+            font-size: 1.125rem;
+            opacity: 0.95;
+            margin: 0.5rem 0 0 0;
+        }
+
+        /* .demandes-stats est défini dans la section container avec grid-area */
+
+        .demande-stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+            border: 1px solid rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .demande-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--color-primary);
+        }
+
+        .demande-stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.15);
+        }
+
+        .demande-stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .demande-stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .demande-stat-label {
+            font-size: 0.9rem;
+            color: var(--color-neutral);
+            font-weight: 500;
+        }
+
+        .demandes-actions-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .demandes-search-modern {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .demandes-search-modern input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 2px solid #E0E7FF;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .demandes-search-modern input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(0, 56, 122, 0.1);
+        }
+
+        .demandes-search-modern i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-neutral);
+            pointer-events: none;
+        }
+
+        .demandes-filter-modern {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .demandes-filter-modern select {
+            padding: 1rem 1.5rem;
+            border: 2px solid #E0E7FF;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            background: white;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            min-width: 180px;
+        }
+
+        .demandes-filter-modern select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(0, 56, 122, 0.1);
+        }
+
+        .demandes-table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+        }
+
+        .demandes-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .demandes-table thead {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .demandes-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .demandes-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .demandes-table tbody tr {
+            transition: var(--transition);
+        }
+
+        .demandes-table tbody tr:hover {
+            background: var(--color-background-light);
+        }
+
+        .demandes-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .demande-card-mobile {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--color-primary);
+        }
+
+        .demande-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .demande-card-info {
+            flex: 1;
+        }
+
+        .demande-card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .demande-card-meta {
+            font-size: 0.875rem;
+            color: var(--color-neutral);
+            margin-top: 0.5rem;
+        }
+
+        .demande-card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .demandes-hero h1 {
+                font-size: 2rem;
+            }
+
+            .demandes-stats {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            .demande-stat-value {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .demandes-hero {
+                padding: 2rem 1.5rem;
+            }
+
+            .demandes-hero-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .demandes-hero h1 {
+                font-size: 1.75rem;
+            }
+
+            .demandes-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .demande-stat-card {
+                padding: 1.25rem;
+            }
+
+            .demande-stat-value {
+                font-size: 1.75rem;
+            }
+
+            .demandes-table-wrapper {
+                display: none;
+            }
+
+            .demande-card-mobile {
+                display: block;
+            }
+
+            .demandes-actions-bar {
+                flex-direction: column;
+            }
+
+            .demandes-search-modern {
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .demandes-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .demande-card-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .demande-card-actions .btn {
+                width: 100%;
+            }
+        }
+
+        /* Styles pour centrer les modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(6px);
+            animation: fadeIn 0.3s ease;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            overflow-y: auto;
+            position: relative;
+            animation: slideUp 0.3s ease;
+            margin: auto;
+            width: 794px;
+            height: 562px;
+            max-width: 794px;
+            max-height: 562px;
+            border: 2px solid rgba(0, 56, 122, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: var(--color-background-light);
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: var(--color-neutral-light);
+            border-radius: 4px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: var(--color-neutral);
+        }
+
+        /* Empêcher le scroll du body quand modal ouvert */
+        body.modal-open {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
+    
+    <div class="header">
+        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
+        <div class="user-info">
+            <span id="user-name"></span>
+            <button onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+        <a href="demandes-devis.html" class="active"><i class="fas fa-inbox"></i> Demandes Devis</a>
+        <a href="clients.html"><i class="fas fa-users"></i> Clients</a>
+        <a href="rfq.html"><i class="fas fa-file-alt"></i> RFQ</a>
+        <a href="devis.html"><i class="fas fa-briefcase"></i> Devis</a>
+        <a href="commandes.html"><i class="fas fa-shopping-cart"></i> Commandes</a>
+        <a href="factures.html"><i class="fas fa-file-invoice"></i> Factures</a>
+        <a href="entreprises.html"><i class="fas fa-building"></i> Entreprises</a>
+        <a href="produits.html"><i class="fas fa-box"></i> Produits</a>
+        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="demandes-hero">
+            <div class="demandes-hero-content">
+                <div>
+                    <h1><i class="fas fa-inbox"></i> Demandes de Devis</h1>
+                    <p>Gérez les demandes de devis de vos clients et créez des RFQ pour vos fournisseurs</p>
+                </div>
+                <button class="btn btn-secondary" onclick="refreshDemandes()" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                    <i class="fas fa-sync-alt"></i> Actualiser
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistiques rapides -->
+        <div class="demandes-stats" id="stats-demandes">
+            <div class="loading">Chargement des statistiques...</div>
+        </div>
+
+        <!-- Barre de recherche et filtres -->
+        <div class="demandes-actions-bar">
+            <div class="demandes-search-modern">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="Rechercher (nom, email, entreprise)..." 
+                       onkeyup="filterDemandes()">
+            </div>
+            <div class="demandes-filter-modern">
+                <select id="statut-filter" onchange="filterDemandes()">
+                    <option value="">Tous les statuts</option>
+                    <option value="nouvelle">Nouvelle</option>
+                    <option value="en_cours">En cours</option>
+                    <option value="traitee">Traitée</option>
+                    <option value="annulee">Annulée</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Liste des demandes -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-list"></i> Liste des demandes</h2>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                <!-- Tableau desktop -->
+                <div class="demandes-table-wrapper">
+                    <div id="demandes-table-container">
+                        <div class="loading" style="padding: 2rem; text-align: center;">Chargement des demandes...</div>
+                    </div>
+                </div>
+                <!-- Cards mobile -->
+                <div id="demandes-cards-mobile" style="padding: 1rem; display: none;">
+                    <!-- Les cards mobiles seront générées ici -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de détails -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content" style="width: 794px; height: 562px; max-width: 794px; max-height: 562px; margin: auto; display: flex; flex-direction: column;">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%); color: white; padding: 1rem 1.5rem; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; margin-bottom: 0; flex-shrink: 0;">
+                <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-info-circle"></i> Détails de la demande
+                </h2>
+                <button class="modal-close" onclick="closeDetailModal()" style="background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; font-size: 1rem; flex-shrink: 0;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="detail-modal-body" style="padding: 1rem; max-width: 100%; background: white; overflow-y: auto; flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                <div class="loading">Chargement...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de prévisualisation de fichier -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content" style="max-width: 90vw; max-height: 90vh; width: auto; height: auto;">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%); color: white; padding: 1rem 1.5rem; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; margin-bottom: 0; flex-shrink: 0;">
+                <h2 id="preview-title" style="margin: 0; font-size: 1.125rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-eye"></i> Prévisualisation
+                </h2>
+                <button class="modal-close" onclick="closePreviewModal()" style="background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; font-size: 1rem; flex-shrink: 0;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="preview-content" class="modal-body" style="padding: 1.5rem; max-width: 100%; background: white; overflow-y: auto; flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                <!-- Le contenu de prévisualisation sera injecté ici -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Créer RFQ -->
+    <div id="createRFQModal" class="modal">
+        <div class="modal-content" style="max-width: 1000px; width: 95%;">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-alt"></i> Créer des RFQ depuis cette demande</h2>
+                <button class="modal-close" onclick="closeCreateRFQModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <form id="createRFQForm" onsubmit="submitCreateRFQ(event)">
+                    <div class="form-group">
+                        <label><i class="fas fa-building"></i> Sélectionner les fournisseurs *</label>
+                        <div id="fournisseurs-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 1rem;">
+                            <div class="loading">Chargement des fournisseurs...</div>
+                        </div>
+                        <small style="color: var(--color-neutral); margin-top: 0.5rem; display: block;">
+                            Sélectionnez un ou plusieurs fournisseurs du secteur concerné
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar"></i> Date limite de réponse</label>
+                        <input type="date" id="date_limite_reponse" name="date_limite_reponse" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-truck"></i> Date de livraison souhaitée</label>
+                        <input type="date" id="date_livraison_souhaitee" name="date_livraison_souhaitee" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-globe"></i> Incoterms</label>
+                        <select id="incoterms" name="incoterms" class="form-control">
+                            <option value="">Sélectionner</option>
+                            <option value="EXW">EXW - Ex Works</option>
+                            <option value="FCA">FCA - Free Carrier</option>
+                            <option value="CPT">CPT - Carriage Paid To</option>
+                            <option value="CIP">CIP - Carriage and Insurance Paid</option>
+                            <option value="DAP">DAP - Delivered At Place</option>
+                            <option value="DPU">DPU - Delivered at Place Unloaded</option>
+                            <option value="DDP">DDP - Delivered Duty Paid</option>
+                            <option value="FOB">FOB - Free On Board</option>
+                            <option value="CFR">CFR - Cost and Freight</option>
+                            <option value="CIF">CIF - Cost, Insurance and Freight</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-money-bill-wave"></i> Conditions de paiement</label>
+                        <input type="text" id="conditions_paiement" name="conditions_paiement" class="form-control" 
+                               placeholder="Ex: 30% à la commande, 70% à la livraison">
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                        <button type="button" class="btn btn-secondary" onclick="closeCreateRFQModal()">Annuler</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check"></i> Créer les RFQ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de modification -->
+    <div id="editModal" class="modal">
+        <div class="modal-content" style="max-width: 700px; width: 95%;">
+            <div class="modal-header">
+                <h2><i class="fas fa-edit"></i> Modifier le statut</h2>
+                <button class="modal-close" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <form id="edit-form" onsubmit="handleUpdateStatut(event)">
+                    <input type="hidden" id="edit-id">
+                    <div class="form-group">
+                        <label>Statut *</label>
+                        <select id="edit-statut" class="form-control" required>
+                            <option value="nouvelle">Nouvelle</option>
+                            <option value="en_cours">En cours</option>
+                            <option value="traitee">Traitée</option>
+                            <option value="annulee">Annulée</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes internes</label>
+                        <textarea id="edit-notes" class="form-control" rows="4" 
+                                  placeholder="Ajoutez des notes pour le suivi..."></textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                        <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allDemandes = [];
+        let currentPage = 1;
+        const limit = 50;
+
+        // Vérifier l'authentification
+        if (checkAuth()) {
+            // Vérifier que l'utilisateur est admin ou superviseur
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.role !== 'admin' && user.role !== 'superviseur') {
+                Toast.error('Accès refusé. Cette page est réservée aux administrateurs et superviseurs.');
+                window.location.href = 'dashboard.html';
+            } else {
+                loadDemandes();
+                loadStats();
+            }
+        }
+
+        async function loadDemandes() {
+            try {
+                const statut = document.getElementById('statut-filter')?.value || '';
+                const url = `/api/contact/demandes?page=${currentPage}&limit=${limit}${statut ? '&statut=' + statut : ''}`;
+                
+                const response = await apiCall(url);
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des demandes');
+                }
+
+                const data = await response.json();
+                allDemandes = data.demandes || [];
+                displayDemandes(allDemandes);
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur lors du chargement des demandes');
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await apiCall('/api/contact/demandes?limit=1000');
+                if (!response.ok) return;
+
+                const data = await response.json();
+                const demandes = data.demandes || [];
+
+                const stats = {
+                    totale: demandes.length,
+                    nouvelle: demandes.filter(d => d.statut === 'nouvelle').length,
+                    en_cours: demandes.filter(d => d.statut === 'en_cours').length,
+                    traitee: demandes.filter(d => d.statut === 'traitee').length
+                };
+
+                const statsHtml = `
+                    <div class="demande-stat-card">
+                        <div class="demande-stat-icon" style="background: #00387A;">
+                            <i class="fas fa-inbox"></i>
+                        </div>
+                        <div class="demande-stat-value">${stats.totale}</div>
+                        <div class="demande-stat-label">Total</div>
+                    </div>
+                    <div class="demande-stat-card">
+                        <div class="demande-stat-icon" style="background: #FF6600;">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div class="demande-stat-value">${stats.nouvelle}</div>
+                        <div class="demande-stat-label">Nouvelles</div>
+                    </div>
+                    <div class="demande-stat-card">
+                        <div class="demande-stat-icon" style="background: #FFB800;">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="demande-stat-value">${stats.en_cours}</div>
+                        <div class="demande-stat-label">En cours</div>
+                    </div>
+                    <div class="demande-stat-card">
+                        <div class="demande-stat-icon" style="background: #00A651;">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="demande-stat-value">${stats.traitee}</div>
+                        <div class="demande-stat-label">Traitées</div>
+                    </div>
+                `;
+
+                document.getElementById('stats-demandes').innerHTML = statsHtml;
+            } catch (error) {
+                console.error('Erreur stats:', error);
+            }
+        }
+
+        function displayDemandes(demandes) {
+            const container = document.getElementById('demandes-table-container');
+            const mobileContainer = document.getElementById('demandes-cards-mobile');
+            
+            if (demandes.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 3rem; text-align: center;"><i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem; color: var(--color-neutral);"></i><p style="color: var(--color-neutral); font-size: 1.125rem;">Aucune demande trouvée</p></div>';
+                if (mobileContainer) {
+                    mobileContainer.innerHTML = '';
+                    mobileContainer.style.display = 'none';
+                }
+                return;
+            }
+
+            // Tableau desktop
+            const table = `
+                <table class="demandes-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Entreprise</th>
+                            <th>Articles</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${demandes.map(d => `
+                            <tr>
+                                <td style="white-space: nowrap; font-size: 0.875rem; color: var(--color-neutral);">${formatDate(d.date_creation)}</td>
+                                <td><strong style="color: var(--color-primary);">${d.nom || '-'}</strong></td>
+                                <td><a href="mailto:${d.email}" style="color: var(--color-primary); text-decoration: none;">${d.email}</a></td>
+                                <td style="color: var(--color-neutral);">${d.entreprise || '-'}</td>
+                                <td><span class="badge badge-info">${d.nb_articles || 0} article(s)</span></td>
+                                <td>${getStatutBadge(d.statut)}</td>
+                                <td>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="btn btn-primary" onclick="viewDemande(${d.id})" title="Voir les détails" style="padding: 0.75rem 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            <i class="fas fa-eye"></i> Détails
+                                        </button>
+                                        <button class="btn btn-secondary" onclick="editDemande(${d.id})" title="Modifier" style="padding: 0.75rem 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                                            <i class="fas fa-edit"></i> Modifier
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = table;
+
+            // Cards mobile
+            if (mobileContainer && window.innerWidth <= 768) {
+                const cardsHtml = demandes.map(d => `
+                    <div class="demande-card-mobile">
+                        <div class="demande-card-header">
+                            <div class="demande-card-info">
+                                <div class="demande-card-title">${d.nom || 'Sans nom'}</div>
+                                <div class="demande-card-meta">
+                                    <div><i class="fas fa-envelope"></i> <a href="mailto:${d.email}" style="color: var(--color-primary);">${d.email}</a></div>
+                                    ${d.entreprise ? `<div style="margin-top: 0.25rem;"><i class="fas fa-building"></i> ${d.entreprise}</div>` : ''}
+                                    <div style="margin-top: 0.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                                        <span style="font-size: 0.8rem; color: var(--color-neutral);"><i class="fas fa-calendar"></i> ${formatDate(d.date_creation)}</span>
+                                        <span class="badge badge-info" style="font-size: 0.8rem;">${d.nb_articles || 0} article(s)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 0.5rem;">
+                                ${getStatutBadge(d.statut)}
+                            </div>
+                        </div>
+                        <div class="demande-card-actions">
+                            <button class="btn btn-primary" onclick="viewDemande(${d.id})" style="flex: 1; padding: 0.75rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <i class="fas fa-eye"></i> Voir les détails
+                            </button>
+                            <button class="btn btn-secondary" onclick="editDemande(${d.id})" style="flex: 1; padding: 0.75rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                <i class="fas fa-edit"></i> Modifier
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                mobileContainer.innerHTML = cardsHtml;
+                mobileContainer.style.display = 'block';
+            } else if (mobileContainer) {
+                mobileContainer.style.display = 'none';
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatService(service) {
+            if (!service) return '-';
+            const services = {
+                'gestion-rfq': 'Gestion RFQ',
+                'comparaison-devis': 'Comparaison Devis',
+                'suivi-commandes': 'Suivi Commandes',
+                'facturation': 'Facturation',
+                'gestion-fournisseurs': 'Gestion Fournisseurs',
+                'tableau-bord': 'Tableau de Bord',
+                'solution-complete': 'Solution complète'
+            };
+            return services[service] || service;
+        }
+
+        function getStatutBadge(statut) {
+            const badges = {
+                'nouvelle': '<span class="badge badge-danger">Nouvelle</span>',
+                'en_cours': '<span class="badge badge-warning">En cours</span>',
+                'traitee': '<span class="badge badge-success">Traitée</span>',
+                'annulee': '<span class="badge badge-secondary">Annulée</span>'
+            };
+            return badges[statut] || statut;
+        }
+
+        async function viewDemande(id) {
+            try {
+                const response = await apiCall(`/api/contact/demandes/${id}`);
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement');
+                }
+
+                const demande = await response.json();
+                const body = document.getElementById('detail-modal-body');
+                
+                // Debug: vérifier les articles
+                console.log('Demande reçue:', demande);
+                console.log('Articles:', demande.articles);
+                
+                // Construire le HTML des articles
+                let articlesHtml = '';
+                if (demande.articles && Array.isArray(demande.articles) && demande.articles.length > 0) {
+                    articlesHtml = `
+                        <div style="background: var(--color-background-light); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--color-accent); grid-column: 1 / -1; grid-row: 2;">
+                            <h3 style="margin-bottom: 0.75rem; color: var(--color-primary); font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-box"></i> Articles demandés (${demande.articles.length})
+                            </h3>
+                            <div style="overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                <table class="demandes-table" style="margin: 0; width: 100%; min-width: 600px;">
+                                    <thead>
+                                        <tr style="background: var(--color-primary); color: white;">
+                                            <th style="padding: 1rem; font-weight: 600;">Description</th>
+                                            <th style="padding: 1rem; font-weight: 600;">Secteur</th>
+                                            <th style="padding: 1rem; font-weight: 600; text-align: center;">Quantité</th>
+                                            <th style="padding: 1rem; font-weight: 600; text-align: center;">Unité</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${demande.articles.map((art, index) => `
+                                            <tr style="${index % 2 === 0 ? 'background: #f9fafb;' : 'background: white;'}">
+                                                <td style="padding: 1rem;"><strong>${art.description || '-'}</strong></td>
+                                                <td style="padding: 1rem;">${art.secteur || '-'}</td>
+                                                <td style="padding: 1rem; text-align: center; font-weight: 600; color: var(--color-primary);">${art.quantite || 0}</td>
+                                                <td style="padding: 1rem; text-align: center;">${art.unite || 'unité'}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    articlesHtml = `
+                        <div style="background: var(--color-background-light); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--color-accent);">
+                            <h3 style="margin-bottom: 1rem; color: var(--color-primary); font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-box"></i> Articles demandés
+                            </h3>
+                            <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center; color: var(--color-neutral);">
+                                <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                                <div>Aucun article spécifié</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                body.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto 1fr; gap: 0.75rem; height: 100%; max-height: 100%; overflow-y: auto;">
+                        <div style="background: var(--color-background-light); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--color-primary); grid-column: 1; grid-row: 1;">
+                            <h3 style="margin-bottom: 0.75rem; color: var(--color-primary); font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-user"></i> Informations du demandeur
+                            </h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                <div style="padding: 0.5rem; background: white; border-radius: 6px;">
+                                    <div style="font-size: 0.75rem; color: var(--color-neutral); margin-bottom: 0.25rem;">Nom</div>
+                                    <div style="font-weight: 600; color: var(--color-primary-dark); font-size: 0.875rem;">${demande.nom}</div>
+                                </div>
+                                <div style="padding: 0.5rem; background: white; border-radius: 6px;">
+                                    <div style="font-size: 0.75rem; color: var(--color-neutral); margin-bottom: 0.25rem;">Email</div>
+                                    <div style="font-size: 0.875rem;"><a href="mailto:${demande.email}" style="color: var(--color-primary); text-decoration: none;">${demande.email}</a></div>
+                                </div>
+                                ${demande.telephone ? `
+                                <div style="padding: 0.5rem; background: white; border-radius: 6px;">
+                                    <div style="font-size: 0.75rem; color: var(--color-neutral); margin-bottom: 0.25rem;">Téléphone</div>
+                                    <div style="font-size: 0.875rem;"><a href="tel:${demande.telephone}" style="color: var(--color-primary); text-decoration: none;">${demande.telephone}</a></div>
+                                </div>
+                                ` : ''}
+                                ${demande.entreprise ? `
+                                <div style="padding: 0.5rem; background: white; border-radius: 6px;">
+                                    <div style="font-size: 0.75rem; color: var(--color-neutral); margin-bottom: 0.25rem;">Entreprise</div>
+                                    <div style="font-weight: 600; color: var(--color-primary-dark); font-size: 0.875rem;">${demande.entreprise}</div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div style="background: var(--color-background-light); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--color-primary); grid-column: 2; grid-row: 1;">
+                            <h3 style="margin-bottom: 0.75rem; color: var(--color-primary); font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-info-circle"></i> Détails de la demande
+                            </h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                <div style="padding: 0.5rem; background: white; border-radius: 6px;">
+                                    <div style="font-size: 0.75rem; color: var(--color-neutral); margin-bottom: 0.25rem;">Statut</div>
+                                    <div style="font-size: 0.875rem;">${getStatutBadge(demande.statut)}</div>
+                                </div>
+                                <div style="padding: 0.5rem; background: white; border-radius: 6px;">
+                                    <div style="font-size: 0.75rem; color: var(--color-neutral); margin-bottom: 0.25rem;">Date création</div>
+                                    <div style="font-weight: 600; color: var(--color-primary-dark); font-size: 0.875rem;">${formatDate(demande.date_creation)}</div>
+                                </div>
+                                ${demande.date_modification ? `
+                                <div style="padding: 0.5rem; background: white; border-radius: 6px;">
+                                    <div style="font-size: 0.75rem; color: var(--color-neutral); margin-bottom: 0.25rem;">Modification</div>
+                                    <div style="font-weight: 600; color: var(--color-primary-dark); font-size: 0.875rem;">${formatDate(demande.date_modification)}</div>
+                                </div>
+                                ` : ''}
+                                ${demande.traite_par_nom ? `
+                                <div style="padding: 0.5rem; background: white; border-radius: 6px;">
+                                    <div style="font-size: 0.75rem; color: var(--color-neutral); margin-bottom: 0.25rem;">Traîtée par</div>
+                                    <div style="font-weight: 600; color: var(--color-primary-dark); font-size: 0.875rem;">${demande.traite_par_nom} ${demande.traite_par_prenom || ''}</div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        ${articlesHtml}
+                        ${demande.adresse_livraison ? `
+                            <div style="background: var(--color-background-light); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--color-success); grid-column: 1 / -1; grid-row: 3;">
+                                <h3 style="margin-bottom: 0.75rem; color: var(--color-primary); font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-map-marker-alt"></i> Adresse de livraison
+                                </h3>
+                                <div style="background: white; padding: 0.75rem; border-radius: 6px;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: ${demande.latitude && demande.longitude ? '0.75rem' : '0'};">
+                                        <div style="font-size: 0.875rem;"><strong style="color: var(--color-neutral);">Adresse :</strong> <span style="color: var(--color-primary-dark);">${demande.adresse_livraison}</span></div>
+                                        ${demande.ville_livraison ? `<div style="font-size: 0.875rem;"><strong style="color: var(--color-neutral);">Ville :</strong> <span style="color: var(--color-primary-dark);">${demande.ville_livraison}</span></div>` : ''}
+                                        ${demande.pays_livraison ? `<div style="font-size: 0.875rem;"><strong style="color: var(--color-neutral);">Pays :</strong> <span style="color: var(--color-primary-dark);">${demande.pays_livraison}</span></div>` : ''}
+                                    </div>
+                                    ${demande.latitude && demande.longitude ? `
+                                        <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #E5E7EB;">
+                                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                                <i class="fas fa-map-marked-alt" style="color: var(--color-accent); font-size: 1rem;"></i>
+                                                <strong style="color: var(--color-primary); font-size: 0.875rem;">Position GPS</strong>
+                                            </div>
+                                            <div style="font-size: 0.8rem; color: var(--color-neutral); margin-bottom: 0.5rem; padding: 0.5rem; background: var(--color-background-light); border-radius: 4px;">
+                                                <i class="fas fa-location-dot"></i> Lat: ${parseFloat(demande.latitude).toFixed(6)}, Lng: ${parseFloat(demande.longitude).toFixed(6)}
+                                            </div>
+                                            <div id="map-container-${demande.id}" style="width: 100%; height: 200px; border-radius: 6px; overflow: hidden; border: 1px solid var(--color-primary);"></div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${demande.message ? `
+                            <div style="background: var(--color-background-light); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--color-info); grid-column: 1; grid-row: 3;">
+                                <h3 style="margin-bottom: 0.75rem; color: var(--color-primary); font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-comment"></i> Message
+                                </h3>
+                                <div style="background: white; padding: 0.75rem; border-radius: 6px; white-space: pre-wrap; line-height: 1.5; color: var(--color-primary-dark); font-size: 0.875rem; max-height: 120px; overflow-y: auto;">${demande.message}</div>
+                            </div>
+                        ` : ''}
+                        ${demande.notes_internes ? `
+                            <div style="background: var(--color-background-light); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--color-warning); grid-column: ${demande.message ? '2' : '1 / -1'}; grid-row: ${demande.message ? '3' : '3'};">
+                                <h3 style="margin-bottom: 0.75rem; color: var(--color-primary); font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-sticky-note"></i> Notes internes
+                                </h3>
+                                <div style="background: white; padding: 0.75rem; border-radius: 6px; white-space: pre-wrap; line-height: 1.5; color: var(--color-primary-dark); font-size: 0.875rem; max-height: 120px; overflow-y: auto;">${demande.notes_internes}</div>
+                            </div>
+                        ` : ''}
+                        <div id="fichiers-joints-${demande.id}">
+                            <!-- Les fichiers joints seront chargés ici -->
+                        </div>
+                        ${demande.statut === 'nouvelle' || demande.statut === 'en_cours' ? `
+                            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--color-primary);">
+                                <button class="btn btn-primary" onclick="openCreateRFQModal(${demande.id})" style="width: 100%;">
+                                    <i class="fas fa-file-alt"></i> Créer des RFQ depuis cette demande
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                document.getElementById('detailModal').classList.add('active');
+                document.body.classList.add('modal-open');
+                
+                // Charger les fichiers joints
+                loadFichiersDemande(demande.id);
+                
+                // Charger la carte si géolocalisation disponible
+                if (demande.latitude && demande.longitude) {
+                    setTimeout(() => {
+                        loadMapForDemande(demande.id, parseFloat(demande.latitude), parseFloat(demande.longitude));
+                    }, 100);
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur lors du chargement des détails');
+            }
+        }
+
+        async function loadFichiersDemande(demandeId) {
+            try {
+                const response = await apiCall(`/api/fichiers/demande_devis/${demandeId}`);
+                if (!response || !response.ok) {
+                    return;
+                }
+
+                const fichiers = await response.json();
+                const container = document.getElementById(`fichiers-joints-${demandeId}`);
+                
+                if (!container) return;
+
+                if (fichiers.length === 0) {
+                    container.innerHTML = `
+                        <div>
+                            <h3 style="margin-bottom: 1rem; color: var(--color-primary);">
+                                <i class="fas fa-paperclip"></i> Fichiers joints
+                            </h3>
+                            <div style="background: var(--color-background-light); padding: 1rem; border-radius: 8px; text-align: center; color: var(--color-neutral);">
+                                <i class="fas fa-info-circle"></i> Aucun fichier joint
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div>
+                        <h3 style="margin-bottom: 1rem; color: var(--color-primary); font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-paperclip"></i> Fichiers joints (${fichiers.length})
+                        </h3>
+                        <div style="display: grid; gap: 0.5rem;">
+                            ${fichiers.map(fichier => {
+                                const icon = getFileIcon(fichier.type_mime);
+                                const taille = formatFileSize(fichier.taille_fichier);
+                                const date = formatDate(fichier.date_upload);
+                                const canPreview = canPreviewFile(fichier.type_mime);
+                                return `
+                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: white; border: 1px solid #E5E7EB; border-radius: 8px; transition: all 0.3s;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+                                        <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1; cursor: pointer;" onclick="${canPreview ? `previewFile(${fichier.id}, '${fichier.nom_fichier}', '${fichier.type_mime}')` : ''}">
+                                            <i class="${icon}" style="font-size: 1.25rem; color: var(--color-primary);"></i>
+                                            <div style="flex: 1;">
+                                                <div style="font-weight: 500; color: var(--color-text); font-size: 0.875rem;">${fichier.nom_fichier}</div>
+                                                <div style="font-size: 0.75rem; color: var(--color-neutral);">${taille} • ${date}</div>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            ${canPreview ? `
+                                                <button class="btn btn-secondary btn-sm" onclick="previewFile(${fichier.id}, '${fichier.nom_fichier}', '${fichier.type_mime}')" style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                                                    <i class="fas fa-eye"></i> Prévisualiser
+                                                </button>
+                                            ` : ''}
+                                            <a href="/api/fichiers/download/${fichier.id}" class="btn btn-primary btn-sm" download style="text-decoration: none; padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                                                <i class="fas fa-download"></i> Télécharger
+                                            </a>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erreur chargement fichiers:', error);
+            }
+        }
+
+        function getFileIcon(mimeType) {
+            if (mimeType === 'application/pdf') return 'fas fa-file-pdf';
+            if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fas fa-file-excel';
+            if (mimeType.includes('image')) return 'fas fa-file-image';
+            return 'fas fa-file';
+        }
+
+        function canPreviewFile(mimeType) {
+            if (!mimeType) return false;
+            // Images
+            if (mimeType.startsWith('image/')) return true;
+            // PDF
+            if (mimeType === 'application/pdf') return true;
+            // Text files
+            if (mimeType.startsWith('text/')) return true;
+            return false;
+        }
+
+        function previewFile(fichierId, nomFichier, typeMime) {
+            const previewModal = document.getElementById('previewModal');
+            const previewContent = document.getElementById('preview-content');
+            const previewTitle = document.getElementById('preview-title');
+            
+            if (!previewModal || !previewContent || !previewTitle) {
+                Toast.error('Modal de prévisualisation non trouvée');
+                return;
+            }
+
+            previewTitle.textContent = nomFichier;
+            previewContent.innerHTML = '<div class="loading">Chargement de la prévisualisation...</div>';
+            previewModal.classList.add('active');
+            document.body.classList.add('modal-open');
+
+            const fileUrl = `/api/fichiers/download/${fichierId}`;
+            
+            if (typeMime.startsWith('image/')) {
+                // Prévisualisation d'image
+                previewContent.innerHTML = `
+                    <div style="text-align: center; padding: 1rem;">
+                        <img src="${fileUrl}" alt="${nomFichier}" style="max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onerror="this.parentElement.innerHTML='<p style=\'color: var(--color-danger); padding: 2rem;\'>Erreur lors du chargement de l\'image</p>'">
+                    </div>
+                `;
+            } else if (typeMime === 'application/pdf') {
+                // Prévisualisation PDF
+                previewContent.innerHTML = `
+                    <div style="width: 100%; height: 70vh;">
+                        <iframe src="${fileUrl}" style="width: 100%; height: 100%; border: none; border-radius: 8px;" onerror="this.parentElement.innerHTML='<p style=\'color: var(--color-danger); padding: 2rem; text-align: center;\'>Impossible de prévisualiser le PDF. <a href=\\'${fileUrl}\\' download>Cliquez ici pour le télécharger</a></p>'"></iframe>
+                    </div>
+                `;
+            } else if (typeMime.startsWith('text/')) {
+                // Prévisualisation texte
+                fetch(fileUrl)
+                    .then(response => response.text())
+                    .then(text => {
+                        previewContent.innerHTML = `
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; max-height: 70vh; overflow-y: auto;">
+                                <pre style="margin: 0; font-family: 'Courier New', monospace; font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word;">${escapeHtml(text)}</pre>
+                            </div>
+                        `;
+                    })
+                    .catch(error => {
+                        previewContent.innerHTML = `<p style="color: var(--color-danger); padding: 2rem; text-align: center;">Erreur lors du chargement du fichier texte</p>`;
+                    });
+            } else {
+                previewContent.innerHTML = `
+                    <div style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-file" style="font-size: 3rem; color: var(--color-neutral); margin-bottom: 1rem;"></i>
+                        <p style="color: var(--color-neutral); margin-bottom: 1rem;">Prévisualisation non disponible pour ce type de fichier</p>
+                        <a href="${fileUrl}" class="btn btn-primary" download>
+                            <i class="fas fa-download"></i> Télécharger le fichier
+                        </a>
+                    </div>
+                `;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function closePreviewModal() {
+            const previewModal = document.getElementById('previewModal');
+            if (previewModal) {
+                previewModal.classList.remove('active');
+                document.body.classList.remove('modal-open');
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Charger la carte pour une demande avec géolocalisation
+        function loadMapForDemande(demandeId, lat, lng) {
+            const mapContainer = document.getElementById(`map-container-${demandeId}`);
+            if (!mapContainer) return;
+
+            // Utiliser OpenStreetMap avec iframe (gratuit, pas besoin de clé API)
+            const mapHtml = `
+                <div style="position: relative; width: 100%; height: 100%;">
+                    <iframe 
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0" 
+                        scrolling="no" 
+                        marginheight="0" 
+                        marginwidth="0"
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01},${lat-0.01},${lng+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lng}"
+                        style="border: none;">
+                    </iframe>
+                    <div style="position: absolute; bottom: 0; right: 0; background: white; padding: 0.25rem 0.5rem; border-radius: 4px 0 0 0; font-size: 0.75rem; box-shadow: 0 -2px 4px rgba(0,0,0,0.1);">
+                        <a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}&zoom=15" target="_blank" style="color: var(--color-primary); text-decoration: none;">
+                            <i class="fas fa-external-link-alt"></i> Voir sur OpenStreetMap
+                        </a>
+                    </div>
+                </div>
+            `;
+            
+            mapContainer.innerHTML = mapHtml;
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('active');
+            document.body.classList.remove('modal-open');
+        }
+
+        async function editDemande(id) {
+            try {
+                const response = await apiCall(`/api/contact/demandes/${id}`);
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement');
+                }
+
+                const demande = await response.json();
+                document.getElementById('edit-id').value = demande.id;
+                document.getElementById('edit-statut').value = demande.statut;
+                document.getElementById('edit-notes').value = demande.notes_internes || '';
+
+                document.getElementById('editModal').classList.add('active');
+                document.body.classList.add('modal-open');
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur lors du chargement');
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            document.body.classList.remove('modal-open');
+        }
+
+        async function handleUpdateStatut(event) {
+            event.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const statut = document.getElementById('edit-statut').value;
+            const notes = document.getElementById('edit-notes').value;
+
+            try {
+                const response = await apiCall(`/api/contact/demandes/${id}/statut`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ statut, notes_internes: notes })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Erreur lors de la mise à jour');
+                }
+
+                Toast.success('Statut mis à jour avec succès');
+                closeEditModal();
+                loadDemandes();
+                loadStats();
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error(error.message || 'Erreur lors de la mise à jour');
+            }
+        }
+
+        function filterDemandes() {
+            const search = document.getElementById('search-input')?.value.toLowerCase() || '';
+            const statut = document.getElementById('statut-filter')?.value || '';
+            
+            let filtered = allDemandes.filter(d => {
+                const matchSearch = !search || 
+                    (d.nom && d.nom.toLowerCase().includes(search)) ||
+                    (d.email && d.email.toLowerCase().includes(search)) ||
+                    (d.entreprise && d.entreprise.toLowerCase().includes(search));
+                const matchStatut = !statut || d.statut === statut;
+                return matchSearch && matchStatut;
+            });
+
+            displayDemandes(filtered);
+        }
+
+        // Gérer le responsive au redimensionnement
+        window.addEventListener('resize', () => {
+            if (allDemandes.length > 0) {
+                displayDemandes(allDemandes);
+            }
+        });
+
+        function refreshDemandes() {
+            loadDemandes();
+            loadStats();
+        }
+
+        let currentDemandeId = null;
+
+        async function openCreateRFQModal(demandeId) {
+            currentDemandeId = demandeId;
+            
+            // Charger les fournisseurs
+            try {
+                const response = await apiCall('/api/entreprises?type=fournisseur');
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des fournisseurs');
+                }
+
+                const fournisseurs = await response.json();
+                const container = document.getElementById('fournisseurs-list');
+                
+                if (fournisseurs.length === 0) {
+                    container.innerHTML = '<p style="color: var(--color-neutral); text-align: center; padding: 2rem;">Aucun fournisseur disponible</p>';
+                } else {
+                    container.innerHTML = fournisseurs.map(f => `
+                        <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.3s;" 
+                               onmouseover="this.style.background='var(--color-background-light)'" 
+                               onmouseout="this.style.background='white'">
+                            <input type="checkbox" name="fournisseur_ids" value="${f.id}" style="cursor: pointer;">
+                            <div style="flex: 1;">
+                                <strong>${f.nom || '-'}</strong>
+                                ${f.secteur_activite ? `<div style="font-size: 0.9rem; color: var(--color-neutral);">${f.secteur_activite}</div>` : ''}
+                                ${f.email ? `<div style="font-size: 0.85rem; color: var(--color-neutral);"><i class="fas fa-envelope"></i> ${f.email}</div>` : ''}
+                            </div>
+                        </label>
+                    `).join('');
+                }
+
+                document.getElementById('createRFQModal').classList.add('active');
+                document.body.classList.add('modal-open');
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur lors du chargement des fournisseurs');
+            }
+        }
+
+        function closeCreateRFQModal() {
+            document.getElementById('createRFQModal').classList.remove('active');
+            document.body.classList.remove('modal-open');
+            document.getElementById('createRFQForm').reset();
+            currentDemandeId = null;
+        }
+
+        async function submitCreateRFQ(event) {
+            event.preventDefault();
+            
+            if (!currentDemandeId) {
+                Toast.error('ID demande manquant');
+                return;
+            }
+
+            // Récupérer les fournisseurs sélectionnés
+            const checkboxes = document.querySelectorAll('input[name="fournisseur_ids"]:checked');
+            const fournisseur_ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+            if (fournisseur_ids.length === 0) {
+                Toast.error('Veuillez sélectionner au moins un fournisseur');
+                return;
+            }
+
+            const formData = {
+                fournisseur_ids: fournisseur_ids,
+                date_limite_reponse: document.getElementById('date_limite_reponse').value || null,
+                date_livraison_souhaitee: document.getElementById('date_livraison_souhaitee').value || null,
+                incoterms: document.getElementById('incoterms').value || null,
+                conditions_paiement: document.getElementById('conditions_paiement').value || null
+            };
+
+            try {
+                const submitButton = event.target.querySelector('button[type="submit"]');
+                const originalText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création en cours...';
+
+                const response = await apiCall(`/api/contact/demandes/${currentDemandeId}/create-rfq`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Erreur lors de la création des RFQ');
+                }
+
+                const result = await response.json();
+                
+                Toast.success(result.message || `${result.rfqs.length} RFQ créée(s) avec succès`);
+                closeCreateRFQModal();
+                closeDetailModal();
+                loadDemandes();
+                loadStats();
+
+                // Afficher les RFQ créées
+                if (result.rfqs && result.rfqs.length > 0) {
+                    const rfqsList = result.rfqs.map(rfq => 
+                        `${rfq.numero} (${rfq.fournisseur_nom})`
+                    ).join(', ');
+                    
+                    setTimeout(() => {
+                        Toast.info(`RFQ créées : ${rfqsList}. Cliquez pour voir les détails.`, 5000);
+                    }, 500);
+                }
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error(error.message || 'Erreur lors de la création des RFQ');
+            } finally {
+                const submitButton = event.target.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-check"></i> Créer les RFQ';
+                }
+            }
+        }
+
+        // Fermer les modals en cliquant en dehors (sur le fond)
+        document.getElementById('detailModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'detailModal' || e.target.classList.contains('modal')) {
+                closeDetailModal();
+            }
+        });
+
+        document.getElementById('createRFQModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'createRFQModal' || e.target.classList.contains('modal')) {
+                closeCreateRFQModal();
+            }
+        });
+
+        document.getElementById('editModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'editModal' || e.target.classList.contains('modal')) {
+                closeEditModal();
+            }
+        });
+
+        // Empêcher la propagation du clic sur le contenu du modal
+        document.querySelectorAll('.modal-content').forEach(content => {
+            content.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        });
+    </script>
+</body>
+</html>
+

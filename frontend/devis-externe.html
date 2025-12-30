@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Répondre à une demande de devis - SilyProcure</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .public-header {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .public-header .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .public-header .subtitle {
+            opacity: 0.9;
+        }
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            margin: 2rem auto;
+            max-width: 600px;
+        }
+        .success-message {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #3c3;
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            margin: 2rem auto;
+            max-width: 600px;
+        }
+        .success-message i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="public-header">
+        <div class="logo">SilyProcure</div>
+        <div class="subtitle">Répondre à une demande de devis</div>
+    </div>
+
+    <div class="container" id="main-container">
+        <div id="loading-state" class="card" style="text-align: center; padding: 3rem;">
+            <div class="loading"><div class="loading-spinner"></div> Chargement de la demande de devis...</div>
+        </div>
+
+        <div id="error-state" style="display: none;">
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h2>Lien invalide</h2>
+                <p id="error-text"></p>
+            </div>
+        </div>
+
+        <div id="success-state" style="display: none;">
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                <h2>Devis soumis avec succès !</h2>
+                <p>Votre devis a été reçu et sera traité dans les plus brefs délais.</p>
+                <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
+                    Vous pouvez fermer cette page.
+                </p>
+            </div>
+        </div>
+
+        <div id="form-state" style="display: none;">
+            <div id="rfq-info" class="card" style="margin-bottom: 1.5rem;">
+                <h2><i class="fas fa-file-alt"></i> Demande de devis</h2>
+                <div id="rfq-details"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-edit"></i> Formulaire de devis</h2>
+                </div>
+
+                <form id="devis-form" onsubmit="handleSubmitDevis(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="devis-numero">Numéro de devis *</label>
+                            <input type="text" id="devis-numero" name="numero" required placeholder="DEV-2024-001">
+                        </div>
+                        <div class="form-group">
+                            <label for="devis-date">Date d'émission *</label>
+                            <input type="date" id="devis-date" name="date_emission" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="devis-date-validite">Date de validité</label>
+                            <input type="date" id="devis-date-validite" name="date_validite">
+                        </div>
+                        <div class="form-group">
+                            <label for="devis-delai-livraison">Délai de livraison (jours)</label>
+                            <input type="number" id="devis-delai-livraison" name="delai_livraison" min="1" placeholder="30">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="devis-remise-globale">Remise globale (%)</label>
+                        <input type="number" id="devis-remise-globale" name="remise_globale" min="0" max="100" step="0.01" value="0" onchange="calculateTotals()">
+                    </div>
+
+                    <h3 style="margin: 1.5rem 0 1rem 0; color: var(--color-primary);"><i class="fas fa-box"></i> Lignes de devis</h3>
+                    <div id="devis-lignes">
+                        <!-- Les lignes seront générées depuis la RFQ -->
+                    </div>
+
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <strong>Total HT :</strong>
+                            <strong id="total-ht">0 GNF</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <strong>TVA :</strong>
+                            <strong id="total-tva">0 GNF</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 2px solid #ddd;">
+                            <strong style="font-size: 1.1rem;">Total TTC :</strong>
+                            <strong style="font-size: 1.1rem; color: var(--color-primary);" id="total-ttc">0 GNF</strong>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label for="devis-conditions-paiement">Conditions de paiement</label>
+                        <textarea id="devis-conditions-paiement" name="conditions_paiement" rows="2" 
+                                  placeholder="Ex: 30% à la commande, 70% à la livraison"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="devis-garanties">Garanties</label>
+                        <textarea id="devis-garanties" name="garanties" rows="2" 
+                                  placeholder="Garanties offertes..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="devis-certifications">Certifications</label>
+                        <textarea id="devis-certifications" name="certifications" rows="2" 
+                                  placeholder="Certifications disponibles..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="devis-notes">Notes</label>
+                        <textarea id="devis-notes" name="notes" rows="3" 
+                                  placeholder="Informations complémentaires..."></textarea>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                        <button type="submit" class="btn btn-success" style="flex: 1;">
+                            <i class="fas fa-paper-plane"></i> Envoyer le devis
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/components.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        let rfqData = null;
+
+        // Initialiser la date
+        const today = new Date();
+        document.getElementById('devis-date').valueAsDate = today;
+        const dateValidite = new Date();
+        dateValidite.setDate(dateValidite.getDate() + 30);
+        document.getElementById('devis-date-validite').valueAsDate = dateValidite;
+
+        function showError(message) {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('form-state').style.display = 'none';
+            document.getElementById('error-state').style.display = 'block';
+            document.getElementById('error-text').textContent = message;
+        }
+
+        function displayRFQ(data) {
+            const rfq = data.rfq;
+            const fournisseur = data.fournisseur;
+
+            const details = `
+                <div style="margin-top: 1rem;">
+                    <p><strong>Numéro RFQ :</strong> ${rfq.numero || 'N/A'}</p>
+                    <p><strong>Date d'émission :</strong> ${rfq.date_emission ? new Date(rfq.date_emission).toLocaleDateString('fr-FR') : 'N/A'}</p>
+                    <p><strong>Date limite de réponse :</strong> ${rfq.date_limite_reponse ? new Date(rfq.date_limite_reponse).toLocaleDateString('fr-FR') : 'N/A'}</p>
+                    ${rfq.emetteur ? `<p><strong>Émetteur :</strong> ${rfq.emetteur.nom || 'N/A'}</p>` : ''}
+                    ${rfq.description ? `<p><strong>Description :</strong> ${rfq.description}</p>` : ''}
+                </div>
+            `;
+
+            document.getElementById('rfq-details').innerHTML = details;
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('form-state').style.display = 'block';
+        }
+
+        function displayLignes(lignes) {
+            const container = document.getElementById('devis-lignes');
+            container.innerHTML = '';
+
+            lignes.forEach((ligne, index) => {
+                const ligneDiv = document.createElement('div');
+                ligneDiv.className = 'card';
+                ligneDiv.style.marginBottom = '1rem';
+                ligneDiv.style.padding = '1rem';
+                ligneDiv.innerHTML = `
+                    <h4 style="margin-bottom: 1rem; color: var(--color-primary);">
+                        Ligne ${index + 1}: ${ligne.reference || 'Sans référence'}
+                    </h4>
+                    <p style="margin-bottom: 1rem;"><strong>Description :</strong> ${ligne.description || ''}</p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Quantité demandée</label>
+                            <input type="number" value="${ligne.quantite || 1}" disabled style="background: #f5f5f5;">
+                        </div>
+                        <div class="form-group">
+                            <label>Unité</label>
+                            <input type="text" value="${ligne.unite || 'unité'}" disabled style="background: #f5f5f5;">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Prix unitaire HT (GNF) *</label>
+                            <input type="number" name="ligne-prix[]" min="0" step="0.01" required 
+                                   onchange="calculateTotals()" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Remise (%)</label>
+                            <input type="number" name="ligne-remise[]" min="0" max="100" step="0.01" value="0" 
+                                   onchange="calculateTotals()" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>TVA (%)</label>
+                            <input type="number" name="ligne-tva[]" min="0" max="100" step="0.01" value="20" 
+                                   onchange="calculateTotals()">
+                        </div>
+                    </div>
+                    <input type="hidden" name="ligne-rfq-id[]" value="${ligne.id}">
+                    <input type="hidden" name="ligne-quantite[]" value="${ligne.quantite || 1}">
+                    <input type="hidden" name="ligne-unite[]" value="${ligne.unite || 'unité'}">
+                    <input type="hidden" name="ligne-description[]" value="${ligne.description || ''}">
+                    <input type="hidden" name="ligne-reference[]" value="${ligne.reference || ''}">
+                `;
+                container.appendChild(ligneDiv);
+            });
+        }
+
+        function calculateTotals() {
+            const prixInputs = document.querySelectorAll('input[name="ligne-prix[]"]');
+            const remiseInputs = document.querySelectorAll('input[name="ligne-remise[]"]');
+            const tvaInputs = document.querySelectorAll('input[name="ligne-tva[]"]');
+            const quantiteInputs = document.querySelectorAll('input[name="ligne-quantite[]"]');
+            const remiseGlobale = parseFloat(document.getElementById('devis-remise-globale').value) || 0;
+
+            let totalHT = 0;
+            let totalTVA = 0;
+
+            prixInputs.forEach((prixInput, index) => {
+                const prix = parseFloat(prixInput.value) || 0;
+                const quantite = parseFloat(quantiteInputs[index].value) || 1;
+                const remise = parseFloat(remiseInputs[index].value) || 0;
+                const tva = parseFloat(tvaInputs[index].value) || 20;
+
+                const prixHTLigne = prix * quantite;
+                const remiseLigne = prixHTLigne * (remise / 100);
+                const ligneHT = prixHTLigne - remiseLigne;
+                const ligneTVA = ligneHT * (tva / 100);
+
+                totalHT += ligneHT;
+                totalTVA += ligneTVA;
+            });
+
+            // Appliquer la remise globale
+            totalHT = totalHT * (1 - remiseGlobale / 100);
+            totalTVA = totalTVA * (1 - remiseGlobale / 100);
+            const totalTTC = totalHT + totalTVA;
+
+            document.getElementById('total-ht').textContent = formatCurrency(totalHT);
+            document.getElementById('total-tva').textContent = formatCurrency(totalTVA);
+            document.getElementById('total-ttc').textContent = formatCurrency(totalTTC);
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('fr-FR', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount) + ' GNF';
+        }
+
+        async function handleSubmitDevis(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+
+            const prix = formData.getAll('ligne-prix[]');
+            const remises = formData.getAll('ligne-remise[]');
+            const tvas = formData.getAll('ligne-tva[]');
+            const quantites = formData.getAll('ligne-quantite[]');
+            const descriptions = formData.getAll('ligne-description[]');
+            const unites = formData.getAll('ligne-unite[]');
+            const rfqLigneIds = formData.getAll('ligne-rfq-id[]');
+            const references = formData.getAll('ligne-reference[]');
+
+            const lignes = [];
+            for (let i = 0; i < prix.length; i++) {
+                if (prix[i] && parseFloat(prix[i]) > 0) {
+                    lignes.push({
+                        rfq_ligne_id: parseInt(rfqLigneIds[i]),
+                        quantite: parseFloat(quantites[i]) || 1,
+                        unite: unites[i] || 'unité',
+                        prix_unitaire_ht: parseFloat(prix[i]),
+                        remise: parseFloat(remises[i]) || 0,
+                        tva_taux: parseFloat(tvas[i]) || 20,
+                        description: descriptions[i] || '',
+                        reference: references[i] || '',
+                        ordre: i
+                    });
+                }
+            }
+
+            if (lignes.length === 0) {
+                if (typeof Toast !== 'undefined') {
+                    Toast.error('Veuillez remplir au moins une ligne avec un prix');
+                } else {
+                    alert('Veuillez remplir au moins une ligne avec un prix');
+                }
+                return;
+            }
+
+            const devisData = {
+                numero: formData.get('numero'),
+                date_emission: formData.get('date_emission'),
+                date_validite: formData.get('date_validite') || null,
+                delai_livraison: formData.get('delai_livraison') ? parseInt(formData.get('delai_livraison')) : null,
+                remise_globale: parseFloat(formData.get('remise_globale')) || 0,
+                conditions_paiement: formData.get('conditions_paiement') || null,
+                garanties: formData.get('garanties') || null,
+                certifications: formData.get('certifications') || null,
+                notes: formData.get('notes') || null,
+                lignes: lignes
+            };
+
+            try {
+                showLoading('Envoi du devis...');
+
+                const response = await fetch('/api/liens-externes/submit-devis-externe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        token: token,
+                        devis_data: devisData
+                    })
+                });
+
+                hideLoading();
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    if (typeof Toast !== 'undefined') {
+                        Toast.error(error.error || 'Erreur lors de l\'envoi du devis');
+                    } else {
+                        alert(error.error || 'Erreur lors de l\'envoi du devis');
+                    }
+                    return;
+                }
+
+                // Afficher le message de succès
+                document.getElementById('form-state').style.display = 'none';
+                document.getElementById('success-state').style.display = 'block';
+            } catch (error) {
+                hideLoading();
+                console.error('Erreur soumission devis:', error);
+                if (typeof Toast !== 'undefined') {
+                    Toast.error('Erreur de connexion');
+                } else {
+                    alert('Erreur de connexion');
+                }
+            }
+        }
+
+        function showLoading(message) {
+            // Simple loading indicator
+            const btn = document.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+            }
+        }
+
+        function hideLoading() {
+            const btn = document.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer le devis';
+            }
+        }
+
+        // Fonction pour charger la RFQ
+        async function loadRFQ() {
+            try {
+                const response = await fetch(`/api/liens-externes/rfq-by-token/${token}`);
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    showError(error.error || 'Erreur lors du chargement de la demande de devis');
+                    return;
+                }
+
+                const data = await response.json();
+                rfqData = data;
+                displayRFQ(data);
+                displayLignes(data.rfq.lignes);
+            } catch (error) {
+                console.error('Erreur chargement RFQ:', error);
+                showError('Erreur de connexion au serveur');
+            }
+        }
+
+        // Charger la RFQ au chargement de la page si le token est présent
+        if (!token) {
+            showError('Token manquant dans l\'URL');
+        } else {
+            loadRFQ();
+        }
+    </script>
+</body>
+</html>
+

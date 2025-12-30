@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Dashboard - Auto Login</title>
+</head>
+<body>
+    <h1>Connexion automatique en cours...</h1>
+    <script>
+        async function autoLogin() {
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@silyprocure.com',
+                        mot_de_passe: 'password'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = 'dashboard.html';
+                } else {
+                    document.body.innerHTML = '<h1>Erreur de connexion</h1><p>Impossible de se connecter automatiquement.</p>';
+                }
+            } catch (error) {
+                document.body.innerHTML = '<h1>Erreur</h1><p>' + error.message + '</p>';
+            }
+        }
+        
+        autoLogin();
+    </script>
+</body>
+</html>
+

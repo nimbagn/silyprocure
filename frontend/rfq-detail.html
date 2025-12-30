@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails RFQ - SilyProcure</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
+        <div class="user-info">
+            <span id="user-name"></span>
+            <button onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="rfq.html" class="active">RFQ</a>
+        <a href="devis.html">Devis</a>
+        <a href="commandes.html">Commandes</a>
+        <a href="factures.html">Factures</a>
+        <a href="entreprises.html">Entreprises</a>
+        <a href="produits.html">Produits</a>
+        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section" style="text-align: left; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <button class="btn btn-secondary" onclick="window.location.href='rfq.html'" style="margin-bottom: 1rem;">
+                        ← Retour à la liste
+                    </button>
+                    <h1 class="hero-title" style="font-size: 2rem; margin: 0;"><i class="fas fa-clipboard-list"></i> Détails de la RFQ</h1>
+                    <p class="hero-description" style="text-align: left; margin: 0.5rem 0 0 0; max-width: 100%;">
+                        Consultez les détails de la demande de devis et les réponses reçues
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="rfq-details">
+            <div class="loading"><div class="loading-spinner"></div> Chargement...</div>
+        </div>
+
+        <!-- Section Devis reçus -->
+        <div class="card" id="devis-section" style="margin-top: 1.5rem;">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-briefcase"></i> Devis reçus</h2>
+                <span class="badge badge-info" id="devis-count">0 devis</span>
+            </div>
+            <div id="devis-list">
+                <div class="loading">Chargement des devis...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/fileUpload.js"></script>
+    <script src="js/forms.js"></script>
+        <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
+<script>
+        checkAuth();
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const rfqId = urlParams.get('id');
+
+        async function loadRFQDetails() {
+            if (!rfqId) {
+                Toast.error('RFQ non spécifiée');
+                window.location.href = 'rfq.html';
+                return;
+            }
+
+            try {
+                showLoading('Chargement...');
+                const response = await apiCall(`/api/rfq/${rfqId}`);
+                if (!response) {
+                    hideLoading();
+                    return;
+                }
+
+                const rfq = await response.json();
+                hideLoading();
+                displayRFQDetails(rfq);
+                loadDevis(rfqId);
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors du chargement');
+                console.error('Erreur:', error);
+            }
+        }
+
+        function displayRFQDetails(rfq) {
+            const container = document.getElementById('rfq-details');
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">${rfq.numero || 'RFQ-' + rfq.id}</h2>
+                        <div>
+                            <button class="btn btn-secondary" onclick="window.open('/api/pdf/rfq/${rfq.id}', '_blank')" style="margin-right: 0.5rem;">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </button>
+                            <span class="badge ${getStatusBadge(rfq.statut)}">${getStatusLabel(rfq.statut)}</span>
+                            ${rfq.statut === 'brouillon' ? `
+                                <button class="btn btn-primary" onclick="if(typeof editRFQForm==='function'){editRFQForm(${rfq.id});}else{alert('Fonction non disponible');}" style="margin-left: 0.5rem;">
+                                    <i class="fas fa-edit"></i> Modifier
+                                </button>
+                                <button class="btn btn-success" onclick="envoyerRFQ(${rfq.id})" style="margin-left: 0.5rem;">
+                                    <i class="fas fa-upload"></i> Envoyer aux fournisseurs
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                        <div>
+                            <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-clipboard-list"></i> Informations</h3>
+                            <div class="form-group">
+                                <label>Date d'émission</label>
+                                <div style="padding: 0.75rem; background: var(--color-background-light); border-radius: 6px;">
+                                    ${formatDate(rfq.date_emission)}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Date limite de réponse</label>
+                                <div style="padding: 0.75rem; background: var(--color-background-light); border-radius: 6px;">
+                                    ${formatDate(rfq.date_limite_reponse)}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Destinataire</label>
+                                <div style="padding: 0.75rem; background: var(--color-background-light); border-radius: 6px;">
+                                    ${rfq.destinataire_nom || '-'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-edit"></i> Description</h3>
+                            <div style="padding: 0.75rem; background: var(--color-background-light); border-radius: 6px; min-height: 100px;">
+                                ${rfq.description || '-'}
+                            </div>
+                        </div>
+                    </div>
+
+                    ${rfq.lignes && rfq.lignes.length > 0 ? `
+                        <h3 style="margin: 1.5rem 0 1rem 0; color: var(--color-primary);"><i class="fas fa-box"></i> Produits/Services demandés</h3>
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Description</th>
+                                        <th>Quantité</th>
+                                        <th>Unité</th>
+                                        <th>Spécifications</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${rfq.lignes.map(ligne => `
+                                        <tr>
+                                            <td>${ligne.description}</td>
+                                            <td>${ligne.quantite}</td>
+                                            <td>${ligne.unite}</td>
+                                            <td>${ligne.specifications || '-'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                ${(user.role === 'admin' || user.role === 'superviseur') ? `
+                    <div class="card" style="margin-top: 1.5rem; border-left: 4px solid var(--color-primary);">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fas fa-external-link-alt"></i> Gestion fournisseur externe</h2>
+                        </div>
+                        <div style="padding: 1rem;">
+                            <p style="margin-bottom: 1rem; color: #666;">
+                                Si le fournisseur n'a pas de compte sur la plateforme, vous pouvez :
+                            </p>
+                            <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                                <button class="btn btn-primary" onclick="generateExternalLink(${rfq.id}, ${rfq.destinataire_id})">
+                                    <i class="fas fa-link"></i> Générer un lien de remplissage
+                                </button>
+                                <button class="btn btn-success" onclick="exportRFQToExcel(${rfq.id})">
+                                    <i class="fas fa-file-excel"></i> Exporter en Excel
+                                </button>
+                                <button class="btn btn-info" onclick="showImportDevisModal(${rfq.id})">
+                                    <i class="fas fa-upload"></i> Importer un devis depuis Excel
+                                </button>
+                            </div>
+                            <div id="external-links-section" style="margin-top: 1rem;">
+                                <!-- Les liens générés apparaîtront ici -->
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+            
+            // Ajouter la section fichiers joints
+            container.innerHTML += '<div id="fichiers-joints-container"></div>';
+            
+            // Initialiser le gestionnaire de fichiers
+            if (rfqId) {
+                initFileUpload('rfq', rfqId, 'fichiers-joints-container');
+            }
+        }
+
+        async function loadDevis(rfqId) {
+            try {
+                const response = await apiCall(`/api/devis?rfq_id=${rfqId}`);
+                if (!response) return;
+
+                const devis = await response.json();
+                displayDevis(devis);
+            } catch (error) {
+                console.error('Erreur chargement devis:', error);
+            }
+        }
+
+        function displayDevis(devis) {
+            const container = document.getElementById('devis-list');
+            document.getElementById('devis-count').textContent = `${devis.length} devis`;
+
+            if (devis.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-briefcase"></i></div>
+                        <div class="empty-state-title">Aucun devis reçu</div>
+                        <div class="empty-state-text">Les devis des fournisseurs apparaîtront ici</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="display: grid; gap: 1rem;">
+                    ${devis.map(d => `
+                        <div class="card" style="border-left: 4px solid ${getDevisColor(d.statut)};">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="flex: 1;">
+                                    <h3 style="margin: 0 0 0.5rem 0;">
+                                        ${d.numero || 'Devis-' + d.id} - ${d.fournisseur_nom || '-'}
+                                    </h3>
+                                    <div style="margin-bottom: 0.5rem;">
+                                        <strong>Date:</strong> ${formatDate(d.date_emission)}<br>
+                                        <strong>Validité:</strong> ${formatDate(d.date_validite) || 'Non spécifiée'}<br>
+                                        <strong>Délai livraison:</strong> ${d.delai_livraison ? d.delai_livraison + ' jours' : '-'}
+                                    </div>
+                                    <div style="font-size: 1.25rem; font-weight: bold; color: var(--color-primary);">
+                                        Total TTC: ${formatCurrency(d.total_ttc)}
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span class="badge ${getStatusBadge(d.statut)}">${getStatusLabel(d.statut)}</span>
+                                    <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-direction: column;">
+                                        <button class="btn btn-secondary btn-sm" onclick="viewDevis(${d.id})"><i class="fas fa-eye"></i> Voir</button>
+                                        <button class="btn btn-success btn-sm" onclick="accepterDevis(${d.id})"><i class="fas fa-check"></i> Accepter</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="margin-top: 1.5rem;">
+                    <button class="btn btn-primary" onclick="compareDevis([${devis.map(d => d.id).join(',')}])">
+                        <i class="fas fa-chart-bar"></i> Comparer les devis
+                    </button>
+                </div>
+            `;
+        }
+
+        function getDevisColor(statut) {
+            const colors = {
+                'accepte': '#10B981',
+                'envoye': '#3B82F6',
+                'refuse': '#EF4444',
+                'brouillon': '#64748B'
+            };
+            return colors[statut] || '#64748B';
+        }
+
+        function viewDevis(id) {
+            window.location.href = `devis-detail.html?id=${id}`;
+        }
+
+        async function accepterDevis(devisId) {
+            confirmAction(
+                'Voulez-vous accepter ce devis et créer une commande ?',
+                async () => {
+                    try {
+                        showLoading('Création de la commande...');
+                        const devisResponse = await apiCall(`/api/devis/${devisId}`);
+                        if (!devisResponse) {
+                            hideLoading();
+                            return;
+                        }
+
+                        const devis = await devisResponse.json();
+                        
+                        // Créer la commande depuis le devis
+                        const commandeData = {
+                            numero: `BC-${new Date().getFullYear()}-${Date.now()}`,
+                            type_commande: 'BC',
+                            date_commande: new Date().toISOString().split('T')[0],
+                            devis_id: devisId,
+                            rfq_id: devis.rfq_id,
+                            lignes: devis.lignes.map(l => ({
+                                produit_id: l.produit_id,
+                                reference: l.reference,
+                                description: l.description,
+                                quantite: l.quantite,
+                                unite: l.unite,
+                                prix_unitaire_ht: l.prix_unitaire_ht,
+                                remise: l.remise,
+                                tva_taux: l.tva_taux
+                            }))
+                        };
+
+                        const commandeResponse = await apiCall('/api/commandes', {
+                            method: 'POST',
+                            body: JSON.stringify(commandeData)
+                        });
+
+                        if (commandeResponse && commandeResponse.ok) {
+                            // Mettre à jour le statut du devis
+                            await apiCall(`/api/devis/${devisId}`, {
+                                method: 'PATCH',
+                                body: JSON.stringify({ statut: 'accepte' })
+                            });
+
+                            Toast.success('Commande créée avec succès');
+                            setTimeout(() => {
+                                window.location.href = 'commandes.html';
+                            }, 1500);
+                        } else {
+                            const error = await commandeResponse.json();
+                            Toast.error(error.error || 'Erreur lors de la création');
+                        }
+                    } catch (error) {
+                        Toast.error('Erreur de connexion');
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            );
+        }
+
+        function compareDevis(devisIds) {
+            window.location.href = `devis-compare.html?ids=${devisIds.join(',')}`;
+        }
+
+        async function envoyerRFQ(id) {
+            confirmAction(
+                'Envoyer cette RFQ aux fournisseurs ?',
+                async () => {
+                    try {
+                        showLoading('Envoi...');
+                        const response = await apiCall(`/api/rfq/${id}/statut`, {
+                            method: 'PATCH',
+                            body: JSON.stringify({ statut: 'envoye' })
+                        });
+
+                        if (response && response.ok) {
+                            Toast.success('RFQ envoyée aux fournisseurs');
+                            loadRFQDetails();
+                        } else {
+                            Toast.error('Erreur lors de l\'envoi');
+                        }
+                    } catch (error) {
+                        Toast.error('Erreur de connexion');
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            );
+        }
+
+        // Fonctions pour la gestion des fournisseurs externes
+        async function generateExternalLink(rfqId, fournisseurId) {
+            const email = prompt('Email du fournisseur (optionnel) :');
+            const jours = prompt('Durée de validité du lien (en jours, défaut: 30) :', '30');
+            
+            try {
+                showLoading('Génération du lien...');
+                const response = await apiCall(`/api/liens-externes/rfq/${rfqId}/generate-link`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        fournisseur_id: fournisseurId,
+                        email_envoye: email || null,
+                        date_expiration_jours: parseInt(jours) || 30
+                    })
+                });
+
+                if (response && response.ok) {
+                    const data = await response.json();
+                    hideLoading();
+                    
+                    // Afficher le lien
+                    const linkSection = document.getElementById('external-links-section');
+                    linkSection.innerHTML = `
+                        <div class="card" style="background: #f0f9ff; border: 1px solid #3B82F6;">
+                            <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle" style="color: #10B981;"></i> Lien généré avec succès</h4>
+                            <div style="margin: 1rem 0;">
+                                <label style="font-weight: bold;">Lien de remplissage :</label>
+                                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                                    <input type="text" id="generated-link" value="${data.link}" readonly 
+                                           style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                                    <button class="btn btn-secondary" onclick="copyLink()">
+                                        <i class="fas fa-copy"></i> Copier
+                                    </button>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                                <i class="fas fa-info-circle"></i> Expire le : ${new Date(data.expiration).toLocaleDateString('fr-FR')}
+                            </p>
+                        </div>
+                    `;
+                    
+                    Toast.success('Lien généré avec succès');
+                } else {
+                    const error = await response.json();
+                    hideLoading();
+                    Toast.error(error.error || 'Erreur lors de la génération du lien');
+                }
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur de connexion');
+                console.error('Erreur:', error);
+            }
+        }
+
+        function copyLink() {
+            const linkInput = document.getElementById('generated-link');
+            linkInput.select();
+            document.execCommand('copy');
+            Toast.success('Lien copié dans le presse-papiers');
+        }
+
+        function exportRFQToExcel(rfqId) {
+            window.open(`/api/excel/rfq/${rfqId}`, '_blank');
+            Toast.success('Export Excel en cours...');
+        }
+
+        function showImportDevisModal(rfqId) {
+            const content = `
+                <form id="import-devis-form" onsubmit="handleImportDevis(event, ${rfqId})">
+                    <div class="form-group">
+                        <label>Fichier Excel retourné par le fournisseur *</label>
+                        <input type="file" id="excel-file" name="file" accept=".xlsx,.xls" required>
+                        <small style="color: #666; font-size: 0.85rem;">
+                            Le fichier doit contenir les colonnes : Référence, Description, Quantité, Prix unitaire HT, Remise %, TVA %
+                        </small>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Numéro de devis *</label>
+                            <input type="text" name="numero" required placeholder="DEV-2024-001">
+                        </div>
+                        <div class="form-group">
+                            <label>Date d'émission *</label>
+                            <input type="date" name="date_emission" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date de validité</label>
+                            <input type="date" name="date_validite">
+                        </div>
+                        <div class="form-group">
+                            <label>Délai de livraison (jours)</label>
+                            <input type="number" name="delai_livraison" min="1" placeholder="30">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Remise globale (%)</label>
+                        <input type="number" name="remise_globale" min="0" max="100" step="0.01" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Conditions de paiement</label>
+                        <textarea name="conditions_paiement" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Garanties</label>
+                        <textarea name="garanties" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea name="notes" rows="2"></textarea>
+                    </div>
+                </form>
+            `;
+
+            const footer = `
+                <button class="btn btn-secondary" onclick="Modal.hide('import-devis')">Annuler</button>
+                <button class="btn btn-primary" onclick="document.getElementById('import-devis-form').requestSubmit()">
+                    <i class="fas fa-upload"></i> Importer
+                </button>
+            `;
+
+            Modal.show('import-devis', 'Importer un devis depuis Excel', content, footer);
+            
+            // Initialiser la date d'émission
+            const dateInput = document.querySelector('#import-devis-form input[name="date_emission"]');
+            if (dateInput) {
+                dateInput.valueAsDate = new Date();
+            }
+        }
+
+        async function handleImportDevis(event, rfqId) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const fileInput = document.getElementById('excel-file');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                Toast.error('Veuillez sélectionner un fichier Excel');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const uploadFormData = new FormData();
+            uploadFormData.append('file', file);
+            
+            // Ajouter les autres champs
+            for (const [key, value] of formData.entries()) {
+                if (key !== 'file') {
+                    uploadFormData.append(key, value);
+                }
+            }
+
+            try {
+                showLoading('Import du devis...');
+                
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/excel/import-devis/${rfqId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: uploadFormData
+                });
+
+                hideLoading();
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    Toast.error(error.error || 'Erreur lors de l\'import');
+                    if (error.details_erreurs && error.details_erreurs.length > 0) {
+                        console.error('Détails des erreurs:', error.details_erreurs);
+                    }
+                    return;
+                }
+
+                const result = await response.json();
+                Modal.hide('import-devis');
+                Toast.success(`Devis importé avec succès ! ${result.lignes_importees} lignes importées`);
+                
+                // Recharger les devis
+                loadDevis(rfqId);
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur de connexion');
+                console.error('Erreur:', error);
+            }
+        }
+
+        // Charger les liens externes existants
+        async function loadExternalLinks(rfqId) {
+            try {
+                const response = await apiCall(`/api/liens-externes/rfq/${rfqId}/links`);
+                if (response && response.ok) {
+                    const links = await response.json();
+                    if (links.length > 0) {
+                        const linkSection = document.getElementById('external-links-section');
+                        linkSection.innerHTML = `
+                            <h4 style="margin-bottom: 1rem;"><i class="fas fa-link"></i> Liens générés</h4>
+                            <div style="display: grid; gap: 0.5rem;">
+                                ${links.map(link => `
+                                    <div class="card" style="padding: 0.75rem; background: ${link.utilise ? '#f5f5f5' : '#f0f9ff'};">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div>
+                                                <strong>${link.fournisseur_nom || 'Fournisseur'}</strong>
+                                                ${link.utilise ? '<span class="badge badge-success" style="margin-left: 0.5rem;">Utilisé</span>' : '<span class="badge badge-warning" style="margin-left: 0.5rem;">En attente</span>'}
+                                                <div style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">
+                                                    ${link.email_envoye ? `Envoyé à: ${link.email_envoye}` : ''}
+                                                    ${link.date_utilisation ? ` | Utilisé le: ${new Date(link.date_utilisation).toLocaleDateString('fr-FR')}` : ''}
+                                                </div>
+                                            </div>
+                                            ${!link.utilise ? `
+                                                <a href="${window.location.origin}/devis-externe.html?token=${link.token}" 
+                                                   target="_blank" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-external-link-alt"></i> Voir le lien
+                                                </a>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur chargement liens externes:', error);
+            }
+        }
+
+        // Modifier la fonction loadRFQDetails pour charger les liens externes
+        const originalLoadRFQDetails = loadRFQDetails;
+        async function loadRFQDetailsWithLinks() {
+            await originalLoadRFQDetails();
+            if (user.role === 'admin' || user.role === 'superviseur') {
+                loadExternalLinks(rfqId);
+            }
+        }
+
+        // Remplacer l'appel original
+        loadRFQDetailsWithLinks();
+    </script>
+</body>
+</html>
+
