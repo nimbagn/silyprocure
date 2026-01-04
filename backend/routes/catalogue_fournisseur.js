@@ -63,7 +63,7 @@ router.get('/fournisseur/:fournisseurId', validateFournisseurId, async (req, res
 
         if (disponible !== undefined) {
             query += ' AND p.disponible = ?';
-            params.push(disponible === 'true' ? 1 : 0);
+            params.push(disponible === 'true' ? true : false);
         }
 
         if (categorie_id) {
