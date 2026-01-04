@@ -55,29 +55,29 @@ router.get('/stats', async (req, res) => {
         const [produitsCount] = await pool.execute('SELECT COUNT(*) as total FROM produits');
         stats.produits_total = produitsCount[0].total;
 
-        // Commandes du mois
+        // Commandes du mois (PostgreSQL)
         const [commandesMois] = await pool.execute(
-            "SELECT COUNT(*) as total, SUM(total_ttc) as montant FROM commandes WHERE MONTH(date_commande) = MONTH(CURRENT_DATE()) AND YEAR(date_commande) = YEAR(CURRENT_DATE())"
+            "SELECT COUNT(*) as total, SUM(total_ttc) as montant FROM commandes WHERE EXTRACT(MONTH FROM date_commande) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(YEAR FROM date_commande) = EXTRACT(YEAR FROM CURRENT_DATE)"
         );
         stats.commandes_mois = commandesMois[0].total;
         stats.montant_mois = parseFloat(commandesMois[0].montant || 0);
 
-        // Commandes du mois dernier (pour comparaison)
+        // Commandes du mois dernier (pour comparaison) - PostgreSQL
         const [commandesMoisDernier] = await pool.execute(
-            "SELECT COUNT(*) as total, SUM(total_ttc) as montant FROM commandes WHERE MONTH(date_commande) = MONTH(DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH)) AND YEAR(date_commande) = YEAR(DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH))"
+            "SELECT COUNT(*) as total, SUM(total_ttc) as montant FROM commandes WHERE EXTRACT(MONTH FROM date_commande) = EXTRACT(MONTH FROM CURRENT_DATE - INTERVAL '1 month') AND EXTRACT(YEAR FROM date_commande) = EXTRACT(YEAR FROM CURRENT_DATE - INTERVAL '1 month')"
         );
         stats.commandes_mois_dernier = commandesMoisDernier[0].total;
         stats.montant_mois_dernier = parseFloat(commandesMoisDernier[0].montant || 0);
 
-        // Évolution des commandes (6 derniers mois)
+        // Évolution des commandes (6 derniers mois) - PostgreSQL
         const [commandesEvolution] = await pool.execute(`
             SELECT 
-                DATE_FORMAT(date_commande, '%Y-%m') as mois,
+                TO_CHAR(date_commande, 'YYYY-MM') as mois,
                 COUNT(*) as nombre,
                 SUM(total_ttc) as montant
             FROM commandes
-            WHERE date_commande >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
-            GROUP BY DATE_FORMAT(date_commande, '%Y-%m')
+            WHERE date_commande >= CURRENT_DATE - INTERVAL '6 months'
+            GROUP BY TO_CHAR(date_commande, 'YYYY-MM')
             ORDER BY mois ASC
         `);
         stats.evolution_commandes = commandesEvolution;
@@ -115,12 +115,12 @@ router.get('/stats', async (req, res) => {
         const [demandesTraitees] = await pool.execute("SELECT COUNT(*) as total FROM demandes_devis WHERE statut = 'traitee'");
         stats.demandes_devis_traitees = demandesTraitees[0].total;
 
-        // Messages de contact (notifications de type message_contact)
+        // Messages de contact (notifications de type message_contact) - PostgreSQL
         const [messagesContact] = await pool.execute(`
             SELECT COUNT(*) as total 
             FROM notifications 
             WHERE type_notification = 'message_contact' 
-            AND DATE(date_creation) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+            AND DATE(date_creation) >= CURRENT_DATE - INTERVAL '30 days'
         `);
         stats.messages_contact_30j = messagesContact[0].total;
 
