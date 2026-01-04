@@ -12,6 +12,7 @@
     "db:backup:sql": "pg_dump -U soul -d silypro > backup_$(date +%Y%m%d_%H%M%S).sql",
     "render:build": "bash render-build.sh",
     "render:init-db": "node backend/scripts/init-db-render.js",
+    "render:fix-admin": "node fix_admin_render.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
