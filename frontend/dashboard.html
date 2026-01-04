@@ -11,17 +11,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         /* --- VARIABLES & RESET --- */
+        /* Utilise les variables CSS de la charte graphique Hapag-Lloyd */
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4338ca;
-            --secondary: #10b981;
-            --accent: #f59e0b;
-            --bg-color: #f3f4f6;
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.6);
-            --text-main: #111827;
-            --text-muted: #6b7280;
-            --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+            --primary: var(--color-primary, #00387A); /* Bleu foncé Hapag-Lloyd */
+            --primary-dark: var(--color-primary-dark, #002855);
+            --primary-light: var(--color-primary-light, #0052A3);
+            --secondary: var(--color-success, #00A651); /* Vert */
+            --accent: var(--color-accent, #FF6600); /* Orange Hapag-Lloyd */
+            --accent-light: var(--color-accent-light, #FF8533);
+            --accent-dark: var(--color-accent-dark, #E55A00);
+            --bg-color: var(--color-background-light, #F9FAFB);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(0, 56, 122, 0.1);
+            --text-main: var(--color-neutral-dark, #374151);
+            --text-muted: var(--color-neutral, #6B7280);
+            --card-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.1));
         }
 
         body {
