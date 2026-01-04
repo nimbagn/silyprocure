@@ -47,10 +47,22 @@ async function apiCall(url, options = {}) {
     }
 
     try {
-        // Ajouter le préfixe si l'URL ne commence pas par http
-        const fullUrl = url.startsWith('http') ? url : `http://localhost:3000${url}`;
+        // Détecter l'URL de base (production ou développement)
+        let baseUrl = '';
+        if (url.startsWith('http')) {
+            // URL complète fournie, utiliser telle quelle
+            baseUrl = '';
+        } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // Mode développement
+            baseUrl = 'http://localhost:3000';
+        } else {
+            // Mode production - utiliser l'URL actuelle (même origine)
+            baseUrl = window.location.origin;
+        }
         
-        // Log uniquement en mode développement (localhost)
+        const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+        
+        // Log uniquement en mode développement
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             console.log('API Call:', fullUrl, {
                 method: finalOptions.method,
