@@ -83,7 +83,7 @@
         async function loadUsers() {
             try {
                 showLoading();
-                const response = await apiCall('/api/users');
+                const response = await apiCall('/api/utilisateurs');
                 
                 if (!response || !response.ok) {
                     throw new Error('Erreur lors du chargement des utilisateurs');
@@ -248,7 +248,7 @@
 
             try {
                 showLoading('Création de l\'utilisateur...');
-                const response = await apiCall('/api/users', {
+                const response = await apiCall('/api/utilisateurs', {
                     method: 'POST',
                     body: JSON.stringify(data)
                 });
@@ -345,7 +345,7 @@
 
             try {
                 showLoading('Mise à jour...');
-                const response = await apiCall(`/api/users/${userId}`, {
+                const response = await apiCall(`/api/utilisateurs/${userId}`, {
                     method: 'PUT',
                     body: JSON.stringify(data)
                 });
@@ -376,7 +376,7 @@
 
             try {
                 showLoading(`${action.charAt(0).toUpperCase() + action.slice(1)}...`);
-                const response = await apiCall(`/api/users/${userId}`, {
+                const response = await apiCall(`/api/utilisateurs/${userId}`, {
                     method: 'PUT',
                     body: JSON.stringify({ actif: newStatus })
                 });

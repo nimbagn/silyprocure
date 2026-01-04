@@ -20,8 +20,12 @@ function initSidebar() {
                 </button>
             </div>
             <nav class="sidebar-nav" role="navigation" aria-label="Menu de navigation">
-                <a href="dashboard.html" class="sidebar-nav-item" data-page="dashboard" aria-label="Aller au tableau de bord">
+                <a href="home.html" class="sidebar-nav-item" data-page="home" aria-label="Aller à la page d'accueil">
                     <span class="sidebar-nav-item-icon" aria-hidden="true"><i class="fas fa-home"></i></span>
+                    <span>Accueil</span>
+                </a>
+                <a href="dashboard.html" class="sidebar-nav-item" data-page="dashboard" aria-label="Aller au tableau de bord">
+                    <span class="sidebar-nav-item-icon" aria-hidden="true"><i class="fas fa-tachometer-alt"></i></span>
                     <span>Dashboard</span>
                 </a>
                 <a href="demandes-devis.html" class="sidebar-nav-item" data-page="demandes-devis" aria-label="Voir les demandes de devis">
