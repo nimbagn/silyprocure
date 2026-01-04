@@ -45,7 +45,8 @@ router.post('/', requireRole('admin'), async (req, res) => {
         const { email, mot_de_passe, nom, prenom, telephone, fonction, departement, role } = req.body;
         
         // Vérifier si l'email existe déjà
-        const [existing] = await pool.execute('SELECT id FROM utilisateurs WHERE email = ?', [email]);
+        const [existingRows] = await pool.execute('SELECT id FROM utilisateurs WHERE email = ?', [email]);
+        const existing = existingRows;
         if (existing.length > 0) {
             return res.status(400).json({ error: 'Cet email est déjà utilisé' });
         }
