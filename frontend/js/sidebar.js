@@ -92,61 +92,91 @@ function initSidebar() {
         document.body.appendChild(overlay);
     }
 
-    // Créer le header supérieur si il n'existe pas
-    if (!document.querySelector('.top-header')) {
-        const topHeader = document.createElement('header');
-        topHeader.className = 'top-header';
-        topHeader.innerHTML = `
-            <div class="top-header-left">
-                <button class="mobile-menu-toggle" onclick="toggleSidebar()" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sidebar">
-                    <i class="fas fa-bars" aria-hidden="true"></i>
-                    <span class="sr-only">Menu</span>
-                </button>
-            </div>
-            <div class="top-header-right">
-                <div class="user-menu" onclick="toggleUserMenu()">
-                    <div class="user-avatar" id="user-avatar" aria-hidden="true">U</div>
-                    <span id="user-name-header"></span>
-                    <button onclick="logout()" style="background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 0.5rem 1rem; border-radius: 6px; margin-left: 0.5rem;" aria-label="Se déconnecter">Déconnexion</button>
+    // Créer le conteneur principal si il n'existe pas
+    if (!document.querySelector('.main-content')) {
+        const mainContent = document.createElement('div');
+        mainContent.className = 'main-content';
+        
+        // Créer le header supérieur dans main-content
+        if (!document.querySelector('.top-header')) {
+            const topHeader = document.createElement('header');
+            topHeader.className = 'top-header';
+            topHeader.innerHTML = `
+                <div class="top-header-left">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sidebar">
+                        <i class="fas fa-bars" aria-hidden="true"></i>
+                        <span class="sr-only">Menu</span>
+                    </button>
                 </div>
-            </div>
-        `;
-        document.body.insertBefore(topHeader, document.body.firstChild);
-    }
-
-        // Créer le conteneur principal si il n'existe pas
-        if (!document.querySelector('.main-content')) {
-            const mainContent = document.createElement('div');
-            mainContent.className = 'main-content';
-            
-            // Déplacer tous les éléments sauf sidebar et top-header dans main-content
-            // Mais seulement si ce n'est pas déjà dans un container
-            const elementsToMove = Array.from(document.body.children).filter(el => 
-                !el.classList.contains('sidebar') && 
-                !el.classList.contains('top-header') &&
-                !el.classList.contains('main-content')
-            );
-            
-            // Si on a déjà un .container, on le garde dans main-content
-            const existingContainer = document.querySelector('.container');
-            if (existingContainer && elementsToMove.includes(existingContainer)) {
-                mainContent.appendChild(existingContainer);
-                // Retirer le container de la liste à déplacer
-                const index = elementsToMove.indexOf(existingContainer);
-                if (index > -1) elementsToMove.splice(index, 1);
-            }
-            
-            // Déplacer les autres éléments (scripts, etc.)
-            elementsToMove.forEach(el => {
-                // Ne pas déplacer les scripts qui doivent rester à la fin
-                if (el.tagName === 'SCRIPT' && el.src && el.src.includes('sidebar.js')) {
-                    return; // Ne pas déplacer sidebar.js
-                }
-                mainContent.appendChild(el);
-            });
-            
-            document.body.appendChild(mainContent);
+                <div class="top-header-right">
+                    <div class="user-menu" onclick="toggleUserMenu()">
+                        <div class="user-avatar" id="user-avatar" aria-hidden="true">U</div>
+                        <span id="user-name-header"></span>
+                        <button onclick="logout()" style="background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 0.5rem 1rem; border-radius: 6px; margin-left: 0.5rem;" aria-label="Se déconnecter">Déconnexion</button>
+                    </div>
+                </div>
+            `;
+            mainContent.appendChild(topHeader);
         }
+        
+        // Déplacer tous les éléments sauf sidebar dans main-content
+        const elementsToMove = Array.from(document.body.children).filter(el => 
+            !el.classList.contains('sidebar') && 
+            !el.classList.contains('main-content') &&
+            !el.classList.contains('sidebar-overlay')
+        );
+        
+        // Si on a déjà un .container, on le garde dans main-content
+        const existingContainer = document.querySelector('.container');
+        if (existingContainer && elementsToMove.includes(existingContainer)) {
+            mainContent.appendChild(existingContainer);
+            // Retirer le container de la liste à déplacer
+            const index = elementsToMove.indexOf(existingContainer);
+            if (index > -1) elementsToMove.splice(index, 1);
+        }
+        
+        // Déplacer les autres éléments (scripts, etc.) sauf ceux qui doivent rester
+        elementsToMove.forEach(el => {
+            // Ne pas déplacer les scripts qui doivent rester à la fin
+            if (el.tagName === 'SCRIPT') {
+                return; // Ne pas déplacer les scripts
+            }
+            // Ne pas déplacer le top-header s'il existe déjà
+            if (el.classList.contains('top-header')) {
+                return;
+            }
+            mainContent.appendChild(el);
+        });
+        
+        document.body.appendChild(mainContent);
+    } else {
+        // Si main-content existe déjà, s'assurer que top-header est dedans
+        const mainContent = document.querySelector('.main-content');
+        const existingTopHeader = document.querySelector('.top-header');
+        if (!existingTopHeader && mainContent) {
+            const topHeader = document.createElement('header');
+            topHeader.className = 'top-header';
+            topHeader.innerHTML = `
+                <div class="top-header-left">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sidebar">
+                        <i class="fas fa-bars" aria-hidden="true"></i>
+                        <span class="sr-only">Menu</span>
+                    </button>
+                </div>
+                <div class="top-header-right">
+                    <div class="user-menu" onclick="toggleUserMenu()">
+                        <div class="user-avatar" id="user-avatar" aria-hidden="true">U</div>
+                        <span id="user-name-header"></span>
+                        <button onclick="logout()" style="background: none; border: none; color: var(--color-primary); cursor: pointer; padding: 0.5rem 1rem; border-radius: 6px; margin-left: 0.5rem;" aria-label="Se déconnecter">Déconnexion</button>
+                    </div>
+                </div>
+            `;
+            mainContent.insertBefore(topHeader, mainContent.firstChild);
+        } else if (existingTopHeader && !mainContent.contains(existingTopHeader)) {
+            // Si top-header existe mais n'est pas dans main-content, le déplacer
+            mainContent.insertBefore(existingTopHeader, mainContent.firstChild);
+        }
+    }
 
     // Marquer la page active
     let currentPage = window.location.pathname.split('/').pop().replace('.html', '') || 'dashboard';
