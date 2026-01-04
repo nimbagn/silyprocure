@@ -678,13 +678,15 @@ router.post('/message', async (req, res) => {
         }
         
         // Enregistrer le message dans la base de données
+        // Pour PostgreSQL, utiliser RETURNING pour récupérer l'ID
         const [messageRows, messageResult] = await pool.execute(
             `INSERT INTO messages_contact (nom, email, telephone, sujet, message) 
-             VALUES (?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?) RETURNING id`,
             [nom, email, telephone || null, sujet, message]
         );
         
-        const messageId = messageResult.insertId;
+        // Pour PostgreSQL, l'ID est dans le premier élément du résultat
+        const messageId = messageRows && messageRows.length > 0 ? messageRows[0].id : (messageResult.insertId || null);
         
         // Créer une notification pour les admins/superviseurs
         await notifyAdminsAndSupervisors(
