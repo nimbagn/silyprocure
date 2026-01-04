@@ -19,14 +19,20 @@ if (!process.env.JWT_SECRET) {
 }
 
 // Initialisation automatique de la base de données sur Render (premier démarrage)
-// Désactivée temporairement - à faire manuellement via Shell pour éviter les erreurs au démarrage
-// if (process.env.RENDER || process.env.NODE_ENV === 'production') {
-//     const initDb = require('./scripts/init-db-render');
-//     // Exécuter en arrière-plan pour ne pas bloquer le démarrage
-//     initDb().catch(err => {
-//         console.warn('⚠️  Initialisation DB (non bloquant):', err.message);
-//     });
-// }
+// Migration de la table demandes_devis si nécessaire
+if (process.env.RENDER || process.env.NODE_ENV === 'production') {
+    // Migration demandes_devis (non bloquant)
+    const migrateDemandesDevis = require('./scripts/migrate-demandes-devis');
+    migrateDemandesDevis().catch(err => {
+        console.warn('⚠️  Migration demandes_devis (non bloquant):', err.message);
+    });
+    
+    // Initialisation complète de la DB (non bloquant)
+    const initDb = require('./scripts/init-db-render');
+    initDb().catch(err => {
+        console.warn('⚠️  Initialisation DB (non bloquant):', err.message);
+    });
+}
 
 // Middleware de sécurité
 const { helmetConfig, apiLimiter, readLimiter } = require('./middleware/security');
