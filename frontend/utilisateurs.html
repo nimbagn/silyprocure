@@ -57,6 +57,39 @@
             font-size: 1.75rem;
         }
 
+        .page-header .btn {
+            position: relative;
+            z-index: 1;
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            padding: 0.875rem 1.75rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .page-header .btn:hover {
+            background: var(--color-accent-light);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+        }
+
+        .page-header .btn:active {
+            transform: translateY(0);
+        }
+
+        .page-header .btn i {
+            font-size: 1rem;
+        }
+
         .card-actions {
             display: flex;
             gap: 1rem;
