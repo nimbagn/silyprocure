@@ -19,15 +19,21 @@ if (!process.env.JWT_SECRET) {
 }
 
 // Initialisation automatique de la base de données sur Render (premier démarrage)
-// Migration de la table demandes_devis si nécessaire
+// Migration des tables manquantes si nécessaire
 if (process.env.RENDER || process.env.NODE_ENV === 'production') {
-    // Migration demandes_devis (non bloquant)
+    // Mise à jour complète (non bloquant) - crée toutes les tables manquantes
+    const runUpdate = require('./scripts/run-update-render');
+    runUpdate().catch(err => {
+        console.warn('⚠️  Mise à jour DB (non bloquant):', err.message);
+    });
+    
+    // Migration demandes_devis (non bloquant) - fallback
     const migrateDemandesDevis = require('./scripts/migrate-demandes-devis');
     migrateDemandesDevis().catch(err => {
         console.warn('⚠️  Migration demandes_devis (non bloquant):', err.message);
     });
     
-    // Initialisation complète de la DB (non bloquant)
+    // Initialisation complète de la DB (non bloquant) - fallback
     const initDb = require('./scripts/init-db-render');
     initDb().catch(err => {
         console.warn('⚠️  Initialisation DB (non bloquant):', err.message);
