@@ -7,15 +7,14 @@ set -e
 echo "🔨 Build pour Render - SilyProcure"
 echo "===================================="
 
-# Activer PostgreSQL pour la production
-if [ "$NODE_ENV" = "production" ] || [ -n "$RENDER" ]; then
-    echo "📊 Activation de PostgreSQL..."
-    if [ -f "backend/config/database.postgresql.js" ]; then
-        cp backend/config/database.postgresql.js backend/config/database.js
-        echo "✅ Configuration PostgreSQL activée"
-    else
-        echo "⚠️  Fichier database.postgresql.js non trouvé"
-    fi
+# Toujours activer PostgreSQL sur Render (détection automatique)
+echo "📊 Activation de PostgreSQL..."
+if [ -f "backend/config/database.postgresql.js" ]; then
+    cp backend/config/database.postgresql.js backend/config/database.js
+    echo "✅ Configuration PostgreSQL activée"
+else
+    echo "⚠️  Fichier database.postgresql.js non trouvé"
+    exit 1
 fi
 
 # Installer les dépendances

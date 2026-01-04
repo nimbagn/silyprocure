@@ -10,17 +10,35 @@ async function initDatabase() {
     console.log('🗄️  Vérification de la base de données...');
     
     // Utiliser DATABASE_URL si disponible (format Render), sinon utiliser les variables individuelles
-    const connectionConfig = process.env.DATABASE_URL ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }
-    } : {
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT,
-        database: process.env.DB_NAME,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
-    };
+    let connectionConfig;
+    
+    if (process.env.DATABASE_URL) {
+        console.log('📊 Utilisation de DATABASE_URL');
+        connectionConfig = {
+            connectionString: process.env.DATABASE_URL,
+            ssl: { rejectUnauthorized: false }
+        };
+    } else {
+        // Vérifier que toutes les variables sont définies
+        if (!process.env.DB_HOST || !process.env.DB_NAME || !process.env.DB_USER || !process.env.DB_PASSWORD) {
+            console.warn('⚠️  Variables DB_* non définies, utilisation de DATABASE_URL recommandée');
+            return; // Ne pas faire échouer le démarrage
+        }
+        
+        const port = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432;
+        if (isNaN(port)) {
+            console.warn('⚠️  DB_PORT invalide, utilisation du port par défaut 5432');
+        }
+        
+        connectionConfig = {
+            host: process.env.DB_HOST,
+            port: isNaN(port) ? 5432 : port,
+            database: process.env.DB_NAME,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
+        };
+    }
     
     const pool = new Pool(connectionConfig);
 

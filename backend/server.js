@@ -15,13 +15,14 @@ if (!process.env.JWT_SECRET) {
 }
 
 // Initialisation automatique de la base de données sur Render (premier démarrage)
-if (process.env.RENDER || process.env.NODE_ENV === 'production') {
-    const initDb = require('./scripts/init-db-render');
-    // Exécuter en arrière-plan pour ne pas bloquer le démarrage
-    initDb().catch(err => {
-        console.warn('⚠️  Initialisation DB (non bloquant):', err.message);
-    });
-}
+// Désactivée temporairement - à faire manuellement via Shell pour éviter les erreurs au démarrage
+// if (process.env.RENDER || process.env.NODE_ENV === 'production') {
+//     const initDb = require('./scripts/init-db-render');
+//     // Exécuter en arrière-plan pour ne pas bloquer le démarrage
+//     initDb().catch(err => {
+//         console.warn('⚠️  Initialisation DB (non bloquant):', err.message);
+//     });
+// }
 
 // Middleware de sécurité
 const { helmetConfig, apiLimiter, readLimiter } = require('./middleware/security');
