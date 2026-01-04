@@ -107,8 +107,10 @@ async function initDatabase() {
                 const remaining = sql.substr(i);
                 if (remaining.startsWith(dollarTag)) {
                     currentStatement += dollarTag;
+                    const tagLength = dollarTag.length;
                     inDollarQuote = false;
-                    i += dollarTag.length;
+                    dollarTag = '';
+                    i += tagLength;
                     continue;
                 }
             }
