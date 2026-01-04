@@ -7,6 +7,177 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Styles responsive pour la page utilisateurs */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.75rem;
+            margin: 0;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 0.75rem 1rem;
+            border: 2px solid #E0E7FF;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            min-width: 250px;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(0, 56, 122, 0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .data-table thead {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .data-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #E0E7FF;
+            font-size: 0.875rem;
+        }
+
+        .data-table tr:hover {
+            background: var(--color-background-light);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table .btn-sm {
+            margin: 0 0.25rem;
+        }
+
+        /* Responsive: Table en cartes sur mobile */
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .card-actions {
+                width: 100%;
+            }
+
+            .search-input {
+                width: 100%;
+                min-width: auto;
+            }
+
+            /* Cacher le thead sur mobile */
+            .data-table thead {
+                display: none;
+            }
+
+            /* Transformer les lignes en cartes */
+            .data-table tbody tr {
+                display: block;
+                background: white;
+                border: 1px solid #E0E7FF;
+                border-radius: 8px;
+                margin-bottom: 1rem;
+                padding: 1rem;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .data-table tbody td {
+                display: block;
+                padding: 0.5rem 0;
+                border-bottom: 1px solid #E0E7FF;
+                text-align: left !important;
+            }
+
+            .data-table tbody td:before {
+                content: attr(data-label) ': ';
+                font-weight: 600;
+                color: var(--color-primary);
+                display: inline-block;
+                min-width: 120px;
+            }
+
+            .data-table tbody td:last-child {
+                border-bottom: none;
+                padding-top: 1rem;
+            }
+
+            .data-table tbody td:last-child .btn {
+                margin: 0.25rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .main-content {
+                padding: 1rem;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+
+            .card-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .page-header .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Tablette: Réduire padding et tailles */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .data-table th,
+            .data-table td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.8125rem;
+            }
+
+            .data-table th:nth-child(n+6),
+            .data-table td:nth-child(n+6) {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
     <script src="js/auth.js"></script>
@@ -171,6 +342,33 @@
                 (user.departement && user.departement.toLowerCase().includes(search))
             );
             displayUsers(filtered);
+        }
+
+        // Recharger l'affichage lors du redimensionnement
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                displayUsers(allUsers.filter(user => {
+                    const search = document.getElementById('search-users').value.toLowerCase();
+                    return !search || 
+                        user.nom.toLowerCase().includes(search) ||
+                        user.prenom.toLowerCase().includes(search) ||
+                        user.email.toLowerCase().includes(search) ||
+                        (user.fonction && user.fonction.toLowerCase().includes(search)) ||
+                        (user.departement && user.departement.toLowerCase().includes(search));
+                }));
+            }, 250);
+        });
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric' 
+            });
         }
 
         function showCreateUserModal() {
