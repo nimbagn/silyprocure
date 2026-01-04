@@ -8,7 +8,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Configurer trust proxy pour Render (nécessaire pour express-rate-limit derrière un proxy)
-app.set('trust proxy', true);
+// Utiliser 1 au lieu de true pour plus de sécurité (ne fait confiance qu'au premier proxy)
+app.set('trust proxy', 1);
 
 // Vérifier les variables d'environnement critiques
 if (!process.env.JWT_SECRET) {

@@ -8,6 +8,10 @@ const authLimiter = rateLimit({
     message: 'Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes.',
     standardHeaders: true,
     legacyHeaders: false,
+    // Désactiver la validation trust proxy pour éviter les warnings (géré dans server.js)
+    validate: {
+        trustProxy: false
+    }
 });
 
 // Rate limiting général pour les routes API (POST, PUT, DELETE, etc.)
@@ -17,6 +21,10 @@ const apiLimiter = rateLimit({
     message: 'Trop de requêtes. Veuillez réessayer plus tard.',
     standardHeaders: true,
     legacyHeaders: false,
+    // Désactiver la validation trust proxy pour éviter les warnings (géré dans server.js)
+    validate: {
+        trustProxy: false
+    }
 });
 
 // Rate limiting pour les routes GET uniquement (plus permissif)
@@ -26,6 +34,10 @@ const readLimiter = rateLimit({
     message: 'Trop de requêtes de lecture. Veuillez réessayer plus tard.',
     standardHeaders: true,
     legacyHeaders: false,
+    // Désactiver la validation trust proxy pour éviter les warnings (géré dans server.js)
+    validate: {
+        trustProxy: false
+    }
 });
 
 // Rate limiting strict pour les routes sensibles (création, modification, suppression)
@@ -35,6 +47,10 @@ const strictLimiter = rateLimit({
     message: 'Trop de requêtes sur cette ressource. Veuillez réessayer plus tard.',
     standardHeaders: true,
     legacyHeaders: false,
+    // Désactiver la validation trust proxy pour éviter les warnings (géré dans server.js)
+    validate: {
+        trustProxy: false
+    }
 });
 
 // Configuration Helmet pour la sécurité
