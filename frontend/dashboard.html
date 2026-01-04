@@ -604,6 +604,11 @@
                 const data = stats.evolution_commandes.map(e => parseFloat(e.montant || 0));
                 const counts = stats.evolution_commandes.map(e => parseInt(e.nombre || 0));
 
+                // Créer un gradient pour le graphique
+                const gradient = ctxCommandes.getContext('2d').createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
+                gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
                 chartCommandes = new Chart(ctxCommandes, {
                     type: 'line',
                     data: {
@@ -611,25 +616,32 @@
                         datasets: [{
                             label: 'Montant (GNF)',
                             data: data,
-                            borderColor: '#3B82F6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: '#6366f1',
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#6366f1',
+                            pointRadius: 5,
+                            fill: true,
                             tension: 0.4,
                             yAxisID: 'y'
                         }, {
                             label: 'Nombre de commandes',
                             data: counts,
-                            borderColor: '#10B981',
+                            borderColor: '#10b981',
                             backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
                             tension: 0.4,
                             yAxisID: 'y1'
                         }]
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
                                 position: 'top',
+                                display: false
                             },
                             title: {
                                 display: false
@@ -640,6 +652,13 @@
                                 type: 'linear',
                                 display: true,
                                 position: 'left',
+                                grid: {
+                                    borderDash: [5, 5],
+                                    color: 'rgba(0,0,0,0.05)'
+                                },
+                                border: {
+                                    display: false
+                                },
                                 title: {
                                     display: true,
                                     text: 'Montant (GNF)'
@@ -649,13 +668,24 @@
                                 type: 'linear',
                                 display: true,
                                 position: 'right',
-                                title: {
-                                    display: true,
-                                    text: 'Nombre'
-                                },
                                 grid: {
                                     drawOnChartArea: false,
                                 },
+                                border: {
+                                    display: false
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Nombre'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                border: {
+                                    display: false
+                                }
                             }
                         }
                     }
