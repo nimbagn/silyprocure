@@ -74,6 +74,48 @@ pool.execute = async (query, params) => {
             }
         }
         
+        // Remplacer les fonctions MySQL par leurs équivalents PostgreSQL
+        pgQuery = pgQuery.replace(/IFNULL\s*\(/gi, 'COALESCE(');
+        pgQuery = pgQuery.replace(/GROUP_CONCAT\s*\(/gi, 'STRING_AGG(');
+        pgQuery = pgQuery.replace(/SEPARATOR\s+['"]([^'"]+)['"]/gi, (match, sep) => `, '${sep}'`);
+        
+        // Remplacer DATE_FORMAT par TO_CHAR pour PostgreSQL
+        pgQuery = pgQuery.replace(/DATE_FORMAT\s*\(\s*([^,]+)\s*,\s*['"]([^'"]+)['"]\s*\)/gi, (match, dateExpr, format) => {
+            // Convertir le format MySQL en format PostgreSQL
+            const pgFormat = format
+                .replace(/%Y/g, 'YYYY')
+                .replace(/%m/g, 'MM')
+                .replace(/%d/g, 'DD')
+                .replace(/%H/g, 'HH24')
+                .replace(/%i/g, 'MI')
+                .replace(/%s/g, 'SS');
+            return `TO_CHAR(${dateExpr.trim()}, '${pgFormat}')`;
+        });
+        
+        // Remplacer DATE_SUB par soustraction d'INTERVAL pour PostgreSQL
+        pgQuery = pgQuery.replace(/DATE_SUB\s*\(\s*([^,]+)\s*,\s*INTERVAL\s+(\d+)\s+(\w+)\s*\)/gi, (match, dateExpr, amount, unit) => {
+            const pgUnit = unit.toLowerCase() === 'month' ? 'months' : 
+                          unit.toLowerCase() === 'day' ? 'days' :
+                          unit.toLowerCase() === 'year' ? 'years' :
+                          unit.toLowerCase() === 'hour' ? 'hours' :
+                          unit.toLowerCase() === 'minute' ? 'minutes' : unit.toLowerCase() + 's';
+            return `${dateExpr.trim()} - INTERVAL '${amount} ${pgUnit}'`;
+        });
+        
+        // Remplacer MONTH() et YEAR() par EXTRACT() pour PostgreSQL
+        pgQuery = pgQuery.replace(/MONTH\s*\(\s*([^)]+)\s*\)/gi, (match, dateExpr) => {
+            return `EXTRACT(MONTH FROM ${dateExpr.trim()})`;
+        });
+        pgQuery = pgQuery.replace(/YEAR\s*\(\s*([^)]+)\s*\)/gi, (match, dateExpr) => {
+            return `EXTRACT(YEAR FROM ${dateExpr.trim()})`;
+        });
+        
+        // Remplacer CURRENT_DATE() par CURRENT_DATE (sans parenthèses)
+        pgQuery = pgQuery.replace(/CURRENT_DATE\s*\(\s*\)/gi, 'CURRENT_DATE');
+        
+        // Remplacer NOW() par CURRENT_TIMESTAMP (ou garder NOW() qui fonctionne aussi)
+        // NOW() fonctionne en PostgreSQL, donc on peut le laisser
+        
         const result = await pool.query(pgQuery, pgParams);
         
         // Créer un objet compatible avec mysql2 pour insertId
