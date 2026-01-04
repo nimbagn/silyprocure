@@ -111,14 +111,15 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
             if (existingClients.length > 0) {
                 // Client existe déjà, mettre à jour ses informations
                 clientId = existingClients[0].id;
+                // Utiliser COALESCE pour PostgreSQL au lieu de IFNULL (MySQL)
                 await connection.execute(
                     `UPDATE clients 
                      SET nom = ?, 
-                         telephone = IFNULL(?, telephone), 
-                         entreprise = IFNULL(?, entreprise),
-                         adresse = IFNULL(?, adresse),
-                         ville = IFNULL(?, ville),
-                         pays = IFNULL(?, pays),
+                         telephone = COALESCE(?, telephone), 
+                         entreprise = COALESCE(?, entreprise),
+                         adresse = COALESCE(?, adresse),
+                         ville = COALESCE(?, ville),
+                         pays = COALESCE(?, pays),
                          date_derniere_demande = NOW(),
                          nombre_demandes = nombre_demandes + 1,
                          statut = CASE WHEN statut = 'prospect' THEN 'actif' ELSE statut END,
@@ -218,11 +219,12 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
             });
 
             // Récupérer la demande créée avec ses lignes
+            // Utiliser STRING_AGG pour PostgreSQL au lieu de GROUP_CONCAT (MySQL)
             const [demandes] = await pool.execute(
                 `SELECT d.*, 
-                        GROUP_CONCAT(
-                            CONCAT(l.description, ' (', l.quantite, ' ', l.unite, ' - ', l.secteur, ')')
-                            SEPARATOR '; '
+                        STRING_AGG(
+                            l.description || ' (' || l.quantite || ' ' || l.unite || ' - ' || COALESCE(l.secteur, '') || ')',
+                            '; '
                         ) as articles_resume
                  FROM demandes_devis d
                  LEFT JOIN demandes_devis_lignes l ON d.id = l.demande_devis_id

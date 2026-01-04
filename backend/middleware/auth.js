@@ -20,12 +20,22 @@ const authenticate = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
         // Récupérer l'utilisateur
-        const [users] = await pool.execute(
-            'SELECT id, email, nom, prenom, role, actif FROM utilisateurs WHERE id = ? AND actif = 1',
-            [decoded.userId]
-        );
+        let result, users;
+        if (pool.execute) {
+            result = await pool.execute(
+                'SELECT id, email, nom, prenom, role, actif FROM utilisateurs WHERE id = ? AND actif = ?',
+                [decoded.userId, true]
+            );
+            users = result[0] || result.rows || [];
+        } else {
+            result = await pool.query(
+                'SELECT id, email, nom, prenom, role, actif FROM utilisateurs WHERE id = $1 AND actif = TRUE',
+                [decoded.userId]
+            );
+            users = result.rows || [];
+        }
 
-        if (users.length === 0) {
+        if (!users || users.length === 0) {
             return res.status(401).json({ error: 'Utilisateur non trouvé ou inactif' });
         }
 

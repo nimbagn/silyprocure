@@ -114,5 +114,91 @@ pool.query = async (query, params) => {
     return result;
 };
 
+// Ajouter getConnection() pour compatibilité MySQL (retourne un client PostgreSQL)
+pool.getConnection = async () => {
+    const client = await pool.connect();
+    let transactionStarted = false;
+    
+    // Wrapper pour compatibilité MySQL
+    const connection = {
+        execute: async (query, params) => {
+            // Utiliser le client de la transaction pour toutes les requêtes
+            let pgQuery = query;
+            let paramIndex = 1;
+            const pgParams = [];
+            
+            // Convertir les placeholders ? en $1, $2, etc. pour PostgreSQL
+            if (params && params.length > 0) {
+                pgQuery = query.replace(/\?/g, () => {
+                    pgParams.push(params[paramIndex - 1]);
+                    return `$${paramIndex++}`;
+                });
+            }
+            
+            // Si c'est un INSERT sans RETURNING, l'ajouter automatiquement
+            const queryUpper = pgQuery.trim().toUpperCase();
+            if (queryUpper.startsWith('INSERT') && 
+                !queryUpper.includes('RETURNING') &&
+                !queryUpper.includes('SELECT')) {
+                const tableMatch = pgQuery.match(/INTO\s+(\w+)/i);
+                if (tableMatch) {
+                    pgQuery += ' RETURNING id';
+                }
+            }
+            
+            // Remplacer IFNULL par COALESCE pour PostgreSQL
+            pgQuery = pgQuery.replace(/IFNULL\s*\(/gi, 'COALESCE(');
+            
+            // Remplacer GROUP_CONCAT par STRING_AGG pour PostgreSQL
+            pgQuery = pgQuery.replace(/GROUP_CONCAT\s*\(/gi, 'STRING_AGG(');
+            pgQuery = pgQuery.replace(/SEPARATOR\s+['"]([^'"]+)['"]/gi, (match, sep) => `, '${sep}'`);
+            pgQuery = pgQuery.replace(/CONCAT\s*\(/gi, 'CONCAT(');
+            
+            const result = await client.query(pgQuery, pgParams);
+            
+            // Créer un objet compatible avec mysql2
+            const mockResult = {
+                insertId: null,
+                affectedRows: result.rowCount,
+                rows: result.rows,
+                fields: result.fields
+            };
+            
+            if (pgQuery.toUpperCase().includes('RETURNING') && result.rows.length > 0) {
+                const row = result.rows[0];
+                mockResult.insertId = row.id || row[Object.keys(row)[0]];
+            }
+            
+            return [result.rows, mockResult];
+        },
+        query: async (query, params) => {
+            return await client.query(query, params);
+        },
+        beginTransaction: async () => {
+            await client.query('BEGIN');
+            transactionStarted = true;
+        },
+        commit: async () => {
+            await client.query('COMMIT');
+            transactionStarted = false;
+            client.release();
+        },
+        rollback: async () => {
+            await client.query('ROLLBACK');
+            transactionStarted = false;
+            client.release();
+        },
+        release: () => {
+            if (!transactionStarted) {
+                client.release();
+            }
+        },
+        // Garder le client pour les requêtes dans la transaction
+        _client: client
+    };
+    
+    return connection;
+};
+
 module.exports = pool;
 
