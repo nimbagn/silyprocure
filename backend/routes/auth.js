@@ -16,22 +16,22 @@ router.post('/login', authLimiter, validateLogin, async (req, res) => {
         }
 
         // Récupérer l'utilisateur
-        // Utiliser pool.query directement pour PostgreSQL, pool.execute pour MySQL
-        let users;
-        if (pool.query && typeof pool.query === 'function' && !pool.execute) {
-            // PostgreSQL direct
-            const result = await pool.query(
-                'SELECT * FROM utilisateurs WHERE email = $1 AND actif = TRUE',
-                [email]
-            );
-            users = result.rows;
-        } else {
-            // MySQL ou wrapper PostgreSQL
-            const result = await pool.execute(
+        // Le wrapper PostgreSQL convertit automatiquement ? en $1, $2, etc.
+        let result;
+        if (pool.execute) {
+            // Utiliser pool.execute (fonctionne avec MySQL et wrapper PostgreSQL)
+            result = await pool.execute(
                 'SELECT * FROM utilisateurs WHERE email = ? AND actif = ?',
                 [email, true]
             );
             users = result[0] || result.rows || [];
+        } else {
+            // PostgreSQL direct (sans wrapper)
+            result = await pool.query(
+                'SELECT * FROM utilisateurs WHERE email = $1 AND actif = TRUE',
+                [email]
+            );
+            users = result.rows || [];
         }
 
         if (!users || users.length === 0) {
@@ -48,16 +48,14 @@ router.post('/login', authLimiter, validateLogin, async (req, res) => {
         }
 
         // Mettre à jour la dernière connexion
-        if (pool.query && typeof pool.query === 'function' && !pool.execute) {
-            // PostgreSQL direct
-            await pool.query(
-                'UPDATE utilisateurs SET derniere_connexion = NOW() WHERE id = $1',
+        if (pool.execute) {
+            await pool.execute(
+                'UPDATE utilisateurs SET derniere_connexion = NOW() WHERE id = ?',
                 [user.id]
             );
         } else {
-            // MySQL ou wrapper PostgreSQL
-            await pool.execute(
-                'UPDATE utilisateurs SET derniere_connexion = NOW() WHERE id = ?',
+            await pool.query(
+                'UPDATE utilisateurs SET derniere_connexion = NOW() WHERE id = $1',
                 [user.id]
             );
         }
@@ -104,21 +102,19 @@ router.get('/verify', async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Récupérer l'utilisateur
-        let users;
-        if (pool.query && typeof pool.query === 'function' && !pool.execute) {
-            // PostgreSQL direct
-            const result = await pool.query(
-                'SELECT id, email, nom, prenom, role, actif FROM utilisateurs WHERE id = $1',
-                [decoded.userId]
-            );
-            users = result.rows;
-        } else {
-            // MySQL ou wrapper PostgreSQL
-            const result = await pool.execute(
+        let result, users;
+        if (pool.execute) {
+            result = await pool.execute(
                 'SELECT id, email, nom, prenom, role, actif FROM utilisateurs WHERE id = ?',
                 [decoded.userId]
             );
             users = result[0] || result.rows || [];
+        } else {
+            result = await pool.query(
+                'SELECT id, email, nom, prenom, role, actif FROM utilisateurs WHERE id = $1',
+                [decoded.userId]
+            );
+            users = result.rows || [];
         }
 
         if (!users || users.length === 0) {
