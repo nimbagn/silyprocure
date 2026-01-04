@@ -11,9 +11,10 @@ router.use(authenticate);
 // Liste des utilisateurs
 router.get('/', requireRole('admin'), async (req, res) => {
     try {
-        const [users] = await pool.execute(
+        const [usersRows] = await pool.execute(
             'SELECT id, email, nom, prenom, telephone, fonction, departement, role, actif, date_creation FROM utilisateurs ORDER BY nom, prenom'
         );
+        const users = usersRows;
         res.json(users);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -24,10 +25,11 @@ router.get('/', requireRole('admin'), async (req, res) => {
 router.get('/:id', validateId, async (req, res) => {
     try {
         const { id } = req.params;
-        const [users] = await pool.execute(
+        const [usersRows] = await pool.execute(
             'SELECT id, email, nom, prenom, telephone, fonction, departement, role, actif, date_creation, derniere_connexion FROM utilisateurs WHERE id = ?',
             [id]
         );
+        const users = usersRows;
         if (users.length === 0) {
             return res.status(404).json({ error: 'Utilisateur non trouvé' });
         }
