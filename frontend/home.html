@@ -1614,7 +1614,7 @@
                     const nav = document.querySelector('.home-nav');
                     if (nav) {
                         const userInfo = document.createElement('span');
-                        userInfo.style.cssText = 'color: white; font-size: 0.9rem; margin-right: 0.5rem;';
+                        userInfo.style.cssText = 'color: white; font-size: 1rem; font-weight: 600; margin-right: 1rem; padding: 0.5rem 1rem; background: rgba(255, 255, 255, 0.15); border-radius: 8px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);';
                         userInfo.textContent = `Bonjour, ${user.prenom || user.nom || 'Utilisateur'}`;
                         nav.insertBefore(userInfo, authLink);
                         
@@ -1622,7 +1622,7 @@
                         const dashboardLink = document.createElement('a');
                         dashboardLink.href = 'dashboard.html';
                         dashboardLink.className = 'btn-login';
-                        dashboardLink.style.cssText = 'padding: 0.5rem 1rem; font-size: 0.9rem; margin-right: 0.5rem;';
+                        dashboardLink.style.cssText = 'background: rgba(255, 255, 255, 0.2); margin-right: 0.5rem; padding: 0.75rem 1.5rem;';
                         dashboardLink.innerHTML = '<i class="fas fa-tachometer-alt"></i> Dashboard';
                         nav.insertBefore(dashboardLink, authLink);
                     }
