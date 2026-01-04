@@ -17,24 +17,31 @@ router.post('/login', authLimiter, validateLogin, async (req, res) => {
 
         // Récupérer l'utilisateur
         // Le wrapper PostgreSQL convertit automatiquement ? en $1, $2, etc.
-        let result;
-        if (pool.execute) {
-            // Utiliser pool.execute (fonctionne avec MySQL et wrapper PostgreSQL)
-            result = await pool.execute(
-                'SELECT * FROM utilisateurs WHERE email = ? AND actif = ?',
-                [email, true]
-            );
-            users = result[0] || result.rows || [];
-        } else {
-            // PostgreSQL direct (sans wrapper)
-            result = await pool.query(
-                'SELECT * FROM utilisateurs WHERE email = $1 AND actif = TRUE',
-                [email]
-            );
-            users = result.rows || [];
+        let result, users;
+        try {
+            if (pool.execute) {
+                // Utiliser pool.execute (fonctionne avec MySQL et wrapper PostgreSQL)
+                result = await pool.execute(
+                    'SELECT * FROM utilisateurs WHERE email = ? AND actif = ?',
+                    [email, true]
+                );
+                users = result[0] || result.rows || [];
+            } else {
+                // PostgreSQL direct (sans wrapper)
+                result = await pool.query(
+                    'SELECT * FROM utilisateurs WHERE email = $1 AND actif = TRUE',
+                    [email]
+                );
+                users = result.rows || [];
+            }
+        } catch (dbError) {
+            console.error('❌ Erreur base de données lors de la connexion:', dbError.message);
+            console.error('   Stack:', dbError.stack);
+            return res.status(500).json({ error: 'Erreur serveur lors de la connexion' });
         }
 
         if (!users || users.length === 0) {
+            console.log('⚠️  Aucun utilisateur trouvé pour:', email);
             return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
         }
 
@@ -44,8 +51,11 @@ router.post('/login', authLimiter, validateLogin, async (req, res) => {
         const isValidPassword = await bcrypt.compare(mot_de_passe, user.mot_de_passe);
 
         if (!isValidPassword) {
+            console.log('⚠️  Mot de passe incorrect pour:', email);
             return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
         }
+        
+        console.log('✅ Connexion réussie pour:', email);
 
         // Mettre à jour la dernière connexion
         if (pool.execute) {
