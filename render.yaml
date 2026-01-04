@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: silyprocure
+    env: node
+    buildCommand: bash render-build.sh || npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_HOST
+        fromDatabase:
+          name: silyprocure-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: silyprocure-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: silyprocure-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: silyprocure-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: silyprocure-db
+          property: password
+      - key: DB_SSL
+        value: "true"
+
+databases:
+  - name: silyprocure-db
+    databaseName: silypro
+    user: soul
+    plan: free
+

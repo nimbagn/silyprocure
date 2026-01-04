@@ -10,6 +10,8 @@
     "db:install": "cd database && bash install.sh",
     "db:backup": "pg_dump -U soul -d silypro -F c -f backup_$(date +%Y%m%d_%H%M%S).dump",
     "db:backup:sql": "pg_dump -U soul -d silypro > backup_$(date +%Y%m%d_%H%M%S).sql",
+    "render:build": "bash render-build.sh",
+    "render:init-db": "node backend/scripts/init-db-render.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
