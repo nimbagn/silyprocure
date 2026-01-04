@@ -16,12 +16,25 @@ router.post('/login', authLimiter, validateLogin, async (req, res) => {
         }
 
         // Récupérer l'utilisateur
-        const [users] = await pool.execute(
-            'SELECT * FROM utilisateurs WHERE email = ? AND actif = 1',
-            [email]
-        );
+        // Utiliser pool.query directement pour PostgreSQL, pool.execute pour MySQL
+        let users;
+        if (pool.query && typeof pool.query === 'function' && !pool.execute) {
+            // PostgreSQL direct
+            const result = await pool.query(
+                'SELECT * FROM utilisateurs WHERE email = $1 AND actif = TRUE',
+                [email]
+            );
+            users = result.rows;
+        } else {
+            // MySQL ou wrapper PostgreSQL
+            const result = await pool.execute(
+                'SELECT * FROM utilisateurs WHERE email = ? AND actif = ?',
+                [email, true]
+            );
+            users = result[0] || result.rows || [];
+        }
 
-        if (users.length === 0) {
+        if (!users || users.length === 0) {
             return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
         }
 
@@ -35,10 +48,19 @@ router.post('/login', authLimiter, validateLogin, async (req, res) => {
         }
 
         // Mettre à jour la dernière connexion
-        await pool.execute(
-            'UPDATE utilisateurs SET derniere_connexion = NOW() WHERE id = ?',
-            [user.id]
-        );
+        if (pool.query && typeof pool.query === 'function' && !pool.execute) {
+            // PostgreSQL direct
+            await pool.query(
+                'UPDATE utilisateurs SET derniere_connexion = NOW() WHERE id = $1',
+                [user.id]
+            );
+        } else {
+            // MySQL ou wrapper PostgreSQL
+            await pool.execute(
+                'UPDATE utilisateurs SET derniere_connexion = NOW() WHERE id = ?',
+                [user.id]
+            );
+        }
 
         // Générer le token JWT
         if (!process.env.JWT_SECRET) {
@@ -82,12 +104,24 @@ router.get('/verify', async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Récupérer l'utilisateur
-        const [users] = await pool.execute(
-            'SELECT id, email, nom, prenom, role, actif FROM utilisateurs WHERE id = ?',
-            [decoded.userId]
-        );
+        let users;
+        if (pool.query && typeof pool.query === 'function' && !pool.execute) {
+            // PostgreSQL direct
+            const result = await pool.query(
+                'SELECT id, email, nom, prenom, role, actif FROM utilisateurs WHERE id = $1',
+                [decoded.userId]
+            );
+            users = result.rows;
+        } else {
+            // MySQL ou wrapper PostgreSQL
+            const result = await pool.execute(
+                'SELECT id, email, nom, prenom, role, actif FROM utilisateurs WHERE id = ?',
+                [decoded.userId]
+            );
+            users = result[0] || result.rows || [];
+        }
 
-        if (users.length === 0) {
+        if (!users || users.length === 0) {
             return res.status(401).json({ error: 'Utilisateur non trouvé' });
         }
 
