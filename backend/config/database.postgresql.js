@@ -2,17 +2,32 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 // Configuration de la connexion à la base de données PostgreSQL
-const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    database: process.env.DB_NAME || 'silypro',
-    user: process.env.DB_USER || 'soul',
-    password: process.env.DB_PASSWORD || 'Satina2025',
-    max: 10, // Nombre maximum de connexions dans le pool
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
-};
+// Utiliser DATABASE_URL en priorité (format Render), sinon utiliser les variables individuelles
+let dbConfig;
+
+if (process.env.DATABASE_URL) {
+    // Utiliser DATABASE_URL (format Render)
+    dbConfig = {
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000
+    };
+} else {
+    // Utiliser les variables individuelles
+    dbConfig = {
+        host: process.env.DB_HOST || 'localhost',
+        port: process.env.DB_PORT || 5432,
+        database: process.env.DB_NAME || 'silypro',
+        user: process.env.DB_USER || 'soul',
+        password: process.env.DB_PASSWORD || 'Satina2025',
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+        ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
+    };
+}
 
 // Création du pool de connexions
 const pool = new Pool(dbConfig);

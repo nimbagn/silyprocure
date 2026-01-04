@@ -7,6 +7,9 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Configurer trust proxy pour Render (nécessaire pour express-rate-limit derrière un proxy)
+app.set('trust proxy', true);
+
 // Vérifier les variables d'environnement critiques
 if (!process.env.JWT_SECRET) {
     console.error('❌ ERREUR: JWT_SECRET doit être défini dans le fichier .env');
