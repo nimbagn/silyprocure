@@ -508,15 +508,16 @@
             const evolutionIcon = evolutionMois >= 0 ? '<i class="fas fa-arrow-up"></i>' : '<i class="fas fa-arrow-down"></i>';
 
             statsGrid.innerHTML = `
-                <div class="stat-card" onclick="window.location.href='rfq.html'">
+                <div class="stat-card glass" onclick="window.location.href='rfq.html'">
+                    <div class="stat-icon"><i class="fas fa-file-invoice-dollar"></i></div>
                     <div class="stat-label">RFQ Total</div>
                     <div class="stat-value">${stats.rfq_total || 0}</div>
-                    <div class="stat-label">
+                    <div class="stat-label-detail">
                         ${stats.rfq_en_cours || 0} en cours • 
                         ${stats.rfq_brouillon || 0} brouillon • 
                         ${stats.rfq_cloture || 0} clôturées
                     </div>
-                    <div class="stat-change positive"><i class="fas fa-file-alt"></i></div>
+                    <div class="stat-change trend-up"><i class="fas fa-file-alt"></i></div>
                 </div>
                 <div class="stat-card glass" onclick="window.location.href='devis.html'">
                     <div class="stat-icon"><i class="fas fa-briefcase"></i></div>
