@@ -750,11 +750,12 @@ router.get('/messages', requireRole('admin', 'superviseur'), async (req, res) =>
         
         if (traite !== undefined) {
             countQuery += ' AND traite = ?';
-            countParams.push(traite === 'true' ? 1 : 0);
+            countParams.push(traite === 'true' ? true : false);
         }
         
-        const [countResult] = await pool.execute(countQuery, countParams);
-        const total = countResult[0].total;
+        const [countRows] = await pool.execute(countQuery, countParams);
+        const countResult = countRows;
+        const total = countResult[0]?.total || 0;
         
         res.json({
             data: messages,
