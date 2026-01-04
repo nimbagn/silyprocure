@@ -127,7 +127,7 @@ router.post('/', validateFacture, async (req, res) => {
             total_ttc = total_ht + total_tva;
         }
 
-        const [result] = await pool.execute(
+        const [factureRows, factureResult] = await pool.execute(
             `INSERT INTO factures (numero, type_facture, date_emission, date_echeance,
               facturier_id, client_id, contact_client_id, commande_id, bl_id,
               adresse_facturation_id, total_ht, total_tva, total_ttc, total_achat_ht, marge_totale, reste_a_payer,
@@ -139,7 +139,7 @@ router.post('/', validateFacture, async (req, res) => {
              conditions_paiement, delai_paiement_jours, mode_paiement]
         );
 
-        const facture_id = result.insertId;
+        const facture_id = factureResult.insertId;
 
         // Enregistrer dans l'historique du client si la facture est liée à une commande -> devis -> demande_devis
         if (commande_id) {

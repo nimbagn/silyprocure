@@ -487,7 +487,7 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
                 const numero = await generateRFQNumber();
 
                 // Créer la RFQ
-                const [result] = await connection.execute(
+                const [rfqRows, rfqResult] = await connection.execute(
                     `INSERT INTO rfq (numero, date_emission, date_limite_reponse, emetteur_id, destinataire_id,
                       description, lieu_livraison_id, date_livraison_souhaitee, incoterms, conditions_paiement, statut)
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'brouillon')`,
@@ -505,7 +505,7 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
                     ]
                 );
 
-                const rfq_id = result.insertId;
+                const rfq_id = rfqResult.insertId;
 
                 // Créer les lignes de la RFQ depuis les articles de la demande
                 for (const ligne of lignes) {
@@ -625,11 +625,12 @@ router.get('/tracking', async (req, res) => {
         }
 
         // Récupérer la demande avec ses lignes
+        // Utiliser STRING_AGG pour PostgreSQL au lieu de GROUP_CONCAT (MySQL)
         const [demandes] = await pool.execute(
             `SELECT d.*, 
-                    GROUP_CONCAT(
-                        CONCAT(l.description, '|', l.secteur, '|', l.quantite, '|', l.unite)
-                        SEPARATOR ';;'
+                    STRING_AGG(
+                        l.description || '|' || COALESCE(l.secteur, '') || '|' || l.quantite || '|' || l.unite,
+                        ';;'
                     ) as articles_data
              FROM demandes_devis d
              LEFT JOIN demandes_devis_lignes l ON d.id = l.demande_devis_id
@@ -677,13 +678,13 @@ router.post('/message', async (req, res) => {
         }
         
         // Enregistrer le message dans la base de données
-        const [result] = await pool.execute(
+        const [messageRows, messageResult] = await pool.execute(
             `INSERT INTO messages_contact (nom, email, telephone, sujet, message) 
              VALUES (?, ?, ?, ?, ?)`,
             [nom, email, telephone || null, sujet, message]
         );
         
-        const messageId = result.insertId;
+        const messageId = messageResult.insertId;
         
         // Créer une notification pour les admins/superviseurs
         await notifyAdminsAndSupervisors(

@@ -65,7 +65,8 @@ router.get('/', validatePagination, async (req, res) => {
 router.get('/categories', async (req, res) => {
     try {
         const [categories] = await pool.execute(
-            'SELECT * FROM categories WHERE actif = 1 ORDER BY libelle'
+            'SELECT * FROM categories WHERE actif = ? ORDER BY libelle',
+            [true]
         );
         res.json(categories);
     } catch (error) {

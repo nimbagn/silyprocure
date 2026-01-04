@@ -60,12 +60,12 @@ router.post('/', async (req, res) => {
         }
 
         // Insérer le paiement
-        const [result] = await pool.execute(
+        const [paiementRows, paiementResult] = await pool.execute(
             'INSERT INTO paiements (facture_id, montant, date_paiement, mode_paiement, reference_paiement, banque, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [facture_id, montantNum, date_paiement, mode_paiement, reference_paiement || null, banque || null, notes || null]
         );
 
-        const paiement_id = result.insertId;
+        const paiement_id = paiementResult.insertId;
 
         // Mettre à jour la facture
         const nouveauMontantRegle = parseFloat(facture.montant_regle || 0) + montantNum;

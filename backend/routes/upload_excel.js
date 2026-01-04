@@ -70,7 +70,7 @@ router.post('/produits/:fournisseur_id', authenticate, validateFournisseurId, up
         }
 
         // Récupérer les catégories pour mapping
-        const [categories] = await pool.execute('SELECT id, libelle FROM categories WHERE actif = 1');
+        const [categories] = await pool.execute('SELECT id, libelle FROM categories WHERE actif = ?', [true]);
         const categorieMap = {};
         categories.forEach(cat => {
             categorieMap[cat.libelle.toLowerCase()] = cat.id;

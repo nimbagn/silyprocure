@@ -148,7 +148,7 @@ router.post('/', validateRFQ, async (req, res) => {
             centre_cout_id || null
         ];
 
-        const [result] = await pool.execute(
+        const [rfqRows, rfqResult] = await pool.execute(
             `INSERT INTO rfq (numero, date_emission, date_limite_reponse, emetteur_id, destinataire_id, 
               contact_destinataire_id, categorie_id, description, lieu_livraison_id, date_livraison_souhaitee,
               incoterms, conditions_paiement, projet_id, centre_cout_id, statut)
@@ -156,7 +156,7 @@ router.post('/', validateRFQ, async (req, res) => {
             params
         );
 
-        const rfq_id = result.insertId;
+        const rfq_id = rfqResult.insertId;
 
         // Insérer les lignes
         if (lignes && lignes.length > 0) {

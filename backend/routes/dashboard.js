@@ -43,12 +43,12 @@ router.get('/stats', async (req, res) => {
         stats.factures_attente = facturesAttente[0].total;
         stats.montant_attente = parseFloat(facturesAttente[0].montant || 0);
 
-        // Fournisseurs actifs
-        const [fournisseurs] = await pool.execute("SELECT COUNT(*) as total FROM entreprises WHERE type_entreprise = 'fournisseur' AND actif = 1");
+        // Fournisseurs actifs (utiliser TRUE pour PostgreSQL)
+        const [fournisseurs] = await pool.execute("SELECT COUNT(*) as total FROM entreprises WHERE type_entreprise = 'fournisseur' AND actif = ?", [true]);
         stats.fournisseurs_actifs = fournisseurs[0].total;
 
-        // Clients actifs
-        const [clients] = await pool.execute("SELECT COUNT(*) as total FROM entreprises WHERE type_entreprise = 'client' AND actif = 1");
+        // Clients actifs (utiliser TRUE pour PostgreSQL)
+        const [clients] = await pool.execute("SELECT COUNT(*) as total FROM entreprises WHERE type_entreprise = 'client' AND actif = ?", [true]);
         stats.clients_actifs = clients[0].total;
 
         // Produits
@@ -95,7 +95,7 @@ router.get('/stats', async (req, res) => {
             SELECT e.id, e.nom, COUNT(c.id) as nb_commandes, SUM(c.total_ttc) as montant_total
             FROM entreprises e
             LEFT JOIN commandes c ON e.id = c.fournisseur_id
-            WHERE e.type_entreprise = 'fournisseur' AND e.actif = 1
+            WHERE e.type_entreprise = 'fournisseur' AND e.actif = ?
             GROUP BY e.id, e.nom
             ORDER BY nb_commandes DESC, montant_total DESC
             LIMIT 5

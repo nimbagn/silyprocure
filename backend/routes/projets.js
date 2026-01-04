@@ -36,7 +36,8 @@ router.get('/', async (req, res) => {
 router.get('/centres-cout', async (req, res) => {
     try {
         const [centres] = await pool.execute(
-            'SELECT * FROM centres_cout WHERE actif = 1 ORDER BY code'
+            'SELECT * FROM centres_cout WHERE actif = ? ORDER BY code',
+            [true]
         );
         res.json(centres);
     } catch (error) {
