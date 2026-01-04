@@ -118,8 +118,12 @@
         }
 
         .data-table thead {
-            background: var(--color-primary);
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
             color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .data-table th {
@@ -129,24 +133,55 @@
             font-size: 0.875rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            white-space: nowrap;
+            min-width: 100px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .data-table th:last-child {
+            border-right: none;
+        }
+
+        .data-table th:empty {
+            display: none;
         }
 
         .data-table td {
             padding: 1rem;
             border-bottom: 1px solid #E0E7FF;
             font-size: 0.875rem;
+            transition: background-color 0.2s ease;
         }
 
-        .data-table tr:hover {
-            background: var(--color-background-light);
+        .data-table tbody tr {
+            transition: all 0.2s ease;
+            cursor: pointer;
         }
 
-        .data-table tr:last-child td {
+        .data-table tbody tr:hover {
+            background: linear-gradient(90deg, rgba(0, 56, 122, 0.05) 0%, rgba(255, 102, 0, 0.05) 100%);
+            transform: translateX(2px);
+            box-shadow: -2px 0 8px rgba(255, 102, 0, 0.15);
+            border-left: 3px solid var(--color-accent);
+        }
+
+        .data-table tbody tr:hover td {
+            color: var(--color-primary-dark);
+            font-weight: 500;
+        }
+
+        .data-table tbody tr:last-child td {
             border-bottom: none;
         }
 
         .data-table .btn-sm {
             margin: 0 0.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .data-table tbody tr:hover .btn-sm {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         /* Responsive: Table en cartes sur mobile */
