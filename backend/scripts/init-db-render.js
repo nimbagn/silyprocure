@@ -103,12 +103,14 @@ async function initDatabase() {
             }
             
             // Détecter la fin d'un bloc $$
-            if (inDollarQuote && sql.substr(i, dollarTag.length) === dollarTag) {
-                currentStatement += dollarTag;
-                inDollarQuote = false;
-                dollarTag = '';
-                i += dollarTag.length;
-                continue;
+            if (inDollarQuote) {
+                const remaining = sql.substr(i);
+                if (remaining.startsWith(dollarTag)) {
+                    currentStatement += dollarTag;
+                    inDollarQuote = false;
+                    i += dollarTag.length;
+                    continue;
+                }
             }
             
             // Détecter la fin d'une instruction SQL (; en dehors d'un bloc $$)
