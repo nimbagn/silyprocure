@@ -129,7 +129,7 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                 );
             } else {
                 // Créer un nouveau client
-                const [clientResult] = await connection.execute(
+                const [clientRows, clientResult] = await connection.execute(
                     `INSERT INTO clients (nom, email, telephone, entreprise, adresse, ville, pays, date_derniere_demande, nombre_demandes, statut)
                      VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), 1, 'prospect')`,
                     [nom, email, telephone, entreprise || null, adresse_livraison, ville_livraison, pays_livraison]
@@ -138,7 +138,7 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
             }
 
             // Enregistrer la demande principale avec référence et token, liée au client
-            const [result] = await connection.execute(
+            const [demandeRows, demandeResult] = await connection.execute(
                 `INSERT INTO demandes_devis (client_id, nom, email, telephone, entreprise, message, adresse_livraison, ville_livraison, pays_livraison, latitude, longitude, statut, reference, token_suivi, mode_notification)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'nouvelle', ?, ?, ?)`,
                 [
@@ -150,7 +150,7 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                 ]
             );
 
-            const demandeId = result.insertId;
+            const demandeId = demandeResult.insertId;
 
             // Enregistrer les fichiers joints s'il y en a
             if (req.files && req.files.length > 0) {

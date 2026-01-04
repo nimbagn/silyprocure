@@ -169,6 +169,7 @@ pool.getConnection = async () => {
                 mockResult.insertId = row.id || row[Object.keys(row)[0]];
             }
             
+            // Retourner le format [rows, mockResult] comme mysql2
             return [result.rows, mockResult];
         },
         query: async (query, params) => {
