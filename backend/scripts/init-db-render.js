@@ -41,6 +41,7 @@ async function initDatabase() {
     }
     
     const pool = new Pool(connectionConfig);
+    let poolClosed = false; // Flag pour éviter la double fermeture
 
     try {
         // Vérifier si la table utilisateurs existe
@@ -116,8 +117,9 @@ async function initDatabase() {
                 }
             } finally {
                 // Fermer le pool seulement une fois
-                if (pool && !pool.ended) {
+                if (pool && !poolClosed) {
                     await pool.end();
+                    poolClosed = true;
                 }
             }
             return;
