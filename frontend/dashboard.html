@@ -25,7 +25,7 @@
         }
 
         body {
-            font-family: 'Outfit', 'Inter', sans-serif;
+            font-family: 'Inter', 'Outfit', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             overflow-x: hidden;
@@ -40,7 +40,7 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+            background: linear-gradient(120deg, var(--color-background-light, #F9FAFB) 0%, var(--color-background-blue, #E0E7FF) 100%);
         }
 
         /* --- GLASSMORPHISM CARD --- */
@@ -92,13 +92,13 @@
             right: 1.5rem;
             width: 48px;
             height: 48px;
-            background: rgba(255,255,255,0.6);
+            background: rgba(255, 102, 0, 0.1);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
-            color: var(--primary);
+            color: var(--accent);
         }
 
         .stat-label { 
@@ -131,13 +131,13 @@
         }
         
         .trend-up { 
-            background: rgba(16, 185, 129, 0.1); 
+            background: rgba(0, 166, 81, 0.1); 
             color: var(--secondary); 
         }
         
         .trend-down { 
-            background: rgba(239, 68, 68, 0.1); 
-            color: #ef4444; 
+            background: rgba(230, 0, 18, 0.1); 
+            color: var(--color-danger, #E60012); 
         }
 
         /* --- CHARTS AREA --- */
@@ -204,7 +204,7 @@
             width: 40px; 
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #a5b4fc, #6366f1);
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
             color: white;
             display: flex; 
             align-items: center; 
@@ -239,7 +239,7 @@
         }
         
         .bg-process { 
-            background: #dbeafe; 
+            background: var(--color-background-blue, #E0E7FF); 
             color: var(--primary); 
         }
 
@@ -263,7 +263,7 @@
         .page-header h1 {
             font-size: 2rem;
             font-weight: 700;
-            background: linear-gradient(45deg, var(--primary), #ec4899);
+            background: linear-gradient(45deg, var(--primary), var(--accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: flex;
@@ -288,8 +288,9 @@
         }
 
         .btn:hover { 
-            background: var(--primary); 
+            background: var(--accent); 
             color: white; 
+            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
         }
 
         /* --- LOADING SPINNER --- */
@@ -582,8 +583,8 @@
         }
 
         // Configuration Globale Chart.js
-        Chart.defaults.font.family = "'Outfit', sans-serif";
-        Chart.defaults.color = '#6b7280';
+        Chart.defaults.font.family = "'Inter', 'Outfit', sans-serif";
+        Chart.defaults.color = '#6B7280';
 
         function displayCharts(stats) {
             // Vérifier que stats est valide
@@ -608,10 +609,10 @@
                 const data = stats.evolution_commandes.map(e => parseFloat(e.montant || 0));
                 const counts = stats.evolution_commandes.map(e => parseInt(e.nombre || 0));
 
-                // Créer un gradient pour le graphique
+                // Créer un gradient pour le graphique avec les couleurs Hapag-Lloyd
                 const gradient = ctxCommandes.getContext('2d').createLinearGradient(0, 0, 0, 400);
-                gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
-                gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+                gradient.addColorStop(0, 'rgba(0, 56, 122, 0.5)');
+                gradient.addColorStop(1, 'rgba(0, 56, 122, 0.0)');
 
                 chartCommandes = new Chart(ctxCommandes, {
                     type: 'line',
@@ -620,11 +621,11 @@
                         datasets: [{
                             label: 'Montant (GNF)',
                             data: data,
-                            borderColor: '#6366f1',
+                            borderColor: '#00387A',
                             backgroundColor: gradient,
                             borderWidth: 3,
                             pointBackgroundColor: '#fff',
-                            pointBorderColor: '#6366f1',
+                            pointBorderColor: '#00387A',
                             pointRadius: 5,
                             fill: true,
                             tension: 0.4,
@@ -632,8 +633,8 @@
                         }, {
                             label: 'Nombre de commandes',
                             data: counts,
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderColor: '#FF6600',
+                            backgroundColor: 'rgba(255, 102, 0, 0.1)',
                             borderWidth: 2,
                             tension: 0.4,
                             yAxisID: 'y1'
@@ -713,7 +714,7 @@
 
                 const labels = stats.rfq_par_statut.map(s => statutLabels[s.statut] || s.statut);
                 const data = stats.rfq_par_statut.map(s => parseInt(s.nombre || 0));
-                const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#e5e7eb'];
+                const colors = ['#00387A', '#FF6600', '#00A651', '#E60012', '#6B7280'];
 
                 chartRFQ = new Chart(ctxRFQ, {
                     type: 'doughnut',
@@ -912,7 +913,7 @@
                             const initial = (r.destinataire_nom || 'R').charAt(0).toUpperCase();
                             return `
                                 <div class="list-item" onclick="window.location.href='rfq-detail.html?id=${r.id}'" style="cursor: pointer;">
-                                    <div class="avatar" style="background: #6366f1">${initial}</div>
+                                    <div class="avatar" style="background: #00387A">${initial}</div>
                                     <div class="list-info">
                                         <h4>${r.numero || 'RFQ-' + r.id}</h4>
                                         <p>${r.destinataire_nom || '-'}</p>
@@ -932,7 +933,7 @@
                             const initial = (d.numero || 'D').charAt(0).toUpperCase();
                             return `
                                 <div class="list-item" onclick="window.location.href='devis.html'" style="cursor: pointer;">
-                                    <div class="avatar" style="background: #10b981">${initial}</div>
+                                    <div class="avatar" style="background: #00A651">${initial}</div>
                                     <div class="list-info">
                                         <h4>${d.numero || 'Devis-' + d.id}</h4>
                                         <p>${formatCurrency(d.total_ttc || 0)}</p>
@@ -951,7 +952,7 @@
                             const initial = (c.numero || 'C').charAt(0).toUpperCase();
                             return `
                                 <div class="list-item" onclick="window.location.href='commandes.html'" style="cursor: pointer;">
-                                    <div class="avatar" style="background: #8b5cf6">${initial}</div>
+                                    <div class="avatar" style="background: #0052A3">${initial}</div>
                                     <div class="list-info">
                                         <h4>${c.numero || 'BC-' + c.id}</h4>
                                         <p>${formatCurrency(c.total_ttc || 0)}</p>
