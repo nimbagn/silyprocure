@@ -188,17 +188,43 @@ pool.getConnection = async () => {
                 }
             }
             
-            // Remplacer IFNULL par COALESCE pour PostgreSQL
+            // Remplacer les fonctions MySQL par leurs équivalents PostgreSQL
             pgQuery = pgQuery.replace(/IFNULL\s*\(/gi, 'COALESCE(');
-            
-            // Remplacer GROUP_CONCAT par STRING_AGG pour PostgreSQL
             pgQuery = pgQuery.replace(/GROUP_CONCAT\s*\(/gi, 'STRING_AGG(');
             pgQuery = pgQuery.replace(/SEPARATOR\s+['"]([^'"]+)['"]/gi, (match, sep) => `, '${sep}'`);
-            pgQuery = pgQuery.replace(/CONCAT\s*\(/gi, 'CONCAT(');
             
-            // Gérer LIMIT et OFFSET avec des paramètres (PostgreSQL supporte les paramètres pour LIMIT/OFFSET)
-            // Si LIMIT/OFFSET sont déjà des paramètres ?, on les laisse tels quels
-            // Sinon, on les convertit en paramètres si nécessaire
+            // Remplacer DATE_FORMAT par TO_CHAR pour PostgreSQL
+            pgQuery = pgQuery.replace(/DATE_FORMAT\s*\(\s*([^,]+)\s*,\s*['"]([^'"]+)['"]\s*\)/gi, (match, dateExpr, format) => {
+                const pgFormat = format
+                    .replace(/%Y/g, 'YYYY')
+                    .replace(/%m/g, 'MM')
+                    .replace(/%d/g, 'DD')
+                    .replace(/%H/g, 'HH24')
+                    .replace(/%i/g, 'MI')
+                    .replace(/%s/g, 'SS');
+                return `TO_CHAR(${dateExpr.trim()}, '${pgFormat}')`;
+            });
+            
+            // Remplacer DATE_SUB par soustraction d'INTERVAL pour PostgreSQL
+            pgQuery = pgQuery.replace(/DATE_SUB\s*\(\s*([^,]+)\s*,\s*INTERVAL\s+(\d+)\s+(\w+)\s*\)/gi, (match, dateExpr, amount, unit) => {
+                const pgUnit = unit.toLowerCase() === 'month' ? 'months' : 
+                              unit.toLowerCase() === 'day' ? 'days' :
+                              unit.toLowerCase() === 'year' ? 'years' :
+                              unit.toLowerCase() === 'hour' ? 'hours' :
+                              unit.toLowerCase() === 'minute' ? 'minutes' : unit.toLowerCase() + 's';
+                return `${dateExpr.trim()} - INTERVAL '${amount} ${pgUnit}'`;
+            });
+            
+            // Remplacer MONTH() et YEAR() par EXTRACT() pour PostgreSQL
+            pgQuery = pgQuery.replace(/MONTH\s*\(\s*([^)]+)\s*\)/gi, (match, dateExpr) => {
+                return `EXTRACT(MONTH FROM ${dateExpr.trim()})`;
+            });
+            pgQuery = pgQuery.replace(/YEAR\s*\(\s*([^)]+)\s*\)/gi, (match, dateExpr) => {
+                return `EXTRACT(YEAR FROM ${dateExpr.trim()})`;
+            });
+            
+            // Remplacer CURRENT_DATE() par CURRENT_DATE (sans parenthèses)
+            pgQuery = pgQuery.replace(/CURRENT_DATE\s*\(\s*\)/gi, 'CURRENT_DATE');
             
             const result = await client.query(pgQuery, pgParams);
             
