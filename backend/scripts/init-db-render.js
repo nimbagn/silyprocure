@@ -109,12 +109,17 @@ async function initDatabase() {
                 console.log('   Email: admin@silyprocure.com');
                 console.log('   Mot de passe: admin123');
             } catch (error) {
-                if (!error.message.includes('duplicate')) {
+                if (!error.message.includes('duplicate') && !error.message.includes('violates unique constraint')) {
                     console.warn('⚠️  Erreur création admin:', error.message);
+                } else {
+                    console.log('ℹ️  Compte admin existe déjà');
+                }
+            } finally {
+                // Fermer le pool seulement une fois
+                if (pool && !pool.ended) {
+                    await pool.end();
                 }
             }
-            
-            await pool.end();
             return;
         } catch (psqlError) {
             // psql non disponible, utiliser le parser
