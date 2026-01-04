@@ -154,6 +154,10 @@ pool.getConnection = async () => {
             pgQuery = pgQuery.replace(/SEPARATOR\s+['"]([^'"]+)['"]/gi, (match, sep) => `, '${sep}'`);
             pgQuery = pgQuery.replace(/CONCAT\s*\(/gi, 'CONCAT(');
             
+            // Gérer LIMIT et OFFSET avec des paramètres (PostgreSQL supporte les paramètres pour LIMIT/OFFSET)
+            // Si LIMIT/OFFSET sont déjà des paramètres ?, on les laisse tels quels
+            // Sinon, on les convertit en paramètres si nécessaire
+            
             const result = await client.query(pgQuery, pgParams);
             
             // Créer un objet compatible avec mysql2

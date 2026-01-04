@@ -40,8 +40,9 @@ router.get('/', validatePagination, async (req, res) => {
             countParams.push(searchTerm, searchTerm);
         }
 
-        query += ` ORDER BY p.libelle LIMIT ${limitNum} OFFSET ${offset}`;
-        // Note: LIMIT et OFFSET ne peuvent pas être des paramètres préparés dans certaines versions MySQL
+        // Utiliser LIMIT et OFFSET comme paramètres pour PostgreSQL
+        query += ' ORDER BY p.libelle LIMIT ? OFFSET ?';
+        params.push(limitNum, offset);
 
         const [produitsRows] = await pool.execute(query, params);
         const produits = produitsRows;
@@ -117,7 +118,7 @@ router.post('/', validateProduit, async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const [produits] = await pool.execute(
+        const [produitsRows] = await pool.execute(
             `SELECT p.*, c.libelle as categorie_libelle, e.nom as fournisseur_nom, e.id as fournisseur_id
              FROM produits p
              LEFT JOIN categories c ON p.categorie_id = c.id
@@ -125,6 +126,7 @@ router.get('/:id', async (req, res) => {
              WHERE p.id = ?`,
             [id]
         );
+        const produits = produitsRows;
 
         if (produits.length === 0) {
             return res.status(404).json({ error: 'Produit non trouvé' });
