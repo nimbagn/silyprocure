@@ -6,21 +6,328 @@
     <title>Dashboard - SilyProcure</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/animations.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        /* --- VARIABLES & RESET --- */
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4338ca;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --bg-color: #f3f4f6;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Outfit', 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- CANVAS BACKGROUND --- */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+        }
+
+        /* --- GLASSMORPHISM CARD --- */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .glass:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- STATS GRID --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .stat-label { 
+            font-size: 0.9rem; 
+            color: var(--text-muted); 
+            font-weight: 500; 
+            margin-bottom: 0.5rem; 
+        }
+        
+        .stat-value { 
+            font-size: 2.2rem; 
+            font-weight: 700; 
+            color: var(--text-main); 
+            line-height: 1; 
+            margin-bottom: 0.5rem; 
+        }
+        
+        .stat-label-detail {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .stat-change {
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+        
+        .trend-up { 
+            background: rgba(16, 185, 129, 0.1); 
+            color: var(--secondary); 
+        }
+        
+        .trend-down { 
+            background: rgba(239, 68, 68, 0.1); 
+            color: #ef4444; 
+        }
+
+        /* --- CHARTS AREA --- */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media(max-width: 900px) { 
+            .charts-section { 
+                grid-template-columns: 1fr; 
+            } 
+        }
+
+        .chart-card { 
+            padding: 1.5rem; 
+            height: 400px; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 1.5rem; 
+        }
+        
+        .card-title { 
+            font-weight: 600; 
+            font-size: 1.1rem; 
+            color: var(--text-main);
+        }
+        
+        .chart-container { 
+            flex: 1; 
+            position: relative; 
+            width: 100%; 
+            overflow: hidden; 
+        }
+
+        /* --- LISTS --- */
+        .lists-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.03);
+            transition: background 0.2s;
+        }
+        
+        .list-item:hover { 
+            background: rgba(255,255,255,0.3); 
+        }
+        
+        .avatar {
+            width: 40px; 
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a5b4fc, #6366f1);
+            color: white;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        
+        .list-info h4 { 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            margin: 0;
+        }
+        
+        .list-info p { 
+            font-size: 0.8rem; 
+            color: var(--text-muted); 
+            margin: 0.25rem 0 0 0;
+        }
+        
+        .status-badge {
+            margin-left: auto;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .bg-new { 
+            background: var(--accent); 
+            color: white; 
+        }
+        
+        .bg-process { 
+            background: #dbeafe; 
+            color: var(--primary); 
+        }
+
+        /* --- OVERRIDE CONTAINER --- */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* --- PAGE HEADER --- */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--primary), #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            background: white;
+            border: none;
+            padding: 0.7rem 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            color: var(--primary);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover { 
+            background: var(--primary); 
+            color: white; 
+        }
+
+        /* --- LOADING SPINNER --- */
+        .fa-spin { 
+            animation: fa-spin 2s infinite linear; 
+        }
+        
+        @keyframes fa-spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+
+        /* --- EMPTY STATE --- */
+        .empty-state {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state-text {
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
+    <!-- CANVAS D'ARRIÈRE-PLAN -->
+    <canvas id="particleCanvas"></canvas>
+
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
     <script src="js/components.js"></script>
     <script src="js/sidebar.js"></script>
 
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <h1><i class="fas fa-chart-line"></i> Tableau de bord</h1>
-            <button class="btn btn-secondary" onclick="refreshDashboard()" style="display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fas fa-sync-alt"></i> Actualiser
+        <div class="page-header">
+            <h1><i class="fas fa-cubes"></i> Tableau de bord</h1>
+            <button class="btn" onclick="refreshDashboard()" id="refreshBtn">
+                <i class="fas fa-sync-alt" id="refreshIcon"></i> Actualiser
             </button>
         </div>
 
@@ -28,39 +335,43 @@
             <div class="loading">Chargement des statistiques...</div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
-            <div class="card">
+        <div class="charts-section">
+            <div class="glass chart-card">
                 <div class="card-header">
-                    <h2 class="card-title"><i class="fas fa-chart-line"></i> Évolution des commandes (6 mois)</h2>
+                    <div class="card-title"><i class="fas fa-chart-line"></i> Évolution des commandes</div>
+                    <select id="chartPeriod" style="border:none; background:transparent; font-family:'Outfit'; cursor:pointer; font-weight: 500; color: var(--primary);" onchange="updateChartPeriod()">
+                        <option value="6">6 derniers mois</option>
+                        <option value="12">Cette année</option>
+                    </select>
                 </div>
-                <div style="padding: 1rem;">
+                <div class="chart-container">
                     <canvas id="chart-commandes"></canvas>
                 </div>
             </div>
 
-            <div class="card">
+            <div class="glass chart-card">
                 <div class="card-header">
-                    <h2 class="card-title"><i class="fas fa-chart-pie"></i> Répartition des RFQ</h2>
+                    <div class="card-title"><i class="fas fa-chart-pie"></i> Répartition des RFQ</div>
                 </div>
-                <div style="padding: 1rem;">
+                <div class="chart-container">
                     <canvas id="chart-rfq"></canvas>
                 </div>
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
-            <div class="card">
+        <div class="lists-section">
+            <div class="glass" style="padding: 1.5rem;">
                 <div class="card-header">
-                    <h2 class="card-title"><i class="fas fa-star"></i> Top 5 Fournisseurs</h2>
+                    <div class="card-title"><i class="fas fa-star"></i> Top 5 Fournisseurs</div>
                 </div>
                 <div id="top-fournisseurs">
                     <div class="loading">Chargement...</div>
                 </div>
             </div>
 
-            <div class="card">
+            <div class="glass" style="padding: 1.5rem;">
                 <div class="card-header">
-                    <h2 class="card-title"><i class="fas fa-clock"></i> Activité récente</h2>
+                    <div class="card-title"><i class="fas fa-clock"></i> Activité récente</div>
                 </div>
                 <div id="recent-activity">
                     <div class="loading">Chargement...</div>
@@ -68,19 +379,19 @@
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
-            <div class="card">
+        <div class="lists-section" style="margin-top: 1.5rem;">
+            <div class="glass" style="padding: 1.5rem;">
                 <div class="card-header">
-                    <h2 class="card-title"><i class="fas fa-tachometer-alt"></i> Vue d'ensemble</h2>
+                    <div class="card-title"><i class="fas fa-tachometer-alt"></i> Vue d'ensemble</div>
                 </div>
                 <div id="overview-stats">
                     <div class="loading">Chargement...</div>
                 </div>
             </div>
 
-            <div class="card">
+            <div class="glass" style="padding: 1.5rem;">
                 <div class="card-header">
-                    <h2 class="card-title"><i class="fas fa-chart-bar"></i> Comparaison mensuelle</h2>
+                    <div class="card-title"><i class="fas fa-chart-bar"></i> Comparaison mensuelle</div>
                 </div>
                 <div id="comparison-stats">
                     <div class="loading">Chargement...</div>
@@ -90,14 +401,14 @@
 
         <!-- Section Messages de Contact -->
         <div style="margin-top: 2rem;">
-            <div class="card">
-                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2 class="card-title"><i class="fas fa-envelope"></i> Messages de Contact</h2>
+            <div class="glass" style="padding: 1.5rem;">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-envelope"></i> Messages de Contact</div>
                     <div style="display: flex; gap: 0.5rem;">
-                        <button class="btn btn-sm btn-secondary" onclick="loadContactMessages('non_lu')" title="Non lus">
+                        <button class="btn" onclick="loadContactMessages('non_lu')" title="Non lus" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
                             <i class="fas fa-envelope"></i> Non lus
                         </button>
-                        <button class="btn btn-sm btn-secondary" onclick="loadContactMessages('tous')" title="Tous">
+                        <button class="btn" onclick="loadContactMessages('tous')" title="Tous" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
                             <i class="fas fa-list"></i> Tous
                         </button>
                     </div>
@@ -207,54 +518,61 @@
                     </div>
                     <div class="stat-change positive"><i class="fas fa-file-alt"></i></div>
                 </div>
-                <div class="stat-card" onclick="window.location.href='devis.html'">
+                <div class="stat-card glass" onclick="window.location.href='devis.html'">
+                    <div class="stat-icon"><i class="fas fa-briefcase"></i></div>
                     <div class="stat-label">Devis</div>
                     <div class="stat-value">${stats.devis_total || 0}</div>
-                    <div class="stat-label">
+                    <div class="stat-label-detail">
                         ${stats.devis_envoye || 0} envoyés • 
                         ${stats.devis_accepte || 0} acceptés
                     </div>
-                    <div class="stat-change positive"><i class="fas fa-briefcase"></i></div>
+                    <div class="stat-change trend-up"><i class="fas fa-briefcase"></i></div>
                 </div>
-                <div class="stat-card" onclick="window.location.href='commandes.html'">
+                <div class="stat-card glass" onclick="window.location.href='commandes.html'">
+                    <div class="stat-icon"><i class="fas fa-box-open"></i></div>
                     <div class="stat-label">Commandes</div>
                     <div class="stat-value">${stats.commandes_total || 0}</div>
-                    <div class="stat-label">${stats.commandes_attente || 0} en attente</div>
-                    <div class="stat-change positive"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="stat-label-detail">${stats.commandes_attente || 0} en attente</div>
+                    <div class="stat-change trend-up"><i class="fas fa-shopping-cart"></i></div>
                 </div>
-                <div class="stat-card" onclick="window.location.href='factures.html'">
+                <div class="stat-card glass" onclick="window.location.href='factures.html'">
+                    <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
                     <div class="stat-label">Factures en attente</div>
                     <div class="stat-value">${stats.factures_attente || 0}</div>
-                    <div class="stat-label">${formatCurrency(stats.montant_attente || 0)}</div>
-                    <div class="stat-change ${stats.montant_attente > 0 ? 'negative' : 'positive'}"><i class="fas fa-money-bill-wave"></i></div>
+                    <div class="stat-label-detail">${formatCurrency(stats.montant_attente || 0)}</div>
+                    <div class="stat-change ${stats.montant_attente > 0 ? 'trend-down' : 'trend-up'}"><i class="fas fa-money-bill-wave"></i></div>
                 </div>
-                <div class="stat-card" onclick="window.location.href='entreprises.html'">
+                <div class="stat-card glass" onclick="window.location.href='entreprises.html'">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
                     <div class="stat-label">Fournisseurs actifs</div>
                     <div class="stat-value">${stats.fournisseurs_actifs || 0}</div>
-                    <div class="stat-label">${stats.clients_actifs || 0} clients actifs</div>
-                    <div class="stat-change positive"><i class="fas fa-building"></i></div>
+                    <div class="stat-label-detail">${stats.clients_actifs || 0} clients actifs</div>
+                    <div class="stat-change trend-up"><i class="fas fa-building"></i></div>
                 </div>
-                <div class="stat-card" onclick="window.location.href='produits.html'">
+                <div class="stat-card glass" onclick="window.location.href='produits.html'">
+                    <div class="stat-icon"><i class="fas fa-box"></i></div>
                     <div class="stat-label">Produits</div>
                     <div class="stat-value">${stats.produits_total || 0}</div>
-                    <div class="stat-label">Catalogue produits</div>
-                    <div class="stat-change positive"><i class="fas fa-box"></i></div>
+                    <div class="stat-label-detail">Catalogue produits</div>
+                    <div class="stat-change trend-up"><i class="fas fa-box"></i></div>
                 </div>
-                <div class="stat-card" onclick="window.location.href='demandes-devis.html'">
+                <div class="stat-card glass" onclick="window.location.href='demandes-devis.html'">
+                    <div class="stat-icon"><i class="fas fa-inbox"></i></div>
                     <div class="stat-label">Demandes de devis</div>
                     <div class="stat-value">${stats.demandes_devis_total || 0}</div>
-                    <div class="stat-label">
+                    <div class="stat-label-detail">
                         ${stats.demandes_devis_nouvelles || 0} nouvelles • 
                         ${stats.demandes_devis_en_cours || 0} en cours
                     </div>
-                    <div class="stat-change ${(stats.demandes_devis_nouvelles || 0) > 0 ? 'negative' : 'positive'}">
+                    <div class="stat-change ${(stats.demandes_devis_nouvelles || 0) > 0 ? 'trend-down' : 'trend-up'}">
                         <i class="fas fa-inbox"></i>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card glass">
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
                     <div class="stat-label">Commandes du mois</div>
                     <div class="stat-value">${stats.commandes_mois || 0}</div>
-                    <div class="stat-label">${formatCurrency(stats.montant_mois || 0)}</div>
+                    <div class="stat-label-detail">${formatCurrency(stats.montant_mois || 0)}</div>
                     <div class="stat-change ${evolutionClass}">
                         ${evolutionIcon} ${Math.abs(evolutionMois)}%
                     </div>
@@ -360,7 +678,7 @@
 
                 const labels = stats.rfq_par_statut.map(s => statutLabels[s.statut] || s.statut);
                 const data = stats.rfq_par_statut.map(s => parseInt(s.nombre || 0));
-                const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#64748B'];
+                const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#e5e7eb'];
 
                 chartRFQ = new Chart(ctxRFQ, {
                     type: 'doughnut',
@@ -369,21 +687,31 @@
                         datasets: [{
                             data: data,
                             backgroundColor: colors.slice(0, data.length),
-                            borderWidth: 2,
-                            borderColor: '#fff'
+                            borderWidth: 0,
+                            hoverOffset: 15
                         }]
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
                         plugins: {
                             legend: {
                                 position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
                             }
                         }
                     }
                 });
             }
+        }
+
+        function updateChartPeriod() {
+            // Fonction pour mettre à jour la période du graphique
+            loadStats();
         }
 
         function displayTopFournisseurs(stats) {
@@ -395,21 +723,23 @@
                 return;
             }
 
-            container.innerHTML = stats.top_fournisseurs.map((f, index) => `
-                <div style="padding: 1rem; border-bottom: 1px solid #E0E7FF; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: bold; color: var(--color-primary-dark);">
-                            ${index + 1}. ${f.nom}
+            const colors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+            container.innerHTML = stats.top_fournisseurs.map((f, index) => {
+                const initial = (f.nom || 'F').charAt(0).toUpperCase();
+                const bgColor = colors[index % colors.length];
+                return `
+                    <div class="list-item">
+                        <div class="avatar" style="background: ${bgColor}">${initial}</div>
+                        <div class="list-info">
+                            <h4>${index + 1}. ${f.nom}</h4>
+                            <p>${f.nb_commandes || 0} commande(s) • ${formatCurrency(f.montant_total || 0)}</p>
                         </div>
-                        <div style="font-size: 0.875rem; color: var(--color-neutral); margin-top: 0.25rem;">
-                            ${f.nb_commandes || 0} commande(s) • ${formatCurrency(f.montant_total || 0)}
-                        </div>
+                        <button class="btn" onclick="window.location.href='entreprises-detail.html?id=${f.id}'" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                            Voir
+                        </button>
                     </div>
-                    <button class="btn btn-secondary btn-sm" onclick="window.location.href='entreprises-detail.html?id=${f.id}'">
-                        Voir
-                    </button>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function displayOverview(stats) {
@@ -542,42 +872,58 @@
                 if (rfqs && rfqs.ok) {
                     const rfqsData = await rfqs.json();
                     if (rfqsData.length > 0) {
-                        html += '<h3 style="margin: 1rem 0 0.5rem 0; font-size: 0.875rem; color: var(--color-neutral); font-weight: 600;"><i class="fas fa-file-alt"></i> RFQ en cours</h3>';
-                        html += rfqsData.slice(0, 3).map(r => `
-                            <div style="padding: 0.75rem; border-bottom: 1px solid #E0E7FF; font-size: 0.875rem; cursor: pointer;" 
-                                 onclick="window.location.href='rfq-detail.html?id=${r.id}'">
-                                <div style="font-weight: 600; color: var(--color-primary-dark);">${r.numero || 'RFQ-' + r.id}</div>
-                                <div style="color: var(--color-neutral); font-size: 0.75rem; margin-top: 0.25rem;">${r.destinataire_nom || '-'}</div>
-                            </div>
-                        `).join('');
+                        html += '<h3 style="margin: 1rem 0 0.5rem 0; font-size: 0.875rem; color: var(--text-muted); font-weight: 600;"><i class="fas fa-file-alt"></i> RFQ en cours</h3>';
+                        html += rfqsData.slice(0, 3).map(r => {
+                            const initial = (r.destinataire_nom || 'R').charAt(0).toUpperCase();
+                            return `
+                                <div class="list-item" onclick="window.location.href='rfq-detail.html?id=${r.id}'" style="cursor: pointer;">
+                                    <div class="avatar" style="background: #6366f1">${initial}</div>
+                                    <div class="list-info">
+                                        <h4>${r.numero || 'RFQ-' + r.id}</h4>
+                                        <p>${r.destinataire_nom || '-'}</p>
+                                    </div>
+                                    <span class="status-badge bg-process">En cours</span>
+                                </div>
+                            `;
+                        }).join('');
                     }
                 }
 
                 if (devis && devis.ok) {
                     const devisData = await devis.json();
                     if (devisData.length > 0) {
-                        html += '<h3 style="margin: 1rem 0 0.5rem 0; font-size: 0.875rem; color: var(--color-neutral); font-weight: 600;"><i class="fas fa-briefcase"></i> Devis en attente</h3>';
-                        html += devisData.slice(0, 3).map(d => `
-                            <div style="padding: 0.75rem; border-bottom: 1px solid #E0E7FF; font-size: 0.875rem; cursor: pointer;"
-                                 onclick="window.location.href='devis.html'">
-                                <div style="font-weight: 600; color: var(--color-primary-dark);">${d.numero || 'Devis-' + d.id}</div>
-                                <div style="color: var(--color-neutral); font-size: 0.75rem; margin-top: 0.25rem;">${formatCurrency(d.total_ttc || 0)}</div>
-                            </div>
-                        `).join('');
+                        html += '<h3 style="margin: 1rem 0 0.5rem 0; font-size: 0.875rem; color: var(--text-muted); font-weight: 600;"><i class="fas fa-briefcase"></i> Devis en attente</h3>';
+                        html += devisData.slice(0, 3).map(d => {
+                            const initial = (d.numero || 'D').charAt(0).toUpperCase();
+                            return `
+                                <div class="list-item" onclick="window.location.href='devis.html'" style="cursor: pointer;">
+                                    <div class="avatar" style="background: #10b981">${initial}</div>
+                                    <div class="list-info">
+                                        <h4>${d.numero || 'Devis-' + d.id}</h4>
+                                        <p>${formatCurrency(d.total_ttc || 0)}</p>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
                     }
                 }
 
                 if (commandes && commandes.ok) {
                     const commandesData = await commandes.json();
                     if (commandesData.length > 0) {
-                        html += '<h3 style="margin: 1rem 0 0.5rem 0; font-size: 0.875rem; color: var(--color-neutral); font-weight: 600;"><i class="fas fa-shopping-cart"></i> Commandes en cours</h3>';
-                        html += commandesData.slice(0, 3).map(c => `
-                            <div style="padding: 0.75rem; border-bottom: 1px solid #E0E7FF; font-size: 0.875rem; cursor: pointer;"
-                                 onclick="window.location.href='commandes.html'">
-                                <div style="font-weight: 600; color: var(--color-primary-dark);">${c.numero || 'BC-' + c.id}</div>
-                                <div style="color: var(--color-neutral); font-size: 0.75rem; margin-top: 0.25rem;">${formatCurrency(c.total_ttc || 0)}</div>
-                            </div>
-                        `).join('');
+                        html += '<h3 style="margin: 1rem 0 0.5rem 0; font-size: 0.875rem; color: var(--text-muted); font-weight: 600;"><i class="fas fa-shopping-cart"></i> Commandes en cours</h3>';
+                        html += commandesData.slice(0, 3).map(c => {
+                            const initial = (c.numero || 'C').charAt(0).toUpperCase();
+                            return `
+                                <div class="list-item" onclick="window.location.href='commandes.html'" style="cursor: pointer;">
+                                    <div class="avatar" style="background: #8b5cf6">${initial}</div>
+                                    <div class="list-info">
+                                        <h4>${c.numero || 'BC-' + c.id}</h4>
+                                        <p>${formatCurrency(c.total_ttc || 0)}</p>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
                     }
                 }
 
