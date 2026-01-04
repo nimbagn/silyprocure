@@ -439,7 +439,8 @@
                 <button class="btn btn-primary" onclick="document.getElementById('create-user-form').requestSubmit()">Créer</button>
             `;
 
-            Modal.show('create-user', 'Créer un utilisateur', content, footer);
+            const modal = new Modal('create-user', 'Créer un utilisateur', content, footer);
+            modal.show();
         }
 
         async function handleCreateUser(event) {
@@ -535,7 +536,8 @@
                 <button class="btn btn-primary" onclick="document.getElementById('edit-user-form').requestSubmit()">Enregistrer</button>
             `;
 
-            Modal.show('edit-user', 'Modifier l\'utilisateur', content, footer);
+            const modal = new Modal('edit-user', 'Modifier l\'utilisateur', content, footer);
+            modal.show();
         }
 
         async function handleUpdateUser(event, userId) {
