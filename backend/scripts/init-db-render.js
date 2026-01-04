@@ -241,6 +241,115 @@ async function initDatabase() {
         
         console.log('✅ Base de données initialisée avec succès!');
         
+        // Vérifier et créer la table demandes_devis si elle n'existe pas
+        try {
+            const checkDemandesDevis = await pool.query(`
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_name = 'demandes_devis'
+                )
+            `);
+            
+            if (!checkDemandesDevis.rows[0].exists) {
+                console.log('📋 Création de la table demandes_devis...');
+                const demandesDevisSql = fs.readFileSync(
+                    path.join(__dirname, '../../database/add_demandes_devis_postgresql.sql'),
+                    'utf8'
+                );
+                
+                // Nettoyer et exécuter le SQL
+                const cleanedSql = demandesDevisSql
+                    .replace(/\\[a-zA-Z]+\s*[^\n]*/g, '')
+                    .replace(/--[^\n]*/g, '')
+                    .replace(/\n\s*\n\s*\n/g, '\n\n')
+                    .trim();
+                
+                // Parser les instructions SQL (gérer les blocs DO $$)
+                const statements = [];
+                let currentStatement = '';
+                let inDollarQuote = false;
+                let dollarTag = '';
+                let i = 0;
+                
+                while (i < cleanedSql.length) {
+                    const char = cleanedSql[i];
+                    
+                    // Détecter le début d'un bloc $$ (dollar quoting)
+                    if (char === '$' && !inDollarQuote) {
+                        let tag = '$';
+                        let j = i + 1;
+                        while (j < cleanedSql.length && cleanedSql[j] !== '$') {
+                            tag += cleanedSql[j];
+                            j++;
+                        }
+                        if (j < cleanedSql.length && cleanedSql[j] === '$') {
+                            tag += '$';
+                            dollarTag = tag;
+                            inDollarQuote = true;
+                            currentStatement += tag;
+                            i = j + 1;
+                            continue;
+                        }
+                    }
+                    
+                    // Détecter la fin d'un bloc $$
+                    if (inDollarQuote) {
+                        const remaining = cleanedSql.substr(i);
+                        if (remaining.startsWith(dollarTag)) {
+                            currentStatement += dollarTag;
+                            const tagLength = dollarTag.length;
+                            inDollarQuote = false;
+                            dollarTag = '';
+                            i += tagLength;
+                            continue;
+                        }
+                    }
+                    
+                    // Détecter la fin d'une instruction SQL
+                    if (char === ';' && !inDollarQuote) {
+                        currentStatement += ';';
+                        const trimmed = currentStatement.trim();
+                        if (trimmed && trimmed !== ';') {
+                            statements.push(trimmed);
+                        }
+                        currentStatement = '';
+                        i++;
+                        continue;
+                    }
+                    
+                    currentStatement += char;
+                    i++;
+                }
+                
+                // Ajouter la dernière instruction si elle existe
+                if (currentStatement.trim() && currentStatement.trim() !== ';') {
+                    statements.push(currentStatement.trim());
+                }
+                
+                // Exécuter les instructions
+                for (const statement of statements) {
+                    if (statement.trim()) {
+                        try {
+                            await pool.query(statement.trim());
+                        } catch (error) {
+                            // Ignorer les erreurs de "déjà existe"
+                            if (!error.message.includes('already exists') && 
+                                !error.message.includes('duplicate') &&
+                                !error.message.includes('relation') &&
+                                !error.message.includes('function')) {
+                                console.warn('⚠️  Erreur lors de la création de demandes_devis:', error.message.substring(0, 100));
+                            }
+                        }
+                    }
+                }
+                console.log('✅ Table demandes_devis créée');
+            } else {
+                console.log('ℹ️  Table demandes_devis existe déjà');
+            }
+        } catch (error) {
+            console.warn('⚠️  Erreur lors de la vérification/création de demandes_devis:', error.message);
+        }
+        
         // Créer le compte admin par défaut
         const bcrypt = require('bcryptjs');
         const adminPassword = 'admin123';
