@@ -280,19 +280,19 @@
 
             tbody.innerHTML = users.map(user => `
                 <tr>
-                    <td><strong>${user.prenom} ${user.nom}</strong></td>
-                    <td>${user.email}</td>
-                    <td>${user.telephone || '-'}</td>
-                    <td>${user.fonction || '-'}</td>
-                    <td>${user.departement || '-'}</td>
-                    <td><span class="badge badge-${getRoleBadgeClass(user.role)}">${getRoleLabel(user.role)}</span></td>
-                    <td>
+                    <td data-label="Nom"><strong>${user.prenom} ${user.nom}</strong></td>
+                    <td data-label="Email">${user.email}</td>
+                    <td data-label="Téléphone">${user.telephone || '-'}</td>
+                    <td data-label="Fonction">${user.fonction || '-'}</td>
+                    <td data-label="Département">${user.departement || '-'}</td>
+                    <td data-label="Rôle"><span class="badge badge-${getRoleBadgeClass(user.role)}">${getRoleLabel(user.role)}</span></td>
+                    <td data-label="Statut">
                         <span class="badge ${user.actif ? 'badge-success' : 'badge-danger'}">
                             ${user.actif ? 'Actif' : 'Inactif'}
                         </span>
                     </td>
-                    <td>${formatDate(user.date_creation)}</td>
-                    <td>
+                    <td data-label="Date création">${formatDate(user.date_creation)}</td>
+                    <td data-label="Actions">
                         <button class="btn btn-sm btn-secondary" onclick="editUser(${user.id})" title="Modifier">
                             <i class="fas fa-edit"></i>
                         </button>
