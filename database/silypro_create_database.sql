@@ -664,7 +664,7 @@ INSERT INTO parametres (cle, valeur, type_valeur, description) VALUES
 ('penalites_retard', '3', 'number', 'Taux de pénalités de retard (%)'),
 ('frais_recouvrement', '40', 'number', 'Frais de recouvrement (€)'),
 ('nom_entreprise', 'SilyProcure', 'string', 'Nom de l''entreprise'),
-('email_contact', 'contact@silyprocure.com', 'string', 'Email de contact');
+('email_contact', 'silycore@gmail.com', 'string', 'Email de contact');
 
 -- =====================================================
 -- FIN DU SCRIPT
