@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Utilisateurs - SilyProcure</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/sidebar.js"></script>
+</head>
+<body>
+    <div class="main-content">
+        <div class="page-header">
+            <h1><i class="fas fa-users-cog"></i> Gestion des Utilisateurs</h1>
+            <button class="btn btn-primary" onclick="showCreateUserModal()">
+                <i class="fas fa-plus"></i> Créer un utilisateur
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Liste des utilisateurs</h2>
+                <div class="card-actions">
+                    <input type="text" id="search-users" placeholder="Rechercher..." class="search-input" oninput="filterUsers()">
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="loading-indicator" class="loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Chargement...
+                </div>
+                <div id="users-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Email</th>
+                                <th>Téléphone</th>
+                                <th>Fonction</th>
+                                <th>Département</th>
+                                <th>Rôle</th>
+                                <th>Statut</th>
+                                <th>Date création</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <tr>
+                                <td colspan="9" class="text-center">Chargement...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allUsers = [];
+        let currentUser = null;
+
+        // Vérifier l'authentification et le rôle admin
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!checkAuth()) return;
+
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            currentUser = user;
+
+            if (user.role !== 'admin') {
+                Toast.error('Accès refusé. Seuls les administrateurs peuvent accéder à cette page.');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+                return;
+            }
+
+            await loadUsers();
+        });
+
+        async function loadUsers() {
+            try {
+                showLoading();
+                const response = await apiCall('/api/users');
+                
+                if (!response || !response.ok) {
+                    throw new Error('Erreur lors du chargement des utilisateurs');
+                }
+
+                allUsers = await response.json();
+                displayUsers(allUsers);
+                hideLoading();
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors du chargement: ' + error.message);
+                console.error('Erreur loadUsers:', error);
+            }
+        }
+
+        function displayUsers(users) {
+            const tbody = document.getElementById('users-table-body');
+            
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">Aucun utilisateur trouvé</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td><strong>${user.prenom} ${user.nom}</strong></td>
+                    <td>${user.email}</td>
+                    <td>${user.telephone || '-'}</td>
+                    <td>${user.fonction || '-'}</td>
+                    <td>${user.departement || '-'}</td>
+                    <td><span class="badge badge-${getRoleBadgeClass(user.role)}">${getRoleLabel(user.role)}</span></td>
+                    <td>
+                        <span class="badge ${user.actif ? 'badge-success' : 'badge-danger'}">
+                            ${user.actif ? 'Actif' : 'Inactif'}
+                        </span>
+                    </td>
+                    <td>${formatDate(user.date_creation)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="editUser(${user.id})" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        ${user.id !== currentUser.id ? `
+                            <button class="btn btn-sm ${user.actif ? 'btn-warning' : 'btn-success'}" 
+                                    onclick="toggleUserStatus(${user.id}, ${!user.actif})" 
+                                    title="${user.actif ? 'Désactiver' : 'Activer'}">
+                                <i class="fas fa-${user.actif ? 'ban' : 'check'}"></i>
+                            </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getRoleBadgeClass(role) {
+            const classes = {
+                'admin': 'danger',
+                'superviseur': 'warning',
+                'acheteur': 'info',
+                'approbateur': 'primary',
+                'comptable': 'success',
+                'viewer': 'secondary'
+            };
+            return classes[role] || 'secondary';
+        }
+
+        function getRoleLabel(role) {
+            const labels = {
+                'admin': 'Administrateur',
+                'superviseur': 'Superviseur',
+                'acheteur': 'Acheteur',
+                'approbateur': 'Approbateur',
+                'comptable': 'Comptable',
+                'viewer': 'Visualiseur'
+            };
+            return labels[role] || role;
+        }
+
+        function filterUsers() {
+            const search = document.getElementById('search-users').value.toLowerCase();
+            const filtered = allUsers.filter(user => 
+                user.nom.toLowerCase().includes(search) ||
+                user.prenom.toLowerCase().includes(search) ||
+                user.email.toLowerCase().includes(search) ||
+                (user.fonction && user.fonction.toLowerCase().includes(search)) ||
+                (user.departement && user.departement.toLowerCase().includes(search))
+            );
+            displayUsers(filtered);
+        }
+
+        function showCreateUserModal() {
+            const content = `
+                <form id="create-user-form" onsubmit="handleCreateUser(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="user-nom">Nom *</label>
+                            <input type="text" id="user-nom" name="nom" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-prenom">Prénom *</label>
+                            <input type="text" id="user-prenom" name="prenom" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="user-email">Email *</label>
+                            <input type="email" id="user-email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-telephone">Téléphone</label>
+                            <input type="tel" id="user-telephone" name="telephone" placeholder="+224 612 34 56 78">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="user-fonction">Fonction</label>
+                            <input type="text" id="user-fonction" name="fonction" placeholder="Ex: Responsable Achats">
+                        </div>
+                        <div class="form-group">
+                            <label for="user-departement">Département</label>
+                            <input type="text" id="user-departement" name="departement" placeholder="Ex: Achats">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="user-role">Rôle *</label>
+                            <select id="user-role" name="role" required>
+                                <option value="">Sélectionner un rôle</option>
+                                <option value="superviseur">Superviseur</option>
+                                <option value="acheteur">Acheteur</option>
+                                <option value="approbateur">Approbateur</option>
+                                <option value="comptable">Comptable</option>
+                                <option value="viewer">Visualiseur</option>
+                            </select>
+                            <small style="color: var(--color-neutral); font-size: 0.75rem;">
+                                Note: Le rôle "Administrateur" ne peut être créé que manuellement
+                            </small>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-password">Mot de passe *</label>
+                            <input type="password" id="user-password" name="mot_de_passe" required minlength="6">
+                            <small style="color: var(--color-neutral); font-size: 0.75rem;">
+                                Minimum 6 caractères
+                            </small>
+                        </div>
+                    </div>
+                </form>
+            `;
+
+            const footer = `
+                <button class="btn btn-secondary" onclick="Modal.hide('create-user')">Annuler</button>
+                <button class="btn btn-primary" onclick="document.getElementById('create-user-form').requestSubmit()">Créer</button>
+            `;
+
+            Modal.show('create-user', 'Créer un utilisateur', content, footer);
+        }
+
+        async function handleCreateUser(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                showLoading('Création de l\'utilisateur...');
+                const response = await apiCall('/api/users', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+
+                if (!response || !response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Erreur lors de la création');
+                }
+
+                Toast.success('Utilisateur créé avec succès');
+                Modal.hide('create-user');
+                await loadUsers();
+            } catch (error) {
+                Toast.error('Erreur: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function editUser(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+
+            const content = `
+                <form id="edit-user-form" onsubmit="handleUpdateUser(event, ${userId})">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-user-nom">Nom *</label>
+                            <input type="text" id="edit-user-nom" name="nom" value="${user.nom}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-user-prenom">Prénom *</label>
+                            <input type="text" id="edit-user-prenom" name="prenom" value="${user.prenom}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-user-email">Email</label>
+                            <input type="email" id="edit-user-email" value="${user.email}" disabled style="background: #f0f0f0;">
+                            <small style="color: var(--color-neutral); font-size: 0.75rem;">L'email ne peut pas être modifié</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-user-telephone">Téléphone</label>
+                            <input type="tel" id="edit-user-telephone" name="telephone" value="${user.telephone || ''}" placeholder="+224 612 34 56 78">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-user-fonction">Fonction</label>
+                            <input type="text" id="edit-user-fonction" name="fonction" value="${user.fonction || ''}" placeholder="Ex: Responsable Achats">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-user-departement">Département</label>
+                            <input type="text" id="edit-user-departement" name="departement" value="${user.departement || ''}" placeholder="Ex: Achats">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-user-role">Rôle *</label>
+                            <select id="edit-user-role" name="role" required>
+                                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Administrateur</option>
+                                <option value="superviseur" ${user.role === 'superviseur' ? 'selected' : ''}>Superviseur</option>
+                                <option value="acheteur" ${user.role === 'acheteur' ? 'selected' : ''}>Acheteur</option>
+                                <option value="approbateur" ${user.role === 'approbateur' ? 'selected' : ''}>Approbateur</option>
+                                <option value="comptable" ${user.role === 'comptable' ? 'selected' : ''}>Comptable</option>
+                                <option value="viewer" ${user.role === 'viewer' ? 'selected' : ''}>Visualiseur</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-user-actif">Statut</label>
+                            <select id="edit-user-actif" name="actif">
+                                <option value="true" ${user.actif ? 'selected' : ''}>Actif</option>
+                                <option value="false" ${!user.actif ? 'selected' : ''}>Inactif</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            `;
+
+            const footer = `
+                <button class="btn btn-secondary" onclick="Modal.hide('edit-user')">Annuler</button>
+                <button class="btn btn-primary" onclick="document.getElementById('edit-user-form').requestSubmit()">Enregistrer</button>
+            `;
+
+            Modal.show('edit-user', 'Modifier l\'utilisateur', content, footer);
+        }
+
+        async function handleUpdateUser(event, userId) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.actif = data.actif === 'true';
+
+            try {
+                showLoading('Mise à jour...');
+                const response = await apiCall(`/api/users/${userId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+
+                if (!response || !response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Erreur lors de la mise à jour');
+                }
+
+                Toast.success('Utilisateur mis à jour avec succès');
+                Modal.hide('edit-user');
+                await loadUsers();
+            } catch (error) {
+                Toast.error('Erreur: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function toggleUserStatus(userId, newStatus) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+
+            const action = newStatus ? 'activer' : 'désactiver';
+            if (!confirm(`Êtes-vous sûr de vouloir ${action} l'utilisateur ${user.prenom} ${user.nom} ?`)) {
+                return;
+            }
+
+            try {
+                showLoading(`${action.charAt(0).toUpperCase() + action.slice(1)}...`);
+                const response = await apiCall(`/api/users/${userId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ actif: newStatus })
+                });
+
+                if (!response || !response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Erreur lors de la mise à jour');
+                }
+
+                Toast.success(`Utilisateur ${action === 'activer' ? 'activé' : 'désactivé'} avec succès`);
+                await loadUsers();
+            } catch (error) {
+                Toast.error('Erreur: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showLoading(message = 'Chargement...') {
+            const indicator = document.getElementById('loading-indicator');
+            if (indicator) {
+                indicator.textContent = message;
+                indicator.style.display = 'flex';
+            }
+        }
+
+        function hideLoading() {
+            const indicator = document.getElementById('loading-indicator');
+            if (indicator) {
+                indicator.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
+

@@ -64,6 +64,13 @@ function initSidebar() {
                     <span class="sidebar-nav-item-icon" aria-hidden="true"><i class="fas fa-map"></i></span>
                     <span>Carte</span>
                 </a>
+                <div id="admin-menu-section" style="display: none;">
+                    <div class="sidebar-nav-divider"></div>
+                    <a href="utilisateurs.html" class="sidebar-nav-item" data-page="utilisateurs" aria-label="Gérer les utilisateurs">
+                        <span class="sidebar-nav-item-icon" aria-hidden="true"><i class="fas fa-users-cog"></i></span>
+                        <span>Utilisateurs</span>
+                    </a>
+                </div>
             </nav>
         `;
         document.body.insertBefore(sidebar, document.body.firstChild);
@@ -175,6 +182,12 @@ function initSidebar() {
     if (userAvatar) {
         const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
         userAvatar.textContent = initials || 'U';
+    }
+
+    // Afficher le menu admin seulement si l'utilisateur est admin
+    const adminMenuSection = document.getElementById('admin-menu-section');
+    if (adminMenuSection && user.role === 'admin') {
+        adminMenuSection.style.display = 'block';
     }
 
     // Responsive: toggle sidebar sur mobile/tablette

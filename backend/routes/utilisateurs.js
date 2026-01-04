@@ -51,12 +51,12 @@ router.post('/', requireRole('admin'), async (req, res) => {
         // Hasher le mot de passe
         const hashedPassword = await bcrypt.hash(mot_de_passe, 10);
 
-        const [result] = await pool.execute(
+        const [userRows, userResult] = await pool.execute(
             'INSERT INTO utilisateurs (email, mot_de_passe, nom, prenom, telephone, fonction, departement, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
             [email, hashedPassword, nom, prenom, telephone || null, fonction || null, departement || null, role || 'viewer']
         );
 
-        res.status(201).json({ id: result.insertId, message: 'Utilisateur créé avec succès' });
+        res.status(201).json({ id: userResult.insertId, message: 'Utilisateur créé avec succès' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

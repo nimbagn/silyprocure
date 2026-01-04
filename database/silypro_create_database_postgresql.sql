@@ -50,12 +50,12 @@ CREATE TABLE utilisateurs (
     telephone VARCHAR(20),
     fonction VARCHAR(100),
     departement VARCHAR(100),
-    role VARCHAR(20) CHECK (role IN ('admin', 'acheteur', 'approbateur', 'comptable', 'viewer')) DEFAULT 'viewer',
+    role VARCHAR(20) CHECK (role IN ('admin', 'superviseur', 'acheteur', 'approbateur', 'comptable', 'viewer')) DEFAULT 'viewer',
     actif BOOLEAN DEFAULT TRUE,
     date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     derniere_connexion TIMESTAMP,
-    CONSTRAINT chk_role CHECK (role IN ('admin', 'acheteur', 'approbateur', 'comptable', 'viewer'))
+    CONSTRAINT chk_role CHECK (role IN ('admin', 'superviseur', 'acheteur', 'approbateur', 'comptable', 'viewer'))
 );
 
 CREATE INDEX idx_utilisateurs_email ON utilisateurs(email);
