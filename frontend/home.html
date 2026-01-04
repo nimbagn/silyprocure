@@ -48,10 +48,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(0, 56, 122, 0.95);
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 102, 0, 0.2);
             transition: all 0.3s ease;
+            border-bottom: 3px solid var(--color-accent);
         }
 
         .home-logo {
@@ -71,42 +72,63 @@
 
         .home-nav {
             display: flex;
-            gap: 2rem;
+            gap: 1.5rem;
             align-items: center;
         }
 
         .home-nav a {
             color: white;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 1rem;
             transition: all 0.3s;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            border: 2px solid transparent;
         }
 
         .home-nav a:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .home-nav a:not(.btn-login) {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+        }
+
+        .home-nav a:not(.btn-login):hover {
+            background: rgba(255, 255, 255, 0.25);
         }
 
         .btn-login {
             background: var(--color-accent);
             color: white;
-            padding: 0.75rem 1.5rem;
+            padding: 0.875rem 1.75rem;
             border-radius: 12px;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 1rem;
             transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.2);
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
             text-decoration: none;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .btn-login:hover {
-            background: var(--color-accent-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+            background: var(--color-accent-light);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 30px rgba(255, 102, 0, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         /* Hero Section */
