@@ -44,6 +44,50 @@ async function initDatabase() {
     let poolClosed = false; // Flag pour éviter la double fermeture
 
     try {
+        // Vérifier si la table demandes_devis existe
+        const checkDemandesDevis = await pool.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' AND table_name = 'demandes_devis'
+            )
+        `);
+        
+        if (!checkDemandesDevis.rows[0].exists) {
+            console.log('📋 Création de la table demandes_devis...');
+            const demandesDevisSql = fs.readFileSync(
+                path.join(__dirname, '../../database/add_demandes_devis_postgresql.sql'),
+                'utf8'
+            );
+            
+            // Nettoyer et exécuter le SQL
+            const cleanedSql = demandesDevisSql
+                .replace(/\\[a-zA-Z]+\s*[^\n]*/g, '')
+                .replace(/--[^\n]*/g, '')
+                .replace(/\n\s*\n\s*\n/g, '\n\n')
+                .trim();
+            
+            // Exécuter les instructions SQL une par une
+            const statements = cleanedSql.split(';').filter(s => s.trim());
+            for (const statement of statements) {
+                if (statement.trim()) {
+                    try {
+                        await pool.query(statement.trim() + ';');
+                    } catch (error) {
+                        // Ignorer les erreurs de "déjà existe" ou "fonction existe déjà"
+                        if (!error.message.includes('already exists') && 
+                            !error.message.includes('duplicate') &&
+                            !error.message.includes('relation') &&
+                            !error.message.includes('function')) {
+                            console.warn('⚠️  Erreur lors de la création de demandes_devis:', error.message);
+                        }
+                    }
+                }
+            }
+            console.log('✅ Table demandes_devis créée');
+        } else {
+            console.log('ℹ️  Table demandes_devis existe déjà');
+        }
+        
         // Vérifier si la table utilisateurs existe
         const checkTable = await pool.query(`
             SELECT EXISTS (
