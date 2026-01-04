@@ -482,7 +482,7 @@ router.post('/create-for-client', authenticate, async (req, res) => {
         const facturier_id = req.user.entreprise_id || client_id; // Fallback sur client_id si pas d'entreprise
 
         // Créer le devis client
-        const [result] = await pool.execute(
+        const [devisRows2, devisResult2] = await pool.execute(
             `INSERT INTO devis (numero, rfq_id, fournisseur_id, demande_devis_id, date_emission, date_validite,
               delai_livraison, remise_globale, total_ht, total_tva, total_ttc,
               conditions_paiement, garanties, certifications, notes, statut)

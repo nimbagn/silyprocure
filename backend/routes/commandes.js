@@ -113,7 +113,7 @@ router.post('/', validateCommande, async (req, res) => {
             total_ttc = total_ht + total_tva;
         }
 
-        const [result] = await pool.execute(
+        const [commandeRows, commandeResult] = await pool.execute(
             `INSERT INTO commandes (numero, type_commande, date_commande, date_livraison_souhaitee,
               commandeur_id, fournisseur_id, contact_fournisseur_id, devis_id, rfq_id,
               adresse_livraison_id, contact_livraison, telephone_livraison, heure_livraison,
@@ -129,7 +129,7 @@ router.post('/', validateCommande, async (req, res) => {
              total_ht, total_tva, total_ttc]
         );
 
-        const commande_id = result.insertId;
+        const commande_id = commandeResult.insertId;
 
         // Enregistrer dans l'historique du client si la commande est liée à une demande client
         if (devis_id) {
