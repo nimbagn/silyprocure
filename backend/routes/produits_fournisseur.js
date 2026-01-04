@@ -41,11 +41,15 @@ router.get('/fournisseur/:fournisseur_id', validateFournisseurId, validatePagina
             countParams.push(searchTerm, searchTerm, searchTerm);
         }
 
-        query += ` ORDER BY p.libelle LIMIT ${limitNum} OFFSET ${offset}`;
+        // Utiliser LIMIT et OFFSET comme paramètres pour PostgreSQL
+        query += ' ORDER BY p.libelle LIMIT ? OFFSET ?';
+        params.push(limitNum, offset);
 
-        const [produits] = await pool.execute(query, params);
-        const [countResult] = await pool.execute(countQuery, countParams);
-        const total = countResult[0].total;
+        const [produitsRows] = await pool.execute(query, params);
+        const produits = produitsRows;
+        const [countRows] = await pool.execute(countQuery, countParams);
+        const countResult = countRows;
+        const total = countResult[0]?.total || 0;
 
         res.json({
             data: produits,

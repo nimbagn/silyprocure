@@ -73,7 +73,8 @@ router.get('/fournisseur/:fournisseurId', validateFournisseurId, async (req, res
 
         query += ' ORDER BY p.libelle';
 
-        const [produits] = await pool.execute(query, params);
+        const [produitsRows] = await pool.execute(query, params);
+        const produits = produitsRows;
         res.json(produits);
     } catch (error) {
         res.status(500).json({ error: error.message });

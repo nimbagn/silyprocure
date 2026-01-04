@@ -191,21 +191,33 @@ CREATE INDEX idx_categories_parent ON categories(parent_id);
 -- =====================================================
 CREATE TABLE produits (
     id SERIAL PRIMARY KEY,
-    reference VARCHAR(100) UNIQUE NOT NULL,
+    reference VARCHAR(100) NOT NULL,
+    reference_fournisseur VARCHAR(100),
     libelle VARCHAR(255) NOT NULL,
     description TEXT,
     categorie_id INTEGER,
+    fournisseur_id INTEGER,
     unite VARCHAR(20) DEFAULT 'unité',
     prix_unitaire_ht DECIMAL(10,2),
+    prix_fournisseur DECIMAL(10,2),
     tva_taux DECIMAL(5,2) DEFAULT 20.00,
     actif BOOLEAN DEFAULT TRUE,
+    disponible BOOLEAN DEFAULT TRUE,
+    delai_livraison_jours INTEGER,
+    quantite_minimale DECIMAL(10,2),
+    image_url VARCHAR(255),
+    caracteristiques_techniques TEXT,
+    stock_disponible DECIMAL(10,2),
     date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_produits_categorie FOREIGN KEY (categorie_id) REFERENCES categories(id) ON DELETE SET NULL
+    CONSTRAINT fk_produits_categorie FOREIGN KEY (categorie_id) REFERENCES categories(id) ON DELETE SET NULL,
+    CONSTRAINT fk_produits_fournisseur FOREIGN KEY (fournisseur_id) REFERENCES entreprises(id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_produits_reference ON produits(reference);
 CREATE INDEX idx_produits_categorie ON produits(categorie_id);
+CREATE INDEX idx_produits_fournisseur ON produits(fournisseur_id);
+CREATE INDEX idx_produits_fournisseur_reference ON produits(fournisseur_id, reference);
 
 CREATE TRIGGER update_produits_modtime BEFORE UPDATE ON produits
     FOR EACH ROW EXECUTE FUNCTION update_modified_column();

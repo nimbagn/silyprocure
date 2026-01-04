@@ -43,9 +43,11 @@ router.get('/', validatePagination, async (req, res) => {
         query += ` ORDER BY p.libelle LIMIT ${limitNum} OFFSET ${offset}`;
         // Note: LIMIT et OFFSET ne peuvent pas être des paramètres préparés dans certaines versions MySQL
 
-        const [produits] = await pool.execute(query, params);
-        const [countResult] = await pool.execute(countQuery, countParams);
-        const total = countResult[0].total;
+        const [produitsRows] = await pool.execute(query, params);
+        const produits = produitsRows;
+        const [countRows] = await pool.execute(countQuery, countParams);
+        const countResult = countRows;
+        const total = countResult[0]?.total || 0;
 
         res.json({
             data: produits,
