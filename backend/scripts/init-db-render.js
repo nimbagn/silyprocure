@@ -60,7 +60,68 @@ async function initDatabase() {
 
         console.log('📝 Initialisation de la base de données...');
         
+        // Essayer d'utiliser psql si disponible (plus fiable pour les fonctions PL/pgSQL)
+        const { execSync } = require('child_process');
         const sqlPath = path.join(__dirname, '../../database/silypro_create_database_postgresql.sql');
+        
+        // Vérifier si psql est disponible
+        try {
+            execSync('which psql', { stdio: 'ignore' });
+            console.log('📊 Utilisation de psql pour l\'initialisation...');
+            
+            const dbUrl = process.env.DATABASE_URL || 
+                `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
+            
+            // Nettoyer le SQL : supprimer les commandes de création de DB et \c
+            let sql = fs.readFileSync(sqlPath, 'utf8');
+            sql = sql
+                .replace(/DROP DATABASE IF EXISTS[^;]*;/gi, '')
+                .replace(/CREATE DATABASE[^;]*;/gi, '')
+                .replace(/\\c\s+\w+/gi, '')
+                .replace(/--[^\n]*/g, '')
+                .trim();
+            
+            // Écrire dans un fichier temporaire
+            const tempFile = '/tmp/silypro_schema.sql';
+            fs.writeFileSync(tempFile, sql);
+            
+            // Exécuter avec psql
+            execSync(`psql "${dbUrl}" -f ${tempFile}`, { 
+                stdio: 'inherit',
+                env: { ...process.env, PGPASSWORD: process.env.DB_PASSWORD || '' }
+            });
+            
+            console.log('✅ Base de données initialisée avec psql!');
+            
+            // Créer le compte admin
+            const bcrypt = require('bcryptjs');
+            const adminPassword = 'admin123';
+            const hash = await bcrypt.hash(adminPassword, 10);
+            
+            try {
+                await pool.query(`
+                    INSERT INTO utilisateurs (email, mot_de_passe, nom, prenom, fonction, role, actif) 
+                    VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    ON CONFLICT (email) DO NOTHING
+                `, ['admin@silyprocure.com', hash, 'Admin', 'SilyProcure', 'Administrateur', 'admin', true]);
+                
+                console.log('✅ Compte admin créé');
+                console.log('   Email: admin@silyprocure.com');
+                console.log('   Mot de passe: admin123');
+            } catch (error) {
+                if (!error.message.includes('duplicate')) {
+                    console.warn('⚠️  Erreur création admin:', error.message);
+                }
+            }
+            
+            await pool.end();
+            return;
+        } catch (psqlError) {
+            // psql non disponible, utiliser le parser
+            console.log('📊 psql non disponible, utilisation du parser SQL...');
+        }
+        
+        // Parser SQL (fallback)
         let sql = fs.readFileSync(sqlPath, 'utf8');
         
         // Nettoyer le SQL : supprimer les commandes psql et les commentaires de ligne
