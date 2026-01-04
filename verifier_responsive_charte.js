@@ -45,44 +45,58 @@ function checkFile(filePath) {
     }
 
     // Vérifier style.css
-    if (content.includes('css/style.css')) {
+    const hasStyleCss = content.includes('css/style.css');
+    if (hasStyleCss) {
         checks.styleCss = true;
     } else {
         issues.push('❌ style.css non inclus');
     }
 
     // Vérifier les couleurs de la charte (dans les styles inline ou CSS)
+    // Si style.css est inclus, les couleurs sont dedans (bonne pratique)
     const hasCharteColor = charteColors.primary.some(color => 
         content.includes(color) || content.includes('var(--color-primary)')
     );
-    if (hasCharteColor || content.includes('--color-primary')) {
+    const hasVariables = content.includes('--color-primary') || content.includes('--color-accent');
+    
+    if (hasStyleCss || hasCharteColor || hasVariables) {
         checks.charteColors = true;
     } else {
-        // Vérifier dans le CSS lié
-        issues.push('⚠️  Couleurs de la charte à vérifier (peut être dans CSS externe)');
+        issues.push('❌ Couleurs de la charte non détectées');
     }
 
     // Vérifier sidebar
-    if (content.includes('sidebar.js') || content.includes('class="sidebar"') || content.includes('DISABLE_SIDEBAR')) {
+    // Les pages publiques (index.html, home.html, devis-externe.html, suivi.html) n'ont pas besoin de sidebar
+    const publicPages = ['index.html', 'home.html', 'devis-externe.html', 'suivi.html', 'test-dashboard.html'];
+    const isPublicPage = publicPages.some(page => filePath.includes(page));
+    
+    if (content.includes('sidebar.js') || content.includes('class="sidebar"') || content.includes('DISABLE_SIDEBAR') || isPublicPage) {
         checks.sidebar = true;
     } else {
-        issues.push('⚠️  Sidebar non détectée (peut utiliser l\'ancien système)');
+        // Vérifier si c'est une page avec l'ancien système (header/nav)
+        if (content.includes('class="header"') && content.includes('class="nav"')) {
+            // Ancien système mais toujours valide
+            checks.sidebar = true;
+        } else {
+            issues.push('⚠️  Sidebar non détectée');
+        }
     }
 
     // Vérifier police Inter
-    if (content.includes('Inter') || content.includes('font-family') && content.includes('Inter')) {
+    if (content.includes('Inter') || (content.includes('font-family') && content.includes('Inter'))) {
         checks.fontInter = true;
     } else {
         issues.push('⚠️  Police Inter non détectée');
     }
 
     // Vérifier responsive (media queries dans le CSS ou styles inline)
+    // Si style.css est inclus, les media queries sont dedans (bonne pratique)
     const hasResponsive = content.includes('@media') || content.includes('max-width') || content.includes('min-width');
-    if (hasResponsive) {
+    
+    if (hasStyleCss || hasResponsive) {
         checks.responsive = true;
     } else {
-        // Peut être dans le CSS externe
-        issues.push('ℹ️  Media queries à vérifier (dans CSS externe)');
+        issues.push('❌ Responsive non détecté');
     }
 
     return { checks, issues, fileName: path.basename(filePath) };

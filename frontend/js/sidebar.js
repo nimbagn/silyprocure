@@ -332,7 +332,7 @@ window.addEventListener('resize', () => {
 window.addEventListener('orientationchange', () => {
     if (window.DISABLE_SIDEBAR === true) {
         return;
-    }
+        }
     
     // Attendre que l'orientation change complètement
     setTimeout(() => {
