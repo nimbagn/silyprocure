@@ -732,10 +732,12 @@ router.get('/messages', requireRole('admin', 'superviseur'), async (req, res) =>
             params.push(traite === 'true' ? 1 : 0);
         }
         
-        // Interpoler LIMIT et OFFSET directement (mysql2 a des problèmes avec les paramètres préparés pour LIMIT/OFFSET)
-        query += ` ORDER BY m.date_creation DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+        // Utiliser LIMIT et OFFSET comme paramètres pour PostgreSQL
+        query += ' ORDER BY m.date_creation DESC LIMIT ? OFFSET ?';
+        params.push(limitNum, offsetNum);
         
-        const [messages] = await pool.execute(query, params);
+        const [messagesRows] = await pool.execute(query, params);
+        const messages = messagesRows;
         
         // Compter le total
         let countQuery = 'SELECT COUNT(*) as total FROM messages_contact WHERE 1=1';
@@ -772,7 +774,7 @@ router.patch('/messages/:id/lu', requireRole('admin', 'superviseur'), validateId
         const { lu } = req.body;
         await pool.execute(
             'UPDATE messages_contact SET lu = ? WHERE id = ?',
-            [lu ? 1 : 0, req.params.id]
+            [lu ? true : false, req.params.id]
         );
         res.json({ message: 'Message mis à jour' });
     } catch (error) {
@@ -787,7 +789,7 @@ router.patch('/messages/:id/traite', requireRole('admin', 'superviseur'), valida
         const { traite, notes_internes } = req.body;
         await pool.execute(
             'UPDATE messages_contact SET traite = ?, traite_par = ?, notes_internes = ? WHERE id = ?',
-            [traite ? 1 : 0, req.user.id, notes_internes || null, req.params.id]
+            [traite ? true : false, req.user.id, notes_internes || null, req.params.id]
         );
         res.json({ message: 'Message mis à jour' });
     } catch (error) {
