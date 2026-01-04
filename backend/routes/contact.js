@@ -678,15 +678,15 @@ router.post('/message', async (req, res) => {
         }
         
         // Enregistrer le message dans la base de données
-        // Pour PostgreSQL, utiliser RETURNING pour récupérer l'ID
+        // Le wrapper PostgreSQL ajoute automatiquement RETURNING id si nécessaire
         const [messageRows, messageResult] = await pool.execute(
             `INSERT INTO messages_contact (nom, email, telephone, sujet, message) 
-             VALUES (?, ?, ?, ?, ?) RETURNING id`,
+             VALUES (?, ?, ?, ?, ?)`,
             [nom, email, telephone || null, sujet, message]
         );
         
-        // Pour PostgreSQL, l'ID est dans le premier élément du résultat
-        const messageId = messageRows && messageRows.length > 0 ? messageRows[0].id : (messageResult.insertId || null);
+        // Récupérer l'ID : le wrapper PostgreSQL le met dans insertId ou dans le premier row
+        const messageId = messageResult.insertId || (messageRows && messageRows.length > 0 ? messageRows[0].id : null);
         
         // Créer une notification pour les admins/superviseurs
         await notifyAdminsAndSupervisors(
@@ -702,7 +702,17 @@ router.post('/message', async (req, res) => {
         });
     } catch (error) {
         console.error('Erreur traitement message contact:', error);
-        res.status(500).json({ error: 'Erreur lors de l\'envoi du message' });
+        
+        // Vérifier si c'est une erreur de table manquante
+        if (error.message && error.message.includes('does not exist') && error.message.includes('messages_contact')) {
+            console.error('❌ Table messages_contact n\'existe pas. Exécutez: npm run render:update');
+            return res.status(500).json({ 
+                error: 'Erreur de configuration serveur. Veuillez contacter le support.',
+                details: 'La table messages_contact n\'existe pas encore. Veuillez réessayer dans quelques instants ou nous contacter directement.'
+            });
+        }
+        
+        res.status(500).json({ error: 'Erreur lors de l\'envoi du message. Veuillez réessayer ou nous contacter directement.' });
     }
 });
 
