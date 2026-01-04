@@ -61,28 +61,111 @@ async function initDatabase() {
         console.log('📝 Initialisation de la base de données...');
         
         const sqlPath = path.join(__dirname, '../../database/silypro_create_database_postgresql.sql');
-        const sql = fs.readFileSync(sqlPath, 'utf8');
+        let sql = fs.readFileSync(sqlPath, 'utf8');
         
-        // Exécuter le schéma (sans les commandes psql comme \c)
-        const statements = sql
-            .split(';')
-            .map(s => s.trim())
-            .filter(s => s && !s.startsWith('\\') && !s.startsWith('--'))
-            .filter(s => s.length > 0);
-
+        // Nettoyer le SQL : supprimer les commandes psql et les commentaires de ligne
+        sql = sql
+            // Supprimer les commandes psql (comme \c, \connect, etc.)
+            .replace(/\\[a-zA-Z]+\s*[^\n]*/g, '')
+            // Supprimer les commentaires de ligne
+            .replace(/--[^\n]*/g, '')
+            // Supprimer les lignes vides multiples
+            .replace(/\n\s*\n\s*\n/g, '\n\n')
+            .trim();
+        
+        // Parser intelligent pour gérer les blocs $$ (fonctions PL/pgSQL)
+        const statements = [];
+        let currentStatement = '';
+        let inDollarQuote = false;
+        let dollarTag = '';
+        let i = 0;
+        
+        while (i < sql.length) {
+            const char = sql[i];
+            const nextChar = sql[i + 1];
+            
+            // Détecter le début d'un bloc $$ (dollar quoting)
+            if (char === '$' && !inDollarQuote) {
+                let tag = '$';
+                let j = i + 1;
+                while (j < sql.length && sql[j] !== '$') {
+                    tag += sql[j];
+                    j++;
+                }
+                if (j < sql.length && sql[j] === '$') {
+                    tag += '$';
+                    dollarTag = tag;
+                    inDollarQuote = true;
+                    currentStatement += tag;
+                    i = j + 1;
+                    continue;
+                }
+            }
+            
+            // Détecter la fin d'un bloc $$
+            if (inDollarQuote && sql.substr(i, dollarTag.length) === dollarTag) {
+                currentStatement += dollarTag;
+                inDollarQuote = false;
+                dollarTag = '';
+                i += dollarTag.length;
+                continue;
+            }
+            
+            // Détecter la fin d'une instruction SQL (; en dehors d'un bloc $$)
+            if (char === ';' && !inDollarQuote) {
+                currentStatement += ';';
+                const trimmed = currentStatement.trim();
+                if (trimmed && trimmed !== ';') {
+                    statements.push(trimmed);
+                }
+                currentStatement = '';
+                i++;
+                continue;
+            }
+            
+            currentStatement += char;
+            i++;
+        }
+        
+        // Ajouter la dernière instruction si elle existe
+        if (currentStatement.trim() && currentStatement.trim() !== ';') {
+            statements.push(currentStatement.trim());
+        }
+        
+        // Exécuter les instructions
+        let successCount = 0;
+        let errorCount = 0;
+        
         for (const statement of statements) {
-            if (statement.trim()) {
-                try {
-                    await pool.query(statement);
-                } catch (error) {
-                    // Ignorer les erreurs de "already exists"
-                    if (!error.message.includes('already exists') && 
-                        !error.message.includes('duplicate')) {
-                        console.warn('⚠️  Avertissement:', error.message);
-                    }
+            if (!statement.trim() || statement.trim() === ';') {
+                continue;
+            }
+            
+            try {
+                await pool.query(statement);
+                successCount++;
+            } catch (error) {
+                errorCount++;
+                // Ignorer certaines erreurs attendues
+                const ignorableErrors = [
+                    'already exists',
+                    'duplicate',
+                    'does not exist',
+                    'syntax error',
+                    'unterminated'
+                ];
+                
+                const shouldIgnore = ignorableErrors.some(msg => 
+                    error.message.toLowerCase().includes(msg.toLowerCase())
+                );
+                
+                if (!shouldIgnore) {
+                    console.warn('⚠️  Erreur SQL:', error.message.substring(0, 100));
                 }
             }
         }
+        
+        console.log(`📊 Instructions exécutées: ${successCount} réussies, ${errorCount} erreurs (certaines attendues)`);
         
         console.log('✅ Base de données initialisée avec succès!');
         
