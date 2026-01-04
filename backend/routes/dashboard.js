@@ -99,7 +99,7 @@ router.get('/stats', async (req, res) => {
             GROUP BY e.id, e.nom
             ORDER BY nb_commandes DESC, montant_total DESC
             LIMIT 5
-        `);
+        `, [true]);
         stats.top_fournisseurs = topFournisseurs;
 
         // Demandes de devis
