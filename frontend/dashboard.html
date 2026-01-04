@@ -581,6 +581,10 @@
             `;
         }
 
+        // Configuration Globale Chart.js
+        Chart.defaults.font.family = "'Outfit', sans-serif";
+        Chart.defaults.color = '#6b7280';
+
         function displayCharts(stats) {
             // Vérifier que stats est valide
             if (!stats || typeof stats !== 'object') {
