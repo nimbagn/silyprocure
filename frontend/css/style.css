@@ -1109,16 +1109,16 @@ body.sidebar-open {
 }
 
 .sidebar::-webkit-scrollbar-track {
-    background: var(--color-sidebar);
+    background: var(--color-primary-dark);
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 102, 0, 0.4);
     border-radius: 3px;
 }
 
 .sidebar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: var(--color-accent);
 }
 
 /* Responsive - Desktop Large (1366px+) */
