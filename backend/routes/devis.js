@@ -502,7 +502,7 @@ router.post('/create-for-client', authenticate, async (req, res) => {
             ]
         );
 
-        const devis_id = result.insertId;
+        const devis_id = devisResult2.insertId;
 
         // Insérer les lignes (sans prix_achat_ht ni marge_appliquee dans devis_lignes - ce sont des champs de facture)
         for (const ligne of lignesConsolidees) {
