@@ -124,16 +124,22 @@
                 
                 if (commandeResponse.ok) {
                     // Mettre à jour le statut du devis à "accepte"
+                    console.log('🟢 Commande créée, mise à jour du statut du devis...');
                     const statutResponse = await apiCall(`/api/devis/${id}/statut`, {
                         method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
                         body: JSON.stringify({ statut: 'accepte' })
                     });
+                    
+                    console.log('🟢 Réponse statut:', statutResponse);
                     
                     if (statutResponse && statutResponse.ok) {
                         const commandeData = await commandeResponse.json();
                         const statutData = await statutResponse.json();
-                        console.log('Commande créée:', commandeData);
-                        console.log('Statut devis mis à jour:', statutData);
+                        console.log('✅ Commande créée:', commandeData);
+                        console.log('✅ Statut devis mis à jour:', statutData);
                         Toast.success('Devis accepté et commande créée avec succès');
                         setTimeout(() => {
                             // Option 1: Rediriger vers commandes
@@ -143,7 +149,9 @@
                         }, 1500);
                     } else {
                         const errorStatut = await statutResponse.json().catch(() => ({ error: 'Erreur inconnue' }));
-                        console.error('Erreur mise à jour statut:', errorStatut);
+                        console.error('❌ Erreur mise à jour statut:', errorStatut);
+                        console.error('❌ Status HTTP:', statutResponse?.status);
+                        console.error('❌ Status text:', statutResponse?.statusText);
                         Toast.warning('Commande créée mais erreur lors de la mise à jour du statut du devis: ' + (errorStatut.error || 'Erreur inconnue'));
                         setTimeout(() => {
                             window.location.reload();
@@ -170,13 +178,18 @@
             
             try {
                 showLoading('Refus du devis...');
-                console.log('Envoi de la requête PATCH...');
+                console.log('🟡 Envoi de la requête PATCH pour refuser le devis...');
                 const response = await apiCall(`/api/devis/${id}/statut`, {
                     method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({ statut: 'refuse' })
                 });
                 
-                console.log('Réponse reçue:', response);
+                console.log('🟡 Réponse reçue:', response);
+                console.log('🟡 Status:', response?.status);
+                console.log('🟡 OK:', response?.ok);
                 
                 if (!response) {
                     hideLoading();

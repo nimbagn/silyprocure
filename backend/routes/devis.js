@@ -285,9 +285,12 @@ router.patch('/:id/statut', validateId, async (req, res) => {
         const { id } = req.params;
         const { statut } = req.body;
 
+        console.log('🔵 PATCH /devis/:id/statut - ID:', id, 'Statut:', statut, 'User:', req.user?.id, 'Role:', req.user?.role);
+
         // Valider le statut
         const statutsValides = ['brouillon', 'envoye', 'accepte', 'refuse', 'expire'];
         if (!statut || !statutsValides.includes(statut)) {
+            console.error('❌ Statut invalide:', statut, 'Statuts valides:', statutsValides);
             return res.status(400).json({ 
                 error: 'Statut invalide', 
                 statutsValides: statutsValides 
@@ -303,13 +306,16 @@ router.patch('/:id/statut', validateId, async (req, res) => {
             [id]
         );
         if (devis.length === 0) {
+            console.error('❌ Devis non trouvé:', id);
             return res.status(404).json({ error: 'Devis non trouvé' });
         }
 
         const devisData = devis[0];
+        console.log('✅ Devis trouvé:', devisData.numero, 'Statut actuel:', devisData.statut);
 
         // Mettre à jour le statut
         await pool.execute('UPDATE devis SET statut = $1 WHERE id = $2', [statut, id]);
+        console.log('✅ Statut mis à jour:', statut);
 
         // Enregistrer dans l'historique du client si le devis est lié à une demande client
         if (devisData.client_id && (statut === 'accepte' || statut === 'refuse')) {
