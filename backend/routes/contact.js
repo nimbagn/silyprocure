@@ -104,7 +104,7 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
             
             // Vérifier si le client existe déjà par email
             const [existingClients] = await connection.execute(
-                'SELECT id FROM clients WHERE email = ?',
+                'SELECT id FROM clients WHERE email = $1',
                 [email]
             );
 
@@ -115,17 +115,17 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                 // Utiliser adresse_livraison au lieu de adresse (structure PostgreSQL)
                 await connection.execute(
                     `UPDATE clients 
-                     SET nom = ?, 
-                         telephone = COALESCE(?, telephone), 
-                         entreprise = COALESCE(?, entreprise),
-                         adresse_livraison = COALESCE(?, adresse_livraison),
-                         ville_livraison = COALESCE(?, ville_livraison),
-                         pays_livraison = COALESCE(?, pays_livraison),
+                     SET nom = $1, 
+                         telephone = COALESCE($2, telephone), 
+                         entreprise = COALESCE($3, entreprise),
+                         adresse_livraison = COALESCE($4, adresse_livraison),
+                         ville_livraison = COALESCE($5, ville_livraison),
+                         pays_livraison = COALESCE($6, pays_livraison),
                          date_derniere_demande = NOW(),
                          nombre_demandes = nombre_demandes + 1,
                          statut = CASE WHEN statut = 'prospect' THEN 'actif' ELSE statut END,
                          date_modification = NOW()
-                     WHERE id = ?`,
+                     WHERE id = $7`,
                     [nom, telephone || null, entreprise || null, adresse_livraison || null, ville_livraison || null, pays_livraison || null, clientId]
                 );
             } else {
@@ -133,16 +133,16 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                 // Utiliser adresse_livraison au lieu de adresse (structure PostgreSQL)
                 const [clientRows, clientResult] = await connection.execute(
                     `INSERT INTO clients (nom, email, telephone, entreprise, adresse_livraison, ville_livraison, pays_livraison, date_derniere_demande, nombre_demandes, statut)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), 1, 'prospect')`,
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), 1, 'prospect') RETURNING id`,
                     [nom, email, telephone, entreprise || null, adresse_livraison, ville_livraison, pays_livraison]
                 );
-                clientId = clientResult.insertId;
+                clientId = clientResult.rows && clientResult.rows[0] ? clientResult.rows[0].id : (clientResult.insertId || clientResult[0]?.id);
             }
 
             // Enregistrer la demande principale avec référence et token, liée au client
             const [demandeRows, demandeResult] = await connection.execute(
                 `INSERT INTO demandes_devis (client_id, nom, email, telephone, entreprise, message, adresse_livraison, ville_livraison, pays_livraison, latitude, longitude, statut, reference, token_suivi, mode_notification)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'nouvelle', ?, ?, ?)`,
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'nouvelle', $12, $13, $14) RETURNING id`,
                 [
                     clientId, nom, email, telephone, entreprise || null, message || null, 
                     adresse_livraison, ville_livraison, pays_livraison,
@@ -152,7 +152,7 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                 ]
             );
 
-            const demandeId = demandeResult.insertId;
+            const demandeId = demandeResult.rows && demandeResult.rows[0] ? demandeResult.rows[0].id : (demandeResult.insertId || demandeResult[0]?.id);
 
             // Enregistrer les fichiers joints s'il y en a
             if (req.files && req.files.length > 0) {
@@ -172,8 +172,8 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                         const uploaderId = req.user?.id || 1; // Utiliser l'utilisateur connecté ou l'admin système (ID 1)
                         
                         await connection.execute(
-                            `INSERT INTO fichiers_joints (type_document, document_id, nom_fichier, chemin_fichier, taille_fichier, type_mime, description, uploader_id)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                            `INSERT INTO documents_joints (type_document, document_id, nom_fichier, chemin_fichier, taille_octets, type_mime, description, upload_par_id)
+                             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
                             ['demande_devis', demandeId, nomFichier, cheminFichier, tailleFichier, typeMime, description, uploaderId]
                         );
                     } catch (fileError) {
@@ -187,7 +187,7 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
             for (const article of articlesParsed) {
                 await connection.execute(
                     `INSERT INTO demandes_devis_lignes (demande_devis_id, description, secteur, quantite, unite, ordre)
-                     VALUES (?, ?, ?, ?, ?, ?)`,
+                     VALUES ($1, $2, $3, $4, $5, $6)`,
                     [
                         demandeId,
                         article.description,
@@ -230,7 +230,7 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                         ) as articles_resume
                  FROM demandes_devis d
                  LEFT JOIN demandes_devis_lignes l ON d.id = l.demande_devis_id
-                 WHERE d.id = ?
+                 WHERE d.id = $1
                  GROUP BY d.id`,
                 [demandeId]
             );
@@ -262,7 +262,7 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                 if (sent) {
                     // Marquer la notification comme envoyée
                     pool.execute(
-                        'UPDATE demandes_devis SET notification_envoyee = TRUE WHERE id = ?',
+                        'UPDATE demandes_devis SET notification_envoyee = TRUE WHERE id = $1',
                         [demandeId]
                     ).catch(err => console.error('Erreur mise à jour notification_envoyee:', err));
                 }
@@ -341,7 +341,7 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
         const params = [];
 
         if (statut) {
-            query += ' WHERE d.statut = ?';
+            query += ' WHERE d.statut = $1';
             params.push(statut);
         }
 
@@ -355,7 +355,7 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
         let countQuery = 'SELECT COUNT(*) as total FROM demandes_devis';
         const countParams = [];
         if (statut) {
-            countQuery += ' WHERE statut = ?';
+            countQuery += ' WHERE statut = $1';
             countParams.push(statut);
         }
         const [countResult] = await pool.execute(countQuery, countParams);
@@ -388,7 +388,7 @@ router.get('/demandes/:id', requireRole('admin', 'superviseur'), validateId, asy
                     u.prenom as traite_par_prenom
              FROM demandes_devis d
              LEFT JOIN utilisateurs u ON d.traite_par = u.id
-             WHERE d.id = ?`,
+             WHERE d.id = $1`,
             [id]
         );
 
@@ -400,7 +400,7 @@ router.get('/demandes/:id', requireRole('admin', 'superviseur'), validateId, asy
 
         // Récupérer les lignes d'articles
         const [lignes] = await pool.execute(
-            'SELECT * FROM demandes_devis_lignes WHERE demande_devis_id = ? ORDER BY ordre',
+            'SELECT * FROM demandes_devis_lignes WHERE demande_devis_id = $1 ORDER BY ordre',
             [id]
         );
         demande.articles = lignes;
@@ -421,7 +421,7 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
 
         // Vérifier que la demande existe
         const [demandes] = await pool.execute(
-            'SELECT * FROM demandes_devis WHERE id = ?',
+            'SELECT * FROM demandes_devis WHERE id = $1',
             [id]
         );
 
@@ -438,7 +438,7 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
 
         // Récupérer les lignes d'articles de la demande
         const [lignes] = await pool.execute(
-            'SELECT * FROM demandes_devis_lignes WHERE demande_devis_id = ? ORDER BY ordre',
+            'SELECT * FROM demandes_devis_lignes WHERE demande_devis_id = $1 ORDER BY ordre',
             [id]
         );
 
@@ -572,7 +572,7 @@ router.patch('/demandes/:id/statut', requireRole('admin', 'superviseur'), valida
         }
 
         // Vérifier que la demande existe
-        const [existing] = await pool.execute('SELECT id FROM demandes_devis WHERE id = ?', [id]);
+        const [existing] = await pool.execute('SELECT id FROM demandes_devis WHERE id = $1', [id]);
         if (existing.length === 0) {
             return res.status(404).json({ error: 'Demande non trouvée' });
         }
@@ -580,11 +580,11 @@ router.patch('/demandes/:id/statut', requireRole('admin', 'superviseur'), valida
         // Mettre à jour
         await pool.execute(
             `UPDATE demandes_devis 
-             SET statut = ?, 
-                 traite_par = ?, 
-                 notes_internes = ?,
+             SET statut = $1, 
+                 traite_par = $2, 
+                 notes_internes = $3,
                  date_modification = NOW()
-             WHERE id = ?`,
+             WHERE id = $4`,
             [statut, req.user.id, notes_internes || null, id]
         );
 
