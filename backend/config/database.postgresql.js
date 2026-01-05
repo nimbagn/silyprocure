@@ -54,8 +54,14 @@ pool.execute = async (query, params) => {
         let paramIndex = 1;
         const pgParams = [];
         
-        // Convertir les placeholders ? en $1, $2, etc. pour PostgreSQL
-        if (params && params.length > 0) {
+        // Vérifier si la requête contient déjà des placeholders PostgreSQL ($1, $2, etc.)
+        const hasPostgresPlaceholders = /\$\d+/.test(query);
+        
+        if (hasPostgresPlaceholders) {
+            // Si la requête contient déjà des placeholders PostgreSQL, utiliser directement les paramètres
+            pgParams.push(...(params || []));
+        } else if (params && params.length > 0) {
+            // Convertir les placeholders ? en $1, $2, etc. pour PostgreSQL
             pgQuery = query.replace(/\?/g, () => {
                 pgParams.push(params[paramIndex - 1]);
                 return `$${paramIndex++}`;
@@ -169,8 +175,14 @@ pool.getConnection = async () => {
             let paramIndex = 1;
             const pgParams = [];
             
-            // Convertir les placeholders ? en $1, $2, etc. pour PostgreSQL
-            if (params && params.length > 0) {
+            // Vérifier si la requête contient déjà des placeholders PostgreSQL ($1, $2, etc.)
+            const hasPostgresPlaceholders = /\$\d+/.test(query);
+            
+            if (hasPostgresPlaceholders) {
+                // Si la requête contient déjà des placeholders PostgreSQL, utiliser directement les paramètres
+                pgParams.push(...(params || []));
+            } else if (params && params.length > 0) {
+                // Convertir les placeholders ? en $1, $2, etc. pour PostgreSQL
                 pgQuery = query.replace(/\?/g, () => {
                     pgParams.push(params[paramIndex - 1]);
                     return `$${paramIndex++}`;
