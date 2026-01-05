@@ -130,8 +130,8 @@ function createEntrepriseForm() {
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="ent-rccm">RCCM *</label>
-                    <input type="text" id="ent-rccm" name="rccm" required placeholder="Ex: GN-2024-A-12345">
+                    <label for="ent-rccm">RCCM</label>
+                    <input type="text" id="ent-rccm" name="rccm" placeholder="Ex: GN-2024-A-12345">
                 </div>
                 <div class="form-group">
                     <label for="ent-numero-contribuable">Numéro contribuable</label>
@@ -327,21 +327,27 @@ async function handleCreateEntreprise(event) {
     const data = Object.fromEntries(formData);
     
     // Séparer les données entreprise et adresse
+    // Nettoyer les valeurs vides pour les convertir en null
+    const cleanValue = (value) => {
+        if (!value || value === '' || value === 'null' || value === 'undefined') return null;
+        return value;
+    };
+    
     const entrepriseData = {
-        nom: data.nom,
-        raison_sociale: data.raison_sociale || null,
-        rccm: data.rccm,
-        numero_contribuable: data.numero_contribuable || null,
-        capital_social: data.capital_social ? parseFloat(data.capital_social) : null,
-        forme_juridique: data.forme_juridique || null,
-        secteur_activite: data.secteur_activite || null,
-        siret: data.siret || null,
-        tva_intracommunautaire: data.tva_intracommunautaire || null,
+        nom: data.nom.trim(),
+        raison_sociale: cleanValue(data.raison_sociale),
+        rccm: cleanValue(data.rccm),
+        numero_contribuable: cleanValue(data.numero_contribuable),
+        capital_social: data.capital_social && data.capital_social !== '' ? parseFloat(data.capital_social) : null,
+        forme_juridique: cleanValue(data.forme_juridique),
+        secteur_activite: cleanValue(data.secteur_activite),
+        siret: cleanValue(data.siret),
+        tva_intracommunautaire: cleanValue(data.tva_intracommunautaire),
         type_entreprise: data.type_entreprise,
-        email: data.email || null,
-        telephone: data.telephone || null,
-        site_web: data.site_web || null,
-        notes: data.notes || null
+        email: cleanValue(data.email),
+        telephone: cleanValue(data.telephone),
+        site_web: cleanValue(data.site_web),
+        notes: cleanValue(data.notes)
     };
 
     // Nettoyer et convertir les coordonnées GPS (gérer virgule et point)

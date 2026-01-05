@@ -54,13 +54,24 @@ const validateRFQ = [
 // Validations pour Entreprises
 const validateEntreprise = [
     body('nom').notEmpty().withMessage('Le nom est obligatoire').trim().isLength({ min: 2, max: 255 }).withMessage('Le nom doit contenir entre 2 et 255 caractères'),
-    body('raison_sociale').optional().trim().isLength({ max: 255 }).withMessage('Raison sociale trop longue'),
-    body('rccm').optional().trim().isLength({ max: 50 }).withMessage('RCCM trop long'),
-    body('numero_contribuable').optional().trim().isLength({ max: 50 }).withMessage('Numéro contribuable trop long'),
-    body('capital_social').optional().isFloat({ min: 0 }).withMessage('Capital social invalide'),
-    body('email').optional().isEmail().withMessage('Email invalide'),
-    body('telephone').optional().trim().isLength({ max: 20 }).withMessage('Téléphone trop long'),
-    body('type_entreprise').isIn(['acheteur', 'fournisseur', 'client', 'transporteur']).withMessage('Type d\'entreprise invalide'),
+    body('raison_sociale').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 255 }).withMessage('Raison sociale trop longue'),
+    body('rccm').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 50 }).withMessage('RCCM trop long'),
+    body('numero_contribuable').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 50 }).withMessage('Numéro contribuable trop long'),
+    body('capital_social').optional({ nullable: true, checkFalsy: true }).custom((value) => {
+        if (value === null || value === undefined || value === '' || value === 'null') return true;
+        const num = parseFloat(value);
+        if (isNaN(num) || num < 0) throw new Error('Capital social invalide');
+        return true;
+    }).withMessage('Capital social invalide'),
+    body('email').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Email invalide'),
+    body('telephone').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 20 }).withMessage('Téléphone trop long'),
+    body('type_entreprise').notEmpty().withMessage('Le type d\'entreprise est obligatoire').isIn(['acheteur', 'fournisseur', 'client', 'transporteur']).withMessage('Type d\'entreprise invalide'),
+    body('forme_juridique').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 50 }).withMessage('Forme juridique trop longue'),
+    body('secteur_activite').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Secteur d\'activité trop long'),
+    body('siret').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 14 }).withMessage('SIRET trop long'),
+    body('tva_intracommunautaire').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 20 }).withMessage('TVA intracommunautaire trop longue'),
+    body('site_web').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 255 }).withMessage('Site web trop long'),
+    body('notes').optional({ nullable: true, checkFalsy: true }).trim(),
     handleValidationErrors
 ];
 
