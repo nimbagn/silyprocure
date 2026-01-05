@@ -373,6 +373,15 @@ class MessageProService {
      */
     async getWhatsAppAccounts(limit = 10, page = 1) {
         try {
+            // S'assurer que le secret est chargé
+            if (!this.secret) {
+                await this.loadSecretFromDB();
+            }
+            
+            if (!this.secret) {
+                throw new Error('MESSAGEPRO_SECRET non configuré');
+            }
+            
             const url = new URL(`${MESSAGEPRO_BASE_URL}/get/wa.accounts`);
             url.searchParams.append('secret', this.secret);
             url.searchParams.append('limit', limit);
@@ -409,13 +418,17 @@ class MessageProService {
                 });
 
                 req.on('error', (error) => {
-                    reject(error);
+                    reject(new Error(`Erreur réseau: ${error.message}`));
                 });
 
                 req.end();
             });
         } catch (error) {
             console.error('Erreur récupération comptes WhatsApp:', error);
+            // Améliorer le message d'erreur
+            if (error.message.includes('MESSAGEPRO_SECRET')) {
+                throw new Error('Clé API Message Pro non configurée. Veuillez configurer votre clé API dans les paramètres.');
+            }
             throw error;
         }
     }

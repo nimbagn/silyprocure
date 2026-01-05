@@ -128,6 +128,18 @@ router.post('/messagepro/test', async (req, res) => {
     try {
         const messageProService = require('../services/messagepro');
         
+        // S'assurer que le secret est chargé depuis la DB si nécessaire
+        if (!messageProService.secret) {
+            await messageProService.loadSecretFromDB();
+        }
+        
+        if (!messageProService.secret) {
+            return res.status(400).json({
+                success: false,
+                error: 'MESSAGEPRO_SECRET non configuré. Veuillez configurer votre clé API d\'abord.'
+            });
+        }
+        
         // Tester en récupérant les crédits
         const credits = await messageProService.getCredits();
         
@@ -137,9 +149,10 @@ router.post('/messagepro/test', async (req, res) => {
             data: credits
         });
     } catch (error) {
+        console.error('Erreur test connexion Message Pro:', error);
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error.message || 'Erreur lors du test de connexion'
         });
     }
 });
@@ -148,12 +161,25 @@ router.post('/messagepro/test', async (req, res) => {
 router.get('/messagepro/whatsapp-accounts', async (req, res) => {
     try {
         const messageProService = require('../services/messagepro');
+        
+        // S'assurer que le secret est chargé depuis la DB si nécessaire
+        if (!messageProService.secret) {
+            await messageProService.loadSecretFromDB();
+        }
+        
+        if (!messageProService.secret) {
+            return res.status(400).json({ 
+                error: 'MESSAGEPRO_SECRET non configuré. Veuillez configurer votre clé API d\'abord.' 
+            });
+        }
+        
         const { limit = 10, page = 1 } = req.query;
         
         const accounts = await messageProService.getWhatsAppAccounts(parseInt(limit), parseInt(page));
         res.json(accounts);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Erreur récupération comptes WhatsApp:', error);
+        res.status(500).json({ error: error.message || 'Erreur lors de la récupération des comptes WhatsApp' });
     }
 });
 
@@ -161,12 +187,25 @@ router.get('/messagepro/whatsapp-accounts', async (req, res) => {
 router.get('/messagepro/devices', async (req, res) => {
     try {
         const messageProService = require('../services/messagepro');
+        
+        // S'assurer que le secret est chargé depuis la DB si nécessaire
+        if (!messageProService.secret) {
+            await messageProService.loadSecretFromDB();
+        }
+        
+        if (!messageProService.secret) {
+            return res.status(400).json({ 
+                error: 'MESSAGEPRO_SECRET non configuré. Veuillez configurer votre clé API d\'abord.' 
+            });
+        }
+        
         const { limit = 10, page = 1 } = req.query;
         
         const devices = await messageProService.getDevices(parseInt(limit), parseInt(page));
         res.json(devices);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Erreur récupération devices:', error);
+        res.status(500).json({ error: error.message || 'Erreur lors de la récupération des devices' });
     }
 });
 
@@ -175,10 +214,22 @@ router.get('/messagepro/gateways', async (req, res) => {
     try {
         const messageProService = require('../services/messagepro');
         
+        // S'assurer que le secret est chargé depuis la DB si nécessaire
+        if (!messageProService.secret) {
+            await messageProService.loadSecretFromDB();
+        }
+        
+        if (!messageProService.secret) {
+            return res.status(400).json({ 
+                error: 'MESSAGEPRO_SECRET non configuré. Veuillez configurer votre clé API d\'abord.' 
+            });
+        }
+        
         const rates = await messageProService.getRates();
         res.json(rates);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Erreur récupération gateways:', error);
+        res.status(500).json({ error: error.message || 'Erreur lors de la récupération des gateways' });
     }
 });
 

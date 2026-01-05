@@ -552,19 +552,37 @@
 
             try {
                 const response = await apiCall('/api/settings/messagepro/whatsapp-accounts');
-                if (!response || !response.ok) {
-                    throw new Error('Erreur lors du chargement des comptes WhatsApp');
+                
+                if (!response) {
+                    throw new Error('Aucune réponse du serveur');
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    throw new Error(errorData.error || `Erreur ${response.status}: ${response.statusText}`);
                 }
 
                 const data = await response.json();
                 select.innerHTML = '<option value="">Sélectionner un compte WhatsApp...</option>';
 
-                if (data && data.length > 0) {
-                    data.forEach(account => {
+                // Vérifier si data est un tableau ou un objet avec un tableau
+                let accounts = [];
+                if (Array.isArray(data)) {
+                    accounts = data;
+                } else if (data && Array.isArray(data.data)) {
+                    accounts = data.data;
+                } else if (data && typeof data === 'object') {
+                    // Peut-être un objet avec des propriétés
+                    accounts = Object.values(data).filter(item => item && typeof item === 'object');
+                }
+
+                if (accounts.length > 0) {
+                    accounts.forEach(account => {
                         const option = document.createElement('option');
-                        option.value = account.unique || account.id;
-                        const phone = account.phone || account.number || '';
-                        option.textContent = `${phone} (${account.unique || account.id})`;
+                        option.value = account.unique || account.id || account.unique_id;
+                        const phone = account.phone || account.number || account.phone_number || '';
+                        const name = account.name || account.account_name || '';
+                        option.textContent = name ? `${name} (${phone || option.value})` : `${phone || 'Compte'} (${option.value})`;
                         select.appendChild(option);
                     });
                 } else {
@@ -577,7 +595,9 @@
                 }
             } catch (error) {
                 select.innerHTML = '<option value="">Erreur de chargement</option>';
-                Toast.error('Erreur lors du chargement des comptes WhatsApp: ' + error.message);
+                const errorMessage = error.message || 'Erreur lors du chargement des comptes WhatsApp';
+                Toast.error(errorMessage);
+                console.error('Erreur loadWhatsAppAccounts:', error);
             } finally {
                 select.disabled = false;
             }
