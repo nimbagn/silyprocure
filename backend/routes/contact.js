@@ -112,14 +112,15 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                 // Client existe déjà, mettre à jour ses informations
                 clientId = existingClients[0].id;
                 // Utiliser COALESCE pour PostgreSQL au lieu de IFNULL (MySQL)
+                // Utiliser adresse_livraison au lieu de adresse (structure PostgreSQL)
                 await connection.execute(
                     `UPDATE clients 
                      SET nom = ?, 
                          telephone = COALESCE(?, telephone), 
                          entreprise = COALESCE(?, entreprise),
-                         adresse = COALESCE(?, adresse),
-                         ville = COALESCE(?, ville),
-                         pays = COALESCE(?, pays),
+                         adresse_livraison = COALESCE(?, adresse_livraison),
+                         ville_livraison = COALESCE(?, ville_livraison),
+                         pays_livraison = COALESCE(?, pays_livraison),
                          date_derniere_demande = NOW(),
                          nombre_demandes = nombre_demandes + 1,
                          statut = CASE WHEN statut = 'prospect' THEN 'actif' ELSE statut END,
@@ -129,8 +130,9 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                 );
             } else {
                 // Créer un nouveau client
+                // Utiliser adresse_livraison au lieu de adresse (structure PostgreSQL)
                 const [clientRows, clientResult] = await connection.execute(
-                    `INSERT INTO clients (nom, email, telephone, entreprise, adresse, ville, pays, date_derniere_demande, nombre_demandes, statut)
+                    `INSERT INTO clients (nom, email, telephone, entreprise, adresse_livraison, ville_livraison, pays_livraison, date_derniere_demande, nombre_demandes, statut)
                      VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), 1, 'prospect')`,
                     [nom, email, telephone, entreprise || null, adresse_livraison, ville_livraison, pays_livraison]
                 );

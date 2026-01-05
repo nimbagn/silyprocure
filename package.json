@@ -14,6 +14,7 @@
     "render:init-db": "node backend/scripts/init-db-render.js",
     "render:update": "node backend/scripts/run-update-render.js",
     "render:migrate-demandes": "node backend/scripts/migrate-demandes-devis.js",
+    "render:add-clients-columns": "node backend/scripts/add-clients-columns.js",
     "render:fix-admin": "node fix_admin_render.js",
     "test": "jest",
     "test:watch": "jest --watch",
