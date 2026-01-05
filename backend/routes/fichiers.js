@@ -92,7 +92,7 @@ router.post('/:type_document/:document_id', upload.single('file'), async (req, r
         };
         const table = tables[type_document];
         
-        const [documents] = await pool.execute(`SELECT id FROM ${table} WHERE id = ?`, [document_id]);
+        const [documents] = await pool.execute(`SELECT id FROM ${table} WHERE id = $1`, [document_id]);
         if (documents.length === 0) {
             fs.unlinkSync(req.file.path);
             return res.status(404).json({ error: 'Document non trouvé' });

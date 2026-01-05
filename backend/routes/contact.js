@@ -511,7 +511,7 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
                 // Créer les lignes de la RFQ depuis les articles de la demande
                 for (const ligne of lignes) {
                     await connection.execute(
-                        'INSERT INTO rfq_lignes (rfq_id, reference, description, quantite, unite, specifications, ordre) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                        'INSERT INTO rfq_lignes (rfq_id, reference, description, quantite, unite, specifications, ordre) VALUES ($1, $2, $3, $4, $5, $6, $7)',
                         [
                             rfq_id,
                             null, // reference
