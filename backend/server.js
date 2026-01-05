@@ -33,6 +33,12 @@ if (process.env.RENDER || process.env.NODE_ENV === 'production') {
         console.warn('⚠️  Migration demandes_devis (non bloquant):', err.message);
     });
     
+    // Ajout colonnes clients (non bloquant) - compatibilité
+    const addClientsColumns = require('./scripts/add-clients-columns');
+    addClientsColumns().catch(err => {
+        console.warn('⚠️  Ajout colonnes clients (non bloquant):', err.message);
+    });
+    
     // Initialisation complète de la DB (non bloquant) - fallback
     const initDb = require('./scripts/init-db-render');
     initDb().catch(err => {
