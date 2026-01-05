@@ -47,7 +47,9 @@ async function migrateDemandesDevis() {
         
         if (checkTable.rows[0].exists) {
             console.log('✅ Table demandes_devis existe déjà');
-            await pool.end();
+            if (pool && !pool.ended) {
+                await pool.end();
+            }
             return;
         }
         
@@ -149,7 +151,9 @@ async function migrateDemandesDevis() {
         console.error('❌ Erreur lors de la migration:', error.message);
         throw error;
     } finally {
-        await pool.end();
+        if (pool && !pool.ended) {
+            await pool.end();
+        }
     }
 }
 

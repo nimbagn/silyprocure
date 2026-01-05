@@ -184,7 +184,9 @@ async function runUpdate() {
         console.error('❌ Erreur lors de la mise à jour:', error.message);
         throw error;
     } finally {
-        await pool.end();
+        if (pool && !pool.ended) {
+            await pool.end();
+        }
     }
 }
 

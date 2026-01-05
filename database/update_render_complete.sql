@@ -255,10 +255,10 @@ CREATE TRIGGER update_messages_contact_modtime BEFORE UPDATE ON messages_contact
 DO $$
 DECLARE
     missing_tables TEXT[] := ARRAY[]::TEXT[];
-    table_name TEXT;
+    tbl_name TEXT;
 BEGIN
     -- Liste des tables essentielles
-    FOR table_name IN 
+    FOR tbl_name IN 
         SELECT unnest(ARRAY[
             'utilisateurs',
             'entreprises',
@@ -275,9 +275,9 @@ BEGIN
             'notifications'
         ])
     LOOP
-        IF NOT EXISTS (SELECT 1 FROM information_schema.tables 
-                       WHERE table_schema = 'public' AND table_name = table_name) THEN
-            missing_tables := array_append(missing_tables, table_name);
+        IF NOT EXISTS (SELECT 1 FROM information_schema.tables t
+                       WHERE t.table_schema = 'public' AND t.table_name = tbl_name) THEN
+            missing_tables := array_append(missing_tables, tbl_name);
         END IF;
     END LOOP;
     
