@@ -288,6 +288,31 @@ END $$;
 -- 5. VÉRIFICATION FINALE
 -- =====================================================
 
+-- =====================================================
+-- TABLE : liens_externes
+-- Liens de remplissage externes pour les fournisseurs
+-- =====================================================
+CREATE TABLE IF NOT EXISTS liens_externes (
+    id SERIAL PRIMARY KEY,
+    rfq_id INTEGER NOT NULL,
+    token VARCHAR(255) UNIQUE NOT NULL,
+    fournisseur_id INTEGER NOT NULL,
+    email_envoye VARCHAR(255),
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    date_expiration TIMESTAMP,
+    utilise BOOLEAN DEFAULT FALSE,
+    date_utilisation TIMESTAMP NULL,
+    ip_utilisation VARCHAR(45),
+    CONSTRAINT fk_liens_externes_rfq FOREIGN KEY (rfq_id) REFERENCES rfq(id) ON DELETE CASCADE,
+    CONSTRAINT fk_liens_externes_fournisseur FOREIGN KEY (fournisseur_id) REFERENCES entreprises(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_liens_externes_token ON liens_externes(token);
+CREATE INDEX IF NOT EXISTS idx_liens_externes_rfq ON liens_externes(rfq_id);
+CREATE INDEX IF NOT EXISTS idx_liens_externes_fournisseur ON liens_externes(fournisseur_id);
+CREATE INDEX IF NOT EXISTS idx_liens_externes_utilise ON liens_externes(utilise);
+CREATE INDEX IF NOT EXISTS idx_liens_externes_date_expiration ON liens_externes(date_expiration);
+
 DO $$
 BEGIN
     RAISE NOTICE '✅ Script de correction terminé';
@@ -297,6 +322,7 @@ BEGIN
     RAISE NOTICE '  ✓ Colonnes entreprises vérifiées (rccm, numero_contribuable, capital_social, forme_juridique, secteur_activite)';
     RAISE NOTICE '  ✓ Colonnes clients vérifiées (adresse, ville, pays, secteur_activite, site_web, notes)';
     RAISE NOTICE '  ✓ Migration fichiers_joints -> documents_joints effectuée';
+    RAISE NOTICE '  ✓ Table liens_externes créée';
     RAISE NOTICE '';
     RAISE NOTICE 'Pour vérifier les tables:';
     RAISE NOTICE '  SELECT tablename FROM pg_tables WHERE schemaname = ''public'' ORDER BY tablename;';
