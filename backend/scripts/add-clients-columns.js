@@ -20,8 +20,58 @@ async function addClientsColumns() {
         // Obtenir une connexion
         client = await pool.connect();
         
-        // Exécuter le script SQL
-        await client.query(sql);
+        // Parser le script SQL en instructions individuelles (gérer les DO $$ blocks)
+        const statements = [];
+        let currentStatement = '';
+        let inDoBlock = false;
+        let doBlockDepth = 0;
+        
+        const lines = sql.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const trimmedLine = line.trim();
+            
+            // Ignorer les lignes vides et les commentaires
+            if (!trimmedLine || trimmedLine.startsWith('--')) {
+                continue;
+            }
+            
+            if (trimmedLine.startsWith('DO $$')) {
+                inDoBlock = true;
+                doBlockDepth = 1;
+                currentStatement = trimmedLine;
+            } else if (inDoBlock) {
+                currentStatement += '\n' + line;
+                // Compter les occurrences de $$ pour détecter la fin du bloc
+                const matches = line.match(/\$\$/g);
+                if (matches) {
+                    doBlockDepth += matches.length - 2; // -2 car on compte l'ouverture et la fermeture
+                    if (doBlockDepth <= 0) {
+                        inDoBlock = false;
+                        statements.push(currentStatement);
+                        currentStatement = '';
+                    }
+                }
+            } else if (trimmedLine && !trimmedLine.startsWith('/*')) {
+                currentStatement += (currentStatement ? '\n' : '') + line;
+                if (trimmedLine.endsWith(';')) {
+                    statements.push(currentStatement);
+                    currentStatement = '';
+                }
+            }
+        }
+        
+        // Ajouter la dernière instruction si elle existe
+        if (currentStatement.trim()) {
+            statements.push(currentStatement);
+        }
+        
+        // Exécuter chaque instruction
+        for (const statement of statements) {
+            if (statement.trim()) {
+                await client.query(statement);
+            }
+        }
         
         console.log('✅ Colonnes ajoutées avec succès à la table clients');
         
