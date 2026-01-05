@@ -279,6 +279,7 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
         } catch (error) {
             // Rollback en cas d'erreur
             await connection.rollback();
+            // rollback() libère déjà le client, pas besoin de release()
             // Supprimer les fichiers uploadés en cas d'erreur
             if (req.files && req.files.length > 0) {
                 req.files.forEach(file => {
@@ -288,8 +289,6 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                 });
             }
             throw error;
-        } finally {
-            connection.release();
         }
 
     } catch (error) {
@@ -538,6 +537,7 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
             );
 
             await connection.commit();
+            // commit() libère déjà le client, pas besoin de release()
 
             res.status(201).json({
                 message: `${rfqsCreated.length} RFQ créée(s) avec succès`,
@@ -547,9 +547,8 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
 
         } catch (error) {
             await connection.rollback();
+            // rollback() libère déjà le client, pas besoin de release()
             throw error;
-        } finally {
-            connection.release();
         }
 
     } catch (error) {
