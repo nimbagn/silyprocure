@@ -491,7 +491,7 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
                 const [rfqRows, rfqResult] = await connection.execute(
                     `INSERT INTO rfq (numero, date_emission, date_limite_reponse, emetteur_id, destinataire_id,
                       description, lieu_livraison_id, date_livraison_souhaitee, incoterms, conditions_paiement, statut)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'brouillon')`,
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'brouillon') RETURNING id`,
                     [
                         numero,
                         new Date().toISOString().split('T')[0],
@@ -506,7 +506,7 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
                     ]
                 );
 
-                const rfq_id = rfqResult.insertId;
+                const rfq_id = rfqResult.rows && rfqResult.rows[0] ? rfqResult.rows[0].id : (rfqResult.insertId || rfqResult[0]?.id);
 
                 // Créer les lignes de la RFQ depuis les articles de la demande
                 for (const ligne of lignes) {
