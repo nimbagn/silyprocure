@@ -735,19 +735,21 @@ router.get('/messages', requireRole('admin', 'superviseur'), async (req, res) =>
         `;
         const params = [];
         
+        let paramIndex = 1;
         if (lu !== undefined) {
-            query += ' AND m.lu = ?';
+            query += ` AND m.lu = $${paramIndex}`;
             params.push(lu === 'true' ? 1 : 0);
+            paramIndex++;
         }
         
         if (traite !== undefined) {
-            query += ' AND m.traite = ?';
+            query += ` AND m.traite = $${paramIndex}`;
             params.push(traite === 'true' ? 1 : 0);
+            paramIndex++;
         }
         
-        // Utiliser LIMIT et OFFSET comme paramètres pour PostgreSQL
-        query += ' ORDER BY m.date_creation DESC LIMIT ? OFFSET ?';
-        params.push(limitNum, offsetNum);
+        // LIMIT et OFFSET doivent être interpolés directement (PostgreSQL ne supporte pas les paramètres pour LIMIT/OFFSET dans certaines versions)
+        query += ` ORDER BY m.date_creation DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
         
         const [messagesRows] = await pool.execute(query, params);
         const messages = messagesRows;
