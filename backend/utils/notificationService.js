@@ -1,5 +1,6 @@
 const { sendDevisRequestConfirmation } = require('./emailService');
 const crypto = require('crypto');
+const messageProService = require('../services/messagepro');
 
 /**
  * Génère une référence unique pour une demande de devis
@@ -139,63 +140,104 @@ L'équipe SilyProcure
 }
 
 /**
- * Envoie une notification par SMS
- * Note: Nécessite un service SMS comme Twilio, Vonage, etc.
+ * Envoie une notification par SMS via Message Pro
  */
 async function sendSMSNotification(demande, reference, trackingUrl) {
     try {
-        // TODO: Intégrer un service SMS (Twilio, Vonage, etc.)
-        // Pour l'instant, on log juste
-        console.log(`📱 SMS à envoyer à ${demande.telephone}:`);
-        console.log(`Référence: ${reference}`);
-        console.log(`Lien de suivi: ${trackingUrl}`);
+        if (!demande.telephone) {
+            console.warn('⚠️  Numéro de téléphone manquant pour SMS');
+            return false;
+        }
+
+        if (!process.env.MESSAGEPRO_SECRET) {
+            console.warn('⚠️  MESSAGEPRO_SECRET non configuré. SMS non envoyé.');
+            return false;
+        }
+
+        // Préparer le message SMS
+        const message = `SilyProcure - Votre demande de devis ${reference}. Suivez votre demande: ${trackingUrl}`;
         
-        // Exemple avec Twilio (à configurer):
-        /*
-        const twilio = require('twilio');
-        const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+        // Options pour Message Pro
+        const mode = process.env.MESSAGEPRO_SMS_MODE || 'credits'; // 'devices' ou 'credits'
+        const options = {
+            mode: mode
+        };
+
+        // Si mode 'credits', utiliser un gateway
+        if (mode === 'credits' && process.env.MESSAGEPRO_GATEWAY) {
+            options.gateway = process.env.MESSAGEPRO_GATEWAY;
+        }
+
+        // Si mode 'devices', utiliser un device
+        if (mode === 'devices' && process.env.MESSAGEPRO_DEVICE) {
+            options.device = process.env.MESSAGEPRO_DEVICE;
+            if (process.env.MESSAGEPRO_SIM) {
+                options.sim = parseInt(process.env.MESSAGEPRO_SIM);
+            }
+        }
+
+        // Envoyer le SMS via Message Pro
+        const result = await messageProService.sendSMS(demande.telephone, message, mode, options);
         
-        await client.messages.create({
-            body: `SilyProcure - Votre demande de devis ${reference}. Suivez: ${trackingUrl}`,
-            to: demande.telephone,
-            from: process.env.TWILIO_PHONE_NUMBER
-        });
-        */
-        
+        console.log('✅ SMS envoyé via Message Pro:', result);
         return true;
     } catch (error) {
-        console.error('❌ Erreur envoi SMS:', error);
+        console.error('❌ Erreur envoi SMS via Message Pro:', error);
         return false;
     }
 }
 
 /**
- * Envoie une notification par WhatsApp
- * Note: Nécessite un service WhatsApp Business API (Twilio, etc.)
+ * Envoie une notification par WhatsApp via Message Pro
  */
 async function sendWhatsAppNotification(demande, reference, trackingUrl) {
     try {
-        // TODO: Intégrer WhatsApp Business API (Twilio, etc.)
-        // Pour l'instant, on log juste
-        console.log(`💬 WhatsApp à envoyer à ${demande.telephone}:`);
-        console.log(`Référence: ${reference}`);
-        console.log(`Lien de suivi: ${trackingUrl}`);
+        if (!demande.telephone) {
+            console.warn('⚠️  Numéro de téléphone manquant pour WhatsApp');
+            return false;
+        }
+
+        if (!process.env.MESSAGEPRO_SECRET) {
+            console.warn('⚠️  MESSAGEPRO_SECRET non configuré. WhatsApp non envoyé.');
+            return false;
+        }
+
+        // Récupérer le compte WhatsApp à utiliser
+        let whatsappAccount = process.env.MESSAGEPRO_WHATSAPP_ACCOUNT;
         
-        // Exemple avec Twilio WhatsApp (à configurer):
-        /*
-        const twilio = require('twilio');
-        const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+        // Si aucun compte configuré, essayer de récupérer le premier compte disponible
+        if (!whatsappAccount) {
+            try {
+                const accounts = await messageProService.getWhatsAppAccounts(1, 1);
+                if (accounts && accounts.length > 0) {
+                    whatsappAccount = accounts[0].unique || accounts[0].id;
+                    console.log(`📱 Utilisation du compte WhatsApp: ${whatsappAccount}`);
+                } else {
+                    console.warn('⚠️  Aucun compte WhatsApp disponible');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Erreur récupération comptes WhatsApp:', error);
+                return false;
+            }
+        }
+
+        // Préparer le message WhatsApp
+        const message = `🚢 *SilyProcure*\n\nVotre demande de devis a été reçue !\n\n📋 *Référence:* ${reference}\n\n🔗 Suivez votre demande:\n${trackingUrl}\n\nMerci de votre confiance !`;
         
-        await client.messages.create({
-            body: `SilyProcure - Votre demande de devis ${reference}. Suivez: ${trackingUrl}`,
-            to: `whatsapp:${demande.telephone}`,
-            from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`
-        });
-        */
+        // Options pour Message Pro
+        const options = {
+            type: 'text',
+            priority: 1 // Priorité haute pour envoyer immédiatement
+        };
+
+        // Envoyer le WhatsApp via Message Pro
+        const result = await messageProService.sendWhatsApp(whatsappAccount, demande.telephone, message, options);
         
+        console.log('✅ WhatsApp envoyé via Message Pro:', result);
         return true;
     } catch (error) {
-        console.error('❌ Erreur envoi WhatsApp:', error);
+        console.error('❌ Erreur envoi WhatsApp via Message Pro:', error);
         return false;
     }
 }

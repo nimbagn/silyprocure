@@ -99,6 +99,7 @@ const paiementsRoutes = require('./routes/paiements');
 const contactRoutes = require('./routes/contact');
 const clientsRoutes = require('./routes/clients');
 const aiRoutes = require('./routes/ai');
+const messageProRoutes = require('./routes/messagepro');
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -127,6 +128,7 @@ app.use('/api/paiements', paiementsRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/clients', clientsRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/messagepro', messageProRoutes);
 
 // Routes pour les pages HTML (doivent être APRÈS les routes API pour éviter les conflits)
 // Ne pas intercepter les requêtes qui commencent par /api
