@@ -53,23 +53,34 @@ router.put('/messagepro', async (req, res) => {
         await connection.beginTransaction();
 
         try {
-            // Fonction helper pour insérer/mettre à jour un paramètre
+            // Fonction helper pour insérer/mettre à jour un paramètre (PostgreSQL)
             const upsertParam = async (cle, valeur) => {
                 if (valeur === null || valeur === undefined || valeur === '') {
                     // Supprimer le paramètre si vide
                     await connection.execute(
-                        'DELETE FROM parametres WHERE cle = ?',
+                        'DELETE FROM parametres WHERE cle = $1',
                         [cle]
                     );
                 } else {
-                    // Insérer ou mettre à jour
-                    await connection.execute(`
-                        INSERT INTO parametres (cle, valeur, description, date_modification)
-                        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-                        ON CONFLICT (cle) DO UPDATE 
-                        SET valeur = EXCLUDED.valeur,
-                            date_modification = CURRENT_TIMESTAMP
-                    `, [cle, valeur, `Paramètre Message Pro: ${cle}`]);
+                    // Vérifier si le paramètre existe
+                    const [existing] = await connection.execute(
+                        'SELECT id FROM parametres WHERE cle = $1',
+                        [cle]
+                    );
+                    
+                    if (existing && existing.length > 0) {
+                        // Mettre à jour
+                        await connection.execute(
+                            'UPDATE parametres SET valeur = $1, date_modification = CURRENT_TIMESTAMP WHERE cle = $2',
+                            [valeur, cle]
+                        );
+                    } else {
+                        // Insérer
+                        await connection.execute(
+                            'INSERT INTO parametres (cle, valeur, description, date_modification) VALUES ($1, $2, $3, CURRENT_TIMESTAMP)',
+                            [cle, valeur, `Paramètre Message Pro: ${cle}`]
+                        );
+                    }
                 }
             };
 
