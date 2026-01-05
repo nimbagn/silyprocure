@@ -94,27 +94,32 @@ router.post('/', validateAdresse, async (req, res) => {
             code_postal, ville, pays, latitude, longitude, notes_geolocalisation, principal
         } = req.body;
 
-        // Validation : au moins une adresse ligne 1 ou une ville doit être fournie
-        if (!adresse_ligne1 && !ville) {
+        // Validation : au moins une adresse ligne 1, une ville OU des coordonnées GPS doivent être fournies
+        // Nettoyer d'abord les valeurs
+        let finalAdresseLigne1 = (adresse_ligne1 && adresse_ligne1.trim()) || null;
+        let finalVille = (ville && ville.trim()) || null;
+        
+        // Vérifier les coordonnées GPS avant de valider
+        let hasCoordinates = false;
+        if (latitude !== undefined && latitude !== null && latitude !== '') {
+            const latStr = String(latitude).replace(',', '.');
+            const latNum = parseFloat(latStr);
+            if (!isNaN(latNum) && latNum >= -90 && latNum <= 90) {
+                hasCoordinates = true;
+            }
+        }
+        if (longitude !== undefined && longitude !== null && longitude !== '') {
+            const lngStr = String(longitude).replace(',', '.');
+            const lngNum = parseFloat(lngStr);
+            if (!isNaN(lngNum) && lngNum >= -180 && lngNum <= 180) {
+                hasCoordinates = hasCoordinates || true;
+            }
+        }
+        
+        // Validation : au moins une adresse ligne 1, une ville OU des coordonnées GPS doivent être fournies
+        if (!finalAdresseLigne1 && !finalVille && !hasCoordinates) {
             return res.status(400).json({ 
-                error: 'Au moins l\'adresse ligne 1 ou la ville doit être fournie' 
-            });
-        }
-
-        // Validation : si adresse_ligne1 est fournie, elle ne doit pas être vide
-        if (adresse_ligne1 !== null && adresse_ligne1 !== undefined && adresse_ligne1.trim() === '') {
-            adresse_ligne1 = null;
-        }
-
-        // Validation : si ville est fournie, elle ne doit pas être vide
-        if (ville !== null && ville !== undefined && ville.trim() === '') {
-            ville = null;
-        }
-
-        // Vérifier à nouveau après nettoyage
-        if (!adresse_ligne1 && !ville) {
-            return res.status(400).json({ 
-                error: 'Au moins l\'adresse ligne 1 ou la ville doit être fournie' 
+                error: 'Au moins l\'adresse ligne 1, la ville ou les coordonnées GPS doivent être fournies' 
             });
         }
 

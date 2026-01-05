@@ -406,9 +406,9 @@ async function handleCreateEntreprise(event) {
         const result = await response.json();
         const entrepriseId = result.id;
 
-        // Créer l'adresse si au moins l'adresse ligne 1 ou la ville est fournie
-        // Les coordonnées GPS sont optionnelles
-        if (adresseData.adresse_ligne1 || adresseData.ville) {
+        // Créer l'adresse si au moins l'adresse ligne 1, la ville OU les coordonnées GPS sont fournies
+        // Les coordonnées GPS peuvent être la seule information fournie
+        if (adresseData.adresse_ligne1 || adresseData.ville || (latitude !== null && longitude !== null)) {
             adresseData.entreprise_id = entrepriseId;
             const adresseResponse = await apiCall('/api/adresses', {
                 method: 'POST',
@@ -419,6 +419,8 @@ async function handleCreateEntreprise(event) {
                 const errorData = await adresseResponse.json().catch(() => ({ error: 'Erreur inconnue' }));
                 console.warn('Entreprise créée mais erreur lors de la création de l\'adresse:', errorData);
                 Toast.warning('Entreprise créée mais l\'adresse n\'a pas pu être enregistrée: ' + (errorData.error || 'Erreur inconnue'));
+            } else {
+                console.log('Adresse créée avec succès, coordonnées GPS:', latitude, longitude);
             }
         } else {
             // Aucune adresse fournie, ce n'est pas grave
