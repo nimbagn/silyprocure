@@ -406,13 +406,23 @@ class MessageProService {
                     res.on('end', () => {
                         try {
                             const json = JSON.parse(responseData);
+                            
+                            // Vérifier le code de statut HTTP
+                            if (res.statusCode !== 200) {
+                                reject(new Error(`Erreur HTTP ${res.statusCode}: ${json.message || 'Erreur API Message Pro'}`));
+                                return;
+                            }
+                            
+                            // Vérifier le statut dans la réponse JSON
                             if (json.status === 200) {
-                                resolve(json.data);
+                                resolve(json.data || []);
                             } else {
                                 reject(new Error(json.message || 'Erreur API Message Pro'));
                             }
                         } catch (error) {
-                            reject(new Error(`Erreur parsing réponse: ${error.message}`));
+                            // Si ce n'est pas du JSON valide, retourner la réponse brute pour debug
+                            console.error('Réponse brute de l\'API WhatsApp:', responseData);
+                            reject(new Error(`Erreur parsing réponse: ${error.message}. Réponse: ${responseData.substring(0, 200)}`));
                         }
                     });
                 });
