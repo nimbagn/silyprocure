@@ -534,7 +534,7 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
 
             // Mettre à jour le statut de la demande
             await connection.execute(
-                'UPDATE demandes_devis SET statut = ? WHERE id = ?',
+                'UPDATE demandes_devis SET statut = $1 WHERE id = $2',
                 ['en_cours', id]
             );
 
