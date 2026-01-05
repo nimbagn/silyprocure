@@ -456,7 +456,7 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
             const year = new Date().getFullYear();
             const prefix = `RFQ-${year}-`;
             const [lastRFQ] = await pool.execute(
-                `SELECT numero FROM rfq WHERE numero LIKE ? ORDER BY numero DESC LIMIT 1`,
+                `SELECT numero FROM rfq WHERE numero LIKE $1 ORDER BY numero DESC LIMIT 1`,
                 [`${prefix}%`]
             );
             let nextNumber = 1;
@@ -635,7 +635,7 @@ router.get('/tracking', async (req, res) => {
                     ) as articles_data
              FROM demandes_devis d
              LEFT JOIN demandes_devis_lignes l ON d.id = l.demande_devis_id
-             WHERE d.reference = ? AND d.token_suivi = ?
+             WHERE d.reference = $1 AND d.token_suivi = $2
              GROUP BY d.id`,
             [ref, token]
         );
