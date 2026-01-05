@@ -74,6 +74,10 @@ function initSidebar() {
                         <span class="sidebar-nav-item-icon" aria-hidden="true"><i class="fas fa-users-cog"></i></span>
                         <span>Utilisateurs</span>
                     </a>
+                    <a href="parametres-messagepro.html" class="sidebar-nav-item" data-page="parametres-messagepro" aria-label="Configurer Message Pro">
+                        <span class="sidebar-nav-item-icon" aria-hidden="true"><i class="fas fa-comments"></i></span>
+                        <span>Message Pro</span>
+                    </a>
                 </div>
             </nav>
         `;

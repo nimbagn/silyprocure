@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Message Pro - SilyProcure</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, rgba(0, 56, 122, 0.05) 0%, rgba(0, 56, 122, 0.02) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 56, 122, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-accent) 100%);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(45deg, var(--color-primary) 0%, var(--color-accent) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-header h1 i {
+            color: var(--color-accent);
+            -webkit-text-fill-color: var(--color-accent);
+            font-size: 1.75rem;
+        }
+
+        .config-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(0, 56, 122, 0.1);
+        }
+
+        .config-section h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(0, 56, 122, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-primary-dark);
+            font-size: 0.9375rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #E0E7FF;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-family: inherit;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(0, 56, 122, 0.1);
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 0.5rem;
+            color: var(--color-neutral);
+            font-size: 0.8125rem;
+        }
+
+        .form-group .help-text {
+            color: var(--color-neutral);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.875rem 1.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 56, 122, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 56, 122, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--color-neutral-light);
+            color: var(--color-neutral-dark);
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-neutral);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #008a47;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-left: 1rem;
+        }
+
+        .status-badge.success {
+            background: rgba(0, 166, 81, 0.1);
+            color: var(--color-success);
+        }
+
+        .status-badge.error {
+            background: rgba(230, 0, 18, 0.1);
+            color: var(--color-danger);
+        }
+
+        .status-badge.warning {
+            background: rgba(255, 184, 0, 0.1);
+            color: var(--color-warning);
+        }
+
+        .select-help {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background: var(--color-background-light);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: var(--color-neutral-dark);
+        }
+
+        .select-help strong {
+            color: var(--color-primary);
+        }
+
+        .loading-select {
+            color: var(--color-neutral);
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 1.25rem 1.5rem;
+            }
+
+            .config-section {
+                padding: 1.5rem;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/sidebar.js"></script>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1><i class="fas fa-cog"></i> Configuration Message Pro</h1>
+            <div>
+                <button class="btn btn-success" onclick="testConnection()">
+                    <i class="fas fa-plug"></i> Tester la connexion
+                </button>
+            </div>
+        </div>
+
+        <form id="messagepro-form" onsubmit="saveSettings(event)">
+            <!-- Section API Secret -->
+            <div class="config-section">
+                <h2><i class="fas fa-key"></i> Configuration API</h2>
+                
+                <div class="form-group">
+                    <label for="secret">
+                        <i class="fas fa-lock"></i> API Secret *
+                        <span class="status-badge" id="secret-status"></span>
+                    </label>
+                    <input 
+                        type="password" 
+                        id="secret" 
+                        name="secret" 
+                        placeholder="Votre clé API secrète Message Pro"
+                        required
+                        autocomplete="off"
+                    >
+                    <small>
+                        <i class="fas fa-info-circle"></i> 
+                        Obtenez votre clé API dans Tools → API Keys sur messagepro-gn.com
+                    </small>
+                </div>
+            </div>
+
+            <!-- Section SMS -->
+            <div class="config-section">
+                <h2><i class="fas fa-sms"></i> Configuration SMS</h2>
+                
+                <div class="form-group">
+                    <label for="sms_mode">Mode d'envoi SMS</label>
+                    <select id="sms_mode" name="sms_mode" onchange="updateSMSMode()">
+                        <option value="credits">Credits (Gateways) - Nécessite des crédits</option>
+                        <option value="devices">Devices (Appareils Android) - Gratuit</option>
+                    </select>
+                    <small>Choisissez le mode d'envoi des SMS</small>
+                </div>
+
+                <div id="sms_credits_config" style="display: none;">
+                    <div class="form-group">
+                        <label for="gateway">
+                            <i class="fas fa-server"></i> Gateway ID
+                            <button type="button" class="btn btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; margin-left: 0.5rem;" onclick="loadGateways()">
+                                <i class="fas fa-sync"></i> Charger les gateways
+                            </button>
+                        </label>
+                        <select id="gateway" name="gateway">
+                            <option value="">Sélectionner un gateway...</option>
+                        </select>
+                        <small>Gateway à utiliser pour l'envoi de SMS (mode credits)</small>
+                    </div>
+                </div>
+
+                <div id="sms_devices_config" style="display: none;">
+                    <div class="form-group">
+                        <label for="device">
+                            <i class="fas fa-mobile-alt"></i> Device ID
+                            <button type="button" class="btn btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; margin-left: 0.5rem;" onclick="loadDevices()">
+                                <i class="fas fa-sync"></i> Charger les devices
+                            </button>
+                        </label>
+                        <select id="device" name="device">
+                            <option value="">Sélectionner un device...</option>
+                        </select>
+                        <small>Device Android à utiliser pour l'envoi de SMS (mode devices)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sim">Slot SIM</label>
+                        <select id="sim" name="sim">
+                            <option value="1">SIM 1</option>
+                            <option value="2">SIM 2</option>
+                        </select>
+                        <small>Numéro du slot SIM à utiliser (mode devices uniquement)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section WhatsApp -->
+            <div class="config-section">
+                <h2><i class="fab fa-whatsapp"></i> Configuration WhatsApp</h2>
+                
+                <div class="form-group">
+                    <label for="whatsapp_account">
+                        <i class="fab fa-whatsapp"></i> Compte WhatsApp
+                        <button type="button" class="btn btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; margin-left: 0.5rem;" onclick="loadWhatsAppAccounts()">
+                            <i class="fas fa-sync"></i> Charger les comptes
+                        </button>
+                    </label>
+                    <select id="whatsapp_account" name="whatsapp_account">
+                        <option value="">Sélectionner un compte WhatsApp...</option>
+                    </select>
+                    <small>Compte WhatsApp à utiliser pour l'envoi de messages</small>
+                </div>
+            </div>
+
+            <!-- Boutons d'action -->
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Enregistrer la configuration
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                    <i class="fas fa-undo"></i> Réinitialiser
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let currentSettings = {};
+
+        // Vérifier l'authentification et le rôle admin
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!checkAuth()) return;
+
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.role !== 'admin') {
+                Toast.error('Accès refusé. Seuls les administrateurs peuvent accéder à cette page.');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+                return;
+            }
+
+            await loadSettings();
+        });
+
+        async function loadSettings() {
+            try {
+                showLoading('Chargement de la configuration...');
+                const response = await apiCall('/api/settings/messagepro');
+
+                if (!response || !response.ok) {
+                    throw new Error('Erreur lors du chargement de la configuration');
+                }
+
+                currentSettings = await response.json();
+                populateForm(currentSettings);
+                hideLoading();
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors du chargement: ' + error.message);
+                console.error('Erreur loadSettings:', error);
+            }
+        }
+
+        function populateForm(settings) {
+            // Remplir le formulaire avec les valeurs chargées
+            if (settings.secret) {
+                document.getElementById('secret').value = settings.secret;
+                updateSecretStatus(true);
+            } else {
+                updateSecretStatus(false);
+            }
+
+            if (settings.sms_mode) {
+                document.getElementById('sms_mode').value = settings.sms_mode;
+                updateSMSMode();
+            }
+
+            if (settings.gateway) {
+                document.getElementById('gateway').value = settings.gateway;
+            }
+
+            if (settings.device) {
+                document.getElementById('device').value = settings.device;
+            }
+
+            if (settings.sim) {
+                document.getElementById('sim').value = settings.sim;
+            }
+
+            if (settings.whatsapp_account) {
+                document.getElementById('whatsapp_account').value = settings.whatsapp_account;
+            }
+
+            // Charger les listes si nécessaire
+            if (settings.sms_mode === 'credits') {
+                loadGateways();
+            } else if (settings.sms_mode === 'devices') {
+                loadDevices();
+            }
+
+            loadWhatsAppAccounts();
+        }
+
+        function updateSMSMode() {
+            const mode = document.getElementById('sms_mode').value;
+            const creditsConfig = document.getElementById('sms_credits_config');
+            const devicesConfig = document.getElementById('sms_devices_config');
+
+            if (mode === 'credits') {
+                creditsConfig.style.display = 'block';
+                devicesConfig.style.display = 'none';
+                document.getElementById('device').required = false;
+                document.getElementById('sim').required = false;
+                document.getElementById('gateway').required = false;
+            } else if (mode === 'devices') {
+                creditsConfig.style.display = 'none';
+                devicesConfig.style.display = 'block';
+                document.getElementById('gateway').required = false;
+                document.getElementById('device').required = true;
+                document.getElementById('sim').required = true;
+            }
+        }
+
+        function updateSecretStatus(hasSecret) {
+            const statusBadge = document.getElementById('secret-status');
+            if (hasSecret) {
+                statusBadge.className = 'status-badge success';
+                statusBadge.innerHTML = '<i class="fas fa-check-circle"></i> Configuré';
+            } else {
+                statusBadge.className = 'status-badge error';
+                statusBadge.innerHTML = '<i class="fas fa-exclamation-circle"></i> Non configuré';
+            }
+        }
+
+        async function loadGateways() {
+            const select = document.getElementById('gateway');
+            select.innerHTML = '<option value="">Chargement...</option>';
+            select.disabled = true;
+
+            try {
+                const response = await apiCall('/api/settings/messagepro/gateways');
+                if (!response || !response.ok) {
+                    throw new Error('Erreur lors du chargement des gateways');
+                }
+
+                const data = await response.json();
+                select.innerHTML = '<option value="">Sélectionner un gateway...</option>';
+
+                if (data.gateways && data.gateways.length > 0) {
+                    data.gateways.forEach(gateway => {
+                        const option = document.createElement('option');
+                        option.value = gateway.id || gateway.gateway_id;
+                        option.textContent = `${gateway.name || 'Gateway'} (ID: ${gateway.id || gateway.gateway_id})`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.innerHTML = '<option value="">Aucun gateway disponible</option>';
+                }
+
+                // Restaurer la valeur sauvegardée
+                if (currentSettings.gateway) {
+                    select.value = currentSettings.gateway;
+                }
+            } catch (error) {
+                select.innerHTML = '<option value="">Erreur de chargement</option>';
+                Toast.error('Erreur lors du chargement des gateways: ' + error.message);
+            } finally {
+                select.disabled = false;
+            }
+        }
+
+        async function loadDevices() {
+            const select = document.getElementById('device');
+            select.innerHTML = '<option value="">Chargement...</option>';
+            select.disabled = true;
+
+            try {
+                const response = await apiCall('/api/settings/messagepro/devices');
+                if (!response || !response.ok) {
+                    throw new Error('Erreur lors du chargement des devices');
+                }
+
+                const data = await response.json();
+                select.innerHTML = '<option value="">Sélectionner un device...</option>';
+
+                if (data && data.length > 0) {
+                    data.forEach(device => {
+                        const option = document.createElement('option');
+                        option.value = device.unique || device.id;
+                        option.textContent = `${device.name || 'Device'} (${device.unique || device.id})`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.innerHTML = '<option value="">Aucun device disponible</option>';
+                }
+
+                // Restaurer la valeur sauvegardée
+                if (currentSettings.device) {
+                    select.value = currentSettings.device;
+                }
+            } catch (error) {
+                select.innerHTML = '<option value="">Erreur de chargement</option>';
+                Toast.error('Erreur lors du chargement des devices: ' + error.message);
+            } finally {
+                select.disabled = false;
+            }
+        }
+
+        async function loadWhatsAppAccounts() {
+            const select = document.getElementById('whatsapp_account');
+            select.innerHTML = '<option value="">Chargement...</option>';
+            select.disabled = true;
+
+            try {
+                const response = await apiCall('/api/settings/messagepro/whatsapp-accounts');
+                if (!response || !response.ok) {
+                    throw new Error('Erreur lors du chargement des comptes WhatsApp');
+                }
+
+                const data = await response.json();
+                select.innerHTML = '<option value="">Sélectionner un compte WhatsApp...</option>';
+
+                if (data && data.length > 0) {
+                    data.forEach(account => {
+                        const option = document.createElement('option');
+                        option.value = account.unique || account.id;
+                        const phone = account.phone || account.number || '';
+                        option.textContent = `${phone} (${account.unique || account.id})`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.innerHTML = '<option value="">Aucun compte WhatsApp disponible</option>';
+                }
+
+                // Restaurer la valeur sauvegardée
+                if (currentSettings.whatsapp_account) {
+                    select.value = currentSettings.whatsapp_account;
+                }
+            } catch (error) {
+                select.innerHTML = '<option value="">Erreur de chargement</option>';
+                Toast.error('Erreur lors du chargement des comptes WhatsApp: ' + error.message);
+            } finally {
+                select.disabled = false;
+            }
+        }
+
+        async function saveSettings(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = {
+                secret: formData.get('secret'),
+                sms_mode: formData.get('sms_mode'),
+                gateway: formData.get('gateway') || null,
+                device: formData.get('device') || null,
+                sim: formData.get('sim') ? parseInt(formData.get('sim')) : null,
+                whatsapp_account: formData.get('whatsapp_account') || null
+            };
+
+            try {
+                showLoading('Sauvegarde de la configuration...');
+                const response = await apiCall('/api/settings/messagepro', {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+
+                if (!response || !response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Erreur lors de la sauvegarde');
+                }
+
+                const result = await response.json();
+                hideLoading();
+                Toast.success('Configuration sauvegardée avec succès !');
+                
+                // Mettre à jour les settings courants
+                currentSettings = { ...currentSettings, ...data };
+                updateSecretStatus(!!data.secret);
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur: ' + error.message);
+                console.error('Erreur saveSettings:', error);
+            }
+        }
+
+        async function testConnection() {
+            try {
+                showLoading('Test de la connexion...');
+                const response = await apiCall('/api/settings/messagepro/test', {
+                    method: 'POST'
+                });
+
+                if (!response || !response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Erreur de connexion');
+                }
+
+                const result = await response.json();
+                hideLoading();
+                
+                if (result.success) {
+                    Toast.success(`Connexion réussie ! Crédits: ${result.data.credits} ${result.data.currency || 'GBP'}`);
+                } else {
+                    Toast.error('Erreur de connexion: ' + result.error);
+                }
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur de connexion: ' + error.message);
+                console.error('Erreur testConnection:', error);
+            }
+        }
+
+        function resetForm() {
+            if (confirm('Êtes-vous sûr de vouloir réinitialiser le formulaire ?')) {
+                document.getElementById('messagepro-form').reset();
+                populateForm(currentSettings);
+            }
+        }
+    </script>
+</body>
+</html>
+

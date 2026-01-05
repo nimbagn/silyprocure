@@ -12,10 +12,43 @@ const MESSAGEPRO_BASE_URL = 'https://messagepro-gn.com/api';
 
 class MessageProService {
     constructor() {
+        this.loadSecret();
+    }
+
+    /**
+     * Charge le secret depuis les variables d'environnement ou la base de données
+     */
+    async loadSecret() {
         this.secret = process.env.MESSAGEPRO_SECRET;
+        
+        // Si pas dans les variables d'environnement, essayer de charger depuis la DB
+        if (!this.secret) {
+            try {
+                const pool = require('../config/database');
+                const [params] = await pool.execute(
+                    'SELECT valeur FROM parametres WHERE cle = ?',
+                    ['MESSAGEPRO_SECRET']
+                );
+                if (params && params.length > 0) {
+                    this.secret = params[0].valeur;
+                    process.env.MESSAGEPRO_SECRET = this.secret;
+                }
+            } catch (error) {
+                // Ignorer les erreurs de chargement depuis la DB
+            }
+        }
+        
         if (!this.secret) {
             console.warn('⚠️  MESSAGEPRO_SECRET non défini. Les fonctionnalités SMS/WhatsApp seront désactivées.');
         }
+    }
+
+    /**
+     * Met à jour le secret en mémoire
+     */
+    updateSecret(secret) {
+        this.secret = secret;
+        process.env.MESSAGEPRO_SECRET = secret;
     }
 
     /**
