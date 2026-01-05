@@ -601,12 +601,12 @@ router.delete('/demandes/:id', requireRole('admin'), validateId, async (req, res
     try {
         const { id } = req.params;
 
-        const [existing] = await pool.execute('SELECT id FROM demandes_devis WHERE id = ?', [id]);
+        const [existing] = await pool.execute('SELECT id FROM demandes_devis WHERE id = $1', [id]);
         if (existing.length === 0) {
             return res.status(404).json({ error: 'Demande non trouvée' });
         }
 
-        await pool.execute('DELETE FROM demandes_devis WHERE id = ?', [id]);
+        await pool.execute('DELETE FROM demandes_devis WHERE id = $1', [id]);
 
         res.json({ message: 'Demande supprimée avec succès' });
 
@@ -682,7 +682,7 @@ router.post('/message', async (req, res) => {
         // Le wrapper PostgreSQL ajoute automatiquement RETURNING id si nécessaire
         const [messageRows, messageResult] = await pool.execute(
             `INSERT INTO messages_contact (nom, email, telephone, sujet, message) 
-             VALUES (?, ?, ?, ?, ?)`,
+             VALUES ($1, $2, $3, $4, $5) RETURNING id`,
             [nom, email, telephone || null, sujet, message]
         );
         
@@ -787,7 +787,7 @@ router.patch('/messages/:id/lu', requireRole('admin', 'superviseur'), validateId
     try {
         const { lu } = req.body;
         await pool.execute(
-            'UPDATE messages_contact SET lu = ? WHERE id = ?',
+            'UPDATE messages_contact SET lu = $1 WHERE id = $2',
             [lu ? true : false, req.params.id]
         );
         res.json({ message: 'Message mis à jour' });
@@ -802,7 +802,7 @@ router.patch('/messages/:id/traite', requireRole('admin', 'superviseur'), valida
     try {
         const { traite, notes_internes } = req.body;
         await pool.execute(
-            'UPDATE messages_contact SET traite = ?, traite_par = ?, notes_internes = ? WHERE id = ?',
+            'UPDATE messages_contact SET traite = $1, traite_par = $2, notes_internes = $3 WHERE id = $4',
             [traite ? true : false, req.user.id, notes_internes || null, req.params.id]
         );
         res.json({ message: 'Message mis à jour' });
