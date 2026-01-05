@@ -93,6 +93,7 @@ router.put('/messagepro', async (req, res) => {
             if (whatsapp_account !== undefined) await upsertParam('MESSAGEPRO_WHATSAPP_ACCOUNT', whatsapp_account);
 
             await connection.commit();
+            // commit() libère déjà le client, pas besoin de release()
 
             // Mettre à jour les variables d'environnement en mémoire (pour cette instance)
             if (secret !== undefined) {
@@ -113,9 +114,8 @@ router.put('/messagepro', async (req, res) => {
             });
         } catch (error) {
             await connection.rollback();
+            // rollback() libère déjà le client, pas besoin de release()
             throw error;
-        } finally {
-            connection.release();
         }
     } catch (error) {
         console.error('Erreur sauvegarde paramètres Message Pro:', error);
