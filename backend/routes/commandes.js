@@ -22,20 +22,24 @@ router.get('/', async (req, res) => {
             WHERE 1=1
         `;
         const params = [];
+        let paramIndex = 1;
 
         if (type) {
-            query += ' AND c.type_commande = ?';
+            query += ` AND c.type_commande = $${paramIndex}`;
             params.push(type);
+            paramIndex++;
         }
 
         if (statut) {
-            query += ' AND c.statut = ?';
+            query += ` AND c.statut = $${paramIndex}`;
             params.push(statut);
+            paramIndex++;
         }
 
         if (fournisseur_id) {
-            query += ' AND c.fournisseur_id = ?';
+            query += ` AND c.fournisseur_id = $${paramIndex}`;
             params.push(fournisseur_id);
+            paramIndex++;
         }
 
         query += ' ORDER BY c.date_commande DESC';
@@ -59,7 +63,7 @@ router.get('/:id', validateId, async (req, res) => {
              FROM commandes c
              LEFT JOIN utilisateurs u ON c.commandeur_id = u.id
              LEFT JOIN entreprises e ON c.fournisseur_id = e.id
-             WHERE c.id = ?`,
+             WHERE c.id = $1`,
             [id]
         );
 
@@ -71,7 +75,7 @@ router.get('/:id', validateId, async (req, res) => {
 
         // Récupérer les lignes
         const [lignes] = await pool.execute(
-            'SELECT * FROM commande_lignes WHERE commande_id = ? ORDER BY ordre',
+            'SELECT * FROM commande_lignes WHERE commande_id = $1 ORDER BY ordre',
             [id]
         );
         commande.lignes = lignes;
@@ -120,7 +124,7 @@ router.post('/', validateCommande, async (req, res) => {
               incoterms, mode_transport, instructions_livraison, conditions_paiement,
               delai_paiement_jours, mode_paiement, projet_id, centre_cout_id, budget_approuve,
               total_ht, total_tva, total_ttc, statut)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'brouillon')`,
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, 'brouillon') RETURNING id`,
             [numero, type_commande, date_commande, date_livraison_souhaitee,
              commandeur_id, fournisseur_id, contact_fournisseur_id, devis_id, rfq_id,
              adresse_livraison_id, contact_livraison, telephone_livraison, heure_livraison,
@@ -129,7 +133,7 @@ router.post('/', validateCommande, async (req, res) => {
              total_ht, total_tva, total_ttc]
         );
 
-        const commande_id = commandeResult.insertId;
+        const commande_id = commandeResult.rows && commandeResult.rows[0] ? commandeResult.rows[0].id : (commandeResult.insertId || commandeResult[0]?.id);
 
         // Enregistrer dans l'historique du client si la commande est liée à une demande client
         if (devis_id) {
@@ -138,7 +142,7 @@ router.post('/', validateCommande, async (req, res) => {
                     `SELECT dd.client_id, d.numero as devis_numero 
                      FROM devis d 
                      LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id 
-                     WHERE d.id = ?`,
+                     WHERE d.id = $1`,
                     [devis_id]
                 );
                 
@@ -170,7 +174,7 @@ router.post('/', validateCommande, async (req, res) => {
                 const total_ht_ligne = prix_ht - remise;
 
                 await pool.execute(
-                    'INSERT INTO commande_lignes (commande_id, produit_id, reference, description, quantite, unite, prix_unitaire_ht, remise, total_ht, tva_taux, ordre) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    'INSERT INTO commande_lignes (commande_id, produit_id, reference, description, quantite, unite, prix_unitaire_ht, remise, total_ht, tva_taux, ordre) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
                     [commande_id, ligne.produit_id, ligne.reference, ligne.description, ligne.quantite, ligne.unite || 'unité', ligne.prix_unitaire_ht, ligne.remise || 0, total_ht_ligne, ligne.tva_taux || 20, ligne.ordre || 0]
                 );
             }
@@ -219,7 +223,7 @@ router.patch('/:id/statut', validateId, async (req, res) => {
              FROM commandes c 
              LEFT JOIN devis d ON c.devis_id = d.id 
              LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id 
-             WHERE c.id = ?`,
+             WHERE c.id = $1`,
             [id]
         );
         if (commandes.length === 0) {
@@ -229,7 +233,7 @@ router.patch('/:id/statut', validateId, async (req, res) => {
         const commandeData = commandes[0];
 
         // Mettre à jour le statut
-        await pool.execute('UPDATE commandes SET statut = ? WHERE id = ?', [statut, id]);
+        await pool.execute('UPDATE commandes SET statut = $1 WHERE id = $2', [statut, id]);
 
         // Enregistrer dans l'historique du client si la commande est livrée
         if (commandeData.client_id && statut === 'livre') {
