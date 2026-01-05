@@ -22,20 +22,24 @@ router.get('/', async (req, res) => {
             WHERE 1=1
         `;
         const params = [];
+        let paramIndex = 1;
 
         if (rfq_id) {
-            query += ' AND d.rfq_id = ?';
+            query += ` AND d.rfq_id = $${paramIndex}`;
             params.push(rfq_id);
+            paramIndex++;
         }
 
         if (statut) {
-            query += ' AND d.statut = ?';
+            query += ` AND d.statut = $${paramIndex}`;
             params.push(statut);
+            paramIndex++;
         }
 
         if (fournisseur_id) {
-            query += ' AND d.fournisseur_id = ?';
+            query += ` AND d.fournisseur_id = $${paramIndex}`;
             params.push(fournisseur_id);
+            paramIndex++;
         }
 
         query += ' ORDER BY d.date_emission DESC';
@@ -59,7 +63,7 @@ router.get('/:id', validateId, async (req, res) => {
              FROM devis d
              LEFT JOIN rfq r ON d.rfq_id = r.id
              LEFT JOIN entreprises e ON d.fournisseur_id = e.id
-             WHERE d.id = ?`,
+             WHERE d.id = $1`,
             [id]
         );
 
@@ -71,7 +75,7 @@ router.get('/:id', validateId, async (req, res) => {
 
         // Récupérer les lignes
         const [lignes] = await pool.execute(
-            'SELECT * FROM devis_lignes WHERE devis_id = ? ORDER BY ordre',
+            'SELECT * FROM devis_lignes WHERE devis_id = $1 ORDER BY ordre',
             [id]
         );
         devisData.lignes = lignes;
@@ -95,7 +99,7 @@ router.post('/', validateDevis, async (req, res) => {
         // Récupérer le fournisseur depuis la RFQ si non fourni
         let finalFournisseurId = fournisseur_id;
         if (!finalFournisseurId && rfq_id) {
-            const [rfqs] = await pool.execute('SELECT destinataire_id FROM rfq WHERE id = ?', [rfq_id]);
+            const [rfqs] = await pool.execute('SELECT destinataire_id FROM rfq WHERE id = $1', [rfq_id]);
             if (rfqs.length > 0) {
                 finalFournisseurId = rfqs[0].destinataire_id;
             }
@@ -125,7 +129,7 @@ router.post('/', validateDevis, async (req, res) => {
               date_emission, date_validite, delai_livraison, remise_globale,
               total_ht, total_tva, total_ttc, conditions_paiement, garanties,
               certifications, notes, statut)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'envoye')`,
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 'envoye') RETURNING id`,
             [
                 numero, rfq_id, finalFournisseurId, contact_fournisseur_id,
                 date_emission, date_validite, delai_livraison, remise_globale || 0,
@@ -134,7 +138,7 @@ router.post('/', validateDevis, async (req, res) => {
             ]
         );
 
-        const devis_id = result.insertId;
+        const devis_id = result.rows && result.rows[0] ? result.rows[0].id : (result.insertId || result[0]?.id);
 
         // Insérer les lignes
         if (lignes && lignes.length > 0) {
@@ -144,7 +148,7 @@ router.post('/', validateDevis, async (req, res) => {
                 const total_ht_ligne = prix_ht - remise;
 
                 await pool.execute(
-                    'INSERT INTO devis_lignes (devis_id, rfq_ligne_id, produit_id, reference, description, quantite, unite, prix_unitaire_ht, remise, total_ht, tva_taux, ordre) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    'INSERT INTO devis_lignes (devis_id, rfq_ligne_id, produit_id, reference, description, quantite, unite, prix_unitaire_ht, remise, total_ht, tva_taux, ordre) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
                     [devis_id, ligne.rfq_ligne_id, ligne.produit_id, ligne.reference, ligne.description, ligne.quantite, ligne.unite || 'unité', ligne.prix_unitaire_ht, ligne.remise || 0, total_ht_ligne, ligne.tva_taux || 20, ligne.ordre || 0]
                 );
             }
@@ -152,7 +156,7 @@ router.post('/', validateDevis, async (req, res) => {
 
         // Mettre à jour le statut de la RFQ
         if (rfq_id) {
-            await pool.execute('UPDATE rfq SET statut = ? WHERE id = ?', ['en_cours', rfq_id]);
+            await pool.execute('UPDATE rfq SET statut = $1 WHERE id = $2', ['en_cours', rfq_id]);
             
             // Déclencher la détection d'anomalies en arrière-plan (non bloquant)
             const anomalyDetector = require('../services/ai/anomalyDetector');
@@ -162,9 +166,9 @@ router.post('/', validateDevis, async (req, res) => {
             
             // Notifier l'émetteur de la RFQ qu'un devis a été reçu
             try {
-                const [rfqs] = await pool.execute('SELECT emetteur_id FROM rfq WHERE id = ?', [rfq_id]);
+                const [rfqs] = await pool.execute('SELECT emetteur_id FROM rfq WHERE id = $1', [rfq_id]);
                 if (rfqs.length > 0 && rfqs[0].emetteur_id) {
-                    const [fournisseurs] = await pool.execute('SELECT nom FROM entreprises WHERE id = ?', [finalFournisseurId]);
+                    const [fournisseurs] = await pool.execute('SELECT nom FROM entreprises WHERE id = $1', [finalFournisseurId]);
                     const fournisseurNom = fournisseurs.length > 0 ? fournisseurs[0].nom : 'Fournisseur';
                     
                     await createNotification(
@@ -178,7 +182,7 @@ router.post('/', validateDevis, async (req, res) => {
                 }
                 
                 // Notifier aussi tous les admins/superviseurs
-                const [fournisseurs] = await pool.execute('SELECT nom FROM entreprises WHERE id = ?', [finalFournisseurId]);
+                const [fournisseurs] = await pool.execute('SELECT nom FROM entreprises WHERE id = $1', [finalFournisseurId]);
                 const fournisseurNom = fournisseurs.length > 0 ? fournisseurs[0].nom : 'Fournisseur';
                 
                 await notifyAdminsAndSupervisors(
@@ -205,7 +209,7 @@ router.put('/:id', validateId, validateDevis, async (req, res) => {
         const { id } = req.params;
         
         // Vérifier que le devis est en brouillon
-        const [devis] = await pool.execute('SELECT statut FROM devis WHERE id = ?', [id]);
+        const [devis] = await pool.execute('SELECT statut FROM devis WHERE id = $1', [id]);
         if (devis.length === 0) {
             return res.status(404).json({ error: 'Devis non trouvé' });
         }
@@ -245,10 +249,10 @@ router.put('/:id', validateId, validateDevis, async (req, res) => {
         // Mettre à jour le devis
         await pool.execute(
             `UPDATE devis SET 
-                date_emission = ?, date_validite = ?, delai_livraison = ?,
-                remise_globale = ?, total_ht = ?, total_tva = ?, total_ttc = ?,
-                conditions_paiement = ?, garanties = ?, certifications = ?, notes = ?
-             WHERE id = ?`,
+                date_emission = $1, date_validite = $2, delai_livraison = $3,
+                remise_globale = $4, total_ht = $5, total_tva = $6, total_ttc = $7,
+                conditions_paiement = $8, garanties = $9, certifications = $10, notes = $11
+             WHERE id = $12`,
             [
                 date_emission, date_validite, delai_livraison,
                 remise_globale || 0, total_ht, total_tva, total_ttc,
@@ -257,13 +261,13 @@ router.put('/:id', validateId, validateDevis, async (req, res) => {
         );
 
         // Supprimer les anciennes lignes
-        await pool.execute('DELETE FROM devis_lignes WHERE devis_id = ?', [id]);
+        await pool.execute('DELETE FROM devis_lignes WHERE devis_id = $1', [id]);
 
         // Insérer les nouvelles lignes
         if (lignes && lignes.length > 0) {
             for (const ligne of lignes) {
                 await pool.execute(
-                    'INSERT INTO devis_lignes (devis_id, rfq_ligne_id, reference, description, quantite, unite, prix_unitaire_ht, remise, tva_taux, ordre) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    'INSERT INTO devis_lignes (devis_id, rfq_ligne_id, reference, description, quantite, unite, prix_unitaire_ht, remise, tva_taux, ordre) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
                     [id, ligne.rfq_ligne_id, ligne.reference, ligne.description, ligne.quantite, ligne.unite, ligne.prix_unitaire_ht, ligne.remise || 0, ligne.tva_taux || 20, ligne.ordre || 0]
                 );
             }
@@ -295,7 +299,7 @@ router.patch('/:id/statut', validateId, async (req, res) => {
             `SELECT d.*, dd.client_id, dd.reference as demande_reference 
              FROM devis d 
              LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id 
-             WHERE d.id = ?`, 
+             WHERE d.id = $1`, 
             [id]
         );
         if (devis.length === 0) {
@@ -305,7 +309,7 @@ router.patch('/:id/statut', validateId, async (req, res) => {
         const devisData = devis[0];
 
         // Mettre à jour le statut
-        await pool.execute('UPDATE devis SET statut = ? WHERE id = ?', [statut, id]);
+        await pool.execute('UPDATE devis SET statut = $1 WHERE id = $2', [statut, id]);
 
         // Enregistrer dans l'historique du client si le devis est lié à une demande client
         if (devisData.client_id && (statut === 'accepte' || statut === 'refuse')) {
@@ -378,7 +382,7 @@ router.post('/create-for-client', authenticate, async (req, res) => {
         let demandeInfo = null;
         if (demande_devis_id) {
             const [demandes] = await pool.execute(
-                'SELECT * FROM demandes_devis WHERE id = ?',
+                'SELECT * FROM demandes_devis WHERE id = $1',
                 [demande_devis_id]
             );
             if (demandes.length > 0) {
@@ -390,7 +394,7 @@ router.post('/create-for-client', authenticate, async (req, res) => {
         const year = new Date().getFullYear();
         const prefix = `DEV-CLIENT-${year}-`;
         const [lastDevis] = await pool.execute(
-            `SELECT numero FROM devis WHERE numero LIKE ? ORDER BY numero DESC LIMIT 1`,
+            `SELECT numero FROM devis WHERE numero LIKE $1 ORDER BY numero DESC LIMIT 1`,
             [`${prefix}%`]
         );
         let nextNumber = 1;
@@ -410,7 +414,7 @@ router.post('/create-for-client', authenticate, async (req, res) => {
 
             // Récupérer le devis fournisseur
             const [devis] = await pool.execute(
-                'SELECT * FROM devis WHERE id = ?',
+                'SELECT * FROM devis WHERE id = $1',
                 [devis_id]
             );
 
@@ -420,7 +424,7 @@ router.post('/create-for-client', authenticate, async (req, res) => {
 
             // Récupérer les lignes du devis
             const [lignes] = await pool.execute(
-                'SELECT * FROM devis_lignes WHERE devis_id = ? ORDER BY ordre',
+                'SELECT * FROM devis_lignes WHERE devis_id = $1 ORDER BY ordre',
                 [devis_id]
             );
 
@@ -486,7 +490,7 @@ router.post('/create-for-client', authenticate, async (req, res) => {
             `INSERT INTO devis (numero, rfq_id, fournisseur_id, demande_devis_id, date_emission, date_validite,
               delai_livraison, remise_globale, total_ht, total_tva, total_ttc,
               conditions_paiement, garanties, certifications, notes, statut)
-             VALUES (?, NULL, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, NULL, NULL, ?, 'envoye')`,
+             VALUES ($1, NULL, $2, $3, $4, $5, $6, 0, $7, $8, $9, $10, NULL, NULL, $11, 'envoye') RETURNING id`,
             [
                 numero,
                 client_id, // fournisseur_id = client_id (pour le devis client)
@@ -502,7 +506,7 @@ router.post('/create-for-client', authenticate, async (req, res) => {
             ]
         );
 
-        const devis_id = devisResult2.insertId;
+        const devis_id = devisResult2.rows && devisResult2.rows[0] ? devisResult2.rows[0].id : (devisResult2.insertId || devisResult2[0]?.id);
 
         // Insérer les lignes (sans prix_achat_ht ni marge_appliquee dans devis_lignes - ce sont des champs de facture)
         for (const ligne of lignesConsolidees) {
@@ -511,7 +515,7 @@ router.post('/create-for-client', authenticate, async (req, res) => {
             const total_ht_ligne = prix_ht - remise;
 
             await pool.execute(
-                'INSERT INTO devis_lignes (devis_id, reference, description, quantite, unite, prix_unitaire_ht, remise, total_ht, tva_taux, ordre) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO devis_lignes (devis_id, reference, description, quantite, unite, prix_unitaire_ht, remise, total_ht, tva_taux, ordre) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
                 [devis_id, ligne.reference, ligne.description, ligne.quantite, ligne.unite || 'unité', ligne.prix_unitaire_ht, ligne.remise || 0, total_ht_ligne, ligne.tva_taux || 20, ligne.ordre]
             );
         }
@@ -519,7 +523,7 @@ router.post('/create-for-client', authenticate, async (req, res) => {
         // Mettre à jour le statut de la demande si elle existe
         if (demande_devis_id) {
             await pool.execute(
-                'UPDATE demandes_devis SET statut = ? WHERE id = ?',
+                'UPDATE demandes_devis SET statut = $1 WHERE id = $2',
                 ['traitee', demande_devis_id]
             );
         }
