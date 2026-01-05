@@ -12,34 +12,39 @@ const MESSAGEPRO_BASE_URL = 'https://messagepro-gn.com/api';
 
 class MessageProService {
     constructor() {
-        this.loadSecret();
-    }
-
-    /**
-     * Charge le secret depuis les variables d'environnement ou la base de données
-     */
-    async loadSecret() {
         this.secret = process.env.MESSAGEPRO_SECRET;
-        
-        // Si pas dans les variables d'environnement, essayer de charger depuis la DB
-        if (!this.secret) {
-            try {
-                const pool = require('../config/database');
-                const [params] = await pool.execute(
-                    'SELECT valeur FROM parametres WHERE cle = ?',
-                    ['MESSAGEPRO_SECRET']
-                );
-                if (params && params.length > 0) {
-                    this.secret = params[0].valeur;
-                    process.env.MESSAGEPRO_SECRET = this.secret;
-                }
-            } catch (error) {
-                // Ignorer les erreurs de chargement depuis la DB
-            }
-        }
+        // Charger depuis la DB de manière asynchrone (non bloquant)
+        this.loadSecretFromDB().catch(err => {
+            // Ignorer les erreurs silencieusement
+        });
         
         if (!this.secret) {
             console.warn('⚠️  MESSAGEPRO_SECRET non défini. Les fonctionnalités SMS/WhatsApp seront désactivées.');
+        }
+    }
+
+    /**
+     * Charge le secret depuis la base de données (si non défini dans env)
+     */
+    async loadSecretFromDB() {
+        if (this.secret) {
+            return; // Déjà défini
+        }
+        
+        try {
+            const pool = require('../config/database');
+            const [params] = await pool.execute(
+                'SELECT valeur FROM parametres WHERE cle = $1',
+                ['MESSAGEPRO_SECRET']
+            );
+            if (params && params.length > 0 && params[0].valeur) {
+                this.secret = params[0].valeur;
+                process.env.MESSAGEPRO_SECRET = this.secret;
+                console.log('✅ MESSAGEPRO_SECRET chargé depuis la base de données');
+            }
+        } catch (error) {
+            // Ignorer les erreurs de chargement depuis la DB
+            console.debug('Note: Impossible de charger MESSAGEPRO_SECRET depuis la DB:', error.message);
         }
     }
 
@@ -48,7 +53,9 @@ class MessageProService {
      */
     updateSecret(secret) {
         this.secret = secret;
-        process.env.MESSAGEPRO_SECRET = secret;
+        if (secret) {
+            process.env.MESSAGEPRO_SECRET = secret;
+        }
     }
 
     /**
