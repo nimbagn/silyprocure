@@ -45,6 +45,12 @@ if (process.env.RENDER || process.env.NODE_ENV === 'production') {
         console.warn('⚠️  Ajout colonnes entreprises (non bloquant):', err.message);
     });
     
+    // Ajout table liens_externes (non bloquant) - compatibilité
+    const addLiensExternes = require('./scripts/add-liens-externes');
+    addLiensExternes().catch(err => {
+        console.warn('⚠️  Ajout table liens_externes (non bloquant):', err.message);
+    });
+    
     // Initialisation complète de la DB (non bloquant) - fallback
     const initDb = require('./scripts/init-db-render');
     initDb().catch(err => {
