@@ -29,7 +29,7 @@ router.get('/rfq-by-token/:token', async (req, res) => {
              FROM liens_externes l
              JOIN rfq r ON l.rfq_id = r.id
              JOIN entreprises e ON l.fournisseur_id = e.id
-             WHERE l.token = ? AND l.utilise = FALSE`,
+             WHERE l.token = $1 AND l.utilise = FALSE`,
             [token]
         );
 
@@ -46,7 +46,7 @@ router.get('/rfq-by-token/:token', async (req, res) => {
 
         // Récupérer les lignes de la RFQ
         const [lignes] = await pool.execute(
-            'SELECT * FROM rfq_lignes WHERE rfq_id = ? ORDER BY ordre',
+            'SELECT * FROM rfq_lignes WHERE rfq_id = $1 ORDER BY ordre',
             [lien.rfq_id]
         );
 
@@ -54,7 +54,7 @@ router.get('/rfq-by-token/:token', async (req, res) => {
         const [emetteurs] = await pool.execute(
             `SELECT u.* FROM utilisateurs u
              JOIN rfq r ON u.id = r.emetteur_id
-             WHERE r.id = ?`,
+             WHERE r.id = $1`,
             [lien.rfq_id]
         );
 
@@ -88,7 +88,7 @@ router.post('/submit-devis-externe', async (req, res) => {
 
         // Vérifier le token
         const [liens] = await pool.execute(
-            'SELECT * FROM liens_externes WHERE token = ? AND utilise = FALSE',
+            'SELECT * FROM liens_externes WHERE token = $1 AND utilise = FALSE',
             [token]
         );
 
@@ -118,7 +118,7 @@ router.post('/submit-devis-externe', async (req, res) => {
             // Vérifier si le numéro existe déjà
             while (true) {
                 const [existing] = await pool.execute(
-                    'SELECT id FROM devis WHERE numero = ?',
+                    'SELECT id FROM devis WHERE numero = $1',
                     [finalNumero]
                 );
                 
@@ -184,11 +184,11 @@ router.post('/submit-devis-externe', async (req, res) => {
             `INSERT INTO devis (numero, rfq_id, fournisseur_id, date_emission, date_validite, 
               delai_livraison, remise_globale, total_ht, total_tva, total_ttc, 
               conditions_paiement, garanties, certifications, notes, statut)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'envoye')`,
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'envoye') RETURNING id`,
             devisParams
         );
 
-        const devis_id = result.insertId;
+        const devis_id = result.rows && result.rows[0] ? result.rows[0].id : (result.insertId || result[0]?.id);
 
         // Insérer les lignes (convertir undefined en null)
         if (lignes && lignes.length > 0) {
@@ -198,7 +198,7 @@ router.post('/submit-devis-externe', async (req, res) => {
                 const total_ht_ligne = prix_ht - remise;
 
                 await pool.execute(
-                    'INSERT INTO devis_lignes (devis_id, rfq_ligne_id, produit_id, reference, description, quantite, unite, prix_unitaire_ht, remise, total_ht, tva_taux, ordre) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    'INSERT INTO devis_lignes (devis_id, rfq_ligne_id, produit_id, reference, description, quantite, unite, prix_unitaire_ht, remise, total_ht, tva_taux, ordre) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
                     [
                         devis_id,
                         ligne.rfq_ligne_id || null,
@@ -218,11 +218,11 @@ router.post('/submit-devis-externe', async (req, res) => {
         }
 
         // Mettre à jour le statut de la RFQ
-        await pool.execute('UPDATE rfq SET statut = ? WHERE id = ?', ['en_cours', lien.rfq_id]);
+        await pool.execute('UPDATE rfq SET statut = $1 WHERE id = $2', ['en_cours', lien.rfq_id]);
 
         // Marquer le lien comme utilisé
         await pool.execute(
-            'UPDATE liens_externes SET utilise = TRUE, date_utilisation = NOW(), ip_utilisation = ? WHERE id = ?',
+            'UPDATE liens_externes SET utilise = TRUE, date_utilisation = NOW(), ip_utilisation = $1 WHERE id = $2',
             [req.ip || req.connection.remoteAddress, lien.id]
         );
 
@@ -257,15 +257,15 @@ router.post('/rfq/:rfq_id/generate-link', requireSupervisor, async (req, res) =>
         const { fournisseur_id, email_envoye, date_expiration_jours } = req.body;
 
         // Vérifier que la RFQ existe
-        const [rfqs] = await pool.execute('SELECT * FROM rfq WHERE id = ?', [rfq_id]);
+        const [rfqs] = await pool.execute('SELECT * FROM rfq WHERE id = $1', [rfq_id]);
         if (rfqs.length === 0) {
             return res.status(404).json({ error: 'RFQ non trouvée' });
         }
 
         // Vérifier que le fournisseur existe et est externe
         const [fournisseurs] = await pool.execute(
-            'SELECT * FROM entreprises WHERE id = ? AND type_entreprise = "fournisseur"',
-            [fournisseur_id]
+            'SELECT * FROM entreprises WHERE id = $1 AND type_entreprise = $2',
+            [fournisseur_id, 'fournisseur']
         );
         if (fournisseurs.length === 0) {
             return res.status(404).json({ error: 'Fournisseur non trouvé' });
@@ -282,7 +282,7 @@ router.post('/rfq/:rfq_id/generate-link', requireSupervisor, async (req, res) =>
         // Créer le lien externe
         const [result] = await pool.execute(
             `INSERT INTO liens_externes (rfq_id, token, fournisseur_id, email_envoye, date_expiration)
-             VALUES (?, ?, ?, ?, ?)`,
+             VALUES ($1, $2, $3, $4, $5) RETURNING id`,
             [rfq_id, token, fournisseur_id, email_envoye || null, dateExpiration]
         );
 
@@ -290,8 +290,10 @@ router.post('/rfq/:rfq_id/generate-link', requireSupervisor, async (req, res) =>
         const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
         const linkUrl = `${baseUrl}/devis-externe.html?token=${token}`;
 
+        const linkId = result.rows && result.rows[0] ? result.rows[0].id : (result.insertId || result[0]?.id);
+
         res.status(201).json({
-            id: result.insertId,
+            id: linkId,
             token: token,
             link: linkUrl,
             expiration: dateExpiration,
@@ -318,7 +320,7 @@ router.get('/rfq/:rfq_id/links', requireSupervisor, async (req, res) => {
             `SELECT l.*, e.nom as fournisseur_nom, e.email as fournisseur_email
              FROM liens_externes l
              JOIN entreprises e ON l.fournisseur_id = e.id
-             WHERE l.rfq_id = ?
+             WHERE l.rfq_id = $1
              ORDER BY l.date_creation DESC`,
             [rfq_id]
         );
