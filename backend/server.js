@@ -39,6 +39,12 @@ if (process.env.RENDER || process.env.NODE_ENV === 'production') {
         console.warn('⚠️  Ajout colonnes clients (non bloquant):', err.message);
     });
     
+    // Ajout colonnes entreprises (non bloquant) - compatibilité
+    const addEntreprisesColumns = require('./scripts/add-entreprises-columns');
+    addEntreprisesColumns().catch(err => {
+        console.warn('⚠️  Ajout colonnes entreprises (non bloquant):', err.message);
+    });
+    
     // Initialisation complète de la DB (non bloquant) - fallback
     const initDb = require('./scripts/init-db-render');
     initDb().catch(err => {
