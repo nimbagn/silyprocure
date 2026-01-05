@@ -102,7 +102,7 @@ router.post('/:type_document/:document_id', upload.single('file'), async (req, r
         const cheminRelatif = path.relative(path.join(__dirname, '../../uploads'), req.file.path);
         
         const [result] = await pool.execute(
-            'INSERT INTO fichiers_joints (type_document, document_id, nom_fichier, chemin_fichier, taille_fichier, type_mime, description, uploader_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO documents_joints (type_document, document_id, nom_fichier, chemin_fichier, taille_octets, type_mime, description, upload_par_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
             [type_document, document_id, req.file.originalname, cheminRelatif, req.file.size, req.file.mimetype, description || null, req.user.id]
         );
 
@@ -133,9 +133,9 @@ router.get('/demande_devis/:document_id', async (req, res) => {
         }
 
         const [fichiers] = await pool.execute(
-            `SELECT id, nom_fichier, chemin_fichier, taille_fichier, type_mime, description, date_upload
-             FROM fichiers_joints
-             WHERE type_document = 'demande_devis' AND document_id = ?
+            `SELECT id, nom_fichier, chemin_fichier, taille_octets as taille_fichier, type_mime, description, date_upload
+             FROM documents_joints
+             WHERE type_document = 'demande_devis' AND document_id = $1
              ORDER BY date_upload DESC`,
             [document_id]
         );
@@ -165,10 +165,10 @@ router.get('/:type_document/:document_id', async (req, res) => {
         }
 
         const [fichiers] = await pool.execute(
-            `SELECT f.*, u.nom as uploader_nom, u.prenom as uploader_prenom
-             FROM fichiers_joints f
-             LEFT JOIN utilisateurs u ON f.uploader_id = u.id
-             WHERE f.type_document = ? AND f.document_id = ?
+            `SELECT f.*, f.taille_octets as taille_fichier, u.nom as uploader_nom, u.prenom as uploader_prenom
+             FROM documents_joints f
+             LEFT JOIN utilisateurs u ON f.upload_par_id = u.id
+             WHERE f.type_document = $1 AND f.document_id = $2
              ORDER BY f.date_upload DESC`,
             [type_document, document_id]
         );
@@ -192,7 +192,7 @@ router.get('/download/:id', async (req, res) => {
         }
 
         const [fichiers] = await pool.execute(
-            'SELECT * FROM fichiers_joints WHERE id = ?',
+            'SELECT *, taille_octets as taille_fichier FROM documents_joints WHERE id = $1',
             [id]
         );
 
@@ -229,7 +229,7 @@ router.delete('/:id', async (req, res) => {
         const userId = req.user.id;
 
         const [fichiers] = await pool.execute(
-            'SELECT * FROM fichiers_joints WHERE id = ?',
+            'SELECT *, taille_octets as taille_fichier FROM documents_joints WHERE id = $1',
             [id]
         );
 
@@ -241,7 +241,7 @@ router.delete('/:id', async (req, res) => {
 
         // Vérifier que l'utilisateur est l'uploader ou un admin
         const user = req.user;
-        if (fichier.uploader_id !== userId && user.role !== 'admin' && user.role !== 'superviseur') {
+        if (fichier.upload_par_id !== userId && user.role !== 'admin' && user.role !== 'superviseur') {
             return res.status(403).json({ error: 'Vous n\'avez pas le droit de supprimer ce fichier' });
         }
 
@@ -252,7 +252,7 @@ router.delete('/:id', async (req, res) => {
         }
 
         // Supprimer l'enregistrement en base
-        await pool.execute('DELETE FROM fichiers_joints WHERE id = ?', [id]);
+        await pool.execute('DELETE FROM documents_joints WHERE id = $1', [id]);
 
         res.json({ message: 'Fichier supprimé avec succès' });
     } catch (error) {

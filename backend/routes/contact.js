@@ -477,8 +477,8 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
             for (const fournisseur_id of fournisseur_ids) {
                 // Vérifier que le fournisseur existe
                 const [fournisseurs] = await connection.execute(
-                    'SELECT id, nom FROM entreprises WHERE id = ? AND type_entreprise = "fournisseur"',
-                    [fournisseur_id]
+                    'SELECT id, nom FROM entreprises WHERE id = $1 AND type_entreprise = $2',
+                    [fournisseur_id, 'fournisseur']
                 );
 
                 if (fournisseurs.length === 0) {
