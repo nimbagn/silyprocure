@@ -6,6 +6,7 @@
 const https = require('https');
 const http = require('http');
 const { URL } = require('url');
+const FormData = require('form-data');
 
 const MESSAGEPRO_BASE_URL = 'https://messagepro-gn.com/api';
 
@@ -105,6 +106,10 @@ class MessageProService {
      */
     async sendSMS(phone, message, mode = 'credits', options = {}) {
         try {
+            if (!this.secret) {
+                throw new Error('MESSAGEPRO_SECRET non configuré');
+            }
+            
             const fd = new FormData();
             
             fd.append('secret', this.secret);
@@ -172,6 +177,10 @@ class MessageProService {
      */
     async sendWhatsApp(account, recipient, message, options = {}) {
         try {
+            if (!this.secret) {
+                throw new Error('MESSAGEPRO_SECRET non configuré');
+            }
+            
             const fd = new FormData();
             
             fd.append('secret', this.secret);
@@ -243,6 +252,10 @@ class MessageProService {
      */
     async sendOTP(phone, message, type = 'sms', options = {}) {
         try {
+            if (!this.secret) {
+                throw new Error('MESSAGEPRO_SECRET non configuré');
+            }
+            
             const fd = new FormData();
             
             fd.append('secret', this.secret);
