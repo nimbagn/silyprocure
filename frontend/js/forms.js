@@ -851,9 +851,32 @@ async function handleUpdateEntreprise(event, id) {
     const formData = new FormData(event.target);
     const data = Object.fromEntries(formData);
     
-    if (data.capital_social) {
+    // Nettoyer les valeurs vides pour les convertir en null
+    const cleanValue = (value) => {
+        if (!value || value === '' || value === 'null' || value === 'undefined') return null;
+        return value;
+    };
+    
+    // Nettoyer les données
+    if (data.capital_social && data.capital_social !== '') {
         data.capital_social = parseFloat(data.capital_social);
+    } else {
+        data.capital_social = null;
     }
+    
+    // Nettoyer tous les champs optionnels
+    data.nom = data.nom.trim();
+    data.raison_sociale = cleanValue(data.raison_sociale);
+    data.rccm = cleanValue(data.rccm);
+    data.numero_contribuable = cleanValue(data.numero_contribuable);
+    data.forme_juridique = cleanValue(data.forme_juridique);
+    data.secteur_activite = cleanValue(data.secteur_activite);
+    data.siret = cleanValue(data.siret);
+    data.tva_intracommunautaire = cleanValue(data.tva_intracommunautaire);
+    data.email = cleanValue(data.email);
+    data.telephone = cleanValue(data.telephone);
+    data.site_web = cleanValue(data.site_web);
+    data.notes = cleanValue(data.notes);
     
     showLoading('Mise à jour de l\'entreprise...');
     
