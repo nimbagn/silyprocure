@@ -351,26 +351,33 @@ async function handleCreateEntreprise(event) {
     };
 
     // Nettoyer et convertir les coordonnées GPS (gérer virgule et point)
+    // Récupérer les valeurs même si la section est cachée
     let latitude = null;
     let longitude = null;
     
-    if (data.latitude) {
-        const latStr = String(data.latitude).replace(',', '.');
+    // Récupérer les valeurs des champs même s'ils sont cachés
+    const latInput = document.getElementById('ent-addr-latitude');
+    const lngInput = document.getElementById('ent-addr-longitude');
+    const latValue = latInput ? latInput.value : (data.latitude || '');
+    const lngValue = lngInput ? lngInput.value : (data.longitude || '');
+    
+    if (latValue && latValue.trim() !== '') {
+        const latStr = String(latValue).replace(',', '.');
         const latNum = parseFloat(latStr);
         if (!isNaN(latNum) && latNum >= -90 && latNum <= 90) {
             latitude = latNum;
         } else {
-            Toast.warning('Latitude invalide. Valeur ignorée.');
+            console.warn('Latitude invalide:', latValue);
         }
     }
     
-    if (data.longitude) {
-        const lngStr = String(data.longitude).replace(',', '.');
+    if (lngValue && lngValue.trim() !== '') {
+        const lngStr = String(lngValue).replace(',', '.');
         const lngNum = parseFloat(lngStr);
         if (!isNaN(lngNum) && lngNum >= -180 && lngNum <= 180) {
             longitude = lngNum;
         } else {
-            Toast.warning('Longitude invalide. Valeur ignorée.');
+            console.warn('Longitude invalide:', lngValue);
         }
     }
 
