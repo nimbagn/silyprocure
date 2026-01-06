@@ -55,6 +55,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', validateId, async (req, res) => {
     try {
         const { id } = req.params;
+        console.log('🔵 GET /api/devis/:id - ID:', id, 'User:', req.user?.id, 'Role:', req.user?.role);
 
         const [devis] = await pool.execute(
             `SELECT d.*, 
@@ -68,10 +69,12 @@ router.get('/:id', validateId, async (req, res) => {
         );
 
         if (devis.length === 0) {
+            console.error('❌ Devis non trouvé:', id);
             return res.status(404).json({ error: 'Devis non trouvé' });
         }
 
         const devisData = devis[0];
+        console.log('✅ Devis trouvé:', devisData.numero, 'Statut:', devisData.statut);
 
         // Récupérer les lignes
         const [lignes] = await pool.execute(
@@ -79,9 +82,11 @@ router.get('/:id', validateId, async (req, res) => {
             [id]
         );
         devisData.lignes = lignes;
+        console.log('✅ Lignes récupérées:', lignes.length);
 
         res.json(devisData);
     } catch (error) {
+        console.error('❌ Erreur GET /api/devis/:id:', error);
         res.status(500).json({ error: error.message });
     }
 });
