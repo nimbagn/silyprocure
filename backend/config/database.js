@@ -299,31 +299,34 @@ if (usePostgreSQL) {
         const hasPostgresPlaceholders = /\$\d+/.test(query);
         if (hasPostgresPlaceholders) {
             // Extraire tous les placeholders PostgreSQL dans l'ordre d'apparition
-            const placeholders = [];
+            const placeholdersOrder = [];
             mysqlQuery = mysqlQuery.replace(/\$(\d+)/g, (match, index) => {
                 const idx = parseInt(index);
-                if (!placeholders.includes(idx)) {
-                    placeholders.push(idx);
-                }
+                placeholdersOrder.push(idx);
                 return '?';
             });
             
             // Réorganiser les paramètres selon l'ordre des placeholders
             if (params && params.length > 0) {
-                // Si on a des placeholders numérotés ($1, $2, etc.), réorganiser les paramètres
-                if (placeholders.length > 0) {
-                    mysqlParams = placeholders.map(idx => {
-                        if (idx <= params.length) {
-                            return params[idx - 1];
-                        }
-                        return undefined;
-                    }).filter(p => p !== undefined);
-                } else {
-                    mysqlParams = params;
+                // Trouver le placeholder maximum pour vérifier qu'on a assez de paramètres
+                const maxPlaceholder = Math.max(...placeholdersOrder);
+                if (maxPlaceholder > params.length) {
+                    console.warn(`⚠️ Placeholder $${maxPlaceholder} demandé mais seulement ${params.length} paramètre(s) fourni(s)`);
                 }
+                
+                // Réorganiser les paramètres selon l'ordre d'apparition des placeholders
+                mysqlParams = placeholdersOrder.map(idx => {
+                    if (idx >= 1 && idx <= params.length) {
+                        return params[idx - 1];
+                    }
+                    return null;
+                }).filter(p => p !== null);
             } else {
                 mysqlParams = [];
             }
+        } else {
+            // Pas de placeholders PostgreSQL, utiliser les paramètres tels quels
+            mysqlParams = params || [];
         }
         
         // Convertir EXTRACT(MONTH FROM ...) en MONTH(...)
