@@ -230,52 +230,82 @@
 
             try {
                 showLoading('Chargement...');
+                console.log('🟦 Chargement devis ID:', devisId);
                 const response = await apiCall(`/api/devis/${devisId}`);
+                console.log('🟦 Réponse API:', response);
+                
                 if (!response) {
                     hideLoading();
+                    console.error('❌ Pas de réponse de l\'API');
+                    Toast.error('Erreur de connexion');
                     return;
                 }
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
                     hideLoading();
+                    console.error('❌ Erreur API:', errorData);
                     Toast.error('Erreur: ' + (errorData.error || 'Devis non trouvé'));
                     setTimeout(() => window.location.href = 'devis.html', 2000);
                     return;
                 }
 
                 const devis = await response.json();
+                console.log('✅ Devis chargé:', devis);
+                console.log('✅ Statut du devis:', devis.statut, 'Type:', typeof devis.statut);
                 hideLoading();
                 displayDevisDetails(devis);
             } catch (error) {
                 hideLoading();
-                Toast.error('Erreur lors du chargement');
-                console.error('Erreur:', error);
+                console.error('❌ Erreur lors du chargement:', error);
+                Toast.error('Erreur lors du chargement: ' + error.message);
             }
         }
 
         function displayDevisDetails(devis) {
-            console.log('displayDevisDetails appelé avec devis:', devis);
+            console.log('🟨 displayDevisDetails appelé avec devis:', devis);
             const container = document.getElementById('devis-details');
             const actionsContainer = document.getElementById('devis-actions');
 
+            // Normaliser le statut (enlever espaces, convertir en minuscules)
+            const statut = (devis.statut || '').toString().toLowerCase().trim();
+            console.log('🟨 Statut normalisé:', statut, 'Statut original:', devis.statut);
+
             // Actions selon le statut
-            console.log('Statut du devis:', devis.statut);
             let actionsHTML = `<button class="btn btn-secondary" onclick="window.open('/api/pdf/devis/${devis.id}', '_blank')" style="margin-right: 0.5rem;"><i class="fas fa-file-pdf"></i> PDF</button>`;
-            if (devis.statut === 'brouillon') {
+            
+            if (statut === 'brouillon') {
+                console.log('🟨 Statut: brouillon - Affichage bouton Modifier');
                 actionsHTML += `
                     <button class="btn btn-primary" onclick="if(typeof editDevisForm==='function'){editDevisForm(${devis.id});}else{alert('Fonction non disponible');}"><i class="fas fa-edit"></i> Modifier</button>
                 `;
-            } else if (devis.statut === 'envoye') {
-                console.log('Statut est "envoye", création des boutons Accepter/Refuser');
+            } else if (statut === 'envoye' || statut === 'envoyé') {
+                console.log('🟨 Statut: envoye/envoyé - Affichage boutons Accepter/Refuser');
                 // Utiliser onclick directement dans le HTML pour éviter les problèmes de cache
                 actionsHTML = `
                     <button class="btn btn-success" onclick="if(typeof window.accepterDevis==='function'){window.accepterDevis(${devis.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-check"></i> Accepter</button>
                     <button class="btn btn-danger" onclick="if(typeof window.refuserDevis==='function'){window.refuserDevis(${devis.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}" style="margin-left: 0.5rem;"><i class="fas fa-times"></i> Refuser</button>
                 `;
+            } else if (statut === 'accepte' || statut === 'accepté') {
+                console.log('🟨 Statut: accepte/accepté - Devis déjà accepté');
+                actionsHTML += `<span class="badge badge-success" style="margin-left: 0.5rem;"><i class="fas fa-check-circle"></i> Devis accepté</span>`;
+            } else if (statut === 'refuse' || statut === 'refusé') {
+                console.log('🟨 Statut: refuse/refusé - Devis refusé');
+                actionsHTML += `<span class="badge badge-danger" style="margin-left: 0.5rem;"><i class="fas fa-times-circle"></i> Devis refusé</span>`;
             } else {
-                console.log('Statut non géré:', devis.statut, '- Aucun bouton d\'action affiché');
+                console.warn('⚠️ Statut non géré:', statut, '- Aucun bouton d\'action affiché');
+                // Afficher quand même les boutons si le statut n'est pas reconnu mais que l'utilisateur est admin
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (user.role === 'admin' || user.role === 'superviseur') {
+                    console.log('🟨 Utilisateur admin/superviseur - Affichage boutons Accepter/Refuser malgré statut inconnu');
+                    actionsHTML = `
+                        <button class="btn btn-success" onclick="if(typeof window.accepterDevis==='function'){window.accepterDevis(${devis.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-check"></i> Accepter</button>
+                        <button class="btn btn-danger" onclick="if(typeof window.refuserDevis==='function'){window.refuserDevis(${devis.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}" style="margin-left: 0.5rem;"><i class="fas fa-times"></i> Refuser</button>
+                    `;
+                }
             }
+            
+            console.log('🟨 Actions HTML:', actionsHTML);
             actionsContainer.innerHTML = actionsHTML;
 
             container.innerHTML = `
