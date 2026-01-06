@@ -391,14 +391,21 @@ if (usePostgreSQL) {
     
     // Wrapper pour convertir les requêtes PostgreSQL en MySQL
     mysqlPool.execute = async (query, params) => {
+        // Debug: vérifier que le wrapper est appelé
+        if (typeof query === 'string' && query.includes('$1')) {
+            console.log('🔧 Wrapper MySQL appelé avec placeholder $1');
+        }
+        
         const { mysqlQuery, mysqlParams, isInsert, hasPostgresPlaceholders } = convertPostgresToMySQL(query, params);
+        
         // Debug: afficher la requête convertie si nécessaire
         if (hasPostgresPlaceholders) {
             console.log('🔧 MySQL Conversion:', {
-                original: query.substring(0, 100) + '...',
-                converted: mysqlQuery.substring(0, 100) + '...',
+                original: query.substring(0, 150),
+                converted: mysqlQuery.substring(0, 150),
                 paramsCount: params?.length || 0,
-                mysqlParamsCount: mysqlParams.length
+                mysqlParamsCount: mysqlParams.length,
+                mysqlParams: mysqlParams
             });
         }
         
