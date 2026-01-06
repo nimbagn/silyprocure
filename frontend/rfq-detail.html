@@ -223,20 +223,29 @@
         async function loadDevis(rfqId) {
             try {
                 const response = await apiCall(`/api/devis?rfq_id=${rfqId}`);
-                if (!response) return;
+                if (!response || !response.ok) {
+                    console.error('Erreur chargement devis: réponse invalide');
+                    displayDevis([]);
+                    return;
+                }
 
                 const devis = await response.json();
-                displayDevis(devis);
+                // S'assurer que devis est un tableau
+                const devisArray = Array.isArray(devis) ? devis : [];
+                displayDevis(devisArray);
             } catch (error) {
                 console.error('Erreur chargement devis:', error);
+                displayDevis([]);
             }
         }
 
         function displayDevis(devis) {
             const container = document.getElementById('devis-list');
-            document.getElementById('devis-count').textContent = `${devis.length} devis`;
+            // S'assurer que devis est un tableau
+            const devisArray = Array.isArray(devis) ? devis : [];
+            document.getElementById('devis-count').textContent = `${devisArray.length} devis`;
 
-            if (devis.length === 0) {
+            if (devisArray.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon"><i class="fas fa-briefcase"></i></div>
@@ -249,7 +258,7 @@
 
             container.innerHTML = `
                 <div style="display: grid; gap: 1rem;">
-                    ${devis.map(d => `
+                    ${devisArray.map(d => `
                         <div class="card" style="border-left: 4px solid ${getDevisColor(d.statut)};">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="flex: 1;">
@@ -277,7 +286,7 @@
                     `).join('')}
                 </div>
                 <div style="margin-top: 1.5rem;">
-                    <button class="btn btn-primary" onclick="compareDevis([${devis.map(d => d.id).join(',')}])">
+                    <button class="btn btn-primary" onclick="compareDevis([${devisArray.map(d => d.id).join(',')}])">
                         <i class="fas fa-chart-bar"></i> Comparer les devis
                     </button>
                 </div>
