@@ -356,7 +356,29 @@ if (usePostgreSQL) {
             return `GROUP_CONCAT(${expr.trim()} SEPARATOR '${sep}')`;
         });
         
-        return await originalExecute(mysqlQuery, mysqlParams);
+        // Supprimer RETURNING id pour MySQL (n'existe pas en MySQL)
+        const isInsert = mysqlQuery.trim().toUpperCase().startsWith('INSERT');
+        const hasReturning = /RETURNING\s+id/i.test(mysqlQuery);
+        if (hasReturning) {
+            mysqlQuery = mysqlQuery.replace(/\s+RETURNING\s+id\s*$/i, '');
+        }
+        
+        const result = await originalExecute(mysqlQuery, mysqlParams);
+        
+        // Pour MySQL, result[0] contient les lignes et result[1] contient les métadonnées
+        // Adapter le format pour correspondre à PostgreSQL
+        const rows = result[0] || [];
+        const fields = result[1]?.fields || [];
+        
+        // Pour les INSERT, MySQL retourne insertId dans les métadonnées
+        const mockResult = {
+            insertId: isInsert ? result[0]?.insertId || result[1]?.insertId : null,
+            affectedRows: result[1]?.affectedRows || 0,
+            rows: rows,
+            fields: fields
+        };
+        
+        return [rows, mockResult];
     };
 
     // Test de connexion MySQL
