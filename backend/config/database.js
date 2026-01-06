@@ -277,9 +277,8 @@ pool.getConnection = async () => {
 };
 
 // Test de connexion (après avoir défini tous les wrappers)
-// Utiliser la méthode originale du Pool PostgreSQL directement
-const originalPoolQuery = Pool.prototype.query.bind(pool);
-originalPoolQuery('SELECT NOW() as now')
+// Utiliser la méthode originale sauvegardée
+originalQuery('SELECT NOW() as now')
     .then((result) => {
         console.log('✅ Connexion à la base de données PostgreSQL réussie');
     })
