@@ -24,7 +24,12 @@ function generateTrackingToken() {
  */
 async function sendNotification(demande, reference, trackingToken) {
     const mode = demande.mode_notification || 'email';
-    const trackingUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/suivi?ref=${reference}&token=${trackingToken}`;
+    // Utiliser FRONTEND_URL ou BASE_URL, avec fallback intelligent
+    const frontendUrl = process.env.FRONTEND_URL || process.env.BASE_URL || 
+        ((process.env.RENDER || process.env.NODE_ENV === 'production') 
+            ? 'https://silyprocure.onrender.com' 
+            : 'http://localhost:3000');
+    const trackingUrl = `${frontendUrl}/suivi?ref=${reference}&token=${trackingToken}`;
 
     switch (mode) {
         case 'email':

@@ -287,7 +287,29 @@ router.post('/rfq/:rfq_id/generate-link', requireSupervisor, async (req, res) =>
         );
 
         // Générer l'URL complète
-        const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+        // Détecter automatiquement l'URL de base depuis la requête ou les variables d'environnement
+        let baseUrl = process.env.BASE_URL || process.env.FRONTEND_URL;
+        
+        // Si pas défini dans les variables d'environnement, utiliser la requête HTTP
+        if (!baseUrl) {
+            // Utiliser req.protocol qui fonctionne avec trust proxy sur Render
+            const protocol = req.protocol || (req.secure ? 'https' : 'http');
+            const host = req.get('host') || req.headers.host;
+            
+            if (host) {
+                // Si le host contient un port (ex: localhost:3000), le garder
+                // Sinon, construire l'URL complète
+                baseUrl = `${protocol}://${host}`;
+            } else {
+                // Fallback : utiliser localhost en développement, Render en production
+                baseUrl = (process.env.RENDER || process.env.NODE_ENV === 'production')
+                    ? 'https://silyprocure.onrender.com' 
+                    : 'http://localhost:3000';
+            }
+        }
+        
+        console.log('🔗 Génération lien externe - baseUrl:', baseUrl, 'host:', req.get('host'), 'protocol:', req.protocol);
+        
         const linkUrl = `${baseUrl}/devis-externe.html?token=${token}`;
 
         const linkId = result.rows && result.rows[0] ? result.rows[0].id : (result.insertId || result[0]?.id);
