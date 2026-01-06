@@ -297,15 +297,33 @@ if (usePostgreSQL) {
         
         // Convertir les placeholders PostgreSQL ($1, $2, etc.) en ? pour MySQL
         const hasPostgresPlaceholders = /\$\d+/.test(query);
-        if (hasPostgresPlaceholders && params && params.length > 0) {
-            // Extraire tous les placeholders PostgreSQL dans l'ordre
+        if (hasPostgresPlaceholders) {
+            // Extraire tous les placeholders PostgreSQL dans l'ordre d'apparition
             const placeholders = [];
             mysqlQuery = mysqlQuery.replace(/\$(\d+)/g, (match, index) => {
-                placeholders.push(parseInt(index));
+                const idx = parseInt(index);
+                if (!placeholders.includes(idx)) {
+                    placeholders.push(idx);
+                }
                 return '?';
             });
+            
             // Réorganiser les paramètres selon l'ordre des placeholders
-            mysqlParams = placeholders.map(idx => params[idx - 1]);
+            if (params && params.length > 0) {
+                // Si on a des placeholders numérotés ($1, $2, etc.), réorganiser les paramètres
+                if (placeholders.length > 0) {
+                    mysqlParams = placeholders.map(idx => {
+                        if (idx <= params.length) {
+                            return params[idx - 1];
+                        }
+                        return undefined;
+                    }).filter(p => p !== undefined);
+                } else {
+                    mysqlParams = params;
+                }
+            } else {
+                mysqlParams = [];
+            }
         }
         
         // Convertir EXTRACT(MONTH FROM ...) en MONTH(...)
