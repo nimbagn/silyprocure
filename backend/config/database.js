@@ -38,13 +38,14 @@ pool.on('error', (err, client) => {
     process.exit(-1);
 });
 
-// Test de connexion
-pool.query('SELECT NOW()')
-    .then(() => {
+// Test de connexion (asynchrone, non bloquant)
+pool.query('SELECT NOW() as now')
+    .then((result) => {
         console.log('✅ Connexion à la base de données PostgreSQL réussie');
     })
     .catch(err => {
         console.error('❌ Erreur de connexion à la base de données:', err.message);
+        // Ne pas faire échouer le démarrage si la DB n'est pas disponible
     });
 
 // Wrapper pour compatibilité avec mysql2 (pool.execute devient pool.query)
