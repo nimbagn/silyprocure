@@ -305,6 +305,11 @@ if (usePostgreSQL) {
                 return '?';
             });
             
+            // Debug: afficher les placeholders trouvés
+            if (placeholdersOrder.length > 0) {
+                console.log('🔍 Placeholders trouvés:', placeholdersOrder, 'Max:', Math.max(...placeholdersOrder), 'Params fournis:', params?.length || 0);
+            }
+            
             // Réorganiser les paramètres selon l'ordre des placeholders
             if (params && params.length > 0) {
                 // Trouver le placeholder maximum pour vérifier qu'on a assez de paramètres
@@ -318,8 +323,11 @@ if (usePostgreSQL) {
                     if (idx >= 1 && idx <= params.length) {
                         return params[idx - 1];
                     }
+                    console.warn(`⚠️ Placeholder $${idx} hors limites (max: ${params.length})`);
                     return null;
                 }).filter(p => p !== null);
+                
+                console.log('🔍 Paramètres convertis:', mysqlParams.length, 'sur', params.length, 'originaux');
             } else {
                 mysqlParams = [];
             }
