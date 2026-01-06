@@ -295,15 +295,23 @@ if (usePostgreSQL) {
         let mysqlParams = params || [];
         
         // Convertir les placeholders PostgreSQL ($1, $2, etc.) en ? pour MySQL
+        // IMPORTANT: La regex doit capturer les placeholders dans l'ordre, y compris $10, $11, etc.
         const hasPostgresPlaceholders = /\$\d+/.test(query);
         if (hasPostgresPlaceholders) {
             // Extraire tous les placeholders PostgreSQL dans l'ordre d'apparition
+            // Utiliser une regex globale pour trouver tous les placeholders
             const placeholdersOrder = [];
-            mysqlQuery = mysqlQuery.replace(/\$(\d+)/g, (match, index) => {
-                const idx = parseInt(index);
+            const placeholderRegex = /\$(\d+)/g;
+            let match;
+            
+            // D'abord, trouver tous les placeholders pour connaître l'ordre
+            while ((match = placeholderRegex.exec(query)) !== null) {
+                const idx = parseInt(match[1]);
                 placeholdersOrder.push(idx);
-                return '?';
-            });
+            }
+            
+            // Ensuite, remplacer tous les placeholders par ?
+            mysqlQuery = mysqlQuery.replace(/\$(\d+)/g, '?');
             
             // Debug: afficher les placeholders trouvés
             if (placeholdersOrder.length > 0) {
@@ -311,7 +319,7 @@ if (usePostgreSQL) {
             }
             
             // Réorganiser les paramètres selon l'ordre des placeholders
-            if (params && params.length > 0) {
+            if (params && params.length > 0 && placeholdersOrder.length > 0) {
                 // Trouver le placeholder maximum pour vérifier qu'on a assez de paramètres
                 const maxPlaceholder = Math.max(...placeholdersOrder);
                 if (maxPlaceholder > params.length) {
@@ -328,8 +336,11 @@ if (usePostgreSQL) {
                 }).filter(p => p !== null);
                 
                 console.log('🔍 Paramètres convertis:', mysqlParams.length, 'sur', params.length, 'originaux');
-            } else {
+            } else if (!params || params.length === 0) {
                 mysqlParams = [];
+            } else {
+                // Pas de placeholders trouvés mais des paramètres fournis, utiliser tels quels
+                mysqlParams = params;
             }
         } else {
             // Pas de placeholders PostgreSQL, utiliser les paramètres tels quels
