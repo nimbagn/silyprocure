@@ -389,12 +389,16 @@ if (usePostgreSQL) {
         // Pour MySQL, result[0] contient les lignes et result[1] contient les métadonnées
         // Adapter le format pour correspondre à PostgreSQL
         const rows = result[0] || [];
-        const fields = result[1]?.fields || [];
+        const metadata = result[1] || {};
+        const fields = metadata.fields || [];
         
-        // Pour les INSERT, MySQL retourne insertId dans les métadonnées
+        // Pour les INSERT, MySQL retourne insertId dans les métadonnées (result[0].insertId)
+        // ou dans result[1].insertId selon la version de mysql2
+        const insertId = isInsert ? (result[0]?.insertId || metadata.insertId || null) : null;
+        
         const mockResult = {
-            insertId: isInsert ? result[0]?.insertId || result[1]?.insertId : null,
-            affectedRows: result[1]?.affectedRows || 0,
+            insertId: insertId,
+            affectedRows: metadata.affectedRows || 0,
             rows: rows,
             fields: fields
         };
