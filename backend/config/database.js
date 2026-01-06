@@ -391,7 +391,7 @@ if (usePostgreSQL) {
             mysqlQuery = mysqlQuery.replace(/\s+RETURNING\s+id\s*$/i, '');
         }
         
-        return { mysqlQuery, mysqlParams, isInsert, hasPostgresPlaceholders };
+        return { mysqlQuery, mysqlParams, isInsert, hasPostgresPlaceholders, placeholdersOrder };
     };
     
     // Sauvegarder la méthode originale AVANT de la remplacer
@@ -404,15 +404,16 @@ if (usePostgreSQL) {
             console.log('🔧 Wrapper MySQL appelé avec placeholder $1');
         }
         
-        const { mysqlQuery, mysqlParams, isInsert, hasPostgresPlaceholders } = convertPostgresToMySQL(query, params);
+        const { mysqlQuery, mysqlParams, isInsert, hasPostgresPlaceholders, placeholdersOrder } = convertPostgresToMySQL(query, params);
         
         // Debug: afficher la requête convertie si nécessaire
         if (hasPostgresPlaceholders) {
             console.log('🔧 MySQL Conversion:', {
-                original: query.substring(0, 150),
-                converted: mysqlQuery.substring(0, 150),
+                original: query.substring(0, 200),
+                converted: mysqlQuery.substring(0, 200),
                 paramsCount: params?.length || 0,
                 mysqlParamsCount: mysqlParams.length,
+                placeholdersFound: placeholdersOrder,
                 mysqlParams: mysqlParams
             });
         }
