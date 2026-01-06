@@ -409,12 +409,13 @@ if (usePostgreSQL) {
         // Debug: afficher la requête convertie si nécessaire
         if (hasPostgresPlaceholders) {
             console.log('🔧 MySQL Conversion:', {
-                original: query.substring(0, 200),
-                converted: mysqlQuery.substring(0, 200),
+                original: query,
+                converted: mysqlQuery,
                 paramsCount: params?.length || 0,
                 mysqlParamsCount: mysqlParams.length,
                 placeholdersFound: placeholdersOrder,
-                mysqlParams: mysqlParams
+                mysqlParams: mysqlParams,
+                allParams: params
             });
         }
         
