@@ -287,10 +287,66 @@ if (usePostgreSQL) {
         charset: 'utf8mb4'
     };
 
-    pool = mysql.createPool(dbConfig);
+    const mysqlPool = mysql.createPool(dbConfig);
+
+    // Wrapper pour convertir les requêtes PostgreSQL en MySQL
+    const originalExecute = mysqlPool.execute.bind(mysqlPool);
+    mysqlPool.execute = async (query, params) => {
+        let mysqlQuery = query;
+        
+        // Convertir EXTRACT(MONTH FROM ...) en MONTH(...)
+        mysqlQuery = mysqlQuery.replace(/EXTRACT\s*\(\s*MONTH\s+FROM\s+([^)]+)\s*\)/gi, (match, dateExpr) => {
+            return `MONTH(${dateExpr.trim()})`;
+        });
+        
+        // Convertir EXTRACT(YEAR FROM ...) en YEAR(...)
+        mysqlQuery = mysqlQuery.replace(/EXTRACT\s*\(\s*YEAR\s+FROM\s+([^)]+)\s*\)/gi, (match, dateExpr) => {
+            return `YEAR(${dateExpr.trim()})`;
+        });
+        
+        // Convertir CURRENT_DATE - INTERVAL 'X unit' en DATE_SUB(CURRENT_DATE(), INTERVAL X unit)
+        mysqlQuery = mysqlQuery.replace(/CURRENT_DATE\s*-\s*INTERVAL\s+['"](\d+)\s+(\w+)['"]/gi, (match, amount, unit) => {
+            const mysqlUnit = unit.toLowerCase() === 'months' ? 'MONTH' :
+                             unit.toLowerCase() === 'month' ? 'MONTH' :
+                             unit.toLowerCase() === 'days' ? 'DAY' :
+                             unit.toLowerCase() === 'day' ? 'DAY' :
+                             unit.toLowerCase() === 'years' ? 'YEAR' :
+                             unit.toLowerCase() === 'year' ? 'YEAR' :
+                             unit.toLowerCase() === 'hours' ? 'HOUR' :
+                             unit.toLowerCase() === 'hour' ? 'HOUR' :
+                             unit.toLowerCase() === 'minutes' ? 'MINUTE' :
+                             unit.toLowerCase() === 'minute' ? 'MINUTE' : unit.toUpperCase();
+            return `DATE_SUB(CURRENT_DATE(), INTERVAL ${amount} ${mysqlUnit})`;
+        });
+        
+        // Convertir CURRENT_DATE en CURRENT_DATE() pour MySQL
+        mysqlQuery = mysqlQuery.replace(/\bCURRENT_DATE\b(?!\()/gi, 'CURRENT_DATE()');
+        
+        // Convertir TO_CHAR(date, 'YYYY-MM') en DATE_FORMAT(date, '%Y-%m')
+        mysqlQuery = mysqlQuery.replace(/TO_CHAR\s*\(\s*([^,]+)\s*,\s*['"]([^'"]+)['"]\s*\)/gi, (match, dateExpr, format) => {
+            const mysqlFormat = format
+                .replace(/YYYY/g, '%Y')
+                .replace(/MM/g, '%m')
+                .replace(/DD/g, '%d')
+                .replace(/HH24/g, '%H')
+                .replace(/MI/g, '%i')
+                .replace(/SS/g, '%s');
+            return `DATE_FORMAT(${dateExpr.trim()}, '${mysqlFormat}')`;
+        });
+        
+        // Convertir COALESCE en IFNULL
+        mysqlQuery = mysqlQuery.replace(/COALESCE\s*\(/gi, 'IFNULL(');
+        
+        // Convertir STRING_AGG en GROUP_CONCAT
+        mysqlQuery = mysqlQuery.replace(/STRING_AGG\s*\(\s*([^,]+)\s*,\s*['"]([^'"]+)['"]\s*\)/gi, (match, expr, sep) => {
+            return `GROUP_CONCAT(${expr.trim()} SEPARATOR '${sep}')`;
+        });
+        
+        return await originalExecute(mysqlQuery, params);
+    };
 
     // Test de connexion MySQL
-    pool.getConnection()
+    mysqlPool.getConnection()
         .then(connection => {
             console.log('✅ Connexion à la base de données MySQL réussie');
             connection.release();
@@ -298,6 +354,8 @@ if (usePostgreSQL) {
         .catch(err => {
             console.error('❌ Erreur de connexion à la base de données MySQL:', err.message);
         });
+
+    pool = mysqlPool;
 }
 
 module.exports = pool;

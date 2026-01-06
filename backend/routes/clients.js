@@ -210,8 +210,8 @@ router.get('/stats/overview', requireRole('admin', 'superviseur'), async (req, r
                 COUNT(CASE WHEN statut = 'actif' THEN 1 END) as clients_actifs,
                 COUNT(CASE WHEN statut = 'prospect' THEN 1 END) as prospects,
                 COUNT(CASE WHEN statut = 'inactif' THEN 1 END) as clients_inactifs,
-                COUNT(CASE WHEN date_derniere_demande >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as clients_actifs_30j,
-                COUNT(CASE WHEN date_derniere_demande >= CURRENT_DATE - INTERVAL '90 days' THEN 1 END) as clients_actifs_90j,
+                COUNT(CASE WHEN date_derniere_demande >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) THEN 1 END) as clients_actifs_30j,
+                COUNT(CASE WHEN date_derniere_demande >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) THEN 1 END) as clients_actifs_90j,
                 SUM(nombre_demandes) as total_demandes
             FROM clients
         `);
