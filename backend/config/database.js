@@ -1,5 +1,3 @@
-const mysql = require('mysql2/promise');
-const { Pool: PgPool } = require('pg');
 require('dotenv').config();
 
 // Détection automatique du type de base de données
@@ -13,6 +11,8 @@ let pool;
 if (usePostgreSQL) {
     // Configuration PostgreSQL
     console.log('📊 Utilisation de PostgreSQL');
+    
+    const { Pool: PgPool } = require('pg');
     
     let dbConfig;
     if (process.env.DATABASE_URL) {
@@ -272,6 +272,8 @@ if (usePostgreSQL) {
 } else {
     // Configuration MySQL (local)
     console.log('📊 Utilisation de MySQL');
+    
+    const mysql = require('mysql2/promise');
     
     const dbConfig = {
         host: process.env.DB_HOST || 'localhost',
