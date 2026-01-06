@@ -289,8 +289,10 @@ if (usePostgreSQL) {
 
     const mysqlPool = mysql.createPool(dbConfig);
 
+    // Sauvegarder la méthode originale AVANT de la remplacer
+    const originalExecute = mysqlPool.promise().execute.bind(mysqlPool.promise());
+    
     // Wrapper pour convertir les requêtes PostgreSQL en MySQL
-    const originalExecute = mysqlPool.execute.bind(mysqlPool);
     mysqlPool.execute = async (query, params) => {
         let mysqlQuery = query;
         let mysqlParams = params || [];
@@ -384,7 +386,18 @@ if (usePostgreSQL) {
             mysqlQuery = mysqlQuery.replace(/\s+RETURNING\s+id\s*$/i, '');
         }
         
-        const result = await originalExecute(mysqlQuery, mysqlParams);
+        // Debug: afficher la requête convertie si nécessaire
+        if (hasPostgresPlaceholders) {
+            console.log('🔧 MySQL Conversion:', {
+                original: query.substring(0, 100) + '...',
+                converted: mysqlQuery.substring(0, 100) + '...',
+                paramsCount: params?.length || 0,
+                mysqlParamsCount: mysqlParams.length
+            });
+        }
+        
+        // Utiliser la méthode promise() de mysql2 directement
+        const result = await mysqlPool.promise().execute(mysqlQuery, mysqlParams);
         
         // Pour MySQL, result[0] contient les lignes et result[1] contient les métadonnées
         // Adapter le format pour correspondre à PostgreSQL
@@ -407,12 +420,10 @@ if (usePostgreSQL) {
     };
 
     // Wrapper pour getConnection() avec conversion automatique
-    const originalGetConnection = mysqlPool.getConnection.bind(mysqlPool);
     mysqlPool.getConnection = async () => {
-        const connection = await originalGetConnection();
+        const connection = await mysqlPool.promise().getConnection();
         
         // Wrapper pour connection.execute() avec conversion
-        const originalConnectionExecute = connection.execute.bind(connection);
         connection.execute = async (query, params) => {
             let mysqlQuery = query;
             let mysqlParams = params || [];
@@ -473,7 +484,8 @@ if (usePostgreSQL) {
                 mysqlQuery = mysqlQuery.replace(/\s+RETURNING\s+id\s*$/i, '');
             }
             
-            const result = await originalConnectionExecute(mysqlQuery, mysqlParams);
+            // Utiliser la méthode execute native de la connexion
+            const result = await connection.query(mysqlQuery, mysqlParams);
             const rows = result[0] || [];
             const metadata = result[1] || {};
             const insertId = isInsert ? (result[0]?.insertId || metadata.insertId || null) : null;
@@ -490,7 +502,7 @@ if (usePostgreSQL) {
     };
 
     // Test de connexion MySQL
-    mysqlPool.getConnection()
+    mysqlPool.promise().getConnection()
         .then(connection => {
             console.log('✅ Connexion à la base de données MySQL réussie');
             connection.release();
