@@ -193,7 +193,7 @@
                                 Si le fournisseur n'a pas de compte sur la plateforme, vous pouvez :
                             </p>
                             <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
-                                <button class="btn btn-primary" onclick="generateExternalLink(${rfq.id}, ${rfq.destinataire_id})">
+                                <button class="btn btn-primary" onclick="showGenerateLinkModal(${rfq.id}, ${rfq.destinataire_id})">
                                     <i class="fas fa-link"></i> Générer un lien de remplissage
                                 </button>
                                 <button class="btn btn-success" onclick="exportRFQToExcel(${rfq.id})">
@@ -391,18 +391,51 @@
         }
 
         // Fonctions pour la gestion des fournisseurs externes
-        async function generateExternalLink(rfqId, fournisseurId) {
-            const email = prompt('Email du fournisseur (optionnel) :');
-            const jours = prompt('Durée de validité du lien (en jours, défaut: 30) :', '30');
+        function showGenerateLinkModal(rfqId, fournisseurId) {
+            const content = `
+                <form id="generate-link-form" onsubmit="handleGenerateLink(event, ${rfqId}, ${fournisseurId})">
+                    <div class="form-group">
+                        <label>Email du fournisseur (optionnel)</label>
+                        <input type="email" name="email" placeholder="fournisseur@example.com">
+                        <small style="color: #666; font-size: 0.85rem;">
+                            L'email sera utilisé pour envoyer le lien au fournisseur
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label>Durée de validité du lien (en jours)</label>
+                        <input type="number" name="jours" min="1" max="365" value="30" required>
+                        <small style="color: #666; font-size: 0.85rem;">
+                            Le lien expirera après le nombre de jours spécifié
+                        </small>
+                    </div>
+                </form>
+            `;
+
+            const footer = `
+                <button class="btn btn-secondary" onclick="Modal.hide('generate-link')">Annuler</button>
+                <button class="btn btn-primary" onclick="document.getElementById('generate-link-form').requestSubmit()">
+                    <i class="fas fa-link"></i> Générer le lien
+                </button>
+            `;
+
+            Modal.show('generate-link', 'Générer un lien externe', content, footer);
+        }
+
+        async function handleGenerateLink(event, rfqId, fournisseurId) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const email = formData.get('email') || null;
+            const jours = parseInt(formData.get('jours')) || 30;
             
             try {
+                Modal.hide('generate-link');
                 showLoading('Génération du lien...');
                 const response = await apiCall(`/api/liens-externes/rfq/${rfqId}/generate-link`, {
                     method: 'POST',
                     body: JSON.stringify({
                         fournisseur_id: fournisseurId,
-                        email_envoye: email || null,
-                        date_expiration_jours: parseInt(jours) || 30
+                        email_envoye: email,
+                        date_expiration_jours: jours
                     })
                 });
 
@@ -432,6 +465,8 @@
                     `;
                     
                     Toast.success('Lien généré avec succès');
+                    // Recharger les liens externes
+                    loadExternalLinks(rfqId);
                 } else {
                     const error = await response.json();
                     hideLoading();
