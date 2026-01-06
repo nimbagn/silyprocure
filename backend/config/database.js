@@ -293,6 +293,20 @@ if (usePostgreSQL) {
     const originalExecute = mysqlPool.execute.bind(mysqlPool);
     mysqlPool.execute = async (query, params) => {
         let mysqlQuery = query;
+        let mysqlParams = params || [];
+        
+        // Convertir les placeholders PostgreSQL ($1, $2, etc.) en ? pour MySQL
+        const hasPostgresPlaceholders = /\$\d+/.test(query);
+        if (hasPostgresPlaceholders && params && params.length > 0) {
+            // Extraire tous les placeholders PostgreSQL dans l'ordre
+            const placeholders = [];
+            mysqlQuery = mysqlQuery.replace(/\$(\d+)/g, (match, index) => {
+                placeholders.push(parseInt(index));
+                return '?';
+            });
+            // Réorganiser les paramètres selon l'ordre des placeholders
+            mysqlParams = placeholders.map(idx => params[idx - 1]);
+        }
         
         // Convertir EXTRACT(MONTH FROM ...) en MONTH(...)
         mysqlQuery = mysqlQuery.replace(/EXTRACT\s*\(\s*MONTH\s+FROM\s+([^)]+)\s*\)/gi, (match, dateExpr) => {
@@ -342,7 +356,7 @@ if (usePostgreSQL) {
             return `GROUP_CONCAT(${expr.trim()} SEPARATOR '${sep}')`;
         });
         
-        return await originalExecute(mysqlQuery, params);
+        return await originalExecute(mysqlQuery, mysqlParams);
     };
 
     // Test de connexion MySQL
