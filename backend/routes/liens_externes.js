@@ -231,8 +231,11 @@ router.post('/submit-devis-externe', async (req, res) => {
             message: 'Devis soumis avec succès'
         });
     } catch (error) {
-        console.error('Erreur soumission devis externe:', error);
-        res.status(500).json({ error: error.message });
+        console.error('❌ Erreur soumission devis externe:', error);
+        console.error('❌ Stack:', error.stack);
+        console.error('❌ DevisParams:', devisParams);
+        console.error('❌ DevisParams length:', devisParams?.length);
+        res.status(500).json({ error: error.message, details: process.env.NODE_ENV === 'development' ? error.stack : undefined });
     }
 });
 
