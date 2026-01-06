@@ -38,16 +38,6 @@ pool.on('error', (err, client) => {
     process.exit(-1);
 });
 
-// Test de connexion (asynchrone, non bloquant)
-pool.query('SELECT NOW() as now')
-    .then((result) => {
-        console.log('✅ Connexion à la base de données PostgreSQL réussie');
-    })
-    .catch(err => {
-        console.error('❌ Erreur de connexion à la base de données:', err.message);
-        // Ne pas faire échouer le démarrage si la DB n'est pas disponible
-    });
-
 // Wrapper pour compatibilité avec mysql2 (pool.execute devient pool.query)
 pool.execute = async (query, params) => {
     try {
@@ -285,6 +275,18 @@ pool.getConnection = async () => {
     
     return connection;
 };
+
+// Test de connexion (après avoir défini tous les wrappers)
+// Utiliser la méthode originale du Pool PostgreSQL directement
+const originalPoolQuery = Pool.prototype.query.bind(pool);
+originalPoolQuery('SELECT NOW() as now')
+    .then((result) => {
+        console.log('✅ Connexion à la base de données PostgreSQL réussie');
+    })
+    .catch(err => {
+        console.error('❌ Erreur de connexion à la base de données:', err.message);
+        // Ne pas faire échouer le démarrage si la DB n'est pas disponible
+    });
 
 module.exports = pool;
 
