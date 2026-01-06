@@ -117,7 +117,7 @@ async function initDatabase() {
                 }
             } finally {
                 // Fermer le pool seulement une fois
-                if (pool && !poolClosed) {
+                if (!poolClosed && pool && !pool.ended) {
                     await pool.end();
                     poolClosed = true;
                 }
