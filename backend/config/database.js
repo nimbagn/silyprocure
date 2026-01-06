@@ -406,6 +406,89 @@ if (usePostgreSQL) {
         return [rows, mockResult];
     };
 
+    // Wrapper pour getConnection() avec conversion automatique
+    const originalGetConnection = mysqlPool.getConnection.bind(mysqlPool);
+    mysqlPool.getConnection = async () => {
+        const connection = await originalGetConnection();
+        
+        // Wrapper pour connection.execute() avec conversion
+        const originalConnectionExecute = connection.execute.bind(connection);
+        connection.execute = async (query, params) => {
+            let mysqlQuery = query;
+            let mysqlParams = params || [];
+            
+            // Convertir les placeholders PostgreSQL ($1, $2, etc.) en ? pour MySQL
+            const hasPostgresPlaceholders = /\$\d+/.test(query);
+            if (hasPostgresPlaceholders) {
+                const placeholdersOrder = [];
+                mysqlQuery = mysqlQuery.replace(/\$(\d+)/g, (match, index) => {
+                    const idx = parseInt(index);
+                    placeholdersOrder.push(idx);
+                    return '?';
+                });
+                
+                if (params && params.length > 0) {
+                    const maxPlaceholder = Math.max(...placeholdersOrder);
+                    if (maxPlaceholder > params.length) {
+                        console.warn(`⚠️ Placeholder $${maxPlaceholder} demandé mais seulement ${params.length} paramètre(s) fourni(s)`);
+                    }
+                    mysqlParams = placeholdersOrder.map(idx => {
+                        if (idx >= 1 && idx <= params.length) {
+                            return params[idx - 1];
+                        }
+                        return null;
+                    }).filter(p => p !== null);
+                } else {
+                    mysqlParams = [];
+                }
+            }
+            
+            // Conversions SQL
+            mysqlQuery = mysqlQuery.replace(/EXTRACT\s*\(\s*MONTH\s+FROM\s+([^)]+)\s*\)/gi, (match, dateExpr) => `MONTH(${dateExpr.trim()})`);
+            mysqlQuery = mysqlQuery.replace(/EXTRACT\s*\(\s*YEAR\s+FROM\s+([^)]+)\s*\)/gi, (match, dateExpr) => `YEAR(${dateExpr.trim()})`);
+            mysqlQuery = mysqlQuery.replace(/CURRENT_DATE\s*-\s*INTERVAL\s+['"](\d+)\s+(\w+)['"]/gi, (match, amount, unit) => {
+                const mysqlUnit = unit.toLowerCase() === 'months' ? 'MONTH' :
+                                 unit.toLowerCase() === 'month' ? 'MONTH' :
+                                 unit.toLowerCase() === 'days' ? 'DAY' :
+                                 unit.toLowerCase() === 'day' ? 'DAY' :
+                                 unit.toLowerCase() === 'years' ? 'YEAR' :
+                                 unit.toLowerCase() === 'year' ? 'YEAR' :
+                                 unit.toLowerCase() === 'hours' ? 'HOUR' :
+                                 unit.toLowerCase() === 'hour' ? 'HOUR' :
+                                 unit.toLowerCase() === 'minutes' ? 'MINUTE' :
+                                 unit.toLowerCase() === 'minute' ? 'MINUTE' : unit.toUpperCase();
+                return `DATE_SUB(CURRENT_DATE(), INTERVAL ${amount} ${mysqlUnit})`;
+            });
+            mysqlQuery = mysqlQuery.replace(/\bCURRENT_DATE\b(?!\()/gi, 'CURRENT_DATE()');
+            mysqlQuery = mysqlQuery.replace(/TO_CHAR\s*\(\s*([^,]+)\s*,\s*['"]([^'"]+)['"]\s*\)/gi, (match, dateExpr, format) => {
+                const mysqlFormat = format.replace(/YYYY/g, '%Y').replace(/MM/g, '%m').replace(/DD/g, '%d').replace(/HH24/g, '%H').replace(/MI/g, '%i').replace(/SS/g, '%s');
+                return `DATE_FORMAT(${dateExpr.trim()}, '${mysqlFormat}')`;
+            });
+            mysqlQuery = mysqlQuery.replace(/COALESCE\s*\(/gi, 'IFNULL(');
+            mysqlQuery = mysqlQuery.replace(/STRING_AGG\s*\(\s*([^,]+)\s*,\s*['"]([^'"]+)['"]\s*\)/gi, (match, expr, sep) => `GROUP_CONCAT(${expr.trim()} SEPARATOR '${sep}')`);
+            
+            // Supprimer RETURNING id
+            const isInsert = mysqlQuery.trim().toUpperCase().startsWith('INSERT');
+            if (/RETURNING\s+id/i.test(mysqlQuery)) {
+                mysqlQuery = mysqlQuery.replace(/\s+RETURNING\s+id\s*$/i, '');
+            }
+            
+            const result = await originalConnectionExecute(mysqlQuery, mysqlParams);
+            const rows = result[0] || [];
+            const metadata = result[1] || {};
+            const insertId = isInsert ? (result[0]?.insertId || metadata.insertId || null) : null;
+            
+            return [rows, {
+                insertId: insertId,
+                affectedRows: metadata.affectedRows || 0,
+                rows: rows,
+                fields: metadata.fields || []
+            }];
+        };
+        
+        return connection;
+    };
+
     // Test de connexion MySQL
     mysqlPool.getConnection()
         .then(connection => {
