@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Détails Devis - SilyProcure</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/animations.css">
@@ -32,8 +33,8 @@
     <div class="container">
         <!-- Hero Section -->
         <div class="hero-section" style="text-align: left; padding: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; width: 100%;">
+                <div style="flex: 1; min-width: 300px;">
                     <button class="btn btn-secondary" onclick="window.location.href='devis.html'" style="margin-bottom: 1rem;">
                         ← Retour à la liste
                     </button>
@@ -42,7 +43,7 @@
                         Consultez les détails complets du devis et effectuez les actions nécessaires
                     </p>
                 </div>
-                <div id="devis-actions"></div>
+                <div id="devis-actions" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: flex-end; min-width: 200px; flex-shrink: 0; margin-top: 0.5rem;"></div>
             </div>
         </div>
 
@@ -272,7 +273,7 @@
             console.log('🟨 Statut normalisé:', statut, 'Statut original:', devis.statut);
 
             // Actions selon le statut
-            let actionsHTML = `<button class="btn btn-secondary" onclick="window.open('/api/pdf/devis/${devis.id}', '_blank')" style="margin-right: 0.5rem;"><i class="fas fa-file-pdf"></i> PDF</button>`;
+            let actionsHTML = `<button class="btn btn-secondary" onclick="window.open('/api/pdf/devis/${devis.id}', '_blank')" style="margin-right: 0.5rem; white-space: nowrap;"><i class="fas fa-file-pdf"></i> PDF</button>`;
             
             if (statut === 'brouillon') {
                 console.log('🟨 Statut: brouillon - Affichage bouton Modifier');
@@ -283,9 +284,9 @@
                 console.log('🟨 Statut: envoye/envoyé - Affichage boutons Accepter/Refuser');
                 // Utiliser onclick directement dans le HTML pour éviter les problèmes de cache
                 actionsHTML = `
-                    <button class="btn btn-secondary" onclick="window.open('/api/pdf/devis/${devis.id}', '_blank')" style="margin-right: 0.5rem;"><i class="fas fa-file-pdf"></i> PDF</button>
-                    <button class="btn btn-success" id="btn-accepter-${devis.id}" onclick="console.log('🟢 Clic sur Accepter'); if(typeof window.accepterDevis==='function'){window.accepterDevis(${devis.id});}else{console.error('Fonction accepterDevis non disponible');alert('Fonction non disponible, rechargement...');window.location.reload();}" style="cursor: pointer;"><i class="fas fa-check"></i> Accepter</button>
-                    <button class="btn btn-danger" id="btn-refuser-${devis.id}" onclick="console.log('🔴 Clic sur Refuser'); if(typeof window.refuserDevis==='function'){window.refuserDevis(${devis.id});}else{console.error('Fonction refuserDevis non disponible');alert('Fonction non disponible, rechargement...');window.location.reload();}" style="margin-left: 0.5rem; cursor: pointer;"><i class="fas fa-times"></i> Refuser</button>
+                    <button class="btn btn-secondary" onclick="window.open('/api/pdf/devis/${devis.id}', '_blank')" style="margin-right: 0.5rem; white-space: nowrap;"><i class="fas fa-file-pdf"></i> PDF</button>
+                    <button class="btn btn-success" id="btn-accepter-${devis.id}" onclick="console.log('🟢 Clic sur Accepter'); if(typeof window.accepterDevis==='function'){window.accepterDevis(${devis.id});}else{console.error('Fonction accepterDevis non disponible');alert('Fonction non disponible, rechargement...');window.location.reload();}" style="cursor: pointer; white-space: nowrap; flex-shrink: 0;"><i class="fas fa-check"></i> Accepter</button>
+                    <button class="btn btn-danger" id="btn-refuser-${devis.id}" onclick="console.log('🔴 Clic sur Refuser'); if(typeof window.refuserDevis==='function'){window.refuserDevis(${devis.id});}else{console.error('Fonction refuserDevis non disponible');alert('Fonction non disponible, rechargement...');window.location.reload();}" style="margin-left: 0.5rem; cursor: pointer; white-space: nowrap; flex-shrink: 0;"><i class="fas fa-times"></i> Refuser</button>
                 `;
             } else if (statut === 'accepte' || statut === 'accepté') {
                 console.log('🟨 Statut: accepte/accepté - Devis déjà accepté');

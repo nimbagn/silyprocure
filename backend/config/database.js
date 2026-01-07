@@ -293,25 +293,63 @@ if (usePostgreSQL) {
     const convertPostgresToMySQL = (query, params) => {
         let mysqlQuery = query;
         let mysqlParams = params || [];
+        let placeholdersOrder = []; // Initialiser pour éviter "is not defined"
         
         // Convertir les placeholders PostgreSQL ($1, $2, etc.) en ? pour MySQL
         // IMPORTANT: La regex doit capturer les placeholders dans l'ordre, y compris $10, $11, etc.
         const hasPostgresPlaceholders = /\$\d+/.test(query);
         if (hasPostgresPlaceholders) {
+            // #region agent log
+            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'database.js:300',message:'convertPostgresToMySQL entry',data:{queryLength:query?.length,queryPreview:query?.substring(0,200),paramsCount:params?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+            
             // Extraire tous les placeholders PostgreSQL dans l'ordre d'apparition
             // Utiliser une regex globale pour trouver tous les placeholders
-            const placeholdersOrder = [];
+            // NOTE: placeholdersOrder est déjà déclaré au début de la fonction, ne pas le redéclarer ici
             const placeholderRegex = /\$(\d+)/g;
             let match;
             
+            // #region agent log
+            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'database.js:308',message:'Before placeholder extraction',data:{queryFull:query,hasNewlines:query?.includes('\n')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+            
             // D'abord, trouver tous les placeholders pour connaître l'ordre
-            while ((match = placeholderRegex.exec(query)) !== null) {
-                const idx = parseInt(match[1]);
-                placeholdersOrder.push(idx);
+            // Utiliser matchAll() pour une extraction plus fiable (ES2020)
+            // Fallback sur exec() si matchAll n'est pas disponible
+            try {
+                // Convertir l'itérateur en tableau pour éviter les problèmes de consommation
+                const matches = Array.from(query.matchAll(/\$(\d+)/g));
+                for (const match of matches) {
+                    const idx = parseInt(match[1]);
+                    placeholdersOrder.push(idx);
+                }
+            } catch (e) {
+                // Fallback pour les anciennes versions de Node.js
+                placeholderRegex.lastIndex = 0;
+                while ((match = placeholderRegex.exec(query)) !== null) {
+                    const idx = parseInt(match[1]);
+                    placeholdersOrder.push(idx);
+                }
             }
             
+            // #region agent log
+            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'database.js:332',message:'After matchAll extraction',data:{placeholdersOrder,count:placeholdersOrder.length,queryContainsDollar10:query.includes('$10'),queryContainsDollar14:query.includes('$14'),queryLength:query.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+            
+            // #region agent log
+            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'database.js:319',message:'Placeholders extracted',data:{placeholdersOrder,count:placeholdersOrder.length,queryLength:query.length,queryEnd:query.substring(Math.max(0,query.length-200)),maxPlaceholder:placeholdersOrder.length>0?Math.max(...placeholdersOrder):0,paramsCount:params?.length,queryHasDollar10:query.includes('$10'),queryHasDollar14:query.includes('$14')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+            
             // Ensuite, remplacer tous les placeholders par ?
+            // Utiliser une fonction de remplacement pour s'assurer que tous sont remplacés
             mysqlQuery = mysqlQuery.replace(/\$(\d+)/g, '?');
+            
+            // Compter les ? dans la requête convertie
+            const questionMarkCount = (mysqlQuery.match(/\?/g) || []).length;
+            
+            // #region agent log
+            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'database.js:333',message:'After placeholder replacement',data:{questionMarkCount,placeholdersOrderLength:placeholdersOrder.length,expectedQuestionMarks:placeholdersOrder.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
             
             // Debug: afficher les placeholders trouvés
             if (placeholdersOrder.length > 0) {
@@ -327,13 +365,28 @@ if (usePostgreSQL) {
                 }
                 
                 // Réorganiser les paramètres selon l'ordre d'apparition des placeholders
-                mysqlParams = placeholdersOrder.map(idx => {
-                    if (idx >= 1 && idx <= params.length) {
-                        return params[idx - 1];
+                // IMPORTANT: Les placeholders PostgreSQL sont 1-indexés, les tableaux JS sont 0-indexés
+                // Trier les placeholders pour s'assurer qu'ils sont dans l'ordre (au cas où matchAll retournerait dans un ordre différent)
+                const sortedPlaceholders = [...placeholdersOrder].sort((a, b) => {
+                    // Trouver l'index de chaque placeholder dans la requête originale
+                    const indexA = query.indexOf(`$${a}`);
+                    const indexB = query.indexOf(`$${b}`);
+                    return indexA - indexB;
+                });
+                
+                mysqlParams = sortedPlaceholders.map(idx => {
+                    // idx est 1-indexé (1, 2, 3, ...), params est 0-indexé
+                    const paramIndex = idx - 1;
+                    if (paramIndex >= 0 && paramIndex < params.length) {
+                        return params[paramIndex];
                     }
-                    console.warn(`⚠️ Placeholder $${idx} hors limites (max: ${params.length})`);
+                    console.warn(`⚠️ Placeholder $${idx} (index ${paramIndex}) hors limites (max: ${params.length - 1})`);
                     return null;
                 }).filter(p => p !== null);
+                
+                // #region agent log
+                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'database.js:352',message:'Parameter mapping result',data:{placeholdersOrder,paramsLength:params.length,mysqlParamsLength:mysqlParams.length,expectedCount:placeholdersOrder.length,mysqlParamsPreview:mysqlParams.slice(0,5)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
                 
                 console.log('🔍 Paramètres convertis:', mysqlParams.length, 'sur', params.length, 'originaux');
             } else if (!params || params.length === 0) {
@@ -419,11 +472,23 @@ if (usePostgreSQL) {
         
         // Debug: afficher la requête convertie si nécessaire
         if (hasPostgresPlaceholders) {
+            // Vérifier que le nombre de ? correspond au nombre de placeholders trouvés
+            const questionMarkCount = (mysqlQuery.match(/\?/g) || []).length;
+            if (questionMarkCount !== mysqlParams.length) {
+                console.error('❌ ERREUR: Nombre de ? ne correspond pas au nombre de paramètres convertis!', {
+                    questionMarks: questionMarkCount,
+                    mysqlParamsCount: mysqlParams.length,
+                    placeholdersFound: placeholdersOrder,
+                    queryPreview: mysqlQuery.substring(0, 500)
+                });
+            }
+            
             console.log('🔧 MySQL Conversion:', {
-                original: query,
-                converted: mysqlQuery,
+                original: query.substring(0, 300) + (query.length > 300 ? '...' : ''),
+                converted: mysqlQuery.substring(0, 300) + (mysqlQuery.length > 300 ? '...' : ''),
                 paramsCount: params?.length || 0,
                 mysqlParamsCount: mysqlParams.length,
+                questionMarkCount: questionMarkCount,
                 placeholdersFound: placeholdersOrder,
                 mysqlParams: mysqlParams,
                 allParams: params

@@ -180,13 +180,24 @@ router.post('/submit-devis-externe', async (req, res) => {
             notes || null
         ];
 
-        const [result] = await pool.execute(
-            `INSERT INTO devis (numero, rfq_id, fournisseur_id, date_emission, date_validite, 
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'liens_externes.js:181',message:'Before pool.execute INSERT devis',data:{devisParamsLength:devisParams.length,devisParams},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+
+        const insertQuery = `INSERT INTO devis (numero, rfq_id, fournisseur_id, date_emission, date_validite, 
               delai_livraison, remise_globale, total_ht, total_tva, total_ttc, 
               conditions_paiement, garanties, certifications, notes, statut)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'envoye') RETURNING id`,
-            devisParams
-        );
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'envoye') RETURNING id`;
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'liens_externes.js:188',message:'INSERT query prepared',data:{queryLength:insertQuery.length,queryPreview:insertQuery.substring(0,300),placeholderCount:(insertQuery.match(/\$\d+/g)||[]).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+
+        const [result] = await pool.execute(insertQuery, devisParams);
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'liens_externes.js:193',message:'After pool.execute INSERT devis',data:{resultKeys:Object.keys(result||{}),hasRows:!!result?.rows,hasInsertId:!!result?.insertId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
 
         const devis_id = result.rows && result.rows[0] ? result.rows[0].id : (result.insertId || result[0]?.id);
 
@@ -233,8 +244,10 @@ router.post('/submit-devis-externe', async (req, res) => {
     } catch (error) {
         console.error('❌ Erreur soumission devis externe:', error);
         console.error('❌ Stack:', error.stack);
-        console.error('❌ DevisParams:', devisParams);
-        console.error('❌ DevisParams length:', devisParams?.length);
+        if (typeof devisParams !== 'undefined') {
+            console.error('❌ DevisParams:', devisParams);
+            console.error('❌ DevisParams length:', devisParams?.length);
+        }
         res.status(500).json({ error: error.message, details: process.env.NODE_ENV === 'development' ? error.stack : undefined });
     }
 });

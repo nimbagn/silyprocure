@@ -1,0 +1,666 @@
+/* ============================================
+   SilyProcure - Responsive Design System
+   Basé sur PROMPT_RESPONSIVE_DESIGN.md
+   ============================================ */
+
+/* Variables CSS Responsive */
+:root {
+  /* Espacements */
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.5rem;    /* 8px */
+  --spacing-md: 1rem;      /* 16px */
+  --spacing-lg: 1.5rem;    /* 24px */
+  --spacing-xl: 2rem;      /* 32px */
+  --spacing-xxl: 3rem;     /* 48px */
+  
+  /* Tailles de police (mobile-first) */
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-base: 0.875rem; /* 14px - base mobile */
+  --font-size-lg: 1rem;      /* 16px */
+  --font-size-xl: 1.125rem;  /* 18px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+  --font-size-3xl: 2rem;     /* 32px */
+  
+  /* Breakpoints */
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1440px;
+  
+  /* Touch target minimum */
+  --touch-target-min: 44px;
+}
+
+/* ============================================
+   BASE MOBILE-FIRST
+   ============================================ */
+
+/* Viewport fix pour éviter les problèmes de zoom */
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+/* Typographie responsive de base */
+body {
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+}
+
+h1 { font-size: var(--font-size-2xl); }
+h2 { font-size: var(--font-size-xl); }
+h3 { font-size: var(--font-size-lg); }
+h4 { font-size: var(--font-size-base); }
+h5, h6 { font-size: var(--font-size-sm); }
+
+/* ============================================
+   CONTAINERS RESPONSIVE
+   ============================================ */
+
+.container {
+  width: 100%;
+  max-width: 100%;
+  padding: var(--spacing-md);
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* ============================================
+   GRID SYSTEM RESPONSIVE
+   ============================================ */
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md);
+  width: 100%;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md);
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md);
+}
+
+.grid-auto-fit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-md);
+}
+
+/* ============================================
+   FLEXBOX RESPONSIVE
+   ============================================ */
+
+.flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.flex-nowrap {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--spacing-sm);
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-row {
+  flex-direction: row;
+}
+
+/* ============================================
+   BOUTONS RESPONSIVE
+   ============================================ */
+
+.btn {
+  min-height: var(--touch-target-min);
+  padding: 0.75rem 1.5rem;
+  font-size: var(--font-size-base);
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.btn-group .btn {
+  flex: 1 1 auto;
+}
+
+/* ============================================
+   FORMULAIRES RESPONSIVE
+   ============================================ */
+
+.form-group {
+  margin-bottom: var(--spacing-md);
+  width: 100%;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--color-neutral-dark);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  max-width: 100%;
+  padding: 0.75rem;
+  font-size: var(--font-size-base);
+  box-sizing: border-box;
+  min-height: var(--touch-target-min);
+  border: 1px solid var(--color-neutral-light);
+  border-radius: 6px;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 56, 122, 0.1);
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* ============================================
+   TABLEAUX RESPONSIVE
+   ============================================ */
+
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  margin: var(--spacing-md) 0;
+}
+
+.table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.table th,
+.table td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  border-bottom: 1px solid var(--color-neutral-light);
+}
+
+.table th {
+  font-weight: 600;
+  background-color: var(--color-background-light);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* ============================================
+   MODALES RESPONSIVE
+   ============================================ */
+
+.modal {
+  width: 95vw;
+  max-width: 100%;
+  padding: var(--spacing-md);
+  box-sizing: border-box;
+  margin: var(--spacing-md);
+  background: var(--color-background);
+  border-radius: 8px;
+  box-shadow: var(--shadow-xl);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-neutral-light);
+}
+
+.modal-body {
+  margin-bottom: var(--spacing-lg);
+}
+
+.modal-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-neutral-light);
+}
+
+.modal-footer .btn {
+  width: 100%;
+}
+
+/* ============================================
+   CARDS RESPONSIVE
+   ============================================ */
+
+.card {
+  width: 100%;
+  background: var(--color-background);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: var(--spacing-md);
+}
+
+.card-header {
+  padding: var(--spacing-md);
+  background: var(--color-background-light);
+  border-bottom: 1px solid var(--color-neutral-light);
+}
+
+.card-body {
+  padding: var(--spacing-md);
+}
+
+.card-footer {
+  padding: var(--spacing-md);
+  background: var(--color-background-light);
+  border-top: 1px solid var(--color-neutral-light);
+}
+
+/* ============================================
+   NAVIGATION RESPONSIVE
+   ============================================ */
+
+/* Header responsive */
+.header {
+  width: 100%;
+  padding: var(--spacing-md);
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.header .logo {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+}
+
+.header .user-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Nav responsive */
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nav a {
+  white-space: nowrap;
+  min-height: var(--touch-target-min);
+  padding: var(--spacing-sm) var(--spacing-md);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* Sidebar responsive */
+.sidebar {
+  width: 280px;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-toggle {
+  display: block;
+  position: fixed;
+  top: var(--spacing-md);
+  left: var(--spacing-md);
+  z-index: 1002;
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+}
+
+/* ============================================
+   HERO SECTIONS RESPONSIVE
+   ============================================ */
+
+.hero-section {
+  padding: var(--spacing-lg);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.hero-title {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--spacing-sm);
+}
+
+.hero-description {
+  font-size: var(--font-size-base);
+  margin-bottom: var(--spacing-md);
+}
+
+/* ============================================
+   MEDIA QUERIES - TABLETTE (≥768px)
+   ============================================ */
+
+@media (min-width: 768px) {
+  :root {
+    --font-size-base: 1rem; /* 16px */
+  }
+  
+  .container {
+    padding: var(--spacing-lg);
+    max-width: 1200px;
+  }
+  
+  /* Grid 2 colonnes */
+  .grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Grid 3 colonnes */
+  .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  /* Formulaires en ligne */
+  .form-row {
+    flex-direction: row;
+  }
+  
+  /* Modales plus larges */
+  .modal {
+    width: 80vw;
+    max-width: 600px;
+    padding: var(--spacing-lg);
+  }
+  
+  .modal-footer {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+  
+  .modal-footer .btn {
+    width: auto;
+  }
+  
+  /* Sidebar visible */
+  .sidebar {
+    transform: translateX(0);
+  }
+  
+  .sidebar-toggle {
+    display: none;
+  }
+  
+  /* Hero sections */
+  .hero-section {
+    padding: var(--spacing-xl);
+  }
+  
+  .hero-title {
+    font-size: var(--font-size-3xl);
+  }
+  
+  /* Tableaux */
+  .table {
+    font-size: var(--font-size-base);
+  }
+  
+  .table th,
+  .table td {
+    padding: var(--spacing-md);
+  }
+  
+  /* Boutons */
+  .btn-group .btn {
+    flex: 0 1 auto;
+  }
+}
+
+/* ============================================
+   MEDIA QUERIES - DESKTOP (≥1024px)
+   ============================================ */
+
+@media (min-width: 1024px) {
+  :root {
+    --font-size-base: 1.125rem; /* 18px */
+  }
+  
+  .container {
+    padding: var(--spacing-xl);
+  }
+  
+  /* Grid 3 colonnes pour desktop */
+  .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  /* Modales desktop */
+  .modal {
+    width: auto;
+    max-width: 800px;
+    padding: var(--spacing-xl);
+  }
+  
+  /* Sidebar fixe */
+  .sidebar {
+    position: fixed;
+    width: 280px;
+  }
+  
+  /* Main content avec sidebar */
+  body.has-sidebar .main-content {
+    margin-left: 280px;
+    width: calc(100% - 280px);
+  }
+  
+  /* Navigation horizontale */
+  .nav {
+    flex-wrap: nowrap;
+    overflow-x: visible;
+  }
+}
+
+/* ============================================
+   MEDIA QUERIES - GRAND DESKTOP (≥1440px)
+   ============================================ */
+
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1400px;
+  }
+  
+  .grid-3 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ============================================
+   ORIENTATION SPECIFIQUE
+   ============================================ */
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .hero-section {
+    padding: var(--spacing-md);
+  }
+  
+  .modal {
+    max-height: 95vh;
+  }
+}
+
+/* ============================================
+   UTILITAIRES RESPONSIVE
+   ============================================ */
+
+/* Masquer sur mobile */
+.hide-mobile {
+  display: none;
+}
+
+/* Masquer sur desktop */
+.hide-desktop {
+  display: block;
+}
+
+/* Afficher seulement sur mobile */
+.show-mobile-only {
+  display: block;
+}
+
+/* Afficher seulement sur desktop */
+.show-desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hide-mobile {
+    display: block;
+  }
+  
+  .hide-desktop {
+    display: none;
+  }
+  
+  .show-mobile-only {
+    display: none;
+  }
+  
+  .show-desktop-only {
+    display: block;
+  }
+}
+
+/* Full width sur mobile */
+.w-full-mobile {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .w-full-mobile {
+    width: auto;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITÉ ET PERFORMANCE
+   ============================================ */
+
+/* Améliorer le rendu sur mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Smooth scrolling */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Réduire les animations sur mobile pour performance */
+@media (max-width: 768px) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible pour accessibilité */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   CORRECTIONS SPÉCIFIQUES
+   ============================================ */
+
+/* Éviter le débordement horizontal */
+body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Images responsives */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Vidéos responsives */
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Iframes responsives */
+iframe {
+  max-width: 100%;
+  width: 100%;
+}
+
+/* Prévenir le zoom sur input focus (iOS) */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px; /* Empêche le zoom automatique sur iOS */
+  }
+}
+

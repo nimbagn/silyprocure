@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Détails Commande - SilyProcure</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/animations.css">
@@ -167,21 +168,17 @@
             }, 100);
         }
 
-        // Fonction pour créer une facture depuis une commande avec majoration
-        async function creerFactureDepuisCommande(commandeId) {
-            console.log('creerFactureDepuisCommande appelé avec id:', commandeId);
+        // Fonction pour créer une facture PROFORMA depuis une commande avec majoration
+        async function creerFactureProformaDepuisCommande(commandeId) {
+            console.log('creerFactureProformaDepuisCommande appelé avec id:', commandeId);
             
             try {
                 // Récupérer la marge active par défaut
                 const margeResponse = await apiCall('/api/marges/active');
                 const margeActive = margeResponse && margeResponse.ok ? await margeResponse.json() : { pourcentage: 20 };
                 
-                // Récupérer les clients (acheteurs)
-                const clientsResponse = await apiCall('/api/entreprises?type=acheteur');
-                const clients = clientsResponse && clientsResponse.ok ? await clientsResponse.json() : [];
-                
-                // Afficher le modal de création de facture
-                showCreateFactureModal(commandeId, margeActive.pourcentage, clients);
+                // Afficher le modal de création de facture proforma
+                showCreateFactureProformaModal(commandeId, margeActive.pourcentage);
             } catch (error) {
                 console.error('Erreur:', error);
                 Toast.error('Erreur lors du chargement des données: ' + error.message);
@@ -189,7 +186,239 @@
         }
         
         // Exposer la fonction globalement
-        window.creerFactureDepuisCommande = creerFactureDepuisCommande;
+        window.creerFactureProformaDepuisCommande = creerFactureProformaDepuisCommande;
+
+        // Fonction pour afficher le modal de création de facture proforma
+        async function showCreateFactureProformaModal(commandeId, margeParDefaut) {
+            // Charger les clients (entreprises de type acheteur) pour la sélection si nécessaire
+            let clients = [];
+            try {
+                const clientsResponse = await apiCall('/api/entreprises?type=acheteur');
+                if (clientsResponse && clientsResponse.ok) {
+                    clients = await clientsResponse.json();
+                }
+            } catch (error) {
+                console.warn('Impossible de charger les clients:', error);
+            }
+
+            const modalContent = `
+                <div style="max-width: 800px;">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--color-primary);"><i class="fas fa-file-invoice"></i> Créer une facture proforma</h3>
+                    
+                    ${clients.length > 0 ? `
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Client (optionnel - sera déterminé automatiquement si non spécifié)</label>
+                        <select id="proforma-client-id" class="form-control">
+                            <option value="">Auto-détection</option>
+                            ${clients.map(c => `<option value="${c.id}">${c.nom}</option>`).join('')}
+                        </select>
+                        <small style="color: #666;">Si le client ne peut pas être déterminé automatiquement, sélectionnez-le ici</small>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div class="form-group">
+                            <label>Marge commerciale (%) *</label>
+                            <input type="number" id="proforma-marge" class="form-control" value="${margeParDefaut}" min="0" max="100" step="0.01" required 
+                                   onchange="if(typeof window.updateProformaPreview==='function'){window.updateProformaPreview(${commandeId});}">
+                            <small style="color: #666;">Pourcentage à ajouter au prix d'achat</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Date d'émission</label>
+                            <input type="date" id="proforma-date-emission" class="form-control" 
+                                   value="${new Date().toISOString().split('T')[0]}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Conditions de paiement</label>
+                        <textarea id="proforma-conditions" class="form-control" rows="2" placeholder="Ex: Paiement à 30 jours"></textarea>
+                    </div>
+                    
+                    <div id="proforma-preview" style="margin-top: 1.5rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <p style="color: #666; font-style: italic;">Aperçu de la facture proforma...</p>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button class="btn btn-secondary" onclick="Modal.hide('create-proforma')">Annuler</button>
+                        <button class="btn btn-primary" onclick="if(typeof window.submitCreateProforma==='function'){window.submitCreateProforma(${commandeId});}else{alert('Fonction non disponible');}"><i class="fas fa-save"></i> Créer la facture proforma</button>
+                    </div>
+                </div>
+            `;
+            
+            const modal = new Modal('create-proforma', 'Créer une facture proforma', modalContent);
+            modal.show();
+            
+            // Charger l'aperçu initial
+            setTimeout(() => {
+                if (typeof window.updateProformaPreview === 'function') {
+                    window.updateProformaPreview(commandeId);
+                }
+            }, 100);
+        }
+
+        // Fonction pour mettre à jour l'aperçu de la facture proforma
+        async function updateProformaPreview(commandeId) {
+            const margeInput = document.getElementById('proforma-marge');
+            const previewDiv = document.getElementById('proforma-preview');
+            
+            if (!margeInput || !previewDiv) return;
+            
+            const marge = parseFloat(margeInput.value || 20);
+            
+            try {
+                // Récupérer les détails de la commande
+                const response = await apiCall(`/api/commandes/${commandeId}`);
+                if (!response || !response.ok) {
+                    previewDiv.innerHTML = '<p style="color: var(--color-danger);">Erreur lors du chargement de la commande</p>';
+                    return;
+                }
+                
+                const commande = await response.json();
+                
+                if (!commande.lignes || commande.lignes.length === 0) {
+                    previewDiv.innerHTML = '<p style="color: var(--color-danger);">La commande n\'a pas de lignes</p>';
+                    return;
+                }
+                
+                // Calculer les totaux
+                let totalAchatHT = 0;
+                let totalVenteHT = 0;
+                let totalTVA = 0;
+                
+                const lignesHTML = commande.lignes.map(ligne => {
+                    const prixAchatHT = parseFloat(ligne.prix_unitaire_ht || 0);
+                    const quantite = parseFloat(ligne.quantite || 0);
+                    const prixVenteHT = prixAchatHT * (1 + marge / 100);
+                    const tvaTaux = parseFloat(ligne.tva_taux || 20);
+                    
+                    const totalAchatLigne = prixAchatHT * quantite;
+                    const totalVenteLigne = prixVenteHT * quantite;
+                    const tvaLigne = totalVenteLigne * (tvaTaux / 100);
+                    
+                    totalAchatHT += totalAchatLigne;
+                    totalVenteHT += totalVenteLigne;
+                    totalTVA += tvaLigne;
+                    
+                    return `
+                        <tr>
+                            <td>${ligne.reference || '-'}</td>
+                            <td>${ligne.description || '-'}</td>
+                            <td>${quantite}</td>
+                            <td>${formatCurrency(prixAchatHT)}</td>
+                            <td><strong>${formatCurrency(prixVenteHT)}</strong></td>
+                            <td>${marge.toFixed(2)}%</td>
+                            <td><strong>${formatCurrency(totalVenteLigne)}</strong></td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                const totalTTC = totalVenteHT + totalTVA;
+                const margeTotale = totalVenteHT - totalAchatHT;
+                
+                previewDiv.innerHTML = `
+                    <h4 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-eye"></i> Aperçu de la facture proforma</h4>
+                    <div style="overflow-x: auto;">
+                        <table class="table" style="font-size: 0.9rem;">
+                            <thead>
+                                <tr>
+                                    <th>Référence</th>
+                                    <th>Description</th>
+                                    <th>Qté</th>
+                                    <th>Prix achat HT</th>
+                                    <th>Prix vente HT</th>
+                                    <th>Marge</th>
+                                    <th>Total HT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${lignesHTML}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <p><strong>Total achat HT:</strong> ${formatCurrency(totalAchatHT)}</p>
+                                <p><strong>Total vente HT:</strong> ${formatCurrency(totalVenteHT)}</p>
+                                <p><strong>Marge totale:</strong> <span style="color: var(--color-success); font-weight: bold;">${formatCurrency(margeTotale)}</span></p>
+                            </div>
+                            <div>
+                                <p><strong>TVA:</strong> ${formatCurrency(totalTVA)}</p>
+                                <p style="font-size: 1.2rem; font-weight: bold; color: var(--color-primary);">
+                                    <strong>Total TTC:</strong> ${formatCurrency(totalTTC)}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erreur aperçu facture proforma:', error);
+                previewDiv.innerHTML = '<p style="color: var(--color-danger);">Erreur lors du calcul de l\'aperçu</p>';
+            }
+        }
+        
+        // Fonction pour soumettre la création de facture proforma
+        async function submitCreateProforma(commandeId) {
+            const marge = parseFloat(document.getElementById('proforma-marge')?.value || 20);
+            const dateEmission = document.getElementById('proforma-date-emission')?.value;
+            const conditions = document.getElementById('proforma-conditions')?.value;
+            const clientId = document.getElementById('proforma-client-id')?.value;
+            
+            if (!marge || marge < 0) {
+                Toast.error('Veuillez saisir une marge valide');
+                return;
+            }
+            
+            try {
+                showLoading('Création de la facture proforma...');
+                
+                const requestBody = {
+                    marge_pourcentage: marge,
+                    date_emission: dateEmission,
+                    conditions_paiement: conditions || null,
+                    delai_paiement_jours: 30,
+                    mode_paiement: 'Virement bancaire'
+                };
+                
+                // Ajouter client_id si spécifié
+                if (clientId) {
+                    requestBody.client_id = parseInt(clientId);
+                }
+                
+                const response = await apiCall(`/api/factures/proforma-from-commande/${commandeId}`, {
+                    method: 'POST',
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (!response) {
+                    hideLoading();
+                    Toast.error('Erreur de connexion');
+                    return;
+                }
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    Toast.success('Facture proforma créée avec succès');
+                    Modal.hide('create-proforma');
+                    setTimeout(() => {
+                        window.location.href = `factures.html?type=proforma`;
+                    }, 1500);
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    Toast.error(errorData.error || 'Erreur lors de la création de la facture proforma');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur de connexion: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Exposer les fonctions globalement
+        window.updateProformaPreview = updateProformaPreview;
+        window.submitCreateProforma = submitCreateProforma;
 
         async function loadCommandeDetails() {
             if (!commandeId) {
@@ -241,8 +470,27 @@
                 `;
             } else if (commande.statut === 'livre') {
                 actionsHTML = `
-                    <button class="btn btn-primary" onclick="if(typeof window.creerFactureDepuisCommande==='function'){window.creerFactureDepuisCommande(${commande.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-file-invoice"></i> Créer une facture pour le client</button>
+                    <button class="btn btn-primary" onclick="if(typeof window.creerFactureProformaDepuisCommande==='function'){window.creerFactureProformaDepuisCommande(${commande.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-file-invoice"></i> Créer une facture proforma</button>
                 `;
+            } else if (commande.statut === 'validee') {
+                // Commande validée - vérifier si un BL existe et si une facture définitive n'existe pas déjà
+                checkBLAndFactureDefinitive(commande.id).then(({ blId, hasFacture }) => {
+                    if (blId && !hasFacture) {
+                        actionsHTML += `
+                            <button class="btn btn-success" onclick="creerFactureDefinitiveFromBL(${blId})">
+                                <i class="fas fa-file-invoice"></i> Créer facture définitive
+                            </button>
+                        `;
+                        actionsContainer.innerHTML = actionsHTML;
+                    } else if (blId) {
+                        actionsHTML += `
+                            <a href="bons-livraison-detail.html?id=${blId}" class="btn btn-info">
+                                <i class="fas fa-truck"></i> Voir le bon de livraison
+                            </a>
+                        `;
+                        actionsContainer.innerHTML = actionsHTML;
+                    }
+                });
             }
             actionsContainer.innerHTML = actionsHTML;
 
@@ -516,6 +764,78 @@
             }
         }
         
+        // Fonction pour vérifier si un BL existe et si une facture définitive existe déjà
+        async function checkBLAndFactureDefinitive(commandeId) {
+            try {
+                // Récupérer les BL de la commande
+                const blResponse = await apiCall(`/api/bons-livraison?commande_id=${commandeId}`);
+                let blId = null;
+                if (blResponse && blResponse.ok) {
+                    const bls = await blResponse.json();
+                    if (bls && bls.length > 0) {
+                        blId = bls[0].id;
+                    }
+                }
+                
+                // Vérifier si une facture définitive existe
+                const factureResponse = await apiCall(`/api/factures?commande_id=${commandeId}&type_facture=facture`);
+                let hasFacture = false;
+                if (factureResponse && factureResponse.ok) {
+                    const factures = await factureResponse.json();
+                    hasFacture = factures && factures.length > 0;
+                }
+                
+                return { blId, hasFacture };
+            } catch (error) {
+                console.error('Erreur vérification BL et facture:', error);
+                return { blId: null, hasFacture: false };
+            }
+        }
+
+        // Fonction pour créer une facture définitive depuis un BL
+        async function creerFactureDefinitiveFromBL(blId) {
+            if (!confirm('Voulez-vous créer la facture définitive depuis le bon de livraison ?')) {
+                return;
+            }
+            
+            try {
+                showLoading('Création de la facture définitive...');
+                
+                const response = await apiCall(`/api/factures/definitive-from-bl/${blId}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        date_emission: new Date().toISOString().split('T')[0],
+                        delai_paiement_jours: 30,
+                        mode_paiement: 'Virement bancaire'
+                    })
+                });
+                
+                if (!response) {
+                    hideLoading();
+                    Toast.error('Erreur de connexion');
+                    return;
+                }
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Facture définitive créée:', data);
+                    Toast.success('Facture définitive créée avec succès');
+                    setTimeout(() => {
+                        window.location.href = `factures-detail.html?id=${data.id}`;
+                    }, 1500);
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    console.error('Erreur création facture définitive:', errorData);
+                    Toast.error(errorData.error || 'Erreur lors de la création de la facture définitive');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur de connexion: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
         // Exposer les fonctions globalement
         window.updateFacturePreview = updateFacturePreview;
         window.submitCreateFacture = submitCreateFacture;

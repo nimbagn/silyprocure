@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails Bon de Livraison - SilyProcure</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
+        <div class="user-info">
+            <span id="user-name"></span>
+            <button onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="rfq.html">RFQ</a>
+        <a href="devis.html">Devis</a>
+        <a href="commandes.html">Commandes</a>
+        <a href="factures.html">Factures</a>
+        <a href="entreprises.html">Entreprises</a>
+        <a href="produits.html">Produits</a>
+        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section" style="text-align: left; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <button class="btn btn-secondary" onclick="window.history.back()" style="margin-bottom: 1rem;">
+                        ← Retour
+                    </button>
+                    <h1 class="hero-title" style="font-size: 2rem; margin: 0;"><i class="fas fa-truck"></i> Détails du bon de livraison</h1>
+                    <p class="hero-description" style="text-align: left; margin: 0.5rem 0 0 0; max-width: 100%;">
+                        Consultez les détails complets du bon de livraison
+                    </p>
+                </div>
+                <div id="bl-actions"></div>
+            </div>
+        </div>
+
+        <div id="bl-details">
+            <div class="loading"><div class="loading-spinner"></div> Chargement...</div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/fileUpload.js"></script>
+    <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
+    <script>
+        checkAuth();
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const blId = urlParams.get('id');
+
+        async function loadBLDetails() {
+            if (!blId) {
+                Toast.error('Bon de livraison non spécifié');
+                window.history.back();
+                return;
+            }
+
+            try {
+                showLoading('Chargement...');
+                const response = await apiCall(`/api/bons-livraison/${blId}`);
+                if (!response) {
+                    hideLoading();
+                    return;
+                }
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    hideLoading();
+                    Toast.error('Erreur: ' + (errorData.error || 'Bon de livraison non trouvé'));
+                    setTimeout(() => window.history.back(), 2000);
+                    return;
+                }
+
+                const bl = await response.json();
+                hideLoading();
+                displayBLDetails(bl);
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur lors du chargement');
+                console.error('Erreur:', error);
+            }
+        }
+
+        function displayBLDetails(bl) {
+            const container = document.getElementById('bl-details');
+            const actionsContainer = document.getElementById('bl-actions');
+
+            // Actions
+            let actionsHTML = `
+                <button class="btn btn-secondary" onclick="window.open('/api/pdf/bl/${bl.id}', '_blank')" style="margin-right: 0.5rem;">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+            `;
+            
+            // Si la commande est validée et qu'il n'y a pas encore de facture définitive, afficher le bouton
+            if (bl.commande_id) {
+                // Vérifier si une facture définitive existe déjà
+                checkFactureDefinitive(bl.commande_id).then(hasFacture => {
+                    if (!hasFacture && bl.statut !== 'annule') {
+                        actionsHTML += `
+                            <button class="btn btn-success" onclick="creerFactureDefinitive(${bl.id})">
+                                <i class="fas fa-file-invoice"></i> Créer facture définitive
+                            </button>
+                        `;
+                        actionsContainer.innerHTML = actionsHTML;
+                    }
+                });
+            }
+            
+            actionsContainer.innerHTML = actionsHTML;
+
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">${bl.numero || 'BL-' + bl.id}</h2>
+                        <span class="badge ${getStatusBadge(bl.statut)}">${getStatusLabel(bl.statut)}</span>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                            <div>
+                                <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-clipboard-list"></i> Informations générales</h3>
+                                <div style="line-height: 2;">
+                                    <div><strong>Numéro:</strong> ${bl.numero || '-'}</div>
+                                    <div><strong>Date d'émission:</strong> ${formatDate(bl.date_emission)}</div>
+                                    ${bl.date_livraison ? `<div><strong>Date de livraison:</strong> ${formatDate(bl.date_livraison)}</div>` : ''}
+                                    ${bl.heure_livraison ? `<div><strong>Heure de livraison:</strong> ${bl.heure_livraison}</div>` : ''}
+                                    ${bl.transporteur_nom ? `<div><strong>Transporteur:</strong> ${bl.transporteur_nom}</div>` : ''}
+                                    ${bl.numero_suivi ? `<div><strong>Numéro de suivi:</strong> ${bl.numero_suivi}</div>` : ''}
+                                    ${bl.commande_numero ? `<div><strong>Commande associée:</strong> <a href="commandes-detail.html?id=${bl.commande_id}" class="link-primary">${bl.commande_numero}</a></div>` : ''}
+                                </div>
+                            </div>
+                            <div>
+                                <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-info-circle"></i> Détails</h3>
+                                <div style="line-height: 2;">
+                                    ${bl.poids_total ? `<div><strong>Poids total:</strong> ${bl.poids_total} kg</div>` : ''}
+                                    ${bl.volume ? `<div><strong>Volume:</strong> ${bl.volume} m³</div>` : ''}
+                                    ${bl.numero_colis ? `<div><strong>Numéro de colis:</strong> ${bl.numero_colis}</div>` : ''}
+                                    ${bl.receptionne_par ? `<div><strong>Reçu par:</strong> ${bl.receptionne_par}</div>` : ''}
+                                    ${bl.date_reception ? `<div><strong>Date de réception:</strong> ${formatDate(bl.date_reception)}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        ${bl.notes ? `
+                            <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--color-background-light); border-radius: 8px;">
+                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-comment"></i> Notes</h4>
+                                <p style="margin: 0;">${bl.notes}</p>
+                            </div>
+                        ` : ''}
+
+                        ${bl.reserves ? `
+                            <div style="margin-bottom: 1.5rem; padding: 1rem; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                                <h4 style="margin-bottom: 0.5rem; color: #856404;"><i class="fas fa-exclamation-triangle"></i> Réserves</h4>
+                                <p style="margin: 0; color: #856404;">${bl.reserves}</p>
+                            </div>
+                        ` : ''}
+
+                        ${bl.lignes && bl.lignes.length > 0 ? `
+                            <h3 style="margin: 1.5rem 0 1rem 0; color: var(--color-primary);"><i class="fas fa-box"></i> Lignes de livraison</h3>
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Référence</th>
+                                            <th>Description</th>
+                                            <th>Quantité commandée</th>
+                                            <th>Quantité livrée</th>
+                                            <th>Unité</th>
+                                            <th>Prix unitaire HT</th>
+                                            <th>Total HT</th>
+                                            <th>État</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${bl.lignes.map(ligne => `
+                                            <tr>
+                                                <td>${ligne.reference || '-'}</td>
+                                                <td>${ligne.description || '-'}</td>
+                                                <td>${ligne.quantite_commandee || 0}</td>
+                                                <td>${ligne.quantite_livree || 0}</td>
+                                                <td>${ligne.unite || 'unité'}</td>
+                                                <td>${formatCurrency(ligne.prix_unitaire_ht || 0)}</td>
+                                                <td>${formatCurrency((ligne.prix_unitaire_ht || 0) * (ligne.quantite_livree || 0))}</td>
+                                                <td><span class="badge ${getEtatBadge(ligne.etat)}">${getEtatLabel(ligne.etat)}</span></td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : '<p>Aucune ligne de livraison</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function getStatusBadge(statut) {
+            const badges = {
+                'brouillon': 'badge-secondary',
+                'en_transit': 'badge-info',
+                'livre': 'badge-success',
+                'partiel': 'badge-warning',
+                'retard': 'badge-danger',
+                'annule': 'badge-danger'
+            };
+            return badges[statut] || 'badge-secondary';
+        }
+
+        function getStatusLabel(statut) {
+            const labels = {
+                'brouillon': 'Brouillon',
+                'en_transit': 'En transit',
+                'livre': 'Livré',
+                'partiel': 'Partiel',
+                'retard': 'En retard',
+                'annule': 'Annulé'
+            };
+            return labels[statut] || statut;
+        }
+
+        function getEtatBadge(etat) {
+            const badges = {
+                'conforme': 'badge-success',
+                'non_conforme': 'badge-danger',
+                'endommage': 'badge-warning',
+                'manquant': 'badge-danger'
+            };
+            return badges[etat] || 'badge-secondary';
+        }
+
+        function getEtatLabel(etat) {
+            const labels = {
+                'conforme': 'Conforme',
+                'non_conforme': 'Non conforme',
+                'endommage': 'Endommagé',
+                'manquant': 'Manquant'
+            };
+            return labels[etat] || etat;
+        }
+
+        async function checkFactureDefinitive(commandeId) {
+            try {
+                const response = await apiCall(`/api/factures?commande_id=${commandeId}&type_facture=facture`);
+                if (response && response.ok) {
+                    const factures = await response.json();
+                    return factures && factures.length > 0;
+                }
+                return false;
+            } catch (error) {
+                console.error('Erreur vérification facture définitive:', error);
+                return false;
+            }
+        }
+
+        async function creerFactureDefinitive(blId) {
+            if (!confirm('Voulez-vous créer la facture définitive depuis ce bon de livraison ?')) {
+                return;
+            }
+            
+            try {
+                showLoading('Création de la facture définitive...');
+                
+                const response = await apiCall(`/api/factures/definitive-from-bl/${blId}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        date_emission: new Date().toISOString().split('T')[0],
+                        delai_paiement_jours: 30,
+                        mode_paiement: 'Virement bancaire'
+                    })
+                });
+                
+                if (!response) {
+                    hideLoading();
+                    Toast.error('Erreur de connexion');
+                    return;
+                }
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Facture définitive créée:', data);
+                    Toast.success('Facture définitive créée avec succès');
+                    setTimeout(() => {
+                        window.location.href = `factures-detail.html?id=${data.id}`;
+                    }, 1500);
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    console.error('Erreur création facture définitive:', errorData);
+                    Toast.error(errorData.error || 'Erreur lors de la création de la facture définitive');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur de connexion: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        loadBLDetails();
+    </script>
+</body>
+</html>
+

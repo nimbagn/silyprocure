@@ -319,7 +319,13 @@ router.patch('/:id/statut', validateId, async (req, res) => {
         console.log('✅ Devis trouvé:', devisData.numero, 'Statut actuel:', devisData.statut);
 
         // Mettre à jour le statut
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'devis.js:321',message:'Before UPDATE statut',data:{devisId:id,statut,userId:req.user?.id,userRole:req.user?.role},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         await pool.execute('UPDATE devis SET statut = $1 WHERE id = $2', [statut, id]);
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'devis.js:323',message:'After UPDATE statut',data:{devisId:id,statut,success:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         console.log('✅ Statut mis à jour:', statut);
 
         // Enregistrer dans l'historique du client si le devis est lié à une demande client

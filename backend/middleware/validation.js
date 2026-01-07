@@ -240,6 +240,12 @@ const validateId = [
     handleValidationErrors
 ];
 
+// Validation pour commande_id
+const validateCommandeId = [
+    param('commande_id').isInt({ min: 1 }).withMessage('ID commande invalide'),
+    handleValidationErrors
+];
+
 // Validation pour ID fournisseur
 const validateFournisseurId = [
     param('fournisseur_id').custom((value) => {
@@ -272,6 +278,7 @@ module.exports = {
     validateFacture,
     validateLogin,
     validateId,
+    validateCommandeId,
     validateFournisseurId,
     validatePagination,
     handleValidationErrors

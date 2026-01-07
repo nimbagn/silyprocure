@@ -117,6 +117,18 @@ router.post('/', validateCommande, async (req, res) => {
             total_ttc = total_ht + total_tva;
         }
 
+        console.log('🟦 Création commande - Données reçues:', {
+            numero,
+            type_commande,
+            fournisseur_id,
+            devis_id,
+            rfq_id,
+            lignes_count: lignes?.length || 0,
+            total_ht,
+            total_tva,
+            total_ttc
+        });
+
         const [commandeRows, commandeResult] = await pool.execute(
             `INSERT INTO commandes (numero, type_commande, date_commande, date_livraison_souhaitee,
               commandeur_id, fournisseur_id, contact_fournisseur_id, devis_id, rfq_id,
@@ -133,7 +145,17 @@ router.post('/', validateCommande, async (req, res) => {
              total_ht, total_tva, total_ttc]
         );
 
+        console.log('🟦 Résultat insertion commande:', {
+            rows: commandeRows?.length || 0,
+            commandeResult_keys: Object.keys(commandeResult || {}),
+            hasRows: !!(commandeResult?.rows && commandeResult.rows[0]),
+            insertId: commandeResult?.insertId,
+            firstRowId: commandeResult?.[0]?.id
+        });
+
         const commande_id = commandeResult.rows && commandeResult.rows[0] ? commandeResult.rows[0].id : (commandeResult.insertId || commandeResult[0]?.id);
+        
+        console.log('✅ Commande créée avec ID:', commande_id);
 
         // Enregistrer dans l'historique du client si la commande est liée à une demande client
         if (devis_id) {
@@ -168,16 +190,29 @@ router.post('/', validateCommande, async (req, res) => {
 
         // Insérer les lignes
         if (lignes && lignes.length > 0) {
-            for (const ligne of lignes) {
+            console.log(`🟦 Insertion de ${lignes.length} ligne(s) de commande`);
+            for (let i = 0; i < lignes.length; i++) {
+                const ligne = lignes[i];
                 const prix_ht = ligne.prix_unitaire_ht * ligne.quantite;
                 const remise = prix_ht * (ligne.remise || 0) / 100;
                 const total_ht_ligne = prix_ht - remise;
+
+                console.log(`🟦 Insertion ligne ${i + 1}/${lignes.length}:`, {
+                    commande_id,
+                    description: ligne.description?.substring(0, 50),
+                    quantite: ligne.quantite,
+                    prix_unitaire_ht: ligne.prix_unitaire_ht,
+                    total_ht_ligne
+                });
 
                 await pool.execute(
                     'INSERT INTO commande_lignes (commande_id, produit_id, reference, description, quantite, unite, prix_unitaire_ht, remise, total_ht, tva_taux, ordre) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
                     [commande_id, ligne.produit_id, ligne.reference, ligne.description, ligne.quantite, ligne.unite || 'unité', ligne.prix_unitaire_ht, ligne.remise || 0, total_ht_ligne, ligne.tva_taux || 20, ligne.ordre || 0]
                 );
             }
+            console.log('✅ Toutes les lignes de commande ont été insérées');
+        } else {
+            console.warn('⚠️ Aucune ligne de commande à insérer');
         }
 
         // Notifier le fournisseur qu'une commande a été créée

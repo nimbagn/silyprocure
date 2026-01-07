@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Détails Facture - SilyProcure</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/animations.css">
@@ -110,8 +111,17 @@
                 </button>
             `;
             
-            // Bouton pour ajouter un paiement si la facture n'est pas payée
-            if (facture.statut !== 'payee' && facture.statut !== 'annulee') {
+            // Si c'est une facture proforma et qu'elle est envoyée, afficher le bouton pour valider et créer le BL
+            if (facture.type_facture === 'proforma' && facture.statut === 'envoyee') {
+                actionsHTML += `
+                    <button class="btn btn-success" onclick="if(typeof window.validerProforma==='function'){window.validerProforma(${facture.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}">
+                        <i class="fas fa-check-circle"></i> Valider la proforma et créer le bon de livraison
+                    </button>
+                `;
+            }
+            
+            // Bouton pour ajouter un paiement si la facture n'est pas payée (et ce n'est pas une proforma)
+            if (facture.type_facture !== 'proforma' && facture.statut !== 'payee' && facture.statut !== 'annulee') {
                 actionsHTML += `
                     <button class="btn btn-success" onclick="showAddPaiementModal(${facture.id}, ${facture.reste_a_payer || 0})">
                         <i class="fas fa-money-check"></i> Enregistrer un paiement
@@ -614,6 +624,58 @@
                 console.error('Erreur:', error);
             }
         }
+
+        // Fonction pour valider une facture proforma et créer le bon de livraison + commande validée
+        async function validerProforma(proformaId) {
+            console.log('validerProforma appelé avec id:', proformaId);
+            
+            if (!confirm('Voulez-vous valider cette facture proforma ?\n\nCela créera automatiquement un bon de livraison et une commande validée.')) {
+                return;
+            }
+            
+            try {
+                showLoading('Validation de la facture proforma et création du bon de livraison...');
+                
+                const response = await apiCall(`/api/factures/validate-proforma/${proformaId}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        date_livraison: new Date().toISOString().split('T')[0]
+                    })
+                });
+                
+                if (!response) {
+                    hideLoading();
+                    Toast.error('Erreur de connexion');
+                    return;
+                }
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Proforma validée, BL et commande créés:', data);
+                    Toast.success(`Proforma validée !\nBon de livraison ${data.bl_numero} et commande ${data.commande_numero} créés avec succès`);
+                    setTimeout(() => {
+                        // Rediriger vers le bon de livraison créé
+                        if (data.bl_id) {
+                            window.location.href = `bons-livraison-detail.html?id=${data.bl_id}`;
+                        } else {
+                            window.location.href = `commandes-detail.html?id=${data.commande_id}`;
+                        }
+                    }, 1500);
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    console.error('Erreur validation proforma:', errorData);
+                    Toast.error(errorData.error || 'Erreur lors de la validation de la facture proforma');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur de connexion: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Exposer la fonction globalement
+        window.validerProforma = validerProforma;
 
         loadFactureDetails();
     </script>

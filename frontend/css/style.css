@@ -304,7 +304,7 @@ body.sidebar-open {
 }
 
 .mobile-menu-toggle {
-    display: none;
+    display: none; /* Caché par défaut, visible sur mobile via media query */
     background: none;
     border: none;
     color: var(--color-primary);
@@ -319,6 +319,7 @@ body.sidebar-open {
     transition: var(--transition);
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    flex-shrink: 0;
 }
 
 .mobile-menu-toggle:hover,
@@ -1410,16 +1411,63 @@ body.sidebar-open {
     }
 }
 
-@media (max-width: 768px) {
+/* ============================================
+   MEDIA QUERIES RESPONSIVE
+   ============================================ */
+
+/* Mobile - Sidebar masquée par défaut */
+@media (max-width: 767px) {
+    /* Sidebar cachée par défaut sur mobile */
+    .sidebar {
+        transform: translateX(-100%);
+        width: 280px;
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .sidebar-overlay {
+        display: block;
+    }
+    
+    .sidebar-overlay.active {
+        opacity: 1;
+        pointer-events: all;
+    }
+    
+    .sidebar-close {
+        display: flex;
+    }
+    
+    /* Main content prend toute la largeur sur mobile */
+    body.has-sidebar .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    /* Mobile menu toggle visible */
+    .mobile-menu-toggle {
+        display: flex !important;
+    }
+    
+    /* Container padding réduit */
     .container {
         padding: 1rem;
     }
 
+    /* Navigation en colonne */
     .nav {
         flex-wrap: wrap;
         padding: 0 1rem;
     }
+    
+    .nav a {
+        width: 100%;
+        text-align: center;
+    }
 
+    /* Grilles en 1 colonne */
     .stats-grid {
         grid-template-columns: 1fr;
     }
@@ -1427,18 +1475,216 @@ body.sidebar-open {
     .form-row {
         grid-template-columns: 1fr;
     }
+    
+    /* Formulaires pleine largeur */
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+    }
 
+    /* Search bar en colonne */
     .search-bar {
         flex-direction: column;
     }
-
-    .modal {
-        width: 95%;
-        padding: 1.5rem;
+    
+    .search-bar input,
+    .search-bar button {
+        width: 100%;
+        margin-bottom: 0.5rem;
     }
 
+    /* Modales pleine largeur */
+    .modal {
+        width: 95vw;
+        max-width: 100%;
+        padding: 1rem;
+        margin: 1rem auto;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Tableaux avec scroll horizontal */
     .table-container {
-        overflow-x: scroll;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .table {
+        min-width: 600px;
+        font-size: 0.875rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.5rem;
+    }
+    
+    /* Boutons pleine largeur dans les groupes */
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Cards en pleine largeur */
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    /* Header responsive */
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .header .user-info {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    /* Hero sections */
+    .hero-section {
+        padding: 1rem;
+    }
+    
+    .hero-title {
+        font-size: 1.5rem;
+    }
+    
+    /* Top header avec sidebar */
+    .top-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .top-header-left,
+    .top-header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+/* Tablette */
+@media (min-width: 768px) and (max-width: 1023px) {
+    /* Sidebar visible mais peut être togglée */
+    .sidebar {
+        transform: translateX(0);
+    }
+    
+    .sidebar-overlay {
+        display: none;
+    }
+    
+    .sidebar-close {
+        display: flex;
+    }
+    
+    /* Main content avec marge pour sidebar */
+    body.has-sidebar .main-content {
+        margin-left: 280px;
+        width: calc(100% - 280px);
+    }
+    
+    /* Mobile menu toggle caché */
+    .mobile-menu-toggle {
+        display: none !important;
+    }
+    
+    /* Container padding moyen */
+    .container {
+        padding: 1.5rem;
+    }
+    
+    /* Grilles en 2 colonnes */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Modales taille moyenne */
+    .modal {
+        width: 80vw;
+        max-width: 600px;
+        padding: 1.5rem;
+    }
+    
+    /* Tableaux taille normale */
+    .table {
+        font-size: 1rem;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    /* Sidebar toujours visible */
+    .sidebar {
+        transform: translateX(0);
+    }
+    
+    .sidebar-overlay {
+        display: none;
+    }
+    
+    .sidebar-close {
+        display: none;
+    }
+    
+    /* Main content avec marge fixe */
+    body.has-sidebar .main-content {
+        margin-left: 280px;
+        width: calc(100% - 280px);
+    }
+    
+    /* Mobile menu toggle caché */
+    .mobile-menu-toggle {
+        display: none !important;
+    }
+    
+    /* Container avec max-width */
+    .container {
+        padding: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    /* Grilles en 3+ colonnes */
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+    
+    /* Modales taille normale */
+    .modal {
+        width: auto;
+        max-width: 800px;
+        padding: 2rem;
+    }
+    
+    .modal-footer {
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+    
+    .modal-footer .btn {
+        width: auto;
+        margin-bottom: 0;
+    }
+    
+    /* Navigation horizontale */
+    .nav {
+        flex-wrap: nowrap;
+    }
+    
+    .nav a {
+        width: auto;
     }
 }
 
