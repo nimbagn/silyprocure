@@ -286,16 +286,20 @@
                     <div style="max-width: 1000px;">
                         <h3 style="margin-bottom: 1.5rem; color: var(--color-primary);"><i class="fas fa-file-invoice"></i> Créer une facture proforma</h3>
                         
-                        ${clients.length > 0 ? `
                         <div class="form-group" style="margin-bottom: 1rem;">
-                            <label>Client (optionnel - sera déterminé automatiquement si non spécifié)</label>
-                            <select id="proforma-client-id" class="form-control">
-                                <option value="">Auto-détection</option>
+                            <label>Client * <span style="color: var(--color-danger);">(obligatoire)</span></label>
+                            ${clients.length > 0 ? `
+                            <select id="proforma-client-id" class="form-control" required>
+                                <option value="">-- Sélectionnez un client --</option>
                                 ${clients.map(c => `<option value="${c.id}">${c.nom}</option>`).join('')}
                             </select>
-                            <small style="color: #666;">Si le client ne peut pas être déterminé automatiquement, sélectionnez-le ici</small>
+                            <small style="color: #666;">Sélectionnez le client pour qui la facture proforma sera créée</small>
+                            ` : `
+                            <div style="padding: 1rem; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
+                                <p style="margin: 0; color: #856404;"><i class="fas fa-exclamation-triangle"></i> Aucun client trouvé. Veuillez d'abord créer des entreprises de type "acheteur" dans la section Entreprises.</p>
+                            </div>
+                            `}
                         </div>
-                        ` : ''}
                         
                         <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                             <div class="form-group">
@@ -589,6 +593,13 @@
             const dateEcheance = document.getElementById('proforma-date-echeance')?.value;
             const conditions = document.getElementById('proforma-conditions')?.value;
             const clientId = document.getElementById('proforma-client-id')?.value;
+            
+            // Vérifier que le client est sélectionné
+            if (!clientId || clientId === '') {
+                Toast.error('Veuillez sélectionner un client');
+                document.getElementById('proforma-client-id')?.focus();
+                return;
+            }
             
             // Récupérer les lignes modifiées depuis le tableau
             const lignesTable = document.getElementById('proforma-lignes-table');

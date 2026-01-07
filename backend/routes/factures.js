@@ -554,53 +554,76 @@ router.post('/proforma-from-commande/:commande_id', validateCommandeId, async (r
 
         console.log('🟦 Client ID trouvé:', client_id);
 
-        // Récupérer les lignes de la commande
-        const [lignesCommande] = await pool.execute(
-            'SELECT * FROM commande_lignes WHERE commande_id = $1 ORDER BY ordre',
-            [commande_id]
-        );
+        // Utiliser les lignes_modifiees envoyées depuis le frontend si disponibles
+        // Sinon, récupérer les lignes de la commande
+        let lignesFacture = [];
+        
+        if (req.body.lignes_modifiees && Array.isArray(req.body.lignes_modifiees) && req.body.lignes_modifiees.length > 0) {
+            console.log('🟦 Utilisation des lignes modifiées depuis le frontend:', req.body.lignes_modifiees.length);
+            // Utiliser les lignes envoyées depuis le frontend (avec prix modifiés)
+            lignesFacture = req.body.lignes_modifiees.map((ligne, index) => ({
+                produit_id: null, // Pas de produit_id pour les lignes modifiées
+                reference: ligne.reference || '',
+                description: ligne.description || '',
+                quantite: ligne.quantite || 0,
+                unite: 'unité',
+                prix_unitaire_ht: ligne.prix_vente_ht || 0, // Prix de vente (modifié par l'utilisateur)
+                prix_achat_ht: ligne.prix_achat_ht || 0, // Prix d'achat (modifié par l'utilisateur)
+                remise: 0,
+                tva_taux: 20, // Par défaut
+                marge_appliquee: ligne.marge || 20,
+                ordre: index
+            }));
+        } else {
+            // Fallback : récupérer les lignes de la commande
+            console.log('🟦 Récupération des lignes depuis la commande');
+            const [lignesCommande] = await pool.execute(
+                'SELECT * FROM commande_lignes WHERE commande_id = $1 ORDER BY ordre',
+                [commande_id]
+            );
 
-        if (lignesCommande.length === 0) {
-            return res.status(400).json({ error: 'La commande n\'a pas de lignes' });
-        }
-
-        // Utiliser la marge fournie ou récupérer la marge active par défaut
-        let marge = marge_pourcentage || 20;
-        if (!marge_pourcentage) {
-            try {
-                const [marges] = await pool.execute(
-                    'SELECT pourcentage FROM marges_commerciales WHERE actif = TRUE ORDER BY id DESC LIMIT 1'
-                );
-                if (marges.length > 0) {
-                    marge = marges[0].pourcentage;
-                }
-            } catch (error) {
-                // Si la table n'existe pas, utiliser 20% par défaut
-                marge = 20;
+            if (lignesCommande.length === 0) {
+                return res.status(400).json({ error: 'La commande n\'a pas de lignes' });
             }
+
+            // Utiliser la marge fournie ou récupérer la marge active par défaut
+            let marge = marge_pourcentage || 20;
+            if (!marge_pourcentage) {
+                try {
+                    const [marges] = await pool.execute(
+                        'SELECT pourcentage FROM marges_commerciales WHERE actif = TRUE ORDER BY id DESC LIMIT 1'
+                    );
+                    if (marges.length > 0) {
+                        marge = marges[0].pourcentage;
+                    }
+                } catch (error) {
+                    // Si la table n'existe pas, utiliser 20% par défaut
+                    marge = 20;
+                }
+            }
+
+            console.log('🟦 Marge appliquée:', marge, '%');
+
+            // Préparer les lignes de facture avec majoration
+            lignesFacture = lignesCommande.map(ligne => {
+                const prix_achat_ht = ligne.prix_unitaire_ht; // Prix d'achat (du fournisseur)
+                const prix_vente_ht = prix_achat_ht * (1 + marge / 100); // Prix de vente (après majoration)
+                
+                return {
+                    produit_id: ligne.produit_id,
+                    reference: ligne.reference,
+                    description: ligne.description,
+                    quantite: ligne.quantite,
+                    unite: ligne.unite,
+                    prix_unitaire_ht: prix_vente_ht, // Prix de vente
+                    prix_achat_ht: prix_achat_ht, // Prix d'achat
+                    remise: ligne.remise || 0,
+                    tva_taux: ligne.tva_taux || 20,
+                    marge_appliquee: marge,
+                    ordre: ligne.ordre || 0
+                };
+            });
         }
-
-        console.log('🟦 Marge appliquée:', marge, '%');
-
-        // Préparer les lignes de facture avec majoration
-        const lignesFacture = lignesCommande.map(ligne => {
-            const prix_achat_ht = ligne.prix_unitaire_ht; // Prix d'achat (du fournisseur)
-            const prix_vente_ht = prix_achat_ht * (1 + marge / 100); // Prix de vente (après majoration)
-            
-            return {
-                produit_id: ligne.produit_id,
-                reference: ligne.reference,
-                description: ligne.description,
-                quantite: ligne.quantite,
-                unite: ligne.unite,
-                prix_unitaire_ht: prix_vente_ht, // Prix de vente
-                prix_achat_ht: prix_achat_ht, // Prix d'achat
-                remise: ligne.remise || 0,
-                tva_taux: ligne.tva_taux || 20,
-                marge_appliquee: marge,
-                ordre: ligne.ordre || 0
-            };
-        });
 
         // Calculer les totaux
         let total_ht = 0;
