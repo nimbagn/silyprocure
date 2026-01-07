@@ -562,12 +562,10 @@
             // Actions selon le statut
             let actionsHTML = `<button class="btn btn-secondary" onclick="window.open('/api/pdf/commande/${commande.id}', '_blank')" style="margin-right: 0.5rem;"><i class="fas fa-file-pdf"></i> PDF</button>`;
             
-            // Bouton pour créer une facture proforma - visible pour tous les statuts sauf brouillon
-            if (commande.statut !== 'brouillon') {
-                actionsHTML += `
-                    <button class="btn btn-primary" onclick="if(typeof window.creerFactureProformaDepuisCommande==='function'){window.creerFactureProformaDepuisCommande(${commande.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-file-invoice"></i> Créer une facture proforma</button>
-                `;
-            }
+            // Bouton pour créer une facture proforma - TOUJOURS visible (peut être créée depuis n'importe quel statut)
+            actionsHTML += `
+                <button class="btn btn-primary" onclick="if(typeof window.creerFactureProformaDepuisCommande==='function'){window.creerFactureProformaDepuisCommande(${commande.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-file-invoice"></i> Créer une facture proforma</button>
+            `;
             
             if (commande.statut === 'brouillon') {
                 actionsHTML += `

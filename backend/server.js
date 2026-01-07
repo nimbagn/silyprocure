@@ -87,7 +87,14 @@ app.get('/suivi', (req, res) => {
 });
 
 // Servir les fichiers statiques (sans index par défaut)
-app.use(express.static(path.join(__dirname, '../frontend'), { index: false }));
+// Important: maxAge pour éviter le cache en développement, mais activer le cache en production
+const staticOptions = {
+    index: false,
+    maxAge: process.env.NODE_ENV === 'production' ? '1d' : '0',
+    etag: true,
+    lastModified: true
+};
+app.use(express.static(path.join(__dirname, '../frontend'), staticOptions));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes API
