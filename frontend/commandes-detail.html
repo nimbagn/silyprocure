@@ -259,96 +259,59 @@
 
         // Fonction pour mettre à jour l'aperçu de la facture proforma
         async function updateProformaPreview(commandeId) {
-            const margeInput = document.getElementById('proforma-marge');
             const previewDiv = document.getElementById('proforma-preview');
-            
-            if (!margeInput || !previewDiv) return;
-            
-            const marge = parseFloat(margeInput.value || 20);
+            if (!previewDiv) return;
             
             try {
-                // Récupérer les détails de la commande
-                const response = await apiCall(`/api/commandes/${commandeId}`);
-                if (!response || !response.ok) {
-                    previewDiv.innerHTML = '<p style="color: var(--color-danger);">Erreur lors du chargement de la commande</p>';
+                // Récupérer les valeurs depuis les inputs du tableau
+                const lignesRows = document.querySelectorAll('#proforma-lignes-table tr');
+                if (lignesRows.length === 0) {
+                    previewDiv.innerHTML = '<p style="color: var(--color-danger);">Aucune ligne trouvée</p>';
                     return;
                 }
                 
-                const commande = await response.json();
-                
-                if (!commande.lignes || commande.lignes.length === 0) {
-                    previewDiv.innerHTML = '<p style="color: var(--color-danger);">La commande n\'a pas de lignes</p>';
-                    return;
-                }
-                
-                // Calculer les totaux
                 let totalAchatHT = 0;
                 let totalVenteHT = 0;
                 let totalTVA = 0;
                 
-                const lignesHTML = commande.lignes.map(ligne => {
-                    const prixAchatHT = parseFloat(ligne.prix_unitaire_ht || 0);
-                    const quantite = parseFloat(ligne.quantite || 0);
-                    const prixVenteHT = prixAchatHT * (1 + marge / 100);
-                    const tvaTaux = parseFloat(ligne.tva_taux || 20);
+                lignesRows.forEach((row, index) => {
+                    const prixAchatInput = row.querySelector('.prix-achat');
+                    const prixVenteInput = row.querySelector('.prix-vente');
+                    const quantiteCell = row.cells[2];
                     
-                    const totalAchatLigne = prixAchatHT * quantite;
-                    const totalVenteLigne = prixVenteHT * quantite;
-                    const tvaLigne = totalVenteLigne * (tvaTaux / 100);
-                    
-                    totalAchatHT += totalAchatLigne;
-                    totalVenteHT += totalVenteLigne;
-                    totalTVA += tvaLigne;
-                    
-                    return `
-                        <tr>
-                            <td>${ligne.reference || '-'}</td>
-                            <td>${ligne.description || '-'}</td>
-                            <td>${quantite}</td>
-                            <td>${formatCurrency(prixAchatHT)}</td>
-                            <td><strong>${formatCurrency(prixVenteHT)}</strong></td>
-                            <td>${marge.toFixed(2)}%</td>
-                            <td><strong>${formatCurrency(totalVenteLigne)}</strong></td>
-                        </tr>
-                    `;
-                }).join('');
+                    if (prixAchatInput && prixVenteInput && quantiteCell) {
+                        const prixAchatHT = parseFloat(prixAchatInput.value || 0);
+                        const prixVenteHT = parseFloat(prixVenteInput.value || 0);
+                        const quantite = parseFloat(quantiteCell.textContent || 0);
+                        const tvaTaux = 20; // Par défaut
+                        
+                        const totalAchatLigne = prixAchatHT * quantite;
+                        const totalVenteLigne = prixVenteHT * quantite;
+                        const tvaLigne = totalVenteLigne * (tvaTaux / 100);
+                        
+                        totalAchatHT += totalAchatLigne;
+                        totalVenteHT += totalVenteLigne;
+                        totalTVA += tvaLigne;
+                    }
+                });
                 
                 const totalTTC = totalVenteHT + totalTVA;
                 const margeTotale = totalVenteHT - totalAchatHT;
+                const margePourcentage = totalAchatHT > 0 ? (margeTotale / totalAchatHT * 100) : 0;
                 
                 previewDiv.innerHTML = `
-                    <h4 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-eye"></i> Aperçu de la facture proforma</h4>
-                    <div style="overflow-x: auto;">
-                        <table class="table" style="font-size: 0.9rem;">
-                            <thead>
-                                <tr>
-                                    <th>Référence</th>
-                                    <th>Description</th>
-                                    <th>Qté</th>
-                                    <th>Prix achat HT</th>
-                                    <th>Prix vente HT</th>
-                                    <th>Marge</th>
-                                    <th>Total HT</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${lignesHTML}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                            <div>
-                                <p><strong>Total achat HT:</strong> ${formatCurrency(totalAchatHT)}</p>
-                                <p><strong>Total vente HT:</strong> ${formatCurrency(totalVenteHT)}</p>
-                                <p><strong>Marge totale:</strong> <span style="color: var(--color-success); font-weight: bold;">${formatCurrency(margeTotale)}</span></p>
-                            </div>
-                            <div>
-                                <p><strong>TVA:</strong> ${formatCurrency(totalTVA)}</p>
-                                <p style="font-size: 1.2rem; font-weight: bold; color: var(--color-primary);">
-                                    <strong>Total TTC:</strong> ${formatCurrency(totalTTC)}
-                                </p>
-                            </div>
+                    <h4 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-eye"></i> Résumé de la facture proforma</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div style="padding: 1rem; background: white; border-radius: 8px;">
+                            <p><strong>Total achat HT:</strong> ${formatCurrency(totalAchatHT)}</p>
+                            <p><strong>Total vente HT:</strong> ${formatCurrency(totalVenteHT)}</p>
+                            <p><strong>Marge totale:</strong> <span style="color: var(--color-success); font-weight: bold;">${formatCurrency(margeTotale)} (${margePourcentage.toFixed(2)}%)</span></p>
+                        </div>
+                        <div style="padding: 1rem; background: white; border-radius: 8px;">
+                            <p><strong>TVA (20%):</strong> ${formatCurrency(totalTVA)}</p>
+                            <p style="font-size: 1.2rem; font-weight: bold; color: var(--color-primary); margin-top: 0.5rem;">
+                                <strong>Total TTC:</strong> ${formatCurrency(totalTTC)}
+                            </p>
                         </div>
                     </div>
                 `;
@@ -358,27 +321,162 @@
             }
         }
         
+        // Fonction pour appliquer la marge globale à tous les articles
+        function applyGlobalMarge(commandeId) {
+            const margeInput = document.getElementById('proforma-marge');
+            if (!margeInput) return;
+            
+            const marge = parseFloat(margeInput.value || 20);
+            const lignesRows = document.querySelectorAll('#proforma-lignes-table tr');
+            
+            lignesRows.forEach(row => {
+                const prixAchatInput = row.querySelector('.prix-achat');
+                const prixVenteInput = row.querySelector('.prix-vente');
+                const margeInputLigne = row.querySelector('.marge-ligne');
+                
+                if (prixAchatInput && prixVenteInput && margeInputLigne) {
+                    const prixAchatHT = parseFloat(prixAchatInput.value || 0);
+                    const prixVenteHT = prixAchatHT * (1 + marge / 100);
+                    prixVenteInput.value = prixVenteHT.toFixed(2);
+                    margeInputLigne.value = marge.toFixed(2);
+                    updateLigneTotal(row);
+                }
+            });
+            
+            updateProformaPreview(commandeId);
+        }
+        
+        // Fonction pour mettre à jour le prix de vente quand on change le prix d'achat
+        function updateLignePrix(index, commandeId) {
+            const row = document.querySelector(`#proforma-lignes-table tr[data-ligne-id="${index}"]`) || 
+                       document.querySelectorAll('#proforma-lignes-table tr')[index];
+            if (!row) return;
+            
+            const prixAchatInput = row.querySelector('.prix-achat');
+            const prixVenteInput = row.querySelector('.prix-vente');
+            const margeInputLigne = row.querySelector('.marge-ligne');
+            
+            if (prixAchatInput && prixVenteInput && margeInputLigne) {
+                const prixAchatHT = parseFloat(prixAchatInput.value || 0);
+                const marge = parseFloat(margeInputLigne.value || 20);
+                const prixVenteHT = prixAchatHT * (1 + marge / 100);
+                prixVenteInput.value = prixVenteHT.toFixed(2);
+                updateLigneTotal(row);
+            }
+            
+            updateProformaPreview(commandeId);
+        }
+        
+        // Fonction pour mettre à jour la marge quand on change le prix de vente
+        function updateLigneMarge(index, commandeId) {
+            const row = document.querySelector(`#proforma-lignes-table tr[data-ligne-id="${index}"]`) || 
+                       document.querySelectorAll('#proforma-lignes-table tr')[index];
+            if (!row) return;
+            
+            const prixAchatInput = row.querySelector('.prix-achat');
+            const prixVenteInput = row.querySelector('.prix-vente');
+            const margeInputLigne = row.querySelector('.marge-ligne');
+            
+            if (prixAchatInput && prixVenteInput && margeInputLigne) {
+                const prixAchatHT = parseFloat(prixAchatInput.value || 0);
+                const prixVenteHT = parseFloat(prixVenteInput.value || 0);
+                
+                if (prixAchatHT > 0) {
+                    const marge = ((prixVenteHT - prixAchatHT) / prixAchatHT) * 100;
+                    margeInputLigne.value = marge.toFixed(2);
+                }
+                updateLigneTotal(row);
+            }
+            
+            updateProformaPreview(commandeId);
+        }
+        
+        // Fonction pour mettre à jour le prix de vente quand on change la marge en pourcentage
+        function updateLigneMargeFromPercent(index, commandeId) {
+            const row = document.querySelector(`#proforma-lignes-table tr[data-ligne-id="${index}"]`) || 
+                       document.querySelectorAll('#proforma-lignes-table tr')[index];
+            if (!row) return;
+            
+            const prixAchatInput = row.querySelector('.prix-achat');
+            const prixVenteInput = row.querySelector('.prix-vente');
+            const margeInputLigne = row.querySelector('.marge-ligne');
+            
+            if (prixAchatInput && prixVenteInput && margeInputLigne) {
+                const prixAchatHT = parseFloat(prixAchatInput.value || 0);
+                const marge = parseFloat(margeInputLigne.value || 20);
+                const prixVenteHT = prixAchatHT * (1 + marge / 100);
+                prixVenteInput.value = prixVenteHT.toFixed(2);
+                updateLigneTotal(row);
+            }
+            
+            updateProformaPreview(commandeId);
+        }
+        
+        // Fonction pour mettre à jour le total d'une ligne
+        function updateLigneTotal(row) {
+            const prixVenteInput = row.querySelector('.prix-vente');
+            const quantiteCell = row.cells[2];
+            const totalCell = row.querySelector('.total-ligne');
+            
+            if (prixVenteInput && quantiteCell && totalCell) {
+                const prixVenteHT = parseFloat(prixVenteInput.value || 0);
+                const quantite = parseFloat(quantiteCell.textContent || 0);
+                const total = prixVenteHT * quantite;
+                totalCell.textContent = formatCurrency(total);
+            }
+        }
+        
         // Fonction pour soumettre la création de facture proforma
         async function submitCreateProforma(commandeId) {
-            const marge = parseFloat(document.getElementById('proforma-marge')?.value || 20);
             const dateEmission = document.getElementById('proforma-date-emission')?.value;
+            const dateEcheance = document.getElementById('proforma-date-echeance')?.value;
             const conditions = document.getElementById('proforma-conditions')?.value;
             const clientId = document.getElementById('proforma-client-id')?.value;
             
-            if (!marge || marge < 0) {
-                Toast.error('Veuillez saisir une marge valide');
+            // Récupérer les lignes modifiées depuis le tableau
+            const lignesRows = document.querySelectorAll('#proforma-lignes-table tr');
+            const lignesModifiees = [];
+            
+            lignesRows.forEach((row, index) => {
+                const prixAchatInput = row.querySelector('.prix-achat');
+                const prixVenteInput = row.querySelector('.prix-vente');
+                const quantiteCell = row.cells[2];
+                const referenceCell = row.cells[0];
+                const descriptionCell = row.cells[1];
+                
+                if (prixAchatInput && prixVenteInput && quantiteCell) {
+                    lignesModifiees.push({
+                        reference: referenceCell?.textContent?.trim() || '',
+                        description: descriptionCell?.textContent?.trim() || '',
+                        quantite: parseFloat(quantiteCell.textContent || 0),
+                        prix_achat_ht: parseFloat(prixAchatInput.value || 0),
+                        prix_vente_ht: parseFloat(prixVenteInput.value || 0),
+                        marge: parseFloat(row.querySelector('.marge-ligne')?.value || 20)
+                    });
+                }
+            });
+            
+            if (lignesModifiees.length === 0) {
+                Toast.error('Aucune ligne à facturer');
                 return;
             }
             
             try {
                 showLoading('Création de la facture proforma...');
                 
+                // Calculer la marge moyenne pour l'API (compatibilité)
+                const totalAchat = lignesModifiees.reduce((sum, l) => sum + (l.prix_achat_ht * l.quantite), 0);
+                const totalVente = lignesModifiees.reduce((sum, l) => sum + (l.prix_vente_ht * l.quantite), 0);
+                const margeMoyenne = totalAchat > 0 ? ((totalVente - totalAchat) / totalAchat * 100) : 20;
+                
                 const requestBody = {
-                    marge_pourcentage: marge,
+                    marge_pourcentage: margeMoyenne,
                     date_emission: dateEmission,
+                    date_echeance: dateEcheance || null,
                     conditions_paiement: conditions || null,
                     delai_paiement_jours: 30,
-                    mode_paiement: 'Virement bancaire'
+                    mode_paiement: 'Virement bancaire',
+                    lignes_modifiees: lignesModifiees // Envoyer les lignes modifiées
                 };
                 
                 // Ajouter client_id si spécifié
@@ -419,6 +517,10 @@
         // Exposer les fonctions globalement
         window.updateProformaPreview = updateProformaPreview;
         window.submitCreateProforma = submitCreateProforma;
+        window.applyGlobalMarge = applyGlobalMarge;
+        window.updateLignePrix = updateLignePrix;
+        window.updateLigneMarge = updateLigneMarge;
+        window.updateLigneMargeFromPercent = updateLigneMargeFromPercent;
 
         async function loadCommandeDetails() {
             if (!commandeId) {
@@ -459,18 +561,22 @@
 
             // Actions selon le statut
             let actionsHTML = `<button class="btn btn-secondary" onclick="window.open('/api/pdf/commande/${commande.id}', '_blank')" style="margin-right: 0.5rem;"><i class="fas fa-file-pdf"></i> PDF</button>`;
+            
+            // Bouton pour créer une facture proforma - visible pour tous les statuts sauf brouillon
+            if (commande.statut !== 'brouillon') {
+                actionsHTML += `
+                    <button class="btn btn-primary" onclick="if(typeof window.creerFactureProformaDepuisCommande==='function'){window.creerFactureProformaDepuisCommande(${commande.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-file-invoice"></i> Créer une facture proforma</button>
+                `;
+            }
+            
             if (commande.statut === 'brouillon') {
                 actionsHTML += `
                     <button class="btn btn-primary" onclick="editCommande(${commande.id})"><i class="fas fa-edit"></i> Modifier</button>
                 `;
             } else if (commande.statut === 'envoye') {
                 // Utiliser onclick directement dans le HTML pour éviter les problèmes de cache
-                actionsHTML = `
+                actionsHTML += `
                     <button class="btn btn-success" onclick="if(typeof window.marquerLivree==='function'){window.marquerLivree(${commande.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-check"></i> Marquer comme livrée</button>
-                `;
-            } else if (commande.statut === 'livre') {
-                actionsHTML = `
-                    <button class="btn btn-primary" onclick="if(typeof window.creerFactureProformaDepuisCommande==='function'){window.creerFactureProformaDepuisCommande(${commande.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-file-invoice"></i> Créer une facture proforma</button>
                 `;
             } else if (commande.statut === 'validee') {
                 // Commande validée - vérifier si un BL existe et si une facture définitive n'existe pas déjà

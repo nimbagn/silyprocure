@@ -99,14 +99,15 @@ router.post('/', validateEntreprise, async (req, res) => {
 
         const entrepriseId = result.rows && result.rows[0] ? result.rows[0].id : (result.insertId || result[0]?.id);
 
-        // Envoyer une notification WhatsApp si c'est un fournisseur avec un numéro de téléphone
-        if (type_entreprise === 'fournisseur' && telephone) {
-            try {
-                await sendWelcomeWhatsAppToSupplier(nom, telephone);
-            } catch (error) {
-                // Ne pas faire échouer la création si l'envoi WhatsApp échoue
-                console.error('⚠️  Erreur envoi WhatsApp de bienvenue au fournisseur:', error.message);
-            }
+        // Récupérer l'entreprise créée pour la notification
+        const [entreprises] = await pool.execute('SELECT * FROM entreprises WHERE id = $1', [entrepriseId]);
+        const entreprise = entreprises && entreprises.length > 0 ? entreprises[0] : null;
+
+        // Envoyer une notification WhatsApp (en arrière-plan)
+        if (entreprise && (type_entreprise === 'fournisseur' || type_entreprise === 'acheteur')) {
+            notifyInscriptionEntreprise(entreprise, type_entreprise).catch(err => {
+                console.error('Erreur notification WhatsApp inscription entreprise:', err);
+            });
         }
 
         res.status(201).json({ id: entrepriseId, message: 'Entreprise créée avec succès' });

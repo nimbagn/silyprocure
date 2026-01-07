@@ -2,6 +2,7 @@ const express = require('express');
 const pool = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 const { validateFacture, validateId, validateCommandeId } = require('../middleware/validation');
+const { notifyClientFactureProforma, notifyClientFactureDefinitive } = require('../utils/whatsappNotifications');
 const { createNotification } = require('./notifications');
 const { enregistrerInteraction } = require('../utils/historiqueClient');
 const router = express.Router();
@@ -408,6 +409,22 @@ router.post('/proforma-from-devis', authenticate, async (req, res) => {
         }
 
         console.log('✅ Facture proforma créée avec succès');
+
+        // Notifier le client par WhatsApp (en arrière-plan)
+        if (client_id) {
+            const [client] = await pool.execute(
+                'SELECT id, nom, email, telephone, type_entreprise FROM entreprises WHERE id = $1',
+                [client_id]
+            );
+            if (client && client.length > 0) {
+                notifyClientFactureProforma(
+                    { id: facture_id, numero: numero, total_ttc: total_ttc },
+                    client[0]
+                ).catch(err => {
+                    console.error('Erreur notification WhatsApp facture proforma:', err);
+                });
+            }
+        }
 
         res.status(201).json({ 
             id: facture_id, 
@@ -858,6 +875,24 @@ router.post('/validate-proforma/:proforma_id', validateId, async (req, res) => {
 
         console.log('✅ Proforma validée, BL et commande créés avec succès');
 
+        // Notifier le client de la livraison par WhatsApp (en arrière-plan)
+        if (client_entreprise_id) {
+            const [client] = await pool.execute(
+                'SELECT id, nom, email, telephone, type_entreprise FROM entreprises WHERE id = $1',
+                [client_entreprise_id]
+            );
+            if (client && client.length > 0) {
+                const { notifyClientLivraison } = require('../utils/whatsappNotifications');
+                notifyClientLivraison(
+                    { id: bl_id, numero: numeroBL },
+                    { id: commande_id, numero: numeroCommande },
+                    client[0]
+                ).catch(err => {
+                    console.error('Erreur notification WhatsApp livraison:', err);
+                });
+            }
+        }
+
         res.status(201).json({ 
             commande_id: commande_id,
             commande_numero: numeroCommande,
@@ -984,6 +1019,28 @@ router.post('/definitive-from-bl/:bl_id', validateId, async (req, res) => {
         }
 
         console.log('✅ Facture définitive créée avec succès');
+
+        // Notifier le client par WhatsApp (en arrière-plan)
+        if (client_id) {
+            const [client] = await pool.execute(
+                'SELECT id, nom, email, telephone, type_entreprise FROM entreprises WHERE id = $1',
+                [client_id]
+            );
+            if (client && client.length > 0) {
+                notifyClientFactureDefinitive(
+                    { 
+                        id: facture_id, 
+                        numero: numero, 
+                        total_ttc: bl.proforma_total_ttc,
+                        reste_a_payer: bl.proforma_total_ttc,
+                        date_echeance: date_echeance || bl.proforma_date_echeance
+                    },
+                    client[0]
+                ).catch(err => {
+                    console.error('Erreur notification WhatsApp facture définitive:', err);
+                });
+            }
+        }
 
         res.status(201).json({ 
             id: facture_id, 

@@ -7,6 +7,7 @@ const { sendDevisRequestNotification, sendDevisRequestConfirmation } = require('
 const { generateReference, generateTrackingToken, sendNotification } = require('../utils/notificationService');
 const { enregistrerInteraction } = require('../utils/historiqueClient');
 const { notifyAdminsAndSupervisors } = require('./notifications');
+const { notifyClientDemandeDevis, notifyFournisseurDemandeDevis } = require('../utils/whatsappNotifications');
 const path = require('path');
 const fs = require('fs');
 const router = express.Router();
@@ -268,6 +269,11 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                 }
             }).catch(err => {
                 console.error('Erreur envoi notification client:', err);
+            });
+            
+            // Envoyer une notification WhatsApp au client (en arrière-plan)
+            notifyClientDemandeDevis(demande).catch(err => {
+                console.error('Erreur envoi WhatsApp notification client:', err);
             });
 
             res.status(201).json({
@@ -540,6 +546,19 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
 
             await connection.commit();
             // commit() libère déjà le client, pas besoin de release()
+
+            // Notifier les fournisseurs par WhatsApp (en arrière-plan)
+            for (const rfq of rfqsCreated) {
+                const [fournisseur] = await pool.execute(
+                    'SELECT id, nom, telephone FROM entreprises WHERE id = $1',
+                    [rfq.fournisseur_id]
+                );
+                if (fournisseur && fournisseur.length > 0) {
+                    notifyFournisseurDemandeDevis(fournisseur[0], { numero: rfq.numero, id: rfq.id }).catch(err => {
+                        console.error('Erreur notification WhatsApp fournisseur:', err);
+                    });
+                }
+            }
 
             res.status(201).json({
                 message: `${rfqsCreated.length} RFQ créée(s) avec succès`,

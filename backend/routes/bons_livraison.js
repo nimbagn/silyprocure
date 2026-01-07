@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../config/database');
 const { authenticate } = require('../middleware/auth');
+const { notifyClientLivraison } = require('../utils/whatsappNotifications');
 const router = express.Router();
 
 router.use(authenticate);

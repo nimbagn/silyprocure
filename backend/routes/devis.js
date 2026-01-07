@@ -4,6 +4,7 @@ const { authenticate } = require('../middleware/auth');
 const { validateDevis, validateId } = require('../middleware/validation');
 const { createNotification, notifyAdminsAndSupervisors } = require('./notifications');
 const { enregistrerInteraction } = require('../utils/historiqueClient');
+const { notifyReceptionDevis } = require('../utils/whatsappNotifications');
 const router = express.Router();
 
 router.use(authenticate);
