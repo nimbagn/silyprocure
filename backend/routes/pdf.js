@@ -116,7 +116,7 @@ router.get('/commande/:id', validateId, async (req, res) => {
                     e.nom as fournisseur_nom
              FROM commandes c
              LEFT JOIN entreprises e ON c.fournisseur_id = e.id
-             WHERE c.id = ?`,
+             WHERE c.id = $1`,
             [id]
         );
 
@@ -128,7 +128,7 @@ router.get('/commande/:id', validateId, async (req, res) => {
 
         // Récupérer les lignes
         const [lignes] = await pool.execute(
-            'SELECT * FROM commande_lignes WHERE commande_id = ? ORDER BY ordre',
+            'SELECT * FROM commande_lignes WHERE commande_id = $1 ORDER BY ordre',
             [id]
         );
         commande.lignes = lignes;

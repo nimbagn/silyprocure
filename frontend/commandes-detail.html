@@ -190,71 +190,159 @@
 
         // Fonction pour afficher le modal de création de facture proforma
         async function showCreateFactureProformaModal(commandeId, margeParDefaut) {
-            // Charger les clients (entreprises de type acheteur) pour la sélection si nécessaire
-            let clients = [];
             try {
-                const clientsResponse = await apiCall('/api/entreprises?type=acheteur');
-                if (clientsResponse && clientsResponse.ok) {
-                    clients = await clientsResponse.json();
+                showLoading('Chargement des données...');
+                
+                // Charger les détails de la commande avec ses lignes
+                const commandeResponse = await apiCall(`/api/commandes/${commandeId}`);
+                if (!commandeResponse || !commandeResponse.ok) {
+                    hideLoading();
+                    Toast.error('Erreur lors du chargement de la commande');
+                    return;
                 }
-            } catch (error) {
-                console.warn('Impossible de charger les clients:', error);
-            }
+                
+                const commande = await commandeResponse.json();
+                
+                if (!commande.lignes || commande.lignes.length === 0) {
+                    hideLoading();
+                    Toast.error('La commande n\'a pas de lignes');
+                    return;
+                }
+                
+                // Charger les clients (entreprises de type acheteur) pour la sélection si nécessaire
+                let clients = [];
+                try {
+                    const clientsResponse = await apiCall('/api/entreprises?type=acheteur');
+                    if (clientsResponse && clientsResponse.ok) {
+                        clients = await clientsResponse.json();
+                    }
+                } catch (error) {
+                    console.warn('Impossible de charger les clients:', error);
+                }
+                
+                hideLoading();
+                
+                // Créer le tableau des lignes éditable
+                const lignesTableHTML = `
+                    <div style="margin-top: 1.5rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <h4 style="margin: 0; color: var(--color-primary);"><i class="fas fa-list"></i> Articles de la commande</h4>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="if(typeof window.applyGlobalMarge==='function'){window.applyGlobalMarge(${commandeId});}">
+                                <i class="fas fa-magic"></i> Appliquer la marge à tous
+                            </button>
+                        </div>
+                        <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                            <table id="proforma-lignes-table" class="table" style="font-size: 0.9rem;">
+                                <thead style="position: sticky; top: 0; background: white; z-index: 10;">
+                                    <tr>
+                                        <th>Référence</th>
+                                        <th>Description</th>
+                                        <th>Qté</th>
+                                        <th>Prix achat HT</th>
+                                        <th>Prix vente HT</th>
+                                        <th>Marge %</th>
+                                        <th>Total HT</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${commande.lignes.map((ligne, index) => {
+                                        const prixAchatHT = parseFloat(ligne.prix_unitaire_ht || 0);
+                                        const quantite = parseFloat(ligne.quantite || 0);
+                                        const prixVenteHT = prixAchatHT * (1 + margeParDefaut / 100);
+                                        const marge = margeParDefaut;
+                                        const totalHT = prixVenteHT * quantite;
+                                        
+                                        return `
+                                            <tr data-ligne-id="${index}">
+                                                <td>${ligne.reference || '-'}</td>
+                                                <td>${ligne.description || '-'}</td>
+                                                <td>${quantite}</td>
+                                                <td>
+                                                    <input type="number" class="form-control prix-achat" 
+                                                           value="${prixAchatHT.toFixed(2)}" step="0.01" min="0"
+                                                           onchange="if(typeof window.updateLignePrix==='function'){window.updateLignePrix(${index}, ${commandeId});}">
+                                                </td>
+                                                <td>
+                                                    <input type="number" class="form-control prix-vente" 
+                                                           value="${prixVenteHT.toFixed(2)}" step="0.01" min="0"
+                                                           onchange="if(typeof window.updateLigneMarge==='function'){window.updateLigneMarge(${index}, ${commandeId});}">
+                                                </td>
+                                                <td>
+                                                    <input type="number" class="form-control marge-ligne" 
+                                                           value="${marge.toFixed(2)}" step="0.01" min="0"
+                                                           onchange="if(typeof window.updateLigneMargeFromPercent==='function'){window.updateLigneMargeFromPercent(${index}, ${commandeId});}">
+                                                </td>
+                                                <td class="total-ligne">${formatCurrency(totalHT)}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
 
-            const modalContent = `
-                <div style="max-width: 800px;">
-                    <h3 style="margin-bottom: 1.5rem; color: var(--color-primary);"><i class="fas fa-file-invoice"></i> Créer une facture proforma</h3>
-                    
-                    ${clients.length > 0 ? `
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label>Client (optionnel - sera déterminé automatiquement si non spécifié)</label>
-                        <select id="proforma-client-id" class="form-control">
-                            <option value="">Auto-détection</option>
-                            ${clients.map(c => `<option value="${c.id}">${c.nom}</option>`).join('')}
-                        </select>
-                        <small style="color: #666;">Si le client ne peut pas être déterminé automatiquement, sélectionnez-le ici</small>
-                    </div>
-                    ` : ''}
-                    
-                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                        <div class="form-group">
-                            <label>Marge commerciale (%) *</label>
-                            <input type="number" id="proforma-marge" class="form-control" value="${margeParDefaut}" min="0" max="100" step="0.01" required 
-                                   onchange="if(typeof window.updateProformaPreview==='function'){window.updateProformaPreview(${commandeId});}">
-                            <small style="color: #666;">Pourcentage à ajouter au prix d'achat</small>
+                const modalContent = `
+                    <div style="max-width: 1000px;">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--color-primary);"><i class="fas fa-file-invoice"></i> Créer une facture proforma</h3>
+                        
+                        ${clients.length > 0 ? `
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label>Client (optionnel - sera déterminé automatiquement si non spécifié)</label>
+                            <select id="proforma-client-id" class="form-control">
+                                <option value="">Auto-détection</option>
+                                ${clients.map(c => `<option value="${c.id}">${c.nom}</option>`).join('')}
+                            </select>
+                            <small style="color: #666;">Si le client ne peut pas être déterminé automatiquement, sélectionnez-le ici</small>
                         </div>
-                        <div class="form-group">
-                            <label>Date d'émission</label>
-                            <input type="date" id="proforma-date-emission" class="form-control" 
-                                   value="${new Date().toISOString().split('T')[0]}" required>
+                        ` : ''}
+                        
+                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div class="form-group">
+                                <label>Marge commerciale (%) *</label>
+                                <input type="number" id="proforma-marge" class="form-control" value="${margeParDefaut}" min="0" max="100" step="0.01" required 
+                                       onchange="if(typeof window.applyGlobalMarge==='function'){window.applyGlobalMarge(${commandeId});}">
+                                <small style="color: #666;">Pourcentage à ajouter au prix d'achat</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Date d'émission</label>
+                                <input type="date" id="proforma-date-emission" class="form-control" 
+                                       value="${new Date().toISOString().split('T')[0]}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label>Conditions de paiement</label>
+                            <textarea id="proforma-conditions" class="form-control" rows="2" placeholder="Ex: Paiement à 30 jours"></textarea>
+                        </div>
+                        
+                        ${lignesTableHTML}
+                        
+                        <div id="proforma-preview" style="margin-top: 1.5rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                            <p style="color: #666; font-style: italic;">Aperçu de la facture proforma...</p>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                            <button class="btn btn-secondary" onclick="Modal.hide('create-proforma')">Annuler</button>
+                            <button class="btn btn-primary" onclick="if(typeof window.submitCreateProforma==='function'){window.submitCreateProforma(${commandeId});}else{alert('Fonction non disponible');}"><i class="fas fa-save"></i> Créer la facture proforma</button>
                         </div>
                     </div>
-                    
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label>Conditions de paiement</label>
-                        <textarea id="proforma-conditions" class="form-control" rows="2" placeholder="Ex: Paiement à 30 jours"></textarea>
-                    </div>
-                    
-                    <div id="proforma-preview" style="margin-top: 1.5rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
-                        <p style="color: #666; font-style: italic;">Aperçu de la facture proforma...</p>
-                    </div>
-                    
-                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
-                        <button class="btn btn-secondary" onclick="Modal.hide('create-proforma')">Annuler</button>
-                        <button class="btn btn-primary" onclick="if(typeof window.submitCreateProforma==='function'){window.submitCreateProforma(${commandeId});}else{alert('Fonction non disponible');}"><i class="fas fa-save"></i> Créer la facture proforma</button>
-                    </div>
-                </div>
-            `;
-            
-            const modal = new Modal('create-proforma', 'Créer une facture proforma', modalContent);
-            modal.show();
-            
-            // Charger l'aperçu initial
-            setTimeout(() => {
-                if (typeof window.updateProformaPreview === 'function') {
-                    window.updateProformaPreview(commandeId);
-                }
-            }, 100);
+                `;
+                
+                const modal = new Modal('create-proforma', 'Créer une facture proforma', modalContent);
+                modal.show();
+                
+                // Charger l'aperçu initial
+                setTimeout(() => {
+                    if (typeof window.updateProformaPreview === 'function') {
+                        window.updateProformaPreview(commandeId);
+                    }
+                }, 100);
+            } catch (error) {
+                hideLoading();
+                console.error('Erreur chargement modal:', error);
+                Toast.error('Erreur lors du chargement: ' + error.message);
+            }
         }
 
         // Fonction pour mettre à jour l'aperçu de la facture proforma
@@ -560,7 +648,14 @@
             const actionsContainer = document.getElementById('commande-actions');
 
             // Actions selon le statut
-            let actionsHTML = `<button class="btn btn-secondary" onclick="window.open('/api/pdf/commande/${commande.id}', '_blank')" style="margin-right: 0.5rem;"><i class="fas fa-file-pdf"></i> PDF</button>`;
+            let actionsHTML = `
+                <button class="btn btn-secondary" onclick="window.open('/api/pdf/commande/${commande.id}', '_blank')" style="margin-right: 0.5rem;" title="Télécharger le PDF">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.reload()" style="margin-right: 0.5rem;" title="Actualiser la page">
+                    <i class="fas fa-sync-alt"></i> Actualiser
+                </button>
+            `;
             
             // Bouton pour créer une facture proforma - TOUJOURS visible (peut être créée depuis n'importe quel statut)
             actionsHTML += `
