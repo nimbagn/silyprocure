@@ -457,21 +457,53 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
         // On utilise directement l'ID de l'utilisateur comme émetteur
         const emetteur_id = req.user.id;
 
-        // Fonction pour générer le numéro RFQ
-        const generateRFQNumber = async () => {
+        // Fonction pour générer un numéro RFQ unique
+        const generateRFQNumber = async (connection) => {
             const year = new Date().getFullYear();
             const prefix = `RFQ-${year}-`;
-            const [lastRFQ] = await pool.execute(
+            
+            // Utiliser la connexion de transaction pour éviter les problèmes de concurrence
+            const [lastRFQ] = await connection.execute(
                 `SELECT numero FROM rfq WHERE numero LIKE $1 ORDER BY numero DESC LIMIT 1`,
                 [`${prefix}%`]
             );
+            
             let nextNumber = 1;
             if (lastRFQ.length > 0) {
                 const lastNum = lastRFQ[0].numero;
                 const lastSeq = parseInt(lastNum.split('-')[2]) || 0;
                 nextNumber = lastSeq + 1;
             }
-            return `${prefix}${String(nextNumber).padStart(4, '0')}`;
+            
+            // Vérifier que le numéro n'existe pas déjà (protection contre les collisions)
+            let numero = `${prefix}${String(nextNumber).padStart(4, '0')}`;
+            let attempts = 0;
+            const maxAttempts = 100;
+            
+            while (attempts < maxAttempts) {
+                const [existing] = await connection.execute(
+                    'SELECT id FROM rfq WHERE numero = $1',
+                    [numero]
+                );
+                
+                if (existing.length === 0) {
+                    // Numéro disponible
+                    break;
+                }
+                
+                // Numéro existe déjà, incrémenter
+                nextNumber++;
+                numero = `${prefix}${String(nextNumber).padStart(4, '0')}`;
+                attempts++;
+            }
+            
+            if (attempts >= maxAttempts) {
+                // Si on n'a pas trouvé de numéro disponible, utiliser un timestamp
+                const timestamp = Date.now().toString().slice(-6);
+                numero = `${prefix}${timestamp}`;
+            }
+            
+            return numero;
         };
 
         // Créer une RFQ pour chaque fournisseur
@@ -491,7 +523,7 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
                     continue; // Ignorer ce fournisseur
                 }
 
-                const numero = await generateRFQNumber();
+                const numero = await generateRFQNumber(connection);
 
                 // Créer la RFQ
                 const [rfqRows, rfqResult] = await connection.execute(
