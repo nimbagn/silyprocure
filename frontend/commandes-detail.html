@@ -351,8 +351,14 @@
             if (!previewDiv) return;
             
             try {
-                // Récupérer les valeurs depuis les inputs du tableau
-                const lignesRows = document.querySelectorAll('#proforma-lignes-table tr');
+                // Récupérer les valeurs depuis les inputs du tableau (uniquement tbody)
+                const lignesTable = document.getElementById('proforma-lignes-table');
+                if (!lignesTable) {
+                    previewDiv.innerHTML = '<p style="color: var(--color-danger);">Tableau non trouvé</p>';
+                    return;
+                }
+                
+                const lignesRows = lignesTable.querySelectorAll('tbody tr');
                 if (lignesRows.length === 0) {
                     previewDiv.innerHTML = '<p style="color: var(--color-danger);">Aucune ligne trouvée</p>';
                     return;
@@ -415,7 +421,10 @@
             if (!margeInput) return;
             
             const marge = parseFloat(margeInput.value || 20);
-            const lignesRows = document.querySelectorAll('#proforma-lignes-table tr');
+            const lignesTable = document.getElementById('proforma-lignes-table');
+            if (!lignesTable) return;
+            
+            const lignesRows = lignesTable.querySelectorAll('tbody tr');
             
             lignesRows.forEach(row => {
                 const prixAchatInput = row.querySelector('.prix-achat');
@@ -514,6 +523,66 @@
             }
         }
         
+        // Fonction pour télécharger le PDF d'une commande avec authentification
+        async function downloadPDFCommande(commandeId) {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    Toast.error('Vous devez être connecté pour télécharger le PDF');
+                    return;
+                }
+                
+                // Détecter l'URL de base
+                let baseUrl = '';
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    baseUrl = 'http://localhost:3000';
+                } else {
+                    baseUrl = window.location.origin;
+                }
+                
+                const url = `${baseUrl}/api/pdf/commande/${commandeId}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        Toast.error('Session expirée. Veuillez vous reconnecter.');
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    Toast.error(errorData.error || 'Erreur lors du téléchargement du PDF');
+                    return;
+                }
+                
+                // Récupérer le blob
+                const blob = await response.blob();
+                
+                // Créer un lien de téléchargement
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `Commande-${commandeId}-${Date.now()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+                
+                Toast.success('PDF téléchargé avec succès');
+            } catch (error) {
+                console.error('Erreur téléchargement PDF:', error);
+                Toast.error('Erreur lors du téléchargement du PDF: ' + error.message);
+            }
+        }
+        
+        // Exposer la fonction globalement
+        window.downloadPDFCommande = downloadPDFCommande;
+        
         // Fonction pour soumettre la création de facture proforma
         async function submitCreateProforma(commandeId) {
             const dateEmission = document.getElementById('proforma-date-emission')?.value;
@@ -522,7 +591,22 @@
             const clientId = document.getElementById('proforma-client-id')?.value;
             
             // Récupérer les lignes modifiées depuis le tableau
-            const lignesRows = document.querySelectorAll('#proforma-lignes-table tr');
+            const lignesTable = document.getElementById('proforma-lignes-table');
+            if (!lignesTable) {
+                Toast.error('Tableau des lignes non trouvé. Veuillez réessayer.');
+                console.error('Tableau #proforma-lignes-table non trouvé');
+                return;
+            }
+            
+            const lignesRows = lignesTable.querySelectorAll('tbody tr');
+            console.log('Nombre de lignes trouvées:', lignesRows.length);
+            
+            if (lignesRows.length === 0) {
+                Toast.error('Aucune ligne trouvée dans le tableau. Veuillez vérifier que la commande contient des articles.');
+                console.error('Aucune ligne dans le tableau');
+                return;
+            }
+            
             const lignesModifiees = [];
             
             lignesRows.forEach((row, index) => {
@@ -532,20 +616,36 @@
                 const referenceCell = row.cells[0];
                 const descriptionCell = row.cells[1];
                 
+                console.log(`Ligne ${index}:`, {
+                    prixAchatInput: !!prixAchatInput,
+                    prixVenteInput: !!prixVenteInput,
+                    quantiteCell: !!quantiteCell,
+                    referenceCell: !!referenceCell,
+                    descriptionCell: !!descriptionCell
+                });
+                
                 if (prixAchatInput && prixVenteInput && quantiteCell) {
-                    lignesModifiees.push({
-                        reference: referenceCell?.textContent?.trim() || '',
-                        description: descriptionCell?.textContent?.trim() || '',
-                        quantite: parseFloat(quantiteCell.textContent || 0),
-                        prix_achat_ht: parseFloat(prixAchatInput.value || 0),
-                        prix_vente_ht: parseFloat(prixVenteInput.value || 0),
-                        marge: parseFloat(row.querySelector('.marge-ligne')?.value || 20)
-                    });
+                    const prixAchatHT = parseFloat(prixAchatInput.value || 0);
+                    const prixVenteHT = parseFloat(prixVenteInput.value || 0);
+                    const quantite = parseFloat(quantiteCell.textContent || 0);
+                    
+                    if (prixAchatHT > 0 && quantite > 0) {
+                        lignesModifiees.push({
+                            reference: referenceCell?.textContent?.trim() || '',
+                            description: descriptionCell?.textContent?.trim() || '',
+                            quantite: quantite,
+                            prix_achat_ht: prixAchatHT,
+                            prix_vente_ht: prixVenteHT,
+                            marge: parseFloat(row.querySelector('.marge-ligne')?.value || 20)
+                        });
+                    }
                 }
             });
             
+            console.log('Lignes modifiées à envoyer:', lignesModifiees);
+            
             if (lignesModifiees.length === 0) {
-                Toast.error('Aucune ligne à facturer');
+                Toast.error('Aucune ligne valide à facturer. Vérifiez que les prix et quantités sont corrects.');
                 return;
             }
             
@@ -649,7 +749,7 @@
 
             // Actions selon le statut
             let actionsHTML = `
-                <button class="btn btn-secondary" onclick="window.open('/api/pdf/commande/${commande.id}', '_blank')" style="margin-right: 0.5rem;" title="Télécharger le PDF">
+                <button class="btn btn-secondary" onclick="downloadPDFCommande(${commande.id})" style="margin-right: 0.5rem;" title="Télécharger le PDF">
                     <i class="fas fa-file-pdf"></i> PDF
                 </button>
                 <button class="btn btn-secondary" onclick="window.location.reload()" style="margin-right: 0.5rem;" title="Actualiser la page">
@@ -1034,7 +1134,7 @@
                 hideLoading();
             }
         }
-
+        
         // Exposer les fonctions globalement
         window.updateFacturePreview = updateFacturePreview;
         window.submitCreateFacture = submitCreateFacture;
