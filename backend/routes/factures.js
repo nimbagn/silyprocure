@@ -453,8 +453,9 @@ router.post('/proforma-from-commande/:commande_id', validateCommandeId, async (r
         console.log('🟦 Données reçues:', req.body);
 
         // Récupérer la commande avec ses lignes et le client_id via devis -> demande_devis
+        // Note: On utilise client_id de demandes_devis, pas entreprise_id (qui peut ne pas exister)
         const [commandes] = await pool.execute(
-            `SELECT c.*, e.nom as fournisseur_nom, dd.client_id, dd.entreprise_id as entreprise_client_id, dd.id as demande_devis_id
+            `SELECT c.*, e.nom as fournisseur_nom, dd.client_id, dd.id as demande_devis_id
              FROM commandes c
              LEFT JOIN entreprises e ON c.fournisseur_id = e.id
              LEFT JOIN devis d ON c.devis_id = d.id
@@ -475,40 +476,62 @@ router.post('/proforma-from-commande/:commande_id', validateCommandeId, async (r
             statut: commande.statut,
             devis_id: commande.devis_id,
             demande_devis_id: commande.demande_devis_id,
-            client_id: commande.client_id,
-            entreprise_client_id: commande.entreprise_client_id
+            client_id: commande.client_id
         });
 
         // Note: Dans le nouveau flux, la facture proforma est créée directement depuis les devis comparés.
         // Cette route est conservée pour compatibilité avec l'ancien flux.
         // On permet la création même si la commande n'est pas livrée, car cela peut être utile.
 
-        // Récupérer le client_id (entreprise client, pas le client de la table clients)
-        // Le client_id est l'entreprise qui a fait la demande
+        // Récupérer le client_id (entreprise client)
+        // Le client_id de demandes_devis pointe vers la table clients
+        // On doit récupérer l'entreprise_id depuis la table clients
         // Si fourni en paramètre, l'utiliser en priorité
-        let client_id = client_id_param || commande.entreprise_client_id || commande.client_id;
+        let client_id = client_id_param;
         
         console.log('🟦 Tentative de récupération client_id:', {
             client_id_param: client_id_param,
-            entreprise_client_id: commande.entreprise_client_id,
-            client_id: commande.client_id,
+            client_id_demande: commande.client_id,
             demande_devis_id: commande.demande_devis_id
         });
         
+        if (!client_id && commande.client_id) {
+            // Récupérer l'entreprise_id depuis la table clients
+            try {
+                const [clientData] = await pool.execute(
+                    `SELECT entreprise_id FROM clients WHERE id = $1`,
+                    [commande.client_id]
+                );
+                console.log('🟦 Résultat recherche entreprise via client:', clientData);
+                if (clientData.length > 0 && clientData[0].entreprise_id) {
+                    client_id = clientData[0].entreprise_id;
+                }
+            } catch (err) {
+                console.warn('⚠️  Impossible de récupérer entreprise_id depuis clients:', err.message);
+            }
+        }
+        
         if (!client_id) {
-            // Essayer de trouver via demande_devis -> entreprise_id
-            const [clientData] = await pool.execute(
-                `SELECT dd.entreprise_id as client_id
-                 FROM commandes c 
-                 LEFT JOIN devis d ON c.devis_id = d.id 
-                 LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id 
-                 WHERE c.id = $1`,
-                [commande_id]
-            );
-            console.log('🟦 Résultat recherche client via demande_devis:', clientData);
-            if (clientData.length > 0 && clientData[0].client_id) {
-                client_id = clientData[0].client_id;
-            } else {
+            // Essayer de trouver via demande_devis -> client -> entreprise
+            try {
+                const [clientData] = await pool.execute(
+                    `SELECT cl.entreprise_id as client_id
+                     FROM commandes c 
+                     LEFT JOIN devis d ON c.devis_id = d.id 
+                     LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id
+                     LEFT JOIN clients cl ON dd.client_id = cl.id
+                     WHERE c.id = $1`,
+                    [commande_id]
+                );
+                console.log('🟦 Résultat recherche client via demande_devis -> clients:', clientData);
+                if (clientData.length > 0 && clientData[0].client_id) {
+                    client_id = clientData[0].client_id;
+                }
+            } catch (err) {
+                console.warn('⚠️  Erreur recherche client via demande_devis:', err.message);
+            }
+            
+            if (!client_id) {
                 // Si toujours pas de client_id, essayer de récupérer depuis la facture proforma liée si elle existe
                 const [factureData] = await pool.execute(
                     `SELECT f.client_id 
@@ -742,12 +765,23 @@ router.post('/validate-proforma/:proforma_id', validateId, async (req, res) => {
         // Récupérer le client_id depuis la demande_devis si disponible
         let client_entreprise_id = proforma.client_id;
         if (proforma.demande_devis_id) {
-            const [demandeData] = await pool.execute(
-                'SELECT entreprise_id FROM demandes_devis WHERE id = $1',
-                [proforma.demande_devis_id]
-            );
-            if (demandeData.length > 0 && demandeData[0].entreprise_id) {
-                client_entreprise_id = demandeData[0].entreprise_id;
+            try {
+                // Récupérer client_id depuis demandes_devis, puis entreprise_id depuis clients
+                const [demandeData] = await pool.execute(
+                    'SELECT client_id FROM demandes_devis WHERE id = $1',
+                    [proforma.demande_devis_id]
+                );
+                if (demandeData.length > 0 && demandeData[0].client_id) {
+                    const [clientData] = await pool.execute(
+                        'SELECT entreprise_id FROM clients WHERE id = $1',
+                        [demandeData[0].client_id]
+                    );
+                    if (clientData.length > 0 && clientData[0].entreprise_id) {
+                        client_entreprise_id = clientData[0].entreprise_id;
+                    }
+                }
+            } catch (err) {
+                console.warn('⚠️  Erreur récupération entreprise_id depuis demande_devis:', err.message);
             }
         }
 
@@ -923,11 +957,12 @@ router.post('/definitive-from-bl/:bl_id', validateId, async (req, res) => {
                     f.facturier_id, f.client_id as proforma_client_id, f.conditions_paiement as proforma_conditions,
                     f.delai_paiement_jours as proforma_delai, f.mode_paiement as proforma_mode,
                     f.date_echeance as proforma_date_echeance, f.demande_devis_id,
-                    dd.client_id, dd.entreprise_id as client_entreprise_id
+                    dd.client_id, cl.entreprise_id as client_entreprise_id
              FROM bons_livraison bl
              LEFT JOIN commandes c ON bl.commande_id = c.id
              LEFT JOIN factures f ON f.commande_id = c.id AND f.type_facture = 'proforma'
              LEFT JOIN demandes_devis dd ON f.demande_devis_id = dd.id
+             LEFT JOIN clients cl ON dd.client_id = cl.id
              WHERE bl.id = $1`,
             [bl_id]
         );
