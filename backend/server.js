@@ -125,6 +125,7 @@ const contactRoutes = require('./routes/contact');
 const clientsRoutes = require('./routes/clients');
 const aiRoutes = require('./routes/ai');
 const messageProRoutes = require('./routes/messagepro');
+const whatsappRoutes = require('./routes/whatsapp');
 const settingsRoutes = require('./routes/settings');
 
 // API Routes
@@ -155,6 +156,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/clients', clientsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/messagepro', messageProRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/settings', settingsRoutes);
 
 // Routes pour les pages HTML (doivent être APRÈS les routes API pour éviter les conflits)

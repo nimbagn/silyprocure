@@ -13,8 +13,10 @@ const MESSAGEPRO_BASE_URL = 'https://messagepro-gn.com/api';
 class MessageProService {
     constructor() {
         this.secret = process.env.MESSAGEPRO_SECRET;
+        this.whatsappAccount = process.env.MESSAGEPRO_WHATSAPP_ACCOUNT;
+        
         // Charger depuis la DB de manière asynchrone (non bloquant)
-        this.loadSecretFromDB().catch(err => {
+        this.loadSettingsFromDB().catch(err => {
             // Ignorer les erreurs silencieusement
         });
         
@@ -24,28 +26,49 @@ class MessageProService {
     }
 
     /**
-     * Charge le secret depuis la base de données (si non défini dans env)
+     * Charge les paramètres depuis la base de données (si non définis dans env)
      */
-    async loadSecretFromDB() {
-        if (this.secret) {
-            return; // Déjà défini
-        }
-        
+    async loadSettingsFromDB() {
         try {
             const pool = require('../config/database');
-            const [params] = await pool.execute(
-                'SELECT valeur FROM parametres WHERE cle = $1',
-                ['MESSAGEPRO_SECRET']
-            );
-            if (params && params.length > 0 && params[0].valeur) {
-                this.secret = params[0].valeur;
-                process.env.MESSAGEPRO_SECRET = this.secret;
-                console.log('✅ MESSAGEPRO_SECRET chargé depuis la base de données');
+            
+            // Charger le secret
+            if (!this.secret) {
+                const [secretParams] = await pool.execute(
+                    'SELECT valeur FROM parametres WHERE cle = $1',
+                    ['MESSAGEPRO_SECRET']
+                );
+                if (secretParams && secretParams.length > 0 && secretParams[0].valeur) {
+                    this.secret = secretParams[0].valeur;
+                    process.env.MESSAGEPRO_SECRET = this.secret;
+                    console.log('✅ MESSAGEPRO_SECRET chargé depuis la base de données');
+                }
+            }
+            
+            // Charger le compte WhatsApp
+            if (!this.whatsappAccount) {
+                const [whatsappParams] = await pool.execute(
+                    'SELECT valeur FROM parametres WHERE cle = $1',
+                    ['MESSAGEPRO_WHATSAPP_ACCOUNT']
+                );
+                if (whatsappParams && whatsappParams.length > 0 && whatsappParams[0].valeur) {
+                    this.whatsappAccount = whatsappParams[0].valeur;
+                    process.env.MESSAGEPRO_WHATSAPP_ACCOUNT = this.whatsappAccount;
+                    console.log('✅ MESSAGEPRO_WHATSAPP_ACCOUNT chargé depuis la base de données');
+                }
             }
         } catch (error) {
             // Ignorer les erreurs de chargement depuis la DB
-            console.debug('Note: Impossible de charger MESSAGEPRO_SECRET depuis la DB:', error.message);
+            console.debug('Note: Impossible de charger les paramètres depuis la DB:', error.message);
         }
+    }
+
+    /**
+     * Charge le secret depuis la base de données (méthode de compatibilité)
+     * @deprecated Utiliser loadSettingsFromDB() à la place
+     */
+    async loadSecretFromDB() {
+        return this.loadSettingsFromDB();
     }
 
     /**
@@ -55,6 +78,20 @@ class MessageProService {
         this.secret = secret;
         if (secret) {
             process.env.MESSAGEPRO_SECRET = secret;
+        } else {
+            delete process.env.MESSAGEPRO_SECRET;
+        }
+    }
+
+    /**
+     * Met à jour le compte WhatsApp en mémoire
+     */
+    updateWhatsAppAccount(account) {
+        this.whatsappAccount = account;
+        if (account) {
+            process.env.MESSAGEPRO_WHATSAPP_ACCOUNT = account;
+        } else {
+            delete process.env.MESSAGEPRO_WHATSAPP_ACCOUNT;
         }
     }
 

@@ -514,6 +514,19 @@
             <div class="loading">Chargement des statistiques...</div>
         </div>
 
+        <!-- Section Demandes WhatsApp en attente -->
+        <div id="whatsapp-pending-section" class="card" style="display: none; border-left: 4px solid #25D366; margin-bottom: 1.5rem;">
+            <div class="card-header" style="background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white;">
+                <h2 class="card-title" style="color: white; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fab fa-whatsapp"></i> Demandes WhatsApp en attente de validation
+                    <span id="whatsapp-pending-count" class="badge" style="background: rgba(255,255,255,0.3); color: white; margin-left: auto;">0</span>
+                </h2>
+            </div>
+            <div class="card-body" style="padding: 1rem;">
+                <div id="whatsapp-pending-list" class="loading">Chargement des demandes WhatsApp...</div>
+            </div>
+        </div>
+
         <!-- Barre de recherche et filtres -->
         <div class="demandes-actions-bar">
             <div class="demandes-search-modern">
@@ -701,6 +714,7 @@
             } else {
                 loadDemandes();
                 loadStats();
+                loadWhatsAppPending();
             }
         }
 
@@ -772,6 +786,309 @@
                 document.getElementById('stats-demandes').innerHTML = statsHtml;
             } catch (error) {
                 console.error('Erreur stats:', error);
+            }
+        }
+
+        async function loadWhatsAppPending() {
+            try {
+                const response = await apiCall('/api/whatsapp/pending');
+                if (!response.ok) {
+                    // Si l'endpoint n'existe pas ou erreur, masquer la section
+                    document.getElementById('whatsapp-pending-section').style.display = 'none';
+                    return;
+                }
+
+                const demandes = await response.json();
+                
+                if (demandes.length === 0) {
+                    document.getElementById('whatsapp-pending-section').style.display = 'none';
+                    return;
+                }
+
+                document.getElementById('whatsapp-pending-section').style.display = 'block';
+                document.getElementById('whatsapp-pending-count').textContent = demandes.length;
+
+                // Afficher les demandes
+                const listHtml = demandes.map(d => {
+                    const notes = d.notes_internes ? JSON.parse(d.notes_internes) : {};
+                    const confiance = notes.confiance ? (notes.confiance * 100).toFixed(0) : 'N/A';
+                    
+                    return `
+                        <div class="whatsapp-pending-item" style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                                    <strong style="color: var(--color-primary); font-size: 1.1rem;">${d.nom || 'Client WhatsApp'}</strong>
+                                    <span class="badge" style="background: ${confiance >= 70 ? '#00A651' : confiance >= 50 ? '#FFB800' : '#FF6600'}; color: white; font-size: 0.75rem;">
+                                        Confiance: ${confiance}%
+                                    </span>
+                                </div>
+                                <div style="color: var(--color-neutral); font-size: 0.9rem; margin-bottom: 0.25rem;">
+                                    <i class="fas fa-phone"></i> ${d.telephone || '-'}
+                                    ${d.email ? ` | <i class="fas fa-envelope"></i> ${d.email}` : ''}
+                                    ${d.entreprise ? ` | <i class="fas fa-building"></i> ${d.entreprise}` : ''}
+                                </div>
+                                <div style="color: var(--color-neutral); font-size: 0.85rem; margin-top: 0.5rem;">
+                                    <i class="fas fa-list"></i> ${d.articles_resume || 'Aucun article'}
+                                </div>
+                                ${notes.raw_message ? `
+                                    <div style="background: #f5f5f5; padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem; font-size: 0.85rem; color: var(--color-primary-dark);">
+                                        <strong>Message original:</strong> ${notes.raw_message.substring(0, 150)}${notes.raw_message.length > 150 ? '...' : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-primary" onclick="validateWhatsAppDemande(${d.id})" style="padding: 0.75rem 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-check-circle"></i> Valider
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('whatsapp-pending-list').innerHTML = listHtml;
+            } catch (error) {
+                console.error('Erreur chargement demandes WhatsApp:', error);
+                document.getElementById('whatsapp-pending-section').style.display = 'none';
+            }
+        }
+
+        async function validateWhatsAppDemande(demandeId) {
+            // Ouvrir le modal de validation avec les détails de la demande
+            try {
+                const response = await apiCall(`/api/contact/demandes/${demandeId}`);
+                if (!response.ok) throw new Error('Erreur chargement demande');
+                
+                const demande = await response.json();
+                
+                // Les articles sont déjà dans demande.articles
+                const articles = demande.articles || [];
+
+                // Ouvrir le modal de validation
+                openValidateWhatsAppModal(demande, articles);
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error('Erreur lors du chargement de la demande');
+            }
+        }
+
+        function openValidateWhatsAppModal(demande, articles) {
+            // Créer ou réutiliser un modal de validation
+            let modal = document.getElementById('validateWhatsAppModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'validateWhatsAppModal';
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width: 800px;">
+                        <div class="modal-header">
+                            <h2><i class="fab fa-whatsapp"></i> Valider la demande WhatsApp</h2>
+                            <button class="modal-close" onclick="closeValidateWhatsAppModal()">&times;</button>
+                        </div>
+                        <form id="validateWhatsAppForm" onsubmit="submitValidateWhatsApp(event)">
+                            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                                    <div>
+                                        <label>Nom *</label>
+                                        <input type="text" id="validate-nom" class="form-control" required>
+                                    </div>
+                                    <div>
+                                        <label>Email</label>
+                                        <input type="email" id="validate-email" class="form-control">
+                                    </div>
+                                    <div>
+                                        <label>Téléphone *</label>
+                                        <input type="tel" id="validate-telephone" class="form-control" required>
+                                    </div>
+                                    <div>
+                                        <label>Entreprise</label>
+                                        <input type="text" id="validate-entreprise" class="form-control">
+                                    </div>
+                                    <div>
+                                        <label>Adresse de livraison</label>
+                                        <input type="text" id="validate-adresse" class="form-control">
+                                    </div>
+                                    <div>
+                                        <label>Ville</label>
+                                        <input type="text" id="validate-ville" class="form-control">
+                                    </div>
+                                    <div style="grid-column: 1 / -1;">
+                                        <label>Pays</label>
+                                        <input type="text" id="validate-pays" class="form-control" value="Guinée">
+                                    </div>
+                                </div>
+                                <div style="margin-top: 1.5rem;">
+                                    <h3 style="margin-bottom: 1rem; color: var(--color-primary);">Articles</h3>
+                                    <div id="validate-articles-list"></div>
+                                    <button type="button" class="btn btn-secondary" onclick="addValidateArticle()" style="margin-top: 1rem;">
+                                        <i class="fas fa-plus"></i> Ajouter un article
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" onclick="closeValidateWhatsAppModal()">Annuler</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-check"></i> Valider et activer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            // Remplir le formulaire
+            document.getElementById('validate-nom').value = demande.nom || '';
+            document.getElementById('validate-email').value = demande.email || '';
+            document.getElementById('validate-telephone').value = demande.telephone || '';
+            document.getElementById('validate-entreprise').value = demande.entreprise || '';
+            document.getElementById('validate-adresse').value = demande.adresse_livraison || '';
+            document.getElementById('validate-ville').value = demande.ville_livraison || '';
+            document.getElementById('validate-pays').value = demande.pays_livraison || 'Guinée';
+
+            // Afficher les articles
+            const articlesList = document.getElementById('validate-articles-list');
+            articlesList.innerHTML = articles.map((art, index) => `
+                <div class="validate-article-item" style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <input type="hidden" name="articles[${index}][id]" value="${art.id}">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label style="font-size: 0.85rem; color: var(--color-neutral);">Description *</label>
+                            <input type="text" name="articles[${index}][description]" class="form-control" value="${art.description || ''}" required>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; color: var(--color-neutral);">Quantité</label>
+                            <input type="number" name="articles[${index}][quantite]" class="form-control" value="${art.quantite || 1}" step="0.01" min="0.01">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; color: var(--color-neutral);">Unité</label>
+                            <input type="text" name="articles[${index}][unite]" class="form-control" value="${art.unite || 'unité'}">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; color: var(--color-neutral);">Secteur</label>
+                            <input type="text" name="articles[${index}][secteur]" class="form-control" value="${art.secteur || ''}">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-danger" onclick="removeValidateArticle(this)" style="margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </div>
+            `).join('');
+
+            modal.classList.add('active');
+            document.body.classList.add('modal-open');
+            modal.dataset.demandeId = demande.id;
+        }
+
+        function closeValidateWhatsAppModal() {
+            const modal = document.getElementById('validateWhatsAppModal');
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.classList.remove('modal-open');
+            }
+        }
+
+        function addValidateArticle() {
+            const articlesList = document.getElementById('validate-articles-list');
+            const index = articlesList.children.length;
+            const articleHtml = `
+                <div class="validate-article-item" style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label style="font-size: 0.85rem; color: var(--color-neutral);">Description *</label>
+                            <input type="text" name="articles[${index}][description]" class="form-control" required>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; color: var(--color-neutral);">Quantité</label>
+                            <input type="number" name="articles[${index}][quantite]" class="form-control" value="1" step="0.01" min="0.01">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; color: var(--color-neutral);">Unité</label>
+                            <input type="text" name="articles[${index}][unite]" class="form-control" value="unité">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; color: var(--color-neutral);">Secteur</label>
+                            <input type="text" name="articles[${index}][secteur]" class="form-control">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-danger" onclick="removeValidateArticle(this)" style="margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </div>
+            `;
+            articlesList.insertAdjacentHTML('beforeend', articleHtml);
+        }
+
+        function removeValidateArticle(button) {
+            button.closest('.validate-article-item').remove();
+        }
+
+        async function submitValidateWhatsApp(event) {
+            event.preventDefault();
+            
+            const modal = document.getElementById('validateWhatsAppModal');
+            const demandeId = modal.dataset.demandeId;
+            
+            if (!demandeId) {
+                Toast.error('ID demande manquant');
+                return;
+            }
+
+            // Récupérer les données du formulaire
+            const formData = {
+                nom: document.getElementById('validate-nom').value,
+                email: document.getElementById('validate-email').value,
+                telephone: document.getElementById('validate-telephone').value,
+                entreprise: document.getElementById('validate-entreprise').value,
+                adresse_livraison: document.getElementById('validate-adresse').value,
+                ville_livraison: document.getElementById('validate-ville').value,
+                pays_livraison: document.getElementById('validate-pays').value
+            };
+
+            // Récupérer les articles
+            const articles = [];
+            const articleItems = document.querySelectorAll('.validate-article-item');
+            articleItems.forEach((item, index) => {
+                articles.push({
+                    description: item.querySelector(`input[name="articles[${index}][description]"]`).value,
+                    quantite: parseFloat(item.querySelector(`input[name="articles[${index}][quantite]"]`).value) || 1,
+                    unite: item.querySelector(`input[name="articles[${index}][unite]"]`).value || 'unité',
+                    secteur: item.querySelector(`input[name="articles[${index}][secteur]"]`).value || null
+                });
+            });
+
+            formData.articles = articles;
+
+            try {
+                const submitButton = event.target.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validation...';
+
+                const response = await apiCall(`/api/whatsapp/pending/${demandeId}/validate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Erreur lors de la validation');
+                }
+
+                Toast.success('Demande validée avec succès !');
+                closeValidateWhatsAppModal();
+                loadDemandes();
+                loadWhatsAppPending();
+                loadStats();
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                Toast.error(error.message || 'Erreur lors de la validation');
+            } finally {
+                const submitButton = event.target.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-check"></i> Valider et activer';
+                }
             }
         }
 

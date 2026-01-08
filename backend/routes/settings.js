@@ -96,17 +96,26 @@ router.put('/messagepro', async (req, res) => {
             // commit() libère déjà le client, pas besoin de release()
 
             // Mettre à jour les variables d'environnement en mémoire (pour cette instance)
+            const messageProService = require('../services/messagepro');
+            
             if (secret !== undefined) {
-                process.env.MESSAGEPRO_SECRET = secret || process.env.MESSAGEPRO_SECRET;
+                const finalSecret = secret || null;
+                process.env.MESSAGEPRO_SECRET = finalSecret || process.env.MESSAGEPRO_SECRET;
                 // Mettre à jour aussi dans le service Message Pro
-                const messageProService = require('../services/messagepro');
-                messageProService.updateSecret(secret || process.env.MESSAGEPRO_SECRET);
+                messageProService.updateSecret(finalSecret);
             }
+            
+            if (whatsapp_account !== undefined) {
+                const finalAccount = whatsapp_account || null;
+                process.env.MESSAGEPRO_WHATSAPP_ACCOUNT = finalAccount || process.env.MESSAGEPRO_WHATSAPP_ACCOUNT;
+                // Mettre à jour aussi dans le service Message Pro
+                messageProService.updateWhatsAppAccount(finalAccount);
+            }
+            
             if (sms_mode !== undefined) process.env.MESSAGEPRO_SMS_MODE = sms_mode || process.env.MESSAGEPRO_SMS_MODE;
             if (gateway !== undefined) process.env.MESSAGEPRO_GATEWAY = gateway || process.env.MESSAGEPRO_GATEWAY;
             if (device !== undefined) process.env.MESSAGEPRO_DEVICE = device || process.env.MESSAGEPRO_DEVICE;
             if (sim !== undefined) process.env.MESSAGEPRO_SIM = sim ? sim.toString() : process.env.MESSAGEPRO_SIM;
-            if (whatsapp_account !== undefined) process.env.MESSAGEPRO_WHATSAPP_ACCOUNT = whatsapp_account || process.env.MESSAGEPRO_WHATSAPP_ACCOUNT;
 
             res.json({ 
                 message: 'Paramètres Message Pro sauvegardés avec succès',
