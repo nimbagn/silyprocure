@@ -31,7 +31,7 @@ async function enregistrerInteraction(params) {
         await pool.execute(
             `INSERT INTO historique_clients 
              (client_id, type_interaction, reference_document, document_id, description, utilisateur_id, metadata)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
             [
                 client_id,
                 type_interaction,
@@ -62,9 +62,9 @@ async function getHistoriqueClient(client_id, limit = 100) {
                     u.prenom as utilisateur_prenom
              FROM historique_clients h
              LEFT JOIN utilisateurs u ON h.utilisateur_id = u.id
-             WHERE h.client_id = ?
+             WHERE h.client_id = $1
              ORDER BY h.date_interaction DESC
-             LIMIT ?`,
+             LIMIT $2`,
             [client_id, limit]
         );
 

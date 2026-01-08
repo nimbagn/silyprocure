@@ -282,11 +282,11 @@
                 `;
             } else if (statut === 'envoye' || statut === 'envoyé') {
                 console.log('🟨 Statut: envoye/envoyé - Affichage boutons Accepter/Refuser');
-                // Utiliser onclick directement dans le HTML pour éviter les problèmes de cache
+                // Utiliser des IDs pour attacher les event listeners après
                 actionsHTML = `
                     <button class="btn btn-secondary" onclick="window.open('/api/pdf/devis/${devis.id}', '_blank')" style="margin-right: 0.5rem; white-space: nowrap;"><i class="fas fa-file-pdf"></i> PDF</button>
-                    <button class="btn btn-success" id="btn-accepter-${devis.id}" onclick="console.log('🟢 Clic sur Accepter'); if(typeof window.accepterDevis==='function'){window.accepterDevis(${devis.id});}else{console.error('Fonction accepterDevis non disponible');alert('Fonction non disponible, rechargement...');window.location.reload();}" style="cursor: pointer; white-space: nowrap; flex-shrink: 0;"><i class="fas fa-check"></i> Accepter</button>
-                    <button class="btn btn-danger" id="btn-refuser-${devis.id}" onclick="console.log('🔴 Clic sur Refuser'); if(typeof window.refuserDevis==='function'){window.refuserDevis(${devis.id});}else{console.error('Fonction refuserDevis non disponible');alert('Fonction non disponible, rechargement...');window.location.reload();}" style="margin-left: 0.5rem; cursor: pointer; white-space: nowrap; flex-shrink: 0;"><i class="fas fa-times"></i> Refuser</button>
+                    <button class="btn btn-success" id="btn-accepter-${devis.id}" data-devis-id="${devis.id}" style="cursor: pointer; white-space: nowrap; flex-shrink: 0;"><i class="fas fa-check"></i> Accepter</button>
+                    <button class="btn btn-danger" id="btn-refuser-${devis.id}" data-devis-id="${devis.id}" style="margin-left: 0.5rem; cursor: pointer; white-space: nowrap; flex-shrink: 0;"><i class="fas fa-times"></i> Refuser</button>
                 `;
             } else if (statut === 'accepte' || statut === 'accepté') {
                 console.log('🟨 Statut: accepte/accepté - Devis déjà accepté');
@@ -301,8 +301,9 @@
                 if (user.role === 'admin' || user.role === 'superviseur') {
                     console.log('🟨 Utilisateur admin/superviseur - Affichage boutons Accepter/Refuser malgré statut inconnu');
                     actionsHTML = `
-                        <button class="btn btn-success" onclick="if(typeof window.accepterDevis==='function'){window.accepterDevis(${devis.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-check"></i> Accepter</button>
-                        <button class="btn btn-danger" onclick="if(typeof window.refuserDevis==='function'){window.refuserDevis(${devis.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}" style="margin-left: 0.5rem;"><i class="fas fa-times"></i> Refuser</button>
+                        <button class="btn btn-secondary" onclick="window.open('/api/pdf/devis/${devis.id}', '_blank')" style="margin-right: 0.5rem; white-space: nowrap;"><i class="fas fa-file-pdf"></i> PDF</button>
+                        <button class="btn btn-success" id="btn-accepter-${devis.id}" data-devis-id="${devis.id}" style="cursor: pointer; white-space: nowrap; flex-shrink: 0;"><i class="fas fa-check"></i> Accepter</button>
+                        <button class="btn btn-danger" id="btn-refuser-${devis.id}" data-devis-id="${devis.id}" style="margin-left: 0.5rem; cursor: pointer; white-space: nowrap; flex-shrink: 0;"><i class="fas fa-times"></i> Refuser</button>
                     `;
                 }
             }
@@ -310,49 +311,74 @@
             console.log('🟨 Actions HTML:', actionsHTML);
             actionsContainer.innerHTML = actionsHTML;
             
-            // Vérifier que les boutons sont bien créés et ajouter des event listeners en backup
-            setTimeout(() => {
+            // Attacher les event listeners aux boutons immédiatement après leur création
+            // Utiliser requestAnimationFrame pour s'assurer que le DOM est mis à jour
+            requestAnimationFrame(() => {
                 const btnAccepter = document.getElementById(`btn-accepter-${devis.id}`);
                 const btnRefuser = document.getElementById(`btn-refuser-${devis.id}`);
                 
                 if (btnAccepter) {
-                    console.log('✅ Bouton Accepter trouvé dans le DOM');
-                    // Ajouter un event listener en backup si onclick ne fonctionne pas
-                    btnAccepter.addEventListener('click', function(e) {
-                        console.log('🟢 Event listener Accepter déclenché');
+                    console.log('✅ Bouton Accepter trouvé dans le DOM, attachement event listener');
+                    // Cloner et remplacer pour éviter les doublons d'event listeners
+                    const newBtnAccepter = btnAccepter.cloneNode(true);
+                    btnAccepter.parentNode.replaceChild(newBtnAccepter, btnAccepter);
+                    
+                    newBtnAccepter.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (typeof window.accepterDevis === 'function') {
-                            window.accepterDevis(devis.id);
+                        console.log('🟢 Clic sur Accepter - ID:', devis.id);
+                        const id = parseInt(newBtnAccepter.getAttribute('data-devis-id') || devis.id);
+                        console.log('🟢 ID extrait:', id);
+                        console.log('🟢 Type accepterDevis:', typeof accepterDevis);
+                        console.log('🟢 Type window.accepterDevis:', typeof window.accepterDevis);
+                        
+                        if (typeof accepterDevis === 'function') {
+                            console.log('🟢 Appel accepterDevis (local)');
+                            accepterDevis(id);
+                        } else if (typeof window.accepterDevis === 'function') {
+                            console.log('🟢 Appel window.accepterDevis');
+                            window.accepterDevis(id);
                         } else {
                             console.error('❌ Fonction accepterDevis non disponible');
                             alert('Fonction non disponible, rechargement...');
                             window.location.reload();
                         }
-                    });
+                    }, { once: false, passive: false });
                 } else {
                     console.warn('⚠️ Bouton Accepter non trouvé dans le DOM');
                 }
                 
                 if (btnRefuser) {
-                    console.log('✅ Bouton Refuser trouvé dans le DOM');
-                    // Ajouter un event listener en backup si onclick ne fonctionne pas
-                    btnRefuser.addEventListener('click', function(e) {
-                        console.log('🔴 Event listener Refuser déclenché');
+                    console.log('✅ Bouton Refuser trouvé dans le DOM, attachement event listener');
+                    // Cloner et remplacer pour éviter les doublons d'event listeners
+                    const newBtnRefuser = btnRefuser.cloneNode(true);
+                    btnRefuser.parentNode.replaceChild(newBtnRefuser, btnRefuser);
+                    
+                    newBtnRefuser.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (typeof window.refuserDevis === 'function') {
-                            window.refuserDevis(devis.id);
+                        console.log('🔴 Clic sur Refuser - ID:', devis.id);
+                        const id = parseInt(newBtnRefuser.getAttribute('data-devis-id') || devis.id);
+                        console.log('🔴 ID extrait:', id);
+                        console.log('🔴 Type refuserDevis:', typeof refuserDevis);
+                        console.log('🔴 Type window.refuserDevis:', typeof window.refuserDevis);
+                        
+                        if (typeof refuserDevis === 'function') {
+                            console.log('🔴 Appel refuserDevis (local)');
+                            refuserDevis(id);
+                        } else if (typeof window.refuserDevis === 'function') {
+                            console.log('🔴 Appel window.refuserDevis');
+                            window.refuserDevis(id);
                         } else {
                             console.error('❌ Fonction refuserDevis non disponible');
                             alert('Fonction non disponible, rechargement...');
                             window.location.reload();
                         }
-                    });
+                    }, { once: false, passive: false });
                 } else {
                     console.warn('⚠️ Bouton Refuser non trouvé dans le DOM');
                 }
-            }, 100);
+            });
 
             container.innerHTML = `
                 <div class="card">
