@@ -1,96 +1,656 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="h-full bg-gray-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Dashboard - Auto Login - SilyProcure</title>
+    <title>Test Dashboard - SilyProcure</title>
+    
+    <!-- CSS Charte Graphique Pro Confiance -->
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--color-background-light);
-            color: var(--color-neutral-dark);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 1rem;
-        }
-        .loading-container {
-            text-align: center;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            max-width: 500px;
-            width: 100%;
-        }
-        .loading-container h1 {
-            color: var(--color-primary);
-            margin-bottom: 1rem;
-        }
-        .loading-spinner {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--color-background-blue);
-            border-top-color: var(--color-accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 1rem 0;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        @media (max-width: 768px) {
-            .loading-container {
-                padding: 1.5rem;
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#E0E7FF',
+                            100: '#DBEAFE',
+                            400: '#60A5FA',
+                            500: '#3B82F6',
+                            600: '#2563EB',
+                            700: '#1D4ED8',
+                            900: '#1E3A8A',
+                        },
+                        success: {
+                            500: '#10B981',
+                        },
+                        neutral: {
+                            500: '#64748B',
+                            600: '#475569',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Arial', 'sans-serif'],
+                    }
+                }
             }
+        }
+    </script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Variables CSS selon la charte Pro Confiance */
+        :root {
+            --color-primary-dark: #1E3A8A;
+            --color-primary: #3B82F6;
+            --color-primary-light: #60A5FA;
+            --color-success: #10B981;
+            --color-neutral: #64748B;
+            --color-neutral-dark: #475569;
+            --color-background: #FFFFFF;
+            --color-background-light: #F8FAFC;
+            --color-background-blue: #E0E7FF;
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-background-light);
+            color: var(--color-neutral-dark);
+            line-height: 1.5;
+        }
+        
+        /* Navbar selon charte */
+        nav {
+            background: var(--color-background) !important;
+            border-bottom: 2px solid var(--color-background-blue);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Logo avec couleur charte */
+        .logo-primary {
+            color: var(--color-primary) !important;
+        }
+        
+        /* Navigation active */
+        nav a.border-primary-500 {
+            border-bottom-color: var(--color-primary) !important;
+            color: var(--color-primary-dark) !important;
+            font-weight: 600;
+        }
+        
+        /* Boutons selon charte */
+        button.bg-primary-600,
+        button.bg-primary-500 {
+            background-color: var(--color-primary) !important;
+        }
+        
+        button.bg-primary-600:hover,
+        button.bg-primary-500:hover {
+            background-color: var(--color-primary-dark) !important;
+        }
+        
+        /* Cartes KPI avec style charte */
+        .kpi-card {
+            background: var(--color-background);
+            border-left: 4px solid var(--color-primary);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .kpi-card.blue { border-left-color: var(--color-primary); }
+        .kpi-card.green { border-left-color: var(--color-success); }
+        .kpi-card.yellow { border-left-color: #F59E0B; }
+        .kpi-card.purple { border-left-color: #8B5CF6; }
+        
+        /* Graphiques avec couleurs charte */
+        .chart-container {
+            background: var(--color-background);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Sections avec espacement charte */
+        .section-spacing {
+            margin-bottom: 32px;
+        }
+        
+        /* Titres selon charte */
+        h2 {
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 1.2;
+            color: var(--color-primary-dark);
+        }
+        
+        h3 {
+            font-size: 20px;
+            font-weight: 600;
+            line-height: 1.2;
+            color: var(--color-primary-dark);
+        }
+        
+        /* Animations selon charte */
+        .fade-in { 
+            animation: fadeIn 0.5s ease-out forwards; 
+            opacity: 0; 
+            transform: translateY(10px); 
+        }
+        
+        @keyframes fadeIn { 
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            } 
+        }
+        
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        .delay-500 { animation-delay: 500ms; }
+        
+        /* Transitions selon charte (200-300ms, ease-in-out) */
+        * {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Liens avec couleur charte */
+        a {
+            color: var(--color-primary);
+        }
+        
+        a:hover {
+            color: var(--color-primary-dark);
         }
     </style>
 </head>
-<body>
-    <div class="loading-container">
-        <h1><i class="fas fa-spinner"></i> Connexion automatique en cours...</h1>
-        <div class="loading-spinner"></div>
-        <p style="color: var(--color-neutral); margin-top: 1rem;">Veuillez patienter...</p>
-    </div>
-    <script>
-        async function autoLogin() {
-            try {
-                const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-                    ? 'http://localhost:3000' 
-                    : window.location.origin;
-                const response = await fetch(`${apiUrl}/api/auth/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: 'admin@silyprocure.com',
-                        mot_de_passe: 'password'
-                    })
-                });
+<body class="h-full flex flex-col">
 
-                if (response.ok) {
-                    const data = await response.json();
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = 'dashboard.html';
-                } else {
-                    document.body.innerHTML = '<h1>Erreur de connexion</h1><p>Impossible de se connecter automatiquement.</p>';
+    <!-- Navbar Moderne selon charte Pro Confiance -->
+    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo & Nav Links -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
+                        <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
+                    </div>
+                    <div class="hidden md:ml-8 md:flex md:space-x-6">
+                        <a href="dashboard.html" class="border-primary-500 text-primary-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-semibold">Dashboard</a>
+                        <a href="rfq.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">RFQ</a>
+                        <a href="devis.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">Devis</a>
+                        <a href="commandes.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">Commandes</a>
+                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">Entreprises</a>
+                    </div>
+                </div>
+
+                <!-- Search Bar & Profile -->
+                <div class="flex items-center gap-4">
+                    <!-- Global Search -->
+                    <div class="hidden lg:block relative text-neutral-500 focus-within:text-primary-600">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <input id="global-search" class="block w-full bg-blue-50 py-2 pl-10 pr-3 border border-blue-200 rounded-full leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition duration-150 ease-in-out" placeholder="Rechercher..." type="search">
+                    </div>
+
+                    <!-- Notifications -->
+                    <button class="relative p-2 text-neutral-500 hover:text-primary-600 transition-colors">
+                        <span class="sr-only">Notifications</span>
+                        <i class="far fa-bell text-xl"></i>
+                        <span class="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+                    </button>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative flex items-center gap-2 cursor-pointer group">
+                        <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border border-primary-200">
+                            <span id="user-initials">U</span>
+                        </div>
+                        <span id="user-name" class="hidden md:block text-sm font-medium text-neutral-600">Utilisateur Test</span>
+                        <button onclick="alert('Déconnexion')" class="ml-2 text-xs text-red-500 hover:text-red-700 border border-red-200 rounded px-2 py-1 hover:bg-red-50 transition">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Menu mobile -->
+                    <div class="md:hidden ml-2">
+                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2 rounded-md text-neutral-400 hover:text-primary-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500" aria-expanded="false" aria-label="Menu principal">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Menu mobile déroulant -->
+            <div id="mobile-menu" class="hidden md:hidden border-t border-blue-100">
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="dashboard.html" class="bg-blue-50 border-primary-500 text-primary-700 block px-3 py-2 rounded-md text-base font-semibold">Dashboard</a>
+                    <a href="rfq.html" class="border-transparent text-neutral-600 hover:bg-blue-50 hover:text-primary-700 block px-3 py-2 rounded-md text-base font-medium transition-colors">RFQ</a>
+                    <a href="devis.html" class="border-transparent text-neutral-600 hover:bg-blue-50 hover:text-primary-700 block px-3 py-2 rounded-md text-base font-medium transition-colors">Devis</a>
+                    <a href="commandes.html" class="border-transparent text-neutral-600 hover:bg-blue-50 hover:text-primary-700 block px-3 py-2 rounded-md text-base font-medium transition-colors">Commandes</a>
+                    <a href="entreprises.html" class="border-transparent text-neutral-600 hover:bg-blue-50 hover:text-primary-700 block px-3 py-2 rounded-md text-base font-medium transition-colors">Entreprises</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        <!-- Header & Quick Actions -->
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-bold leading-7 text-primary-900 sm:text-3xl sm:truncate">
+                    Tableau de bord
+                </h2>
+                <p class="mt-1 text-sm text-neutral-500">
+                    Bienvenue, voici un aperçu de vos activités d'achat.
+                </p>
+            </div>
+            
+            <!-- Quick Actions Toolbar -->
+            <div class="flex flex-wrap gap-2">
+                <button onclick="alert('Nouvelle RFQ')" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-500 hover:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all transform hover:scale-105">
+                    <i class="fas fa-plus mr-2"></i> Nouvelle RFQ
+                </button>
+                <button onclick="alert('Fournisseur')" class="inline-flex items-center px-4 py-2 border border-blue-200 shadow-sm text-sm font-medium rounded-md text-primary-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
+                    <i class="fas fa-user-plus mr-2 text-primary-500"></i> Fournisseur
+                </button>
+                <button onclick="location.reload()" class="inline-flex items-center p-2 border border-blue-200 shadow-sm text-sm font-medium rounded-md text-primary-700 bg-white hover:bg-blue-50 focus:outline-none" title="Actualiser">
+                    <i class="fas fa-sync-alt text-primary-500"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            
+            <!-- Commandes -->
+            <div class="kpi-card blue bg-white overflow-hidden shadow-sm rounded-xl border border-blue-100 hover:shadow-md transition-shadow cursor-pointer fade-in delay-100">
+                <div class="p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-50 rounded-lg">
+                                <i class="fas fa-shopping-cart text-primary-500 text-lg"></i>
+                            </div>
+                            <span class="text-sm font-medium text-neutral-500">Commandes</span>
+                        </div>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                            +12%
+                        </span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-2xl font-bold text-primary-900">142</span>
+                        <span class="text-sm text-neutral-500">totales</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dépenses & Budget -->
+            <div class="kpi-card green bg-white overflow-hidden shadow-sm rounded-xl border border-blue-100 hover:shadow-md transition-shadow fade-in delay-200">
+                <div class="p-5">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="p-2 bg-green-50 rounded-lg">
+                            <i class="fas fa-money-bill-wave text-success-500 text-lg"></i>
+                        </div>
+                        <span class="text-sm font-medium text-neutral-500">Dépenses (Mois)</span>
+                    </div>
+                    <div class="mt-2">
+                        <span class="text-2xl font-bold text-primary-900 block">45 000 000 GNF</span>
+                        <!-- Budget Bar -->
+                        <div class="mt-3 relative pt-1">
+                            <div class="flex mb-2 items-center justify-between">
+                                <div class="text-right">
+                                    <span class="text-xs font-semibold inline-block text-success-500">
+                                        75% du budget
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="overflow-hidden h-1.5 mb-1 text-xs flex rounded bg-green-100">
+                                <div style="width: 75%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-success-500"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RFQ -->
+            <div class="kpi-card yellow bg-white overflow-hidden shadow-sm rounded-xl border border-blue-100 hover:shadow-md transition-shadow cursor-pointer fade-in delay-300">
+                <div class="p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-yellow-50 rounded-lg">
+                                <i class="fas fa-file-contract text-yellow-600 text-lg"></i>
+                            </div>
+                            <span class="text-sm font-medium text-neutral-500">Appels d'offres</span>
+                        </div>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Actif
+                        </span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-2xl font-bold text-primary-900">5</span>
+                        <span class="text-sm text-neutral-500">en cours</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fournisseurs -->
+            <div class="kpi-card purple bg-white overflow-hidden shadow-sm rounded-xl border border-blue-100 hover:shadow-md transition-shadow cursor-pointer fade-in delay-400">
+                <div class="p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-purple-50 rounded-lg">
+                                <i class="fas fa-building text-purple-600 text-lg"></i>
+                            </div>
+                            <span class="text-sm font-medium text-neutral-500">Fournisseurs</span>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-2xl font-bold text-primary-900">45</span>
+                        <span class="text-sm text-neutral-500">actifs</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid 1: Finances & RFQ -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Main Chart: Evolution des achats -->
+            <div class="chart-container bg-white shadow rounded-lg p-6 lg:col-span-2 fade-in border border-blue-100">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg leading-6 font-bold text-primary-900">Évolution des Achats</h3>
+                    <div class="flex gap-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-primary-800">
+                            <span class="w-2 h-2 bg-primary-500 rounded-full mr-1.5"></span>
+                            Commandes
+                        </span>
+                    </div>
+                </div>
+                <div class="relative h-72 w-full">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Doughnut Chart: RFQ Statut -->
+            <div class="chart-container bg-white shadow rounded-lg p-6 fade-in border border-blue-100 flex flex-col">
+                <h3 class="text-lg leading-6 font-bold text-primary-900 mb-6">Statut des RFQ</h3>
+                <div class="relative flex-1 flex items-center justify-center">
+                    <canvas id="rfqChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid 2: Categories & Secteurs -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 fade-in delay-500">
+            
+            <!-- Bar Chart: Catégories -->
+            <div class="chart-container bg-white shadow rounded-lg p-6 border border-blue-100">
+                <h3 class="text-lg leading-6 font-bold text-primary-900 mb-6">Catégories les plus demandées</h3>
+                <div class="relative h-72 w-full">
+                    <canvas id="categoriesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Polar Area Chart: Secteurs -->
+            <div class="chart-container bg-white shadow rounded-lg p-6 border border-blue-100">
+                <h3 class="text-lg leading-6 font-bold text-primary-900 mb-6">Secteurs les plus sollicités</h3>
+                <div class="relative h-72 w-full flex justify-center">
+                    <canvas id="sectorsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity & Notifications -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Dernières Commandes (Tableau Amélioré) -->
+            <div class="bg-white shadow rounded-lg overflow-hidden fade-in border border-blue-100">
+                <div class="px-6 py-5 border-b-2 border-blue-100 bg-blue-50 flex justify-between items-center">
+                    <h3 class="text-lg leading-6 font-bold text-primary-900">Commandes Récentes</h3>
+                    <a href="commandes.html" class="text-sm font-medium text-primary-600 hover:text-primary-900">Tout voir</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-blue-100">
+                        <thead class="bg-blue-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-primary-900 uppercase tracking-wider">Réf</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-primary-900 uppercase tracking-wider">Fournisseur</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-primary-900 uppercase tracking-wider">Montant</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-primary-900 uppercase tracking-wider">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-blue-100">
+                            <tr class="hover:bg-blue-50 cursor-pointer transition">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-600">BC-24-300</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
+                                    <div class="flex items-center">
+                                        <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-primary-600 font-bold mr-3 text-xs">F</div>
+                                        Fournisseur A
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-600 font-medium">1 500 000 GNF</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-primary-800">en cours</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-blue-50 cursor-pointer transition">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-600">BC-24-301</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
+                                    <div class="flex items-center">
+                                        <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-primary-600 font-bold mr-3 text-xs">F</div>
+                                        Fournisseur B
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-600 font-medium">1 550 000 GNF</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">livré</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="bg-white shadow rounded-lg overflow-hidden fade-in border border-blue-100">
+                <div class="px-6 py-5 border-b-2 border-blue-100 bg-blue-50 flex justify-between items-center">
+                    <h3 class="text-lg leading-6 font-bold text-primary-900">Derniers Messages</h3>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">1 nouveaux</span>
+                </div>
+                <ul class="divide-y divide-blue-100 overflow-y-auto max-h-[300px]">
+                    <li class="px-6 py-4 hover:bg-blue-50 transition cursor-pointer border-b border-blue-100 bg-blue-50/50">
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold text-xs">J</div>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-medium text-primary-900 flex justify-between">
+                                    <span>Demande de partenariat</span>
+                                    <span class="text-xs text-neutral-400 font-normal">Aujourd'hui</span>
+                                </p>
+                                <p class="text-sm text-neutral-500 truncate">Bonjour, nous souhaitons collaborer...</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="px-6 py-4 hover:bg-blue-50 transition cursor-pointer border-b border-blue-100 last:border-0">
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold text-xs">M</div>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-medium text-primary-900 flex justify-between">
+                                    <span>Problème facture</span>
+                                    <span class="text-xs text-neutral-400 font-normal">Hier</span>
+                                </p>
+                                <p class="text-sm text-neutral-500 truncate">Erreur sur la facture F-102...</p>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Menu mobile
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const button = document.getElementById('mobile-menu-button');
+            if (menu) {
+                menu.classList.toggle('hidden');
+                const icon = button.querySelector('i');
+                if (icon) {
+                    icon.classList.toggle('fa-bars');
+                    icon.classList.toggle('fa-times');
                 }
-            } catch (error) {
-                document.body.innerHTML = '<h1>Erreur</h1><p>' + error.message + '</p>';
             }
         }
-        
-        autoLogin();
+
+        // Initialiser les graphiques
+        document.addEventListener('DOMContentLoaded', function() {
+            // Main Line Chart
+            const ctxMain = document.getElementById('mainChart');
+            if (ctxMain) {
+                const ctx = ctxMain.getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(37, 99, 235, 0.2)');
+                gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Août', 'Sept', 'Oct', 'Nov', 'Déc', 'Jan'],
+                        datasets: [{
+                            label: 'Montant Achats (GNF)',
+                            data: [25000000, 32000000, 28000000, 38000000, 45000000, 42000000],
+                            borderColor: '#2563eb',
+                            backgroundColor: gradient,
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#2563eb'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#1e293b',
+                                padding: 12,
+                                cornerRadius: 8
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { borderDash: [2, 4], color: '#f1f5f9' },
+                                ticks: { callback: (value) => (value / 1000000) + 'M' }
+                            },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // RFQ Doughnut
+            const ctxRfq = document.getElementById('rfqChart');
+            if (ctxRfq) {
+                new Chart(ctxRfq.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Brouillon', 'En cours', 'Clôturé', 'Annulé'],
+                        datasets: [{
+                            data: [3, 5, 15, 2],
+                            backgroundColor: ['#cbd5e1', '#3b82f6', '#10b981', '#ef4444'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true } }
+                        }
+                    }
+                });
+            }
+
+            // Categories Bar Chart
+            const ctxCat = document.getElementById('categoriesChart');
+            if (ctxCat) {
+                new Chart(ctxCat.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Matériel Info.', 'Fournitures Bureau', 'Mobilier', 'Services', 'Logiciels'],
+                        datasets: [{
+                            label: 'Demandes',
+                            data: [45, 28, 15, 12, 8],
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#f1f5f9' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // Sectors Polar Area Chart
+            const ctxSect = document.getElementById('sectorsChart');
+            if (ctxSect) {
+                new Chart(ctxSect.getContext('2d'), {
+                    type: 'polarArea',
+                    data: {
+                        labels: ['Technologie', 'BTP', 'Transport', 'Energie', 'Santé'],
+                        datasets: [{
+                            data: [30, 25, 20, 15, 10],
+                            backgroundColor: ['#3b82f6CC', '#6366f1CC', '#8b5cf6CC', '#a855f7CC', '#d946efCC'],
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right', labels: { usePointStyle: true } }
+                        }
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
-

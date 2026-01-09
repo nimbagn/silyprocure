@@ -4,312 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suivi de votre demande - SilyProcure</title>
+    
+    <!-- CSS Charte Graphique Pro Confiance -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <style>
-        /* Page de suivi - Style inspiré de DHL/Hapag-Lloyd */
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-        }
-
-        .tracking-header {
-            background: linear-gradient(135deg, #00387A 0%, #0052A3 100%);
-            color: white;
-            padding: 2rem;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .tracking-header h1 {
-            margin: 0;
-            font-size: 2rem;
-            font-weight: 700;
-        }
-
-        .tracking-header p {
-            margin: 0.5rem 0 0 0;
-            opacity: 0.9;
-        }
-
-        .tracking-container {
-            max-width: 1000px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        .search-box {
-            background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-        }
-
-        .search-form {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .search-input-group {
-            flex: 1;
-            min-width: 250px;
-        }
-
-        .search-input-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--color-primary);
-        }
-
-        .search-input-group input {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #E0E7FF;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .search-input-group input:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 4px rgba(0, 56, 122, 0.1);
-        }
-
-        .btn-track {
-            background: var(--color-accent);
-            color: white;
-            border: none;
-            padding: 1rem 2.5rem;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            align-self: flex-end;
-            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
-        }
-
-        .btn-track:hover {
-            background: var(--color-accent-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
-        }
-
-        .tracking-result {
-            background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            display: none;
-        }
-
-        .tracking-result.active {
-            display: block;
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+    <link rel="stylesheet" href="css/animations.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#E0E7FF',
+                            100: '#DBEAFE',
+                            400: '#60A5FA',
+                            500: '#3B82F6',
+                            600: '#2563EB',
+                            700: '#1D4ED8',
+                            900: '#1E3A8A',
+                        },
+                        success: {
+                            500: '#10B981',
+                        },
+                        neutral: {
+                            500: '#64748B',
+                            600: '#475569',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Arial', 'sans-serif'],
+                    }
+                }
             }
         }
-
-        .reference-display {
-            background: linear-gradient(135deg, #00387A 0%, #0052A3 100%);
-            color: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        .reference-label {
-            font-size: 0.9rem;
-            opacity: 0.9;
-            margin-bottom: 0.5rem;
-        }
-
-        .reference-code {
-            font-size: 2rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            font-family: 'Courier New', monospace;
-        }
-
-        .status-timeline {
-            position: relative;
-            padding: 2rem 0;
-        }
-
-        .timeline-item {
-            display: flex;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-            position: relative;
-        }
-
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: 20px;
-            top: 50px;
-            bottom: -30px;
-            width: 2px;
-            background: #E0E7FF;
-        }
-
-        .timeline-item:last-child::before {
-            display: none;
-        }
-
-        .timeline-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-            position: relative;
-            z-index: 1;
-        }
-
-        .timeline-icon.active {
-            background: var(--color-success);
-            color: white;
-        }
-
-        .timeline-icon.pending {
-            background: #E0E7FF;
-            color: var(--color-primary);
-        }
-
-        .timeline-content {
-            flex: 1;
-        }
-
-        .timeline-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: var(--color-primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .timeline-date {
-            font-size: 0.9rem;
-            color: var(--color-neutral);
-        }
-
-        .info-section {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 2px solid #E0E7FF;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .info-card {
-            background: var(--color-background-light);
-            padding: 1.5rem;
-            border-radius: 12px;
-            border-left: 4px solid var(--color-primary);
-        }
-
-        .info-card h3 {
-            margin: 0 0 0.75rem 0;
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--color-primary);
-        }
-
-        .info-card p {
-            margin: 0.25rem 0;
-            color: var(--color-neutral-dark);
-        }
-
-        .articles-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        .articles-table th,
-        .articles-table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid #E0E7FF;
-        }
-
-        .articles-table th {
-            background: var(--color-background-light);
-            font-weight: 600;
-            color: var(--color-primary);
-        }
-
-        .error-message {
-            background: #FEE;
-            border: 2px solid var(--color-danger);
-            border-radius: 12px;
-            padding: 1.5rem;
-            color: var(--color-danger);
-            text-align: center;
-            display: none;
-        }
-
-        .error-message.active {
-            display: block;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: var(--color-neutral);
-        }
-
-        .loading i {
-            font-size: 2rem;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 768px) {
-            .search-form {
-                flex-direction: column;
-            }
-
-            .btn-track {
-                width: 100%;
-            }
-
-            .reference-code {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
+    </script>
+    
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Dashboard Theme CSS -->
+    <link rel="stylesheet" href="css/dashboard-theme.css">
 </head>
-<body>
+<body class="h-full flex flex-col">
     <div class="tracking-header">
         <h1><i class="fas fa-shipping-fast"></i> Suivi de votre demande</h1>
         <p>Consultez l'état de votre demande de devis en temps réel</p>
@@ -560,6 +300,27 @@
             document.getElementById('errorMessage').classList.add('active');
         }
     </script>
+        // Menu mobile
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const button = document.getElementById('mobile-menu-button');
+            if (menu && button) {
+                const isHidden = menu.classList.contains('hidden');
+                menu.classList.toggle('hidden');
+                button.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+                const icon = button.querySelector('i');
+                if (icon) {
+                    if (isHidden) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                }
+            }
+        }
+        window.toggleMobileMenu = toggleMobileMenu;
 </body>
 </html>
 

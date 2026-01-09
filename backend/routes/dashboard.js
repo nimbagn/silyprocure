@@ -7,8 +7,18 @@ router.use(authenticate);
 
 // Statistiques du dashboard
 router.get('/stats', async (req, res) => {
+    console.log('📊 Route /api/dashboard/stats appelée');
     try {
         const stats = {};
+        
+        // Vérifier la connexion à la base de données
+        try {
+            await pool.execute('SELECT 1');
+            console.log('✅ Connexion DB OK');
+        } catch (dbError) {
+            console.error('❌ Erreur de connexion DB:', dbError.message);
+            return res.status(500).json({ error: 'Erreur de connexion à la base de données: ' + dbError.message });
+        }
 
         // Nombre de RFQ
         const [rfqCount] = await pool.execute('SELECT COUNT(*) as total FROM rfq');
@@ -43,11 +53,11 @@ router.get('/stats', async (req, res) => {
         stats.factures_attente = facturesAttente[0].total;
         stats.montant_attente = parseFloat(facturesAttente[0].montant || 0);
 
-        // Fournisseurs actifs (utiliser TRUE pour PostgreSQL)
+        // Fournisseurs actifs (compatible MySQL et PostgreSQL)
         const [fournisseurs] = await pool.execute("SELECT COUNT(*) as total FROM entreprises WHERE type_entreprise = 'fournisseur' AND actif = ?", [true]);
         stats.fournisseurs_actifs = fournisseurs[0].total;
 
-        // Clients actifs (utiliser TRUE pour PostgreSQL)
+        // Clients actifs (compatible MySQL et PostgreSQL)
         const [clients] = await pool.execute("SELECT COUNT(*) as total FROM entreprises WHERE type_entreprise = 'client' AND actif = ?", [true]);
         stats.clients_actifs = clients[0].total;
 
@@ -90,7 +100,7 @@ router.get('/stats', async (req, res) => {
         `);
         stats.rfq_par_statut = rfqParStatut;
 
-        // Top 5 fournisseurs (par nombre de commandes)
+        // Top 5 fournisseurs (par nombre de commandes) - Compatible MySQL et PostgreSQL
         const [topFournisseurs] = await pool.execute(`
             SELECT e.id, e.nom, COUNT(c.id) as nb_commandes, SUM(c.total_ttc) as montant_total
             FROM entreprises e
@@ -124,8 +134,50 @@ router.get('/stats', async (req, res) => {
         `);
         stats.messages_contact_30j = messagesContact[0].total;
 
+        // Top catégories les plus demandées (basé sur les RFQ) - PostgreSQL
+        const [topCategories] = await pool.execute(`
+            SELECT 
+                c.libelle as nom,
+                COUNT(r.id) as valeur
+            FROM categories c
+            INNER JOIN rfq r ON r.categorie_id = c.id
+            WHERE c.actif = true
+            GROUP BY c.id, c.libelle
+            ORDER BY valeur DESC
+            LIMIT 5
+        `);
+        stats.top_categories = topCategories;
+
+        // Top secteurs les plus sollicités (basé sur les entreprises fournisseurs) - PostgreSQL
+        const [topSecteurs] = await pool.execute(`
+            SELECT 
+                COALESCE(e.secteur_activite, 'Non spécifié') as nom,
+                COUNT(DISTINCT e.id) as valeur
+            FROM entreprises e
+            WHERE e.type_entreprise = 'fournisseur' 
+            AND e.actif = true
+            AND e.secteur_activite IS NOT NULL
+            GROUP BY e.secteur_activite
+            ORDER BY valeur DESC
+            LIMIT 5
+        `);
+        stats.top_secteurs = topSecteurs;
+
+        // Log des statistiques pour débogage
+        console.log('📊 Statistiques calculées:', {
+            commandes_total: stats.commandes_total,
+            montant_mois: stats.montant_mois,
+            rfq_en_cours: stats.rfq_en_cours,
+            fournisseurs_actifs: stats.fournisseurs_actifs,
+            evolution_commandes_count: stats.evolution_commandes?.length || 0,
+            rfq_par_statut_count: stats.rfq_par_statut?.length || 0,
+            top_categories_count: stats.top_categories?.length || 0,
+            top_secteurs_count: stats.top_secteurs?.length || 0
+        });
+
         res.json(stats);
     } catch (error) {
+        console.error('❌ Erreur dans /api/dashboard/stats:', error);
         res.status(500).json({ error: error.message });
     }
 });

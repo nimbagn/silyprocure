@@ -4,306 +4,150 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Utilisateurs - SilyProcure</title>
+    
+    <!-- CSS Charte Graphique Pro Confiance -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/animations.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <style>
-        /* Styles responsive pour la page utilisateurs */
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding: 1.5rem 2rem;
-            background: linear-gradient(135deg, rgba(0, 56, 122, 0.05) 0%, rgba(0, 56, 122, 0.02) 100%);
-            border-radius: 16px;
-            border: 1px solid rgba(0, 56, 122, 0.1);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            flex-wrap: wrap;
-            gap: 1.5rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .page-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-accent) 100%);
-            border-radius: 0 4px 4px 0;
-        }
-
-        .page-header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0;
-            background: linear-gradient(45deg, var(--color-primary) 0%, var(--color-accent) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .page-header h1 i {
-            color: var(--color-accent);
-            -webkit-text-fill-color: var(--color-accent);
-            font-size: 1.75rem;
-        }
-
-        .page-header .btn {
-            position: relative;
-            z-index: 1;
-            background: var(--color-accent);
-            color: white;
-            border: none;
-            padding: 0.875rem 1.75rem;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-
-        .page-header .btn:hover {
-            background: var(--color-accent-light);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
-        }
-
-        .page-header .btn:active {
-            transform: translateY(0);
-        }
-
-        .page-header .btn i {
-            font-size: 1rem;
-        }
-
-        .card-actions {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .search-input {
-            padding: 0.75rem 1rem;
-            border: 2px solid #E0E7FF;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            min-width: 250px;
-            transition: var(--transition);
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(0, 56, 122, 0.1);
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-
-        .data-table thead {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-            color: white;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .data-table th {
-            padding: 1rem;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            white-space: nowrap;
-            min-width: 100px;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .data-table th:last-child {
-            border-right: none;
-        }
-
-        .data-table th:empty {
-            display: none;
-        }
-
-        .data-table td {
-            padding: 1rem;
-            border-bottom: 1px solid #E0E7FF;
-            font-size: 0.875rem;
-            transition: background-color 0.2s ease;
-        }
-
-        .data-table tbody tr {
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .data-table tbody tr:hover {
-            background: linear-gradient(90deg, rgba(0, 56, 122, 0.05) 0%, rgba(255, 102, 0, 0.05) 100%);
-            transform: translateX(2px);
-            box-shadow: -2px 0 8px rgba(255, 102, 0, 0.15);
-            border-left: 3px solid var(--color-accent);
-        }
-
-        .data-table tbody tr:hover td {
-            color: var(--color-primary-dark);
-            font-weight: 500;
-        }
-
-        .data-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .data-table .btn-sm {
-            margin: 0 0.25rem;
-            transition: all 0.2s ease;
-        }
-
-        .data-table tbody tr:hover .btn-sm {
-            transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Responsive: Table en cartes sur mobile */
-        @media (max-width: 768px) {
-            .page-header {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 1.25rem 1.5rem;
-            }
-
-            .page-header h1 {
-                font-size: 1.5rem;
-                justify-content: center;
-            }
-
-            .page-header .btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .card-actions {
-                width: 100%;
-            }
-
-            .search-input {
-                width: 100%;
-                min-width: auto;
-            }
-
-            /* Cacher le thead sur mobile */
-            .data-table thead {
-                display: none;
-            }
-
-            /* Transformer les lignes en cartes */
-            .data-table tbody tr {
-                display: block;
-                background: white;
-                border: 1px solid #E0E7FF;
-                border-radius: 8px;
-                margin-bottom: 1rem;
-                padding: 1rem;
-                box-shadow: var(--shadow-sm);
-            }
-
-            .data-table tbody td {
-                display: block;
-                padding: 0.5rem 0;
-                border-bottom: 1px solid #E0E7FF;
-                text-align: left !important;
-            }
-
-            .data-table tbody td:before {
-                content: attr(data-label) ': ';
-                font-weight: 600;
-                color: var(--color-primary);
-                display: inline-block;
-                min-width: 120px;
-            }
-
-            .data-table tbody td:last-child {
-                border-bottom: none;
-                padding-top: 1rem;
-                display: flex;
-                gap: 0.5rem;
-                flex-wrap: wrap;
-            }
-
-            .data-table tbody td:last-child .btn {
-                flex: 1;
-                min-width: auto;
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#E0E7FF',
+                            100: '#DBEAFE',
+                            400: '#60A5FA',
+                            500: '#3B82F6',
+                            600: '#2563EB',
+                            700: '#1D4ED8',
+                            900: '#1E3A8A',
+                        },
+                        success: {
+                            500: '#10B981',
+                        },
+                        neutral: {
+                            500: '#64748B',
+                            600: '#475569',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Arial', 'sans-serif'],
+                    }
+                }
             }
         }
-
-        @media (max-width: 600px) {
-            .main-content {
-                padding: 1rem;
-            }
-
-            .card {
-                padding: 1rem;
-            }
-
-            .card-header {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: stretch;
-            }
-
-            .page-header {
-                padding: 1rem;
-                margin-bottom: 1.5rem;
-            }
-
-            .page-header h1 {
-                font-size: 1.375rem;
-            }
-
-            .page-header .btn {
-                width: 100%;
-                justify-content: center;
-                padding: 0.75rem 1.5rem;
-            }
-        }
-
-        /* Tablette: Réduire padding et tailles */
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .data-table th,
-            .data-table td {
-                padding: 0.75rem 0.5rem;
-                font-size: 0.8125rem;
-            }
-
-            .data-table th:nth-child(n+6),
-            .data-table td:nth-child(n+6) {
-                display: none;
-            }
-        }
-    </style>
+    </script>
+    
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Dashboard Theme CSS -->
+    <link rel="stylesheet" href="css/dashboard-theme.css">
 </head>
-<body>
+<body class="h-full flex flex-col">
+        <!-- Navbar Moderne selon charte Pro Confiance -->
+    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo & Nav Links -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
+                        <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
+                    </div>
+                    <nav class="hidden sm:ml-6 sm:flex sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
+                        <a href="dashboard.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
+                            <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="rfq.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
+                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>RFQ</span>
+                        </a>
+                        <a href="devis.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
+                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Devis</span>
+                        </a>
+                        <a href="commandes.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
+                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Commandes</span>
+                        </a>
+                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
+                            <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Entreprises</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Search Bar & Profile -->
+                <div class="flex items-center gap-4">
+                    <!-- Global Search -->
+                    <div class="hidden lg:block relative text-neutral-500 focus-within:text-primary-600" role="search">
+                        <label for="global-search" class="sr-only">Rechercher dans l'application</label>
+                        <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </div>
+                        <input id="global-search" class="block w-64 bg-blue-50 py-2.5 pl-10 pr-4 border border-blue-200 rounded-full leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition duration-150 ease-in-out min-h-[44px]" placeholder="Rechercher..." type="search" aria-label="Rechercher">
+                    </div>
+
+                    <!-- Notifications -->
+                    <button class="relative p-2.5 text-neutral-500 hover:text-primary-600 transition-colors rounded-lg hover:bg-blue-50 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Notifications" title="Notifications">
+                        <i class="far fa-bell text-xl" aria-hidden="true"></i>
+                        <span class="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true"></span>
+                    </button>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm" aria-label="Profil utilisateur">
+                            <span id="user-initials">U</span>
+                        </div>
+                        <span id="user-name" class="hidden md:block text-sm font-semibold text-neutral-700 min-w-[120px]">Chargement...</span>
+                        <button onclick="logout()" class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5" aria-label="Déconnexion" title="Déconnexion">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                            <span class="hidden lg:inline">Déconnexion</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Menu mobile -->
+                    <div class="sm:hidden ml-2">
+                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Menu mobile déroulant -->
+            <div id="mobile-menu" class="hidden sm:hidden border-t-2 border-blue-100 bg-white shadow-lg">
+                <div class="px-4 pt-3 pb-4 space-y-1">
+                    <a href="dashboard.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-chart-line text-neutral-500" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="rfq.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-contract text-neutral-500" aria-hidden="true"></i>
+                        <span>RFQ</span>
+                    </a>
+                    <a href="devis.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-invoice-dollar text-neutral-500" aria-hidden="true"></i>
+                        <span>Devis</span>
+                    </a>
+                    <a href="commandes.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-shopping-cart text-neutral-500" aria-hidden="true"></i>
+                        <span>Commandes</span>
+                    </a>
+                    <a href="entreprises.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-building text-neutral-500" aria-hidden="true"></i>
+                        <span>Entreprises</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
     <script src="js/components.js"></script>

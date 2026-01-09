@@ -1,0 +1,142 @@
+/**
+ * Composant Navbar Réutilisable - Style Pro Confiance
+ * À inclure dans toutes les pages
+ */
+
+function createNavbar(currentPage = 'dashboard') {
+    const pages = [
+        { href: 'dashboard.html', label: 'Dashboard', icon: 'fa-chart-line', id: 'dashboard' },
+        { href: 'rfq.html', label: 'RFQ', icon: 'fa-file-contract', id: 'rfq' },
+        { href: 'devis.html', label: 'Devis', icon: 'fa-file-invoice-dollar', id: 'devis' },
+        { href: 'commandes.html', label: 'Commandes', icon: 'fa-shopping-cart', id: 'commandes' },
+        { href: 'entreprises.html', label: 'Entreprises', icon: 'fa-building', id: 'entreprises' }
+    ];
+    
+    const currentPageObj = pages.find(p => p.id === currentPage) || pages[0];
+    
+    return `
+    <!-- Navbar Moderne selon charte Pro Confiance -->
+    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo & Nav Links -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
+                        <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
+                    </div>
+                    <nav class="hidden sm:ml-6 sm:flex sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
+                        ${pages.map(page => `
+                            <a href="${page.href}" 
+                               class="${page.id === currentPage ? 'border-primary-500 text-primary-900' : 'border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700'} 
+                                      inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-${page.id === currentPage ? 'semibold' : 'medium'} 
+                                      transition-colors min-h-[44px] whitespace-nowrap" 
+                               ${page.id === currentPage ? 'aria-current="page"' : ''}>
+                                <i class="fas ${page.icon} mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                                <span>${page.label}</span>
+                            </a>
+                        `).join('')}
+                    </nav>
+                </div>
+
+                <!-- Search Bar & Profile -->
+                <div class="flex items-center gap-4">
+                    <!-- Global Search -->
+                    <div class="hidden lg:block relative text-neutral-500 focus-within:text-primary-600" role="search">
+                        <label for="global-search" class="sr-only">Rechercher dans l'application</label>
+                        <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </div>
+                        <input id="global-search" 
+                               class="block w-64 bg-blue-50 py-2.5 pl-10 pr-4 border border-blue-200 rounded-full leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition duration-150 ease-in-out min-h-[44px]" 
+                               placeholder="Rechercher..." 
+                               type="search" 
+                               aria-label="Rechercher">
+                    </div>
+
+                    <!-- Notifications -->
+                    <button class="relative p-2.5 text-neutral-500 hover:text-primary-600 transition-colors rounded-lg hover:bg-blue-50 min-w-[44px] min-h-[44px] flex items-center justify-center" 
+                            aria-label="Notifications" 
+                            title="Notifications">
+                        <i class="far fa-bell text-xl" aria-hidden="true"></i>
+                        <span class="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true"></span>
+                    </button>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm" 
+                             aria-label="Profil utilisateur">
+                            <span id="user-initials">U</span>
+                        </div>
+                        <span id="user-name" class="hidden md:block text-sm font-semibold text-neutral-700 min-w-[120px]">Chargement...</span>
+                        <button onclick="logout()" 
+                                class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5" 
+                                aria-label="Déconnexion" 
+                                title="Déconnexion">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                            <span class="hidden lg:inline">Déconnexion</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Menu mobile -->
+                    <div class="sm:hidden ml-2">
+                        <button id="mobile-menu-button" 
+                                onclick="toggleMobileMenu()" 
+                                class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]" 
+                                aria-expanded="false" 
+                                aria-label="Menu principal" 
+                                aria-controls="mobile-menu">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Menu mobile déroulant -->
+            <div id="mobile-menu" class="hidden sm:hidden border-t-2 border-blue-100 bg-white shadow-lg">
+                <div class="px-4 pt-3 pb-4 space-y-1">
+                    ${pages.map(page => `
+                        <a href="${page.href}" 
+                           class="${page.id === currentPage ? 'bg-gradient-to-r from-blue-50 to-primary-50 border-l-4 border-primary-500 text-primary-700' : 'border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300'} 
+                                  block px-4 py-3 rounded-lg text-base font-${page.id === currentPage ? 'semibold' : 'medium'} 
+                                  transition-all min-h-[44px] flex items-center gap-3">
+                            <i class="fas ${page.icon} ${page.id === currentPage ? 'text-primary-600' : 'text-neutral-500'}" aria-hidden="true"></i>
+                            <span>${page.label}</span>
+                        </a>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    </nav>
+    `;
+}
+
+// Fonction pour toggle le menu mobile
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobile-menu');
+    const button = document.getElementById('mobile-menu-button');
+    if (menu && button) {
+        const isHidden = menu.classList.contains('hidden');
+        menu.classList.toggle('hidden');
+        
+        // Mettre à jour l'état ARIA
+        button.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+        
+        // Changer l'icône
+        const icon = button.querySelector('i');
+        if (icon) {
+            if (isHidden) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
+    }
+}
+
+// Exporter pour utilisation globale
+if (typeof window !== 'undefined') {
+    window.createNavbar = createNavbar;
+    window.toggleMobileMenu = toggleMobileMenu;
+}
+

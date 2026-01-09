@@ -1,9 +1,10 @@
 require('dotenv').config();
 
 // Détection automatique du type de base de données
-// Si DATABASE_URL est défini → PostgreSQL (Render)
+// Si DATABASE_URL est défini → PostgreSQL (Render/production)
 // Si DB_TYPE=postgresql → PostgreSQL
-// Sinon → MySQL (local par défaut)
+// Si DB_TYPE=mysql → MySQL
+// Par défaut → MySQL (local)
 const usePostgreSQL = process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql';
 
 let pool;
@@ -14,41 +15,41 @@ if (usePostgreSQL) {
     
     const { Pool: PgPool } = require('pg');
     
-    let dbConfig;
-    if (process.env.DATABASE_URL) {
-        dbConfig = {
-            connectionString: process.env.DATABASE_URL,
-            ssl: { rejectUnauthorized: false },
-            max: 10,
-            idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 2000
-        };
-    } else {
-        dbConfig = {
-            host: process.env.DB_HOST || 'localhost',
+let dbConfig;
+if (process.env.DATABASE_URL) {
+    dbConfig = {
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000
+    };
+} else {
+    dbConfig = {
+        host: process.env.DB_HOST || 'localhost',
             port: parseInt(process.env.DB_PORT || '5432'),
-            database: process.env.DB_NAME || 'silypro',
-            user: process.env.DB_USER || 'soul',
-            password: process.env.DB_PASSWORD || 'Satina2025',
-            max: 10,
-            idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 2000,
-            ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
-        };
-    }
+        database: process.env.DB_NAME || 'silypro',
+        user: process.env.DB_USER || 'soul',
+        password: process.env.DB_PASSWORD || 'Satina2025',
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+        ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
+    };
+}
 
     const pgPool = new PgPool(dbConfig);
 
-    // Gestion des erreurs du pool
+// Gestion des erreurs du pool
     pgPool.on('error', (err, client) => {
-        console.error('❌ Erreur inattendue sur le client PostgreSQL inactif', err);
-        process.exit(-1);
-    });
+    console.error('❌ Erreur inattendue sur le client PostgreSQL inactif', err);
+    process.exit(-1);
+});
 
     // Sauvegarder la méthode originale avant modification
     const originalQuery = pgPool.query.bind(pgPool);
 
-    // Wrapper pour compatibilité avec mysql2 (pool.execute devient pool.query)
+// Wrapper pour compatibilité avec mysql2 (pool.execute devient pool.query)
     pgPool.execute = async (query, params) => {
         try {
             let pgQuery = query;
@@ -229,35 +230,35 @@ if (usePostgreSQL) {
                     mockResult.insertId = row.id || row[Object.keys(row)[0]];
                 }
                 
-                return [result.rows, mockResult];
-            },
-            query: async (query, params) => {
-                return await client.query(query, params);
-            },
-            beginTransaction: async () => {
-                await client.query('BEGIN');
-                transactionStarted = true;
-            },
-            commit: async () => {
-                await client.query('COMMIT');
-                transactionStarted = false;
+            return [result.rows, mockResult];
+        },
+        query: async (query, params) => {
+            return await client.query(query, params);
+        },
+        beginTransaction: async () => {
+            await client.query('BEGIN');
+            transactionStarted = true;
+        },
+        commit: async () => {
+            await client.query('COMMIT');
+            transactionStarted = false;
+            client.release();
+        },
+        rollback: async () => {
+            await client.query('ROLLBACK');
+            transactionStarted = false;
+            client.release();
+        },
+        release: () => {
+            if (!transactionStarted) {
                 client.release();
-            },
-            rollback: async () => {
-                await client.query('ROLLBACK');
-                transactionStarted = false;
-                client.release();
-            },
-            release: () => {
-                if (!transactionStarted) {
-                    client.release();
-                }
-            },
-            _client: client
-        };
-        
-        return connection;
+            }
+        },
+        _client: client
     };
+    
+    return connection;
+};
 
     // Test de connexion PostgreSQL
     originalQuery('SELECT NOW() as now')
@@ -366,23 +367,18 @@ if (usePostgreSQL) {
                 
                 // Réorganiser les paramètres selon l'ordre d'apparition des placeholders
                 // IMPORTANT: Les placeholders PostgreSQL sont 1-indexés, les tableaux JS sont 0-indexés
-                // Trier les placeholders pour s'assurer qu'ils sont dans l'ordre (au cas où matchAll retournerait dans un ordre différent)
-                const sortedPlaceholders = [...placeholdersOrder].sort((a, b) => {
-                    // Trouver l'index de chaque placeholder dans la requête originale
-                    const indexA = query.indexOf(`$${a}`);
-                    const indexB = query.indexOf(`$${b}`);
-                    return indexA - indexB;
-                });
-                
-                mysqlParams = sortedPlaceholders.map(idx => {
+                // matchAll() retourne déjà les placeholders dans l'ordre d'apparition dans la requête
+                // On peut donc utiliser placeholdersOrder directement sans tri
+                mysqlParams = placeholdersOrder.map(idx => {
                     // idx est 1-indexé (1, 2, 3, ...), params est 0-indexé
                     const paramIndex = idx - 1;
                     if (paramIndex >= 0 && paramIndex < params.length) {
                         return params[paramIndex];
                     }
-                    console.warn(`⚠️ Placeholder $${idx} (index ${paramIndex}) hors limites (max: ${params.length - 1})`);
-                    return null;
-                }).filter(p => p !== null);
+                    // Si le placeholder est hors limites, lever une erreur plutôt que de retourner null
+                    // car cela causerait un problème de correspondance entre le nombre de ? et de paramètres
+                    throw new Error(`Placeholder $${idx} (index ${paramIndex}) hors limites. ${params.length} paramètre(s) fourni(s), mais placeholder $${idx} demandé.`);
+                });
                 
                 // #region agent log
                 fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'database.js:352',message:'Parameter mapping result',data:{placeholdersOrder,paramsLength:params.length,mysqlParamsLength:mysqlParams.length,expectedCount:placeholdersOrder.length,mysqlParamsPreview:mysqlParams.slice(0,5)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
@@ -479,8 +475,27 @@ if (usePostgreSQL) {
                     questionMarks: questionMarkCount,
                     mysqlParamsCount: mysqlParams.length,
                     placeholdersFound: placeholdersOrder,
-                    queryPreview: mysqlQuery.substring(0, 500)
+                    queryPreview: mysqlQuery.substring(0, 500),
+                    fullQuery: mysqlQuery,
+                    fullParams: mysqlParams
                 });
+                
+                // Si le nombre de ? est supérieur au nombre de paramètres, c'est une erreur critique
+                // On ne peut pas exécuter la requête dans cet état
+                if (questionMarkCount > mysqlParams.length) {
+                    throw new Error(
+                        `Incorrect arguments to mysqld_stmt_execute: ` +
+                        `La requête contient ${questionMarkCount} placeholders (?) mais seulement ${mysqlParams.length} paramètre(s) fourni(s). ` +
+                        `Placeholders trouvés: [${placeholdersOrder.join(', ')}]. ` +
+                        `Requête: ${mysqlQuery.substring(0, 200)}...`
+                    );
+                }
+                
+                // Si le nombre de ? est inférieur, on peut tronquer les paramètres (mais c'est suspect)
+                if (questionMarkCount < mysqlParams.length) {
+                    console.warn(`⚠️ Avertissement: ${mysqlParams.length - questionMarkCount} paramètre(s) en trop seront ignorés`);
+                    mysqlParams = mysqlParams.slice(0, questionMarkCount);
+                }
             }
             
             console.log('🔧 MySQL Conversion:', {
@@ -493,6 +508,16 @@ if (usePostgreSQL) {
                 mysqlParams: mysqlParams,
                 allParams: params
             });
+        }
+        
+        // Vérification finale avant exécution
+        const finalQuestionMarkCount = (mysqlQuery.match(/\?/g) || []).length;
+        if (finalQuestionMarkCount !== mysqlParams.length) {
+            throw new Error(
+                `Incorrect arguments to mysqld_stmt_execute: ` +
+                `La requête finale contient ${finalQuestionMarkCount} placeholders (?) mais ${mysqlParams.length} paramètre(s) fourni(s). ` +
+                `Requête: ${mysqlQuery.substring(0, 300)}...`
+            );
         }
         
         // Utiliser la méthode originale sauvegardée

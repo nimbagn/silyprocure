@@ -1,54 +1,327 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="h-full bg-gray-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Détails Commande - SilyProcure</title>
+    
+    <!-- CSS Charte Graphique Pro Confiance -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/animations.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#E0E7FF',
+                            100: '#DBEAFE',
+                            400: '#60A5FA',
+                            500: '#3B82F6',
+                            600: '#2563EB',
+                            700: '#1D4ED8',
+                            900: '#1E3A8A',
+                        },
+                        success: {
+                            500: '#10B981',
+                        },
+                        neutral: {
+                            500: '#64748B',
+                            600: '#475569',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Dashboard Theme CSS -->
+    <link rel="stylesheet" href="css/dashboard-theme.css">
+    
+    <style>
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .commande-detail-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        
+        @media (min-width: 1024px) {
+            .commande-detail-container {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        @media (min-width: 640px) {
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-item dt {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-neutral);
+            margin-bottom: 0.25rem;
+        }
+        
+        .info-item dd {
+            font-size: 0.875rem;
+            color: var(--color-neutral-dark);
+            font-weight: 500;
+        }
+        
+        .header-title-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header-subtitle {
+            font-size: 0.875rem;
+            color: var(--color-neutral);
+        }
+        
+        .header-subtitle strong {
+            color: var(--color-neutral-dark);
+            font-weight: 600;
+        }
+        
+        #commande-header-section {
+            margin-bottom: 2rem;
+        }
+        
+        #commande-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            #commande-actions {
+                margin-top: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            #commande-actions {
+                width: 100%;
+            }
+            
+            #commande-actions .btn {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+        
+        .loading-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--color-background-light);
+        }
+        
+        .summary-row:last-child {
+            border-bottom: none;
+            border-top: 2px solid var(--color-primary);
+            padding-top: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        .summary-total {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+    </style>
+
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
-    <div class="header">
-        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
-        <div class="user-info">
-            <span id="user-name"></span>
-            <button onclick="logout()">Déconnexion</button>
-        </div>
-    </div>
+<body class="h-full flex flex-col">
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/fileUpload.js"></script>
+    <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
 
-    <nav class="nav">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="rfq.html">RFQ</a>
-        <a href="devis.html">Devis</a>
-        <a href="commandes.html" class="active">Commandes</a>
-        <a href="factures.html">Factures</a>
-        <a href="entreprises.html">Entreprises</a>
-        <a href="produits.html">Produits</a>
-        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
-    </nav>
-
-    <div class="container">
-        <!-- Hero Section -->
-        <div class="hero-section" style="text-align: left; padding: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <button class="btn btn-secondary" onclick="window.location.href='commandes.html'" style="margin-bottom: 1rem;">
-                        ← Retour à la liste
-                    </button>
-                    <h1 class="hero-title" style="font-size: 2rem; margin: 0;"><i class="fas fa-box"></i> Détails de la commande</h1>
-                    <p class="hero-description" style="text-align: left; margin: 0.5rem 0 0 0; max-width: 100%;">
-                        Consultez les détails complets de la commande et effectuez les actions nécessaires
-                    </p>
+    <!-- Navbar Moderne selon charte Pro Confiance -->
+    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo & Nav Links -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
+                        <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
+                    </div>
+                    <nav class="hidden sm:ml-6 sm:flex sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
+                        <a href="dashboard.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="rfq.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>RFQ</span>
+                        </a>
+                        <a href="devis.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Devis</span>
+                        </a>
+                        <a href="commandes.html" class="border-primary-500 text-primary-900 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold min-h-[44px] transition-colors whitespace-nowrap" aria-current="page">
+                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Commandes</span>
+                        </a>
+                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Entreprises</span>
+                        </a>
+                    </nav>
                 </div>
-                <div id="commande-actions"></div>
+
+                <!-- Search Bar & Profile -->
+                <div class="flex items-center gap-4">
+                    <!-- Global Search -->
+                    <div class="hidden lg:block relative text-neutral-500 focus-within:text-primary-600" role="search">
+                        <label for="global-search" class="sr-only">Rechercher dans l'application</label>
+                        <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </div>
+                        <input id="global-search" class="block w-64 bg-blue-50 py-2.5 pl-10 pr-4 border border-blue-200 rounded-full leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition duration-150 ease-in-out min-h-[44px]" placeholder="Rechercher..." type="search" aria-label="Rechercher">
+                    </div>
+
+                    <!-- Notifications -->
+                    <button class="relative p-2.5 text-neutral-500 hover:text-primary-600 transition-colors rounded-lg hover:bg-blue-50 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Notifications" title="Notifications">
+                        <i class="far fa-bell text-xl" aria-hidden="true"></i>
+                        <span class="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true"></span>
+                    </button>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm" aria-label="Profil utilisateur">
+                            <span id="user-initials">U</span>
+                        </div>
+                        <span id="user-name" class="hidden md:block text-sm font-semibold text-neutral-700 min-w-[120px]">Chargement...</span>
+                        <button onclick="logout()" class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5" aria-label="Déconnexion" title="Déconnexion">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                            <span class="hidden lg:inline">Déconnexion</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Menu mobile -->
+                    <div class="sm:hidden ml-2">
+                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Menu mobile déroulant -->
+            <div id="mobile-menu" class="hidden sm:hidden border-t-2 border-blue-100 bg-white shadow-lg">
+                <div class="px-4 pt-3 pb-4 space-y-1">
+                    <a href="dashboard.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-chart-line text-neutral-500" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="rfq.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-contract text-neutral-500" aria-hidden="true"></i>
+                        <span>RFQ</span>
+                    </a>
+                    <a href="devis.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-invoice-dollar text-neutral-500" aria-hidden="true"></i>
+                        <span>Devis</span>
+                    </a>
+                    <a href="commandes.html" class="bg-gradient-to-r from-blue-50 to-primary-50 border-l-4 border-primary-500 text-primary-700 block px-4 py-3 rounded-lg text-base font-semibold min-h-[44px] flex items-center gap-3 transition-all">
+                        <i class="fas fa-shopping-cart text-primary-600" aria-hidden="true"></i>
+                        <span>Commandes</span>
+                    </a>
+                    <a href="entreprises.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-building text-neutral-500" aria-hidden="true"></i>
+                        <span>Entreprises</span>
+                    </a>
+                </div>
             </div>
         </div>
+    </nav>
 
-        <div id="commande-details">
-            <div class="loading"><div class="loading-spinner"></div> Chargement...</div>
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="container">
+        <!-- Breadcrumb & Back -->
+        <nav style="margin-bottom: 1.25rem;">
+            <a href="commandes.html" class="btn btn-secondary btn-sm" style="text-decoration: none; display: inline-flex; align-items: center;">
+                <i class="fas fa-arrow-left" style="margin-right: 0.5rem;"></i> Retour à la liste
+            </a>
+        </nav>
+
+        <!-- Header Section -->
+        <div id="commande-header-section" style="margin-bottom: 2rem;">
+            <!-- Injecté par JS -->
+            <div class="loading-pulse" style="height: 2.5rem; background: var(--color-background-light); border-radius: 8px; width: 33%;"></div>
+        </div>
+
+        <!-- Content Grid -->
+        <div id="commande-content-container" class="commande-detail-container">
+            <!-- Loading State -->
+            <div style="grid-column: span 1;">
+                <div class="card loading-pulse" style="height: 16rem; margin-bottom: 2rem;"></div>
+            </div>
+            <div>
+                <div class="card loading-pulse" style="height: 10rem;"></div>
+            </div>
         </div>
     </div>
 
@@ -62,7 +335,15 @@
         checkAuth();
 
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+        // Initialisation du nom d'utilisateur et des initiales
+        const userNameEl = document.getElementById('user-name');
+        const userInitialsEl = document.getElementById('user-initials');
+        if (userNameEl) {
+            userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || 'Utilisateur';
+        }
+        if (userInitialsEl && user.prenom) {
+            userInitialsEl.textContent = (user.prenom.charAt(0) + (user.nom ? user.nom.charAt(0) : '')).toUpperCase();
+        }
 
         const urlParams = new URLSearchParams(window.location.search);
         const commandeId = urlParams.get('id');
@@ -754,159 +1035,293 @@
             }
         }
 
-        function displayCommandeDetails(commande) {
-            const container = document.getElementById('commande-details');
-            const actionsContainer = document.getElementById('commande-actions');
-
-            // Actions selon le statut
+        function renderHeader(commande) {
+            const container = document.getElementById('commande-header-section');
+            if (!container) {
+                console.error('❌ Container commande-header-section non trouvé');
+                return;
+            }
+            
+            const statut = (commande.statut || '').toString().toLowerCase().trim();
+            
             let actionsHTML = `
-                <button class="btn btn-secondary" onclick="downloadPDFCommande(${commande.id})" style="margin-right: 0.5rem;" title="Télécharger le PDF">
+                <button class="btn btn-secondary btn-sm" onclick="downloadPDFCommande(${commande.id})" title="Télécharger le PDF">
                     <i class="fas fa-file-pdf"></i> PDF
-                </button>
-                <button class="btn btn-secondary" onclick="window.location.reload()" style="margin-right: 0.5rem;" title="Actualiser la page">
-                    <i class="fas fa-sync-alt"></i> Actualiser
                 </button>
             `;
             
-            // Bouton pour créer une facture proforma - TOUJOURS visible (peut être créée depuis n'importe quel statut)
+            // Bouton pour créer une facture proforma - TOUJOURS visible
             actionsHTML += `
-                <button class="btn btn-primary" onclick="if(typeof window.creerFactureProformaDepuisCommande==='function'){window.creerFactureProformaDepuisCommande(${commande.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-file-invoice"></i> Créer une facture proforma</button>
+                <button class="btn btn-primary btn-sm" onclick="if(typeof window.creerFactureProformaDepuisCommande==='function'){window.creerFactureProformaDepuisCommande(${commande.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}">
+                    <i class="fas fa-file-invoice"></i> Créer Proforma
+                </button>
             `;
             
             if (commande.statut === 'brouillon') {
                 actionsHTML += `
-                    <button class="btn btn-primary" onclick="editCommande(${commande.id})"><i class="fas fa-edit"></i> Modifier</button>
+                    <button class="btn btn-primary btn-sm" onclick="editCommande(${commande.id})">
+                        <i class="fas fa-edit"></i> Modifier
+                    </button>
                 `;
-            } else if (commande.statut === 'envoye') {
-                // Utiliser onclick directement dans le HTML pour éviter les problèmes de cache
+            } else if (commande.statut === 'envoye' || statut === 'en_cours') {
                 actionsHTML += `
-                    <button class="btn btn-success" onclick="if(typeof window.marquerLivree==='function'){window.marquerLivree(${commande.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}"><i class="fas fa-check"></i> Marquer comme livrée</button>
+                    <button class="btn btn-success btn-sm" onclick="if(typeof window.marquerLivree==='function'){window.marquerLivree(${commande.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}">
+                        <i class="fas fa-check"></i> Marquer Livrée
+                    </button>
                 `;
             } else if (commande.statut === 'validee') {
-                // Commande validée - vérifier si un BL existe et si une facture définitive n'existe pas déjà
                 checkBLAndFactureDefinitive(commande.id).then(({ blId, hasFacture }) => {
                     if (blId && !hasFacture) {
                         actionsHTML += `
-                            <button class="btn btn-success" onclick="creerFactureDefinitiveFromBL(${blId})">
+                            <button class="btn btn-success btn-sm" onclick="creerFactureDefinitiveFromBL(${blId})">
                                 <i class="fas fa-file-invoice"></i> Créer facture définitive
                             </button>
                         `;
-                        actionsContainer.innerHTML = actionsHTML;
+                        const actionsContainer = document.getElementById('commande-actions');
+                        if (actionsContainer) actionsContainer.innerHTML = actionsHTML;
                     } else if (blId) {
                         actionsHTML += `
-                            <a href="bons-livraison-detail.html?id=${blId}" class="btn btn-info">
-                                <i class="fas fa-truck"></i> Voir le bon de livraison
+                            <a href="bons-livraison-detail.html?id=${blId}" class="btn btn-info btn-sm">
+                                <i class="fas fa-truck"></i> Voir BL
                             </a>
                         `;
-                        actionsContainer.innerHTML = actionsHTML;
+                        const actionsContainer = document.getElementById('commande-actions');
+                        if (actionsContainer) actionsContainer.innerHTML = actionsHTML;
                     }
                 });
             }
-            actionsContainer.innerHTML = actionsHTML;
-
+            
             container.innerHTML = `
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">${commande.numero || 'Commande-' + commande.id}</h2>
-                        <span class="badge ${getStatusBadge(commande.statut)}">${getStatusLabel(commande.statut)}</span>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div class="header-title-row">
+                        <h1 style="font-size: 1.875rem; font-weight: 700; color: var(--color-neutral-dark); margin: 0;">
+                            ${commande.numero || 'Commande-' + commande.id}
+                        </h1>
+                        <span class="badge ${getStatusBadge(statut)}" style="text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem;">
+                            ${getStatusLabel(statut)}
+                        </span>
                     </div>
-                    <div style="padding: 1.5rem;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-                            <div>
-                                <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-clipboard-list"></i> Informations générales</h3>
-                                <div style="line-height: 2;">
-                                    <div><strong>Type:</strong> ${commande.type_commande || '-'}</div>
-                                    <div><strong>Fournisseur:</strong> ${commande.fournisseur_nom || '-'}</div>
-                                    <div><strong>Date de commande:</strong> ${formatDate(commande.date_commande)}</div>
-                                    ${commande.date_livraison_souhaitee ? `<div><strong>Date de livraison souhaitée:</strong> ${formatDate(commande.date_livraison_souhaitee)}</div>` : ''}
-                                    ${commande.commandeur_nom ? `<div><strong>Commandeur:</strong> ${commande.commandeur_prenom || ''} ${commande.commandeur_nom || ''}</div>` : ''}
-                                    ${commande.devis_id ? `<div><strong>Devis associé:</strong> <a href="devis-detail.html?id=${commande.devis_id}" class="link-primary">Voir le devis</a></div>` : ''}
-                                    ${commande.rfq_id ? `<div><strong>RFQ associée:</strong> <a href="rfq-detail.html?id=${commande.rfq_id}" class="link-primary">Voir la RFQ</a></div>` : ''}
-                                </div>
-                            </div>
-                            <div>
-                                <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-money-bill-wave"></i> Montants</h3>
-                                <div style="line-height: 2;">
-                                    <div><strong>Total HT:</strong> ${formatCurrency(commande.total_ht || 0)}</div>
-                                    <div><strong>Total TVA:</strong> ${formatCurrency(commande.total_tva || 0)}</div>
-                                    <div style="font-size: 1.25rem; font-weight: bold; color: var(--color-primary); margin-top: 0.5rem;">
-                                        Total TTC: ${formatCurrency(commande.total_ttc || 0)}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        ${commande.lignes && commande.lignes.length > 0 ? `
-                            <h3 style="margin: 1.5rem 0 1rem 0; color: var(--color-primary);"><i class="fas fa-box"></i> Lignes de commande</h3>
-                            <div class="table-container">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Description</th>
-                                            <th>Référence</th>
-                                            <th>Quantité</th>
-                                            <th>Unité</th>
-                                            <th>Prix unitaire HT</th>
-                                            <th>Remise</th>
-                                            <th>TVA</th>
-                                            <th>Total HT</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${commande.lignes.map(ligne => {
-                                            const prixUnitaire = parseFloat(ligne.prix_unitaire_ht || 0);
-                                            const quantite = parseFloat(ligne.quantite || 0);
-                                            const remise = parseFloat(ligne.remise || 0);
-                                            const tva = parseFloat(ligne.tva_taux || 20);
-                                            const montantHT = prixUnitaire * quantite * (1 - remise / 100);
-                                            const montantTVA = montantHT * (tva / 100);
-                                            const totalHT = montantHT;
-                                            
-                                            return `
-                                                <tr>
-                                                    <td>${ligne.description || '-'}</td>
-                                                    <td>${ligne.reference || '-'}</td>
-                                                    <td>${quantite}</td>
-                                                    <td>${ligne.unite || '-'}</td>
-                                                    <td>${formatCurrency(prixUnitaire)}</td>
-                                                    <td>${remise > 0 ? remise + '%' : '-'}</td>
-                                                    <td>${tva}%</td>
-                                                    <td><strong>${formatCurrency(totalHT)}</strong></td>
-                                                </tr>
-                                            `;
-                                        }).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
-                        ` : ''}
-
-                        ${commande.conditions_paiement ? `
-                            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--color-background-blue); border-radius: 8px;">
-                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-credit-card"></i> Conditions de paiement</h4>
-                                <p style="margin: 0;">${commande.conditions_paiement}</p>
-                                ${commande.delai_paiement_jours ? `<p style="margin: 0.5rem 0 0 0;"><strong>Délai:</strong> ${commande.delai_paiement_jours} jours</p>` : ''}
-                                ${commande.mode_paiement ? `<p style="margin: 0.5rem 0 0 0;"><strong>Mode:</strong> ${commande.mode_paiement}</p>` : ''}
-                            </div>
-                        ` : ''}
-
-                        ${commande.instructions_livraison ? `
-                            <div style="margin-top: 1rem; padding: 1rem; background: var(--color-background-blue); border-radius: 8px;">
-                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-truck"></i> Instructions de livraison</h4>
-                                <p style="margin: 0;">${commande.instructions_livraison}</p>
-                                ${commande.mode_transport ? `<p style="margin: 0.5rem 0 0 0;"><strong>Mode de transport:</strong> ${commande.mode_transport}</p>` : ''}
-                                ${commande.incoterms ? `<p style="margin: 0.5rem 0 0 0;"><strong>Incoterms:</strong> ${commande.incoterms}</p>` : ''}
-                            </div>
-                        ` : ''}
+                    <p class="header-subtitle">
+                        Fournisseur: <strong>${commande.fournisseur_nom || '-'}</strong> | Type: ${commande.type_commande || '-'}
+                    </p>
+                    <div id="commande-actions">
+                        ${actionsHTML}
                     </div>
                 </div>
             `;
+        }
+        
+        function displayCommandeDetails(commande) {
+            console.log('🟨 displayCommandeDetails appelé avec commande:', commande);
             
-            // Ajouter la section fichiers joints
-            container.innerHTML += '<div id="fichiers-joints-container"></div>';
+            if (!commande) {
+                console.error('❌ displayCommandeDetails: commande est null ou undefined');
+                Toast.error('Aucune donnée à afficher');
+                return;
+            }
             
-            // Initialiser le gestionnaire de fichiers
+            if (!commande.id) {
+                console.error('❌ displayCommandeDetails: commande.id manquant');
+                Toast.error('Données invalides: ID manquant');
+                return;
+            }
+            
+            try {
+                // Rendre le header
+                renderHeader(commande);
+                
+                // Rendre le contenu principal
+                renderMainContent(commande);
+                
+                console.log('✅ Affichage terminé avec succès');
+            } catch (error) {
+                console.error('❌ Erreur dans displayCommandeDetails:', error);
+                Toast.error('Erreur lors de l\'affichage: ' + error.message);
+            }
+        }
+        
+        function renderMainContent(commande) {
+            const container = document.getElementById('commande-content-container');
+            
+            if (!container) {
+                console.error('❌ Container commande-content-container non trouvé dans le DOM');
+                Toast.error('Erreur: conteneur non trouvé');
+                return;
+            }
+            
+            console.log('🟨 renderMainContent appelé, container trouvé:', !!container);
+            
+            container.innerHTML = `
+                <!-- Colonne Gauche -->
+                <div class="fade-in" style="grid-column: span 1;">
+                    
+                    <!-- Info Générales -->
+                    <div class="card" style="margin-bottom: 2rem;">
+                        <div class="card-header">
+                            <h2 class="card-title">Détails de la Commande</h2>
+                        </div>
+                        <div class="card-body">
+                            <dl class="info-grid">
+                                <div class="info-item">
+                                    <dt>Date de commande</dt>
+                                    <dd>${formatDate(commande.date_commande)}</dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>Date livraison souhaitée</dt>
+                                    <dd>${formatDate(commande.date_livraison_souhaitee) || 'Non spécifiée'}</dd>
+                                </div>
+                                ${commande.commandeur_nom ? `
+                                <div class="info-item">
+                                    <dt>Commandeur</dt>
+                                    <dd>${commande.commandeur_prenom || ''} ${commande.commandeur_nom || ''}</dd>
+                                </div>
+                                ` : ''}
+                                <div class="info-item">
+                                    <dt>Liens</dt>
+                                    <dd style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                        ${commande.devis_id ? `<a href="devis-detail.html?id=${commande.devis_id}" style="color: var(--color-primary); font-weight: 500; cursor: pointer; text-decoration: none;">Voir Devis</a>` : ''}
+                                        ${commande.rfq_id ? `<a href="rfq-detail.html?id=${commande.rfq_id}" style="color: var(--color-primary); font-weight: 500; cursor: pointer; text-decoration: none;">Voir RFQ</a>` : ''}
+                                    </dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Items Table -->
+                    <div class="card" style="margin-bottom: 2rem;">
+                        <div class="card-header">
+                            <h2 class="card-title">Articles</h2>
+                        </div>
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Réf</th>
+                                        <th>Description</th>
+                                        <th style="text-align: right;">Qté</th>
+                                        <th style="text-align: right;">P.U. HT</th>
+                                        <th style="text-align: right;">Remise</th>
+                                        <th style="text-align: right;">TVA</th>
+                                        <th style="text-align: right;">Total HT</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${commande.lignes && commande.lignes.length > 0 ? commande.lignes.map(ligne => {
+                                        const prixUnitaire = parseFloat(ligne.prix_unitaire_ht || 0);
+                                        const quantite = parseFloat(ligne.quantite || 0);
+                                        const remise = parseFloat(ligne.remise || 0);
+                                        const tva = parseFloat(ligne.tva_taux || 20);
+                                        const montantHT = prixUnitaire * quantite * (1 - remise / 100);
+                                        
+                                        return `
+                                            <tr>
+                                                <td>${ligne.reference || '-'}</td>
+                                                <td>
+                                                    ${ligne.description || '-'}
+                                                    ${remise > 0 ? `<span class="badge badge-success" style="margin-left: 0.5rem; font-size: 0.7rem;">-${remise}%</span>` : ''}
+                                                </td>
+                                                <td style="text-align: right;">${quantite} ${ligne.unite || ''}</td>
+                                                <td style="text-align: right;">${formatCurrency(prixUnitaire)}</td>
+                                                <td style="text-align: right;">${remise > 0 ? remise + '%' : '-'}</td>
+                                                <td style="text-align: right;">${tva}%</td>
+                                                <td style="text-align: right; font-weight: 600;">${formatCurrency(montantHT)}</td>
+                                            </tr>
+                                        `;
+                                    }).join('') : '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--color-neutral);">Aucun article</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Fichiers Joints -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Fichiers joints</h2>
+                        </div>
+                        <div class="card-body" id="fichiers-joints-container" style="min-height: 100px;">
+                            <!-- Rempli par initFileUpload -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Colonne Droite -->
+                <div class="fade-in">
+                    
+                    <!-- Résumé Financier -->
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div class="card-header" style="background: var(--color-background-light);">
+                            <h2 class="card-title">Résumé Financier</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="summary-row">
+                                <span style="color: var(--color-neutral); font-size: 0.875rem;">Total HT</span>
+                                <span style="font-weight: 500; font-size: 0.875rem;">${formatCurrency(commande.total_ht || 0)}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span style="color: var(--color-neutral); font-size: 0.875rem;">Total TVA</span>
+                                <span style="font-weight: 500; font-size: 0.875rem;">${formatCurrency(commande.total_tva || 0)}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span style="font-weight: 700; color: var(--color-neutral-dark); font-size: 1rem;">Total TTC</span>
+                                <span class="summary-total">${formatCurrency(commande.total_ttc || 0)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conditions & Instructions -->
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        ${commande.conditions_paiement ? `
+                        <div class="card" style="background: var(--color-background-blue); border-left: 4px solid var(--color-primary);">
+                            <div class="card-body">
+                                <div style="display: flex; align-items: start;">
+                                    <i class="fas fa-credit-card" style="color: var(--color-primary); margin-right: 0.75rem; margin-top: 0.25rem;"></i>
+                                    <div>
+                                        <h4 style="font-weight: 600; margin: 0 0 0.5rem 0; color: var(--color-primary-dark); font-size: 0.875rem;">Conditions de paiement</h4>
+                                        <p style="color: var(--color-neutral-dark); margin: 0; font-size: 0.875rem;">${commande.conditions_paiement}</p>
+                                        ${commande.delai_paiement_jours ? `<p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: var(--color-neutral-dark);"><strong>Délai:</strong> ${commande.delai_paiement_jours} jours</p>` : ''}
+                                        ${commande.mode_paiement ? `<p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: var(--color-neutral-dark);"><strong>Mode:</strong> ${commande.mode_paiement}</p>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${commande.instructions_livraison ? `
+                        <div class="card" style="background: var(--color-background-light);">
+                            <div class="card-body">
+                                <div style="display: flex; align-items: start;">
+                                    <i class="fas fa-truck" style="color: var(--color-primary); margin-right: 0.75rem; margin-top: 0.25rem;"></i>
+                                    <div>
+                                        <h4 style="font-weight: 600; margin: 0 0 0.5rem 0; color: var(--color-primary-dark); font-size: 0.875rem;">Instructions Livraison</h4>
+                                        <p style="color: var(--color-neutral-dark); margin: 0; font-size: 0.875rem;">${commande.instructions_livraison}</p>
+                                        ${commande.mode_transport ? `<p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: var(--color-neutral-dark);"><strong>Mode de transport:</strong> ${commande.mode_transport}</p>` : ''}
+                                        ${commande.incoterms ? `<p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: var(--color-neutral-dark);"><strong>Incoterms:</strong> ${commande.incoterms}</p>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>` : ''}
+                    </div>
+
+                </div>
+            `;
+            
+            // Forcer la visibilité
+            container.style.display = 'grid';
+            container.style.visibility = 'visible';
+            container.style.opacity = '1';
+            
+            // Initialiser le gestionnaire de fichiers après le rendu
             if (commandeId) {
-                initFileUpload('commande', commandeId, 'fichiers-joints-container');
+                setTimeout(() => {
+                    try {
+                        const fichiersContainer = document.getElementById('fichiers-joints-container');
+                        if (fichiersContainer && typeof initFileUpload === 'function') {
+                            initFileUpload('commande', commandeId, 'fichiers-joints-container');
+                        }
+                    } catch (error) {
+                        console.error('Erreur initFileUpload:', error);
+                    }
+                }, 200);
             }
         }
 
@@ -1151,6 +1566,28 @@
         window.submitCreateFacture = submitCreateFacture;
 
         loadCommandeDetails();
+        
+        // Menu mobile
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const button = document.getElementById('mobile-menu-button');
+            if (menu && button) {
+                const isHidden = menu.classList.contains('hidden');
+                menu.classList.toggle('hidden');
+                button.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+                const icon = button.querySelector('i');
+                if (icon) {
+                    if (isHidden) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                }
+            }
+        }
+        window.toggleMobileMenu = toggleMobileMenu;
     </script>
 </body>
 </html>

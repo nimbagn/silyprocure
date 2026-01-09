@@ -77,12 +77,14 @@ const helmetConfig = helmet({
                 "'unsafe-inline'",
                 "'unsafe-hashes'",
                 "https://cdn.jsdelivr.net",
+                "https://cdn.tailwindcss.com",
                 "'wasm-unsafe-eval'" // Pour WebAssembly (nécessaire pour certaines bibliothèques)
             ],
             scriptSrcElem: [
                 "'self'",
                 "'unsafe-inline'",
-                "https://cdn.jsdelivr.net"
+                "https://cdn.jsdelivr.net",
+                "https://cdn.tailwindcss.com"
             ],
             scriptSrcAttr: ["'unsafe-inline'"], // Permet les event handlers inline (onclick, etc.)
             imgSrc: ["'self'", "data:", "https:"],

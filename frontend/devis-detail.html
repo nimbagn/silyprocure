@@ -4,51 +4,175 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Détails Devis - SilyProcure</title>
+    
+    <!-- CSS Charte Graphique Pro Confiance -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/animations.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#E0E7FF',
+                            100: '#DBEAFE',
+                            400: '#60A5FA',
+                            500: '#3B82F6',
+                            600: '#2563EB',
+                            700: '#1D4ED8',
+                            900: '#1E3A8A',
+                        },
+                        success: {
+                            500: '#10B981',
+                        },
+                        neutral: {
+                            500: '#64748B',
+                            600: '#475569',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Dashboard Theme CSS -->
+    <link rel="stylesheet" href="css/dashboard-theme.css">
 </head>
-<body>
-    <div class="header">
-        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
-        <div class="user-info">
-            <span id="user-name"></span>
-            <button onclick="logout()">Déconnexion</button>
-        </div>
-    </div>
-
-    <nav class="nav">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="rfq.html">RFQ</a>
-        <a href="devis.html" class="active">Devis</a>
-        <a href="commandes.html">Commandes</a>
-        <a href="factures.html">Factures</a>
-        <a href="entreprises.html">Entreprises</a>
-        <a href="produits.html">Produits</a>
-        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
-    </nav>
-
-    <div class="container">
-        <!-- Hero Section -->
-        <div class="hero-section" style="text-align: left; padding: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; width: 100%;">
-                <div style="flex: 1; min-width: 300px;">
-                    <button class="btn btn-secondary" onclick="window.location.href='devis.html'" style="margin-bottom: 1rem;">
-                        ← Retour à la liste
-                    </button>
-                    <h1 class="hero-title" style="font-size: 2rem; margin: 0;"><i class="fas fa-briefcase"></i> Détails du devis</h1>
-                    <p class="hero-description" style="text-align: left; margin: 0.5rem 0 0 0; max-width: 100%;">
-                        Consultez les détails complets du devis et effectuez les actions nécessaires
-                    </p>
+<body class="h-full flex flex-col">
+        <!-- Navbar Moderne selon charte Pro Confiance -->
+    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo & Nav Links -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
+                        <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
+                    </div>
+                    <nav class="hidden sm:ml-6 sm:flex sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
+                        <a href="dashboard.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
+                            <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="rfq.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
+                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>RFQ</span>
+                        </a>
+                        <a href="devis.html" class="border-primary-500 text-primary-900 font-semibold inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" aria-current="page">
+                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Devis</span>
+                        </a>
+                        <a href="commandes.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
+                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Commandes</span>
+                        </a>
+                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
+                            <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Entreprises</span>
+                        </a>
+                    </nav>
                 </div>
-                <div id="devis-actions" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: flex-end; min-width: 200px; flex-shrink: 0; margin-top: 0.5rem;"></div>
+
+                <!-- Search Bar & Profile -->
+                <div class="flex items-center gap-4">
+                    <!-- Global Search -->
+                    <div class="hidden lg:block relative text-neutral-500 focus-within:text-primary-600" role="search">
+                        <label for="global-search" class="sr-only">Rechercher dans l'application</label>
+                        <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </div>
+                        <input id="global-search" class="block w-64 bg-blue-50 py-2.5 pl-10 pr-4 border border-blue-200 rounded-full leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition duration-150 ease-in-out min-h-[44px]" placeholder="Rechercher..." type="search" aria-label="Rechercher">
+                    </div>
+
+                    <!-- Notifications -->
+                    <button class="relative p-2.5 text-neutral-500 hover:text-primary-600 transition-colors rounded-lg hover:bg-blue-50 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Notifications" title="Notifications">
+                        <i class="far fa-bell text-xl" aria-hidden="true"></i>
+                        <span class="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true"></span>
+                    </button>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm" aria-label="Profil utilisateur">
+                            <span id="user-initials">U</span>
+                        </div>
+                        <span id="user-name" class="hidden md:block text-sm font-semibold text-neutral-700 min-w-[120px]">Chargement...</span>
+                        <button onclick="logout()" class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5" aria-label="Déconnexion" title="Déconnexion">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                            <span class="hidden lg:inline">Déconnexion</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Menu mobile -->
+                    <div class="sm:hidden ml-2">
+                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Menu mobile déroulant -->
+            <div id="mobile-menu" class="hidden sm:hidden border-t-2 border-blue-100 bg-white shadow-lg">
+                <div class="px-4 pt-3 pb-4 space-y-1">
+                    <a href="dashboard.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-chart-line text-neutral-500" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="rfq.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-contract text-neutral-500" aria-hidden="true"></i>
+                        <span>RFQ</span>
+                    </a>
+                    <a href="devis.html" class="bg-gradient-to-r from-blue-50 to-primary-50 border-l-4 border-primary-500 text-primary-700 font-semibold block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-invoice-dollar text-primary-600" aria-hidden="true"></i>
+                        <span>Devis</span>
+                    </a>
+                    <a href="commandes.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-shopping-cart text-neutral-500" aria-hidden="true"></i>
+                        <span>Commandes</span>
+                    </a>
+                    <a href="entreprises.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-building text-neutral-500" aria-hidden="true"></i>
+                        <span>Entreprises</span>
+                    </a>
+                </div>
             </div>
         </div>
+    </nav>
 
-        <div id="devis-details">
-            <div class="loading"><div class="loading-spinner"></div> Chargement...</div>
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="container">
+        <!-- Breadcrumb & Back -->
+        <nav style="margin-bottom: 1.25rem;">
+            <a href="devis.html" class="btn btn-secondary btn-sm" style="text-decoration: none; display: inline-flex; align-items: center;">
+                <i class="fas fa-arrow-left" style="margin-right: 0.5rem;"></i> Retour à la liste
+            </a>
+        </nav>
+
+        <!-- Header Section -->
+        <div id="devis-header-section" style="margin-bottom: 2rem;">
+            <!-- Injecté par JS -->
+            <div class="loading-pulse" style="height: 2.5rem; background: var(--color-background-light); border-radius: 8px; width: 33%;"></div>
+        </div>
+
+        <!-- Content Grid -->
+        <div id="devis-content-container" class="devis-detail-container">
+            <!-- Loading State -->
+            <div style="grid-column: span 1;">
+                <div class="card loading-pulse" style="height: 16rem; margin-bottom: 2rem;"></div>
+            </div>
+            <div>
+                <div class="card loading-pulse" style="height: 10rem;"></div>
+            </div>
         </div>
     </div>
 
@@ -60,13 +184,98 @@
         <script>window.DISABLE_SIDEBAR = true;</script>
     <script src="js/sidebar.js"></script>
     <script>
+        // Menu mobile
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const button = document.getElementById('mobile-menu-button');
+            if (menu && button) {
+                const isHidden = menu.classList.contains('hidden');
+                menu.classList.toggle('hidden');
+                button.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+                const icon = button.querySelector('i');
+                if (icon) {
+                    if (isHidden) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                }
+            }
+        }
+        window.toggleMobileMenu = toggleMobileMenu;
+
         checkAuth();
 
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+        // Initialisation du nom d'utilisateur et des initiales
+        const userNameEl = document.getElementById('user-name');
+        const userInitialsEl = document.getElementById('user-initials');
+        if (userNameEl) {
+            userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+        }
+        if (userInitialsEl) {
+            const initials = `${user.prenom?.[0] || ''}${user.nom?.[0] || ''}`.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U';
+            userInitialsEl.textContent = initials;
+        }
 
         const urlParams = new URLSearchParams(window.location.search);
         const devisId = urlParams.get('id');
+        
+        console.log('🔍 URL params:', window.location.search);
+        console.log('🔍 Devis ID extrait:', devisId);
+        
+        if (!devisId) {
+            console.error('❌ Aucun ID de devis trouvé dans l\'URL');
+            Toast.error('ID de devis manquant dans l\'URL');
+        }
+
+        // Helpers de formatage - formatDate et formatCurrency sont déjà définis dans app.js
+        // Pas besoin de les redéclarer, utiliser directement les fonctions globales
+        
+        // Fonction helper pour formater les dates avec plus de détails (utilise formatDate de app.js si disponible)
+        const formatDateDetailed = (dateString) => {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        };
+
+        // Fonction locale pour gérer les variantes de statut (envoye/envoyé, etc.)
+        // Note: getStatusBadge est déjà défini dans app.js, on utilise getStatusBadgeFunc pour éviter les conflits
+        const getStatusBadgeFunc = (status) => {
+            const s = (status || '').toLowerCase().trim();
+            const badges = {
+                'brouillon': 'badge-info',
+                'envoye': 'badge-warning',
+                'envoyé': 'badge-warning',
+                'accepte': 'badge-success',
+                'accepté': 'badge-success',
+                'refuse': 'badge-danger',
+                'refusé': 'badge-danger'
+            };
+            return badges[s] || 'badge-info';
+        };
+
+        // Fonction locale pour gérer les variantes de statut
+        // Note: getStatusLabel est déjà défini dans app.js, on utilise getStatusLabelFunc pour éviter les conflits
+        const getStatusLabelFunc = (status) => {
+            const s = (status || '').toLowerCase().trim();
+            const labels = {
+                'brouillon': 'Brouillon',
+                'envoye': 'Envoyé',
+                'envoyé': 'Envoyé',
+                'accepte': 'Accepté',
+                'accepté': 'Accepté',
+                'refuse': 'Refusé',
+                'refusé': 'Refusé'
+            };
+            return labels[s] || status || 'Inconnu';
+        };
 
         // Définir les fonctions AVANT de charger les détails
         async function accepterDevis(id) {
@@ -143,16 +352,11 @@
                         console.log('✅ Statut devis mis à jour:', statutData);
                         Toast.success('Devis accepté et commande créée avec succès');
                         setTimeout(() => {
-                            // Option 1: Rediriger vers commandes
-                            // window.location.href = 'commandes.html';
-                            // Option 2: Recharger la page pour voir le statut mis à jour
                             window.location.reload();
                         }, 1500);
                     } else {
                         const errorStatut = await statutResponse.json().catch(() => ({ error: 'Erreur inconnue' }));
                         console.error('❌ Erreur mise à jour statut:', errorStatut);
-                        console.error('❌ Status HTTP:', statutResponse?.status);
-                        console.error('❌ Status text:', statutResponse?.statusText);
                         Toast.warning('Commande créée mais erreur lors de la mise à jour du statut du devis: ' + (errorStatut.error || 'Erreur inconnue'));
                         setTimeout(() => {
                             window.location.reload();
@@ -189,8 +393,6 @@
                 });
                 
                 console.log('🟡 Réponse reçue:', response);
-                console.log('🟡 Status:', response?.status);
-                console.log('🟡 OK:', response?.ok);
                 
                 if (!response) {
                     hideLoading();
@@ -224,6 +426,7 @@
 
         async function loadDevisDetails() {
             if (!devisId) {
+                console.error('❌ Devis ID manquant');
                 Toast.error('Devis non spécifié');
                 window.location.href = 'devis.html';
                 return;
@@ -232,264 +435,486 @@
             try {
                 showLoading('Chargement...');
                 console.log('🟦 Chargement devis ID:', devisId);
+                console.log('🟦 URL API:', `/api/devis/${devisId}`);
+                
                 const response = await apiCall(`/api/devis/${devisId}`);
-                console.log('🟦 Réponse API:', response);
+                console.log('🟦 Réponse API reçue:', response);
+                console.log('🟦 Status:', response ? response.status : 'Pas de réponse');
+                console.log('🟦 OK:', response ? response.ok : 'Pas de réponse');
                 
                 if (!response) {
                     hideLoading();
-                    console.error('❌ Pas de réponse de l\'API');
-                    Toast.error('Erreur de connexion');
+                    console.error('❌ Pas de réponse de l\'API - vérifiez la connexion et l\'authentification');
+                    Toast.error('Erreur de connexion. Vérifiez votre connexion internet.');
                     return;
                 }
 
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    let errorData;
+                    try {
+                        errorData = await response.json();
+                    } catch (e) {
+                        errorData = { error: `Erreur HTTP ${response.status}: ${response.statusText}` };
+                    }
                     hideLoading();
                     console.error('❌ Erreur API:', errorData);
+                    console.error('❌ Status HTTP:', response.status);
                     Toast.error('Erreur: ' + (errorData.error || 'Devis non trouvé'));
                     setTimeout(() => window.location.href = 'devis.html', 2000);
                     return;
                 }
 
                 const devis = await response.json();
-                console.log('✅ Devis chargé:', devis);
-                console.log('✅ Statut du devis:', devis.statut, 'Type:', typeof devis.statut);
+                console.log('✅ Devis chargé avec succès:', devis);
+                console.log('✅ ID:', devis.id);
+                console.log('✅ Numéro:', devis.numero);
+                console.log('✅ Statut:', devis.statut);
+                console.log('✅ Fournisseur:', devis.fournisseur_nom);
+                console.log('✅ Lignes:', devis.lignes ? devis.lignes.length : 0);
+                console.log('✅ Total HT:', devis.total_ht);
+                console.log('✅ Total TTC:', devis.total_ttc);
+                
+                if (!devis || !devis.id) {
+                    hideLoading();
+                    console.error('❌ Données invalides reçues:', devis);
+                    Toast.error('Données invalides reçues du serveur');
+                    return;
+                }
+                
                 hideLoading();
                 displayDevisDetails(devis);
             } catch (error) {
                 hideLoading();
                 console.error('❌ Erreur lors du chargement:', error);
-                Toast.error('Erreur lors du chargement: ' + error.message);
+                console.error('❌ Stack trace:', error.stack);
+                Toast.error('Erreur lors du chargement: ' + (error.message || 'Erreur inconnue'));
             }
         }
 
-        function displayDevisDetails(devis) {
-            console.log('🟨 displayDevisDetails appelé avec devis:', devis);
-            const container = document.getElementById('devis-details');
-            const actionsContainer = document.getElementById('devis-actions');
+        // Fonction pour télécharger le PDF d'un devis avec authentification
+        async function downloadPDFDevis(devisId) {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    Toast.error('Vous devez être connecté pour télécharger le PDF');
+                    return;
+                }
+                
+                showLoading('Génération du PDF...');
+                
+                // Détecter l'URL de base
+                let baseUrl = '';
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    baseUrl = 'http://localhost:3000';
+                } else {
+                    baseUrl = window.location.origin;
+                }
+                
+                const url = `${baseUrl}/api/pdf/devis/${devisId}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                hideLoading();
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        Toast.error('Session expirée. Veuillez vous reconnecter.');
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    Toast.error(errorData.error || 'Erreur lors du téléchargement du PDF');
+                    return;
+                }
+                
+                // Récupérer le blob
+                const blob = await response.blob();
+                
+                // Créer un lien de téléchargement
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `Devis-${devisId}-${Date.now()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+                
+                Toast.success('PDF téléchargé avec succès');
+            } catch (error) {
+                hideLoading();
+                console.error('Erreur téléchargement PDF:', error);
+                Toast.error('Erreur lors du téléchargement du PDF: ' + error.message);
+            }
+        }
+        window.downloadPDFDevis = downloadPDFDevis;
 
-            // Normaliser le statut (enlever espaces, convertir en minuscules)
+        function renderHeader(devis) {
+            const container = document.getElementById('devis-header-section');
             const statut = (devis.statut || '').toString().toLowerCase().trim();
-            console.log('🟨 Statut normalisé:', statut, 'Statut original:', devis.statut);
-
-            // Actions selon le statut
-            let actionsHTML = `<button class="btn btn-secondary" onclick="window.open('/api/pdf/devis/${devis.id}', '_blank')" style="margin-right: 0.5rem; white-space: nowrap;"><i class="fas fa-file-pdf"></i> PDF</button>`;
+            
+            let actionsHTML = `
+                <button onclick="downloadPDFDevis(${devis.id})" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+            `;
             
             if (statut === 'brouillon') {
-                console.log('🟨 Statut: brouillon - Affichage bouton Modifier');
                 actionsHTML += `
-                    <button class="btn btn-primary" onclick="if(typeof editDevisForm==='function'){editDevisForm(${devis.id});}else{alert('Fonction non disponible');}"><i class="fas fa-edit"></i> Modifier</button>
+                    <button onclick="if(typeof editDevisForm==='function'){editDevisForm(${devis.id});}else{alert('Fonction non disponible');}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit"></i> Modifier
+                    </button>
                 `;
             } else if (statut === 'envoye' || statut === 'envoyé') {
-                console.log('🟨 Statut: envoye/envoyé - Affichage boutons Accepter/Refuser');
-                // Utiliser des IDs pour attacher les event listeners après
                 actionsHTML = `
-                    <button class="btn btn-secondary" onclick="window.open('/api/pdf/devis/${devis.id}', '_blank')" style="margin-right: 0.5rem; white-space: nowrap;"><i class="fas fa-file-pdf"></i> PDF</button>
-                    <button class="btn btn-success" id="btn-accepter-${devis.id}" data-devis-id="${devis.id}" style="cursor: pointer; white-space: nowrap; flex-shrink: 0;"><i class="fas fa-check"></i> Accepter</button>
-                    <button class="btn btn-danger" id="btn-refuser-${devis.id}" data-devis-id="${devis.id}" style="margin-left: 0.5rem; cursor: pointer; white-space: nowrap; flex-shrink: 0;"><i class="fas fa-times"></i> Refuser</button>
+                    <button onclick="downloadPDFDevis(${devis.id})" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </button>
+                    <button id="btn-accepter-${devis.id}" data-devis-id="${devis.id}" class="btn btn-success btn-sm">
+                        <i class="fas fa-check"></i> Accepter
+                    </button>
+                    <button id="btn-refuser-${devis.id}" data-devis-id="${devis.id}" class="btn btn-danger btn-sm">
+                        <i class="fas fa-times"></i> Refuser
+                    </button>
                 `;
             } else if (statut === 'accepte' || statut === 'accepté') {
-                console.log('🟨 Statut: accepte/accepté - Devis déjà accepté');
-                actionsHTML += `<span class="badge badge-success" style="margin-left: 0.5rem;"><i class="fas fa-check-circle"></i> Devis accepté</span>`;
+                actionsHTML += `<span class="badge badge-success"><i class="fas fa-check-circle"></i> Devis accepté</span>`;
             } else if (statut === 'refuse' || statut === 'refusé') {
-                console.log('🟨 Statut: refuse/refusé - Devis refusé');
-                actionsHTML += `<span class="badge badge-danger" style="margin-left: 0.5rem;"><i class="fas fa-times-circle"></i> Devis refusé</span>`;
+                actionsHTML += `<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Devis refusé</span>`;
             } else {
-                console.warn('⚠️ Statut non géré:', statut, '- Aucun bouton d\'action affiché');
-                // Afficher quand même les boutons si le statut n'est pas reconnu mais que l'utilisateur est admin
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
                 if (user.role === 'admin' || user.role === 'superviseur') {
-                    console.log('🟨 Utilisateur admin/superviseur - Affichage boutons Accepter/Refuser malgré statut inconnu');
                     actionsHTML = `
-                        <button class="btn btn-secondary" onclick="window.open('/api/pdf/devis/${devis.id}', '_blank')" style="margin-right: 0.5rem; white-space: nowrap;"><i class="fas fa-file-pdf"></i> PDF</button>
-                        <button class="btn btn-success" id="btn-accepter-${devis.id}" data-devis-id="${devis.id}" style="cursor: pointer; white-space: nowrap; flex-shrink: 0;"><i class="fas fa-check"></i> Accepter</button>
-                        <button class="btn btn-danger" id="btn-refuser-${devis.id}" data-devis-id="${devis.id}" style="margin-left: 0.5rem; cursor: pointer; white-space: nowrap; flex-shrink: 0;"><i class="fas fa-times"></i> Refuser</button>
+                        <button onclick="downloadPDFDevis(${devis.id})" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button id="btn-accepter-${devis.id}" data-devis-id="${devis.id}" class="btn btn-success btn-sm">
+                            <i class="fas fa-check"></i> Accepter
+                        </button>
+                        <button id="btn-refuser-${devis.id}" data-devis-id="${devis.id}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-times"></i> Refuser
+                        </button>
                     `;
                 }
             }
             
-            console.log('🟨 Actions HTML:', actionsHTML);
-            actionsContainer.innerHTML = actionsHTML;
+            container.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div class="header-title-row">
+                        <h1 style="font-size: 1.875rem; font-weight: 700; color: var(--color-neutral-dark); margin: 0;">
+                            ${devis.numero || 'Devis-' + devis.id}
+                        </h1>
+                        <span class="badge ${getStatusBadgeFunc(statut)}" style="text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem;">
+                            ${getStatusLabelFunc(devis.statut)}
+                        </span>
+                    </div>
+                    <p class="header-subtitle">
+                        Fournisseur: <strong>${devis.fournisseur_nom || '-'}</strong>
+                    </p>
+                    <div id="devis-actions">
+                        ${actionsHTML}
+                    </div>
+                </div>
+            `;
             
-            // Attacher les event listeners aux boutons immédiatement après leur création
-            // Utiliser requestAnimationFrame pour s'assurer que le DOM est mis à jour
+            // Attacher les event listeners aux boutons
+            attachButtonListeners(devis);
+        }
+        
+        function attachButtonListeners(devis) {
             requestAnimationFrame(() => {
                 const btnAccepter = document.getElementById(`btn-accepter-${devis.id}`);
                 const btnRefuser = document.getElementById(`btn-refuser-${devis.id}`);
                 
                 if (btnAccepter) {
-                    console.log('✅ Bouton Accepter trouvé dans le DOM, attachement event listener');
-                    // Cloner et remplacer pour éviter les doublons d'event listeners
                     const newBtnAccepter = btnAccepter.cloneNode(true);
                     btnAccepter.parentNode.replaceChild(newBtnAccepter, btnAccepter);
                     
-                    newBtnAccepter.addEventListener('click', function(e) {
+                    newBtnAccepter.addEventListener('click', async function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('🟢 Clic sur Accepter - ID:', devis.id);
                         const id = parseInt(newBtnAccepter.getAttribute('data-devis-id') || devis.id);
-                        console.log('🟢 ID extrait:', id);
-                        console.log('🟢 Type accepterDevis:', typeof accepterDevis);
-                        console.log('🟢 Type window.accepterDevis:', typeof window.accepterDevis);
-                        
-                        if (typeof accepterDevis === 'function') {
-                            console.log('🟢 Appel accepterDevis (local)');
-                            accepterDevis(id);
-                        } else if (typeof window.accepterDevis === 'function') {
-                            console.log('🟢 Appel window.accepterDevis');
-                            window.accepterDevis(id);
-                        } else {
-                            console.error('❌ Fonction accepterDevis non disponible');
-                            alert('Fonction non disponible, rechargement...');
-                            window.location.reload();
+                        try {
+                            await accepterDevis(id);
+                        } catch (error) {
+                            console.error('❌ Erreur lors de l\'acceptation du devis:', error);
+                            Toast.error('Erreur lors de l\'acceptation du devis: ' + (error.message || 'Erreur inconnue'));
                         }
-                    }, { once: false, passive: false });
-                } else {
-                    console.warn('⚠️ Bouton Accepter non trouvé dans le DOM');
+                    });
                 }
                 
                 if (btnRefuser) {
-                    console.log('✅ Bouton Refuser trouvé dans le DOM, attachement event listener');
-                    // Cloner et remplacer pour éviter les doublons d'event listeners
                     const newBtnRefuser = btnRefuser.cloneNode(true);
                     btnRefuser.parentNode.replaceChild(newBtnRefuser, btnRefuser);
                     
-                    newBtnRefuser.addEventListener('click', function(e) {
+                    newBtnRefuser.addEventListener('click', async function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('🔴 Clic sur Refuser - ID:', devis.id);
                         const id = parseInt(newBtnRefuser.getAttribute('data-devis-id') || devis.id);
-                        console.log('🔴 ID extrait:', id);
-                        console.log('🔴 Type refuserDevis:', typeof refuserDevis);
-                        console.log('🔴 Type window.refuserDevis:', typeof window.refuserDevis);
-                        
-                        if (typeof refuserDevis === 'function') {
-                            console.log('🔴 Appel refuserDevis (local)');
-                            refuserDevis(id);
-                        } else if (typeof window.refuserDevis === 'function') {
-                            console.log('🔴 Appel window.refuserDevis');
-                            window.refuserDevis(id);
-                        } else {
-                            console.error('❌ Fonction refuserDevis non disponible');
-                            alert('Fonction non disponible, rechargement...');
-                            window.location.reload();
+                        try {
+                            await refuserDevis(id);
+                        } catch (error) {
+                            console.error('❌ Erreur lors du refus du devis:', error);
+                            Toast.error('Erreur lors du refus du devis: ' + (error.message || 'Erreur inconnue'));
                         }
-                    }, { once: false, passive: false });
-                } else {
-                    console.warn('⚠️ Bouton Refuser non trouvé dans le DOM');
+                    });
                 }
             });
-
+        }
+        
+        function displayDevisDetails(devis) {
+            console.log('🟨 displayDevisDetails appelé avec devis:', devis);
+            
+            if (!devis) {
+                console.error('❌ displayDevisDetails: devis est null ou undefined');
+                Toast.error('Aucune donnée à afficher');
+                return;
+            }
+            
+            if (!devis.id) {
+                console.error('❌ displayDevisDetails: devis.id manquant');
+                Toast.error('Données invalides: ID manquant');
+                return;
+            }
+            
+            try {
+                // Rendre le header
+                renderHeader(devis);
+                
+                // Rendre le contenu principal
+                renderMainContent(devis);
+                
+                console.log('✅ Affichage terminé avec succès');
+            } catch (error) {
+                console.error('❌ Erreur dans displayDevisDetails:', error);
+                Toast.error('Erreur lors de l\'affichage: ' + error.message);
+            }
+        }
+        
+        function renderMainContent(devis) {
+            const container = document.getElementById('devis-content-container');
+            
+            if (!container) {
+                console.error('❌ Container devis-content-container non trouvé dans le DOM');
+                Toast.error('Erreur: conteneur non trouvé');
+                return;
+            }
+            
+            console.log('🟨 renderMainContent appelé, container trouvé:', !!container);
+            const statut = (devis.statut || '').toString().toLowerCase().trim();
+            console.log('🟨 Statut pour renderMainContent:', statut);
+            
+            console.log('🟨 Génération du HTML pour renderMainContent...');
+            console.log('🟨 Devis data:', {
+                id: devis.id,
+                numero: devis.numero,
+                rfq_id: devis.rfq_id,
+                rfq_numero: devis.rfq_numero,
+                fournisseur_nom: devis.fournisseur_nom,
+                lignes_count: devis.lignes ? devis.lignes.length : 0
+            });
+            
             container.innerHTML = `
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">${devis.numero || 'Devis-' + devis.id}</h2>
-                        <span class="badge ${getStatusBadge(devis.statut)}">${getStatusLabel(devis.statut)}</span>
+                <!-- Colonne Gauche -->
+                <div class="fade-in" style="grid-column: span 1;">
+                    
+                    <!-- Info Générales -->
+                    <div class="card" style="margin-bottom: 2rem;">
+                        <div class="card-header">
+                            <h2 class="card-title">Information du Devis</h2>
+                        </div>
+                        <div class="card-body">
+                            <dl class="info-grid">
+                                <div class="info-item">
+                                    <dt>Référence RFQ</dt>
+                                    <dd style="color: var(--color-primary); font-weight: 500; cursor: pointer;" onclick="${devis.rfq_id ? `window.location.href='rfq-detail.html?id=${devis.rfq_id}'` : 'return false;'}">
+                                        ${devis.rfq_numero || '-'}
+                                    </dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>Fournisseur</dt>
+                                    <dd style="font-weight: 600; color: var(--color-primary);">${devis.fournisseur_nom || '-'}</dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>Date d'émission</dt>
+                                    <dd>${formatDateDetailed(devis.date_emission)}</dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>Date de validité</dt>
+                                    <dd>${formatDateDetailed(devis.date_validite) || 'Non spécifiée'}</dd>
+                                </div>
+                                ${devis.notes ? `
+                                <div class="info-item" style="grid-column: 1 / -1;">
+                                    <dt>Notes / Description</dt>
+                                    <dd>${devis.notes}</dd>
+                                </div>
+                                ` : ''}
+                            </dl>
+                        </div>
                     </div>
-                    <div style="padding: 1.5rem;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-                            <div>
-                                <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-clipboard-list"></i> Informations générales</h3>
-                                <div style="line-height: 2;">
-                                    <div><strong>RFQ:</strong> ${devis.rfq_numero || '-'}</div>
-                                    <div><strong>Fournisseur:</strong> ${devis.fournisseur_nom || '-'}</div>
-                                    <div><strong>Date d'émission:</strong> ${formatDate(devis.date_emission)}</div>
-                                    <div><strong>Date de validité:</strong> ${formatDate(devis.date_validite) || 'Non spécifiée'}</div>
-                                    <div><strong>Délai de livraison:</strong> ${devis.delai_livraison ? devis.delai_livraison + ' jours' : '-'}</div>
+
+                    <!-- Items Table -->
+                    <div class="card" style="margin-bottom: 2rem;">
+                        <div class="card-header">
+                            <h2 class="card-title">Articles</h2>
+                        </div>
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Description</th>
+                                        <th style="text-align: right;">Qté</th>
+                                        <th style="text-align: right;">P.U. HT</th>
+                                        <th style="text-align: right;">Remise</th>
+                                        <th style="text-align: right;">TVA</th>
+                                        <th style="text-align: right;">Total HT</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${devis.lignes && devis.lignes.length > 0 ? devis.lignes.map(ligne => {
+                                        const prix = parseFloat(ligne.prix_unitaire_ht || 0);
+                                        const qte = parseFloat(ligne.quantite || 0);
+                                        const remise = parseFloat(ligne.remise || 0);
+                                        const total = prix * qte * (1 - remise / 100);
+                                        return `
+                                            <tr>
+                                                <td>
+                                                    ${ligne.description || '-'}
+                                                    ${remise > 0 ? `<span class="badge badge-success" style="margin-left: 0.5rem; font-size: 0.7rem;">-${remise}%</span>` : ''}
+                                                </td>
+                                                <td style="text-align: right;">${qte} ${ligne.unite || ''}</td>
+                                                <td style="text-align: right;">${formatCurrency(prix)}</td>
+                                                <td style="text-align: right;">${remise > 0 ? remise + '%' : '-'}</td>
+                                                <td style="text-align: right;">${ligne.tva_taux || 20}%</td>
+                                                <td style="text-align: right; font-weight: 600;">${formatCurrency(total)}</td>
+                                            </tr>
+                                        `;
+                                    }).join('') : '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--color-neutral);">Aucun article</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Fichiers Joints -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Fichiers joints</h2>
+                        </div>
+                        <div class="card-body" id="fichiers-joints-container" style="min-height: 100px;">
+                            <!-- Rempli par initFileUpload -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Colonne Droite -->
+                <div class="fade-in">
+                    
+                    <!-- Résumé Financier -->
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div class="card-header" style="background: var(--color-background-light);">
+                            <h2 class="card-title">Résumé Financier</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="summary-row">
+                                <span style="color: var(--color-neutral); font-size: 0.875rem;">Total HT</span>
+                                <span style="font-weight: 500; font-size: 0.875rem;">${formatCurrency(devis.total_ht || 0)}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span style="color: var(--color-neutral); font-size: 0.875rem;">Total TVA</span>
+                                <span style="font-weight: 500; font-size: 0.875rem;">${formatCurrency(devis.total_tva || 0)}</span>
+                            </div>
+                            ${devis.remise_globale ? `
+                            <div class="summary-row" style="color: var(--color-success); font-size: 0.875rem;">
+                                <span>Remise Globale</span>
+                                <span style="font-weight: 500;">-${devis.remise_globale}%</span>
+                            </div>` : ''}
+                            <div class="summary-row">
+                                <span style="font-weight: 700; color: var(--color-neutral-dark); font-size: 1rem;">Total TTC</span>
+                                <span class="summary-total">${formatCurrency(devis.total_ttc || 0)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dates & Validité -->
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div class="card-header" style="background: var(--color-background-light);">
+                            <h3 style="font-size: 0.75rem; font-weight: 600; color: var(--color-neutral); text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Dates & Validité</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="date-item">
+                                <i class="far fa-calendar-alt"></i>
+                                <div class="date-item-content">
+                                    <p class="date-item-label">Émission</p>
+                                    <p class="date-item-value">${formatDateDetailed(devis.date_emission)}</p>
                                 </div>
                             </div>
-                            <div>
-                                <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-money-bill-wave"></i> Montants</h3>
-                                <div style="line-height: 2;">
-                                    <div><strong>Total HT:</strong> ${formatCurrency(devis.total_ht || 0)}</div>
-                                    <div><strong>Total TVA:</strong> ${formatCurrency(devis.total_tva || 0)}</div>
-                                    <div style="font-size: 1.25rem; font-weight: bold; color: var(--color-primary); margin-top: 0.5rem;">
-                                        Total TTC: ${formatCurrency(devis.total_ttc || 0)}
-                                    </div>
-                                    ${devis.remise_globale ? `<div><strong>Remise globale:</strong> ${devis.remise_globale}%</div>` : ''}
+                            <div class="date-item">
+                                <i class="far fa-clock"></i>
+                                <div class="date-item-content">
+                                    <p class="date-item-label">Validité</p>
+                                    <p class="date-item-value">${formatDateDetailed(devis.date_validite) || 'Non spécifiée'}</p>
+                                </div>
+                            </div>
+                            <div class="date-item">
+                                <i class="fas fa-truck"></i>
+                                <div class="date-item-content">
+                                    <p class="date-item-label">Délai Livraison</p>
+                                    <p class="date-item-value">${devis.delai_livraison ? devis.delai_livraison + ' jours' : '-'}</p>
                                 </div>
                             </div>
                         </div>
-
-                        ${devis.lignes && devis.lignes.length > 0 ? `
-                            <h3 style="margin: 1.5rem 0 1rem 0; color: var(--color-primary);"><i class="fas fa-box"></i> Lignes de devis</h3>
-                            <div class="table-container">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Description</th>
-                                            <th>Quantité</th>
-                                            <th>Unité</th>
-                                            <th>Prix unitaire HT</th>
-                                            <th>Remise</th>
-                                            <th>TVA</th>
-                                            <th>Total HT</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${devis.lignes.map(ligne => {
-                                            const prixUnitaire = parseFloat(ligne.prix_unitaire_ht || 0);
-                                            const quantite = parseFloat(ligne.quantite || 0);
-                                            const remise = parseFloat(ligne.remise || 0);
-                                            const tva = parseFloat(ligne.tva_taux || 20);
-                                            const montantHT = prixUnitaire * quantite * (1 - remise / 100);
-                                            const montantTVA = montantHT * (tva / 100);
-                                            const totalHT = montantHT;
-                                            
-                                            return `
-                                                <tr>
-                                                    <td>${ligne.description || '-'}</td>
-                                                    <td>${quantite}</td>
-                                                    <td>${ligne.unite || '-'}</td>
-                                                    <td>${formatCurrency(prixUnitaire)}</td>
-                                                    <td>${remise > 0 ? remise + '%' : '-'}</td>
-                                                    <td>${tva}%</td>
-                                                    <td><strong>${formatCurrency(totalHT)}</strong></td>
-                                                </tr>
-                                            `;
-                                        }).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
-                        ` : ''}
-
-                        ${devis.conditions_paiement ? `
-                            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--color-background-blue); border-radius: 8px;">
-                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-credit-card"></i> Conditions de paiement</h4>
-                                <p style="margin: 0;">${devis.conditions_paiement}</p>
-                            </div>
-                        ` : ''}
-
-                        ${devis.garanties ? `
-                            <div style="margin-top: 1rem; padding: 1rem; background: var(--color-background-blue); border-radius: 8px;">
-                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-shield"></i>️ Garanties</h4>
-                                <p style="margin: 0;">${devis.garanties}</p>
-                            </div>
-                        ` : ''}
-
-                        ${devis.certifications ? `
-                            <div style="margin-top: 1rem; padding: 1rem; background: var(--color-background-blue); border-radius: 8px;">
-                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-check"></i> Certifications</h4>
-                                <p style="margin: 0;">${devis.certifications}</p>
-                            </div>
-                        ` : ''}
-
-                        ${devis.notes ? `
-                            <div style="margin-top: 1rem; padding: 1rem; background: var(--color-background-light); border-radius: 8px;">
-                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-edit"></i> Notes</h4>
-                                <p style="margin: 0;">${devis.notes}</p>
-                            </div>
-                        ` : ''}
                     </div>
+
+                    <!-- Conditions & Garanties -->
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        ${devis.conditions_paiement ? `
+                        <div class="card" style="background: var(--color-background-blue); border-left: 4px solid var(--color-primary);">
+                            <div class="card-body">
+                                <div style="display: flex; align-items: start;">
+                                    <i class="fas fa-info-circle" style="color: var(--color-primary); margin-right: 0.75rem; margin-top: 0.25rem;"></i>
+                                    <div>
+                                        <h4 style="font-weight: 600; margin: 0 0 0.5rem 0; color: var(--color-primary-dark); font-size: 0.875rem;">Conditions de paiement</h4>
+                                        <p style="color: var(--color-neutral-dark); margin: 0; font-size: 0.875rem;">${devis.conditions_paiement}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${devis.garanties ? `
+                        <div class="card" style="background: var(--color-background-light);">
+                            <div class="card-body">
+                                <h4 style="font-size: 0.75rem; font-weight: 600; color: var(--color-neutral); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Garanties</h4>
+                                <p style="color: var(--color-neutral-dark); margin: 0; font-size: 0.875rem;">${devis.garanties}</p>
+                            </div>
+                        </div>` : ''}
+                    </div>
+
                 </div>
             `;
             
-            // Ajouter la section fichiers joints
-            container.innerHTML += '<div id="fichiers-joints-container"></div>';
+            // Forcer la visibilité
+            container.style.display = 'grid';
+            container.style.visibility = 'visible';
+            container.style.opacity = '1';
             
-            // Initialiser le gestionnaire de fichiers
+            // Initialiser le gestionnaire de fichiers après le rendu
             if (devisId) {
-                initFileUpload('devis', devisId, 'fichiers-joints-container');
+                setTimeout(() => {
+                    try {
+                        const fichiersContainer = document.getElementById('fichiers-joints-container');
+                        if (fichiersContainer && typeof initFileUpload === 'function') {
+                            initFileUpload('devis', devisId, 'fichiers-joints-container');
+                        }
+                    } catch (error) {
+                        console.error('Erreur initFileUpload:', error);
+                    }
+                }, 200);
             }
         }
 
@@ -506,4 +931,3 @@
     </script>
 </body>
 </html>
-

@@ -1,427 +1,429 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="h-full bg-gray-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Demandes de Devis (RFQ) - SilyProcure</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/animations.css">
+    <!-- CSS Charte Graphique Pro Confiance -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#E0E7FF',
+                            100: '#DBEAFE',
+                            400: '#60A5FA',
+                            500: '#3B82F6',
+                            600: '#2563EB',
+                            700: '#1D4ED8',
+                            900: '#1E3A8A',
+                        },
+                        success: {
+                            500: '#10B981',
+                        },
+                        neutral: {
+                            500: '#64748B',
+                            600: '#475569',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Dashboard Theme CSS -->
+    <link rel="stylesheet" href="css/dashboard-theme.css">
+    
     <style>
-        /* Styles spécifiques pour la page RFQ moderne */
-        .rfq-hero {
-            background: var(--color-primary);
-            color: white;
-            padding: 3rem 2rem;
-            border-radius: 16px;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        /* Fallback styles si Tailwind CDN est bloqué - classes essentielles */
+        .bg-gray-50 { background-color: #f9fafb; }
+        .bg-white { background-color: #ffffff; }
+        .bg-gray-100 { background-color: #f3f4f6; }
+        .bg-gray-200 { background-color: #e5e7eb; }
+        .bg-primary-600 { background-color: #2563eb; }
+        .bg-primary-700 { background-color: #1d4ed8; }
+        .bg-blue-100 { background-color: #dbeafe; }
+        .bg-blue-400 { background-color: #60a5fa; }
+        .bg-yellow-100 { background-color: #fef3c7; }
+        .bg-yellow-400 { background-color: #facc15; }
+        .bg-green-100 { background-color: #d1fae5; }
+        .bg-green-500 { background-color: #10b981; }
+        .text-gray-400 { color: #9ca3af; }
+        .text-gray-500 { color: #6b7280; }
+        .text-gray-600 { color: #4b5563; }
+        .text-gray-700 { color: #374151; }
+        .text-gray-800 { color: #1f2937; }
+        .text-gray-900 { color: #111827; }
+        .text-primary-600 { color: #2563eb; }
+        .text-primary-900 { color: #1e3a8a; }
+        .text-blue-600 { color: #2563eb; }
+        .text-yellow-800 { color: #854d0e; }
+        .text-green-800 { color: #166534; }
+        .text-red-600 { color: #dc2626; }
+        .border-gray-200 { border-color: #e5e7eb; }
+        .border-gray-300 { border-color: #d1d5db; }
+        .border-primary-500 { border-color: #3b82f6; }
+        .border-blue-100 { border-color: #dbeafe; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-md { border-radius: 0.375rem; }
+        .rounded-full { border-radius: 9999px; }
+        .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
+        .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
+        .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
+        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        .py-12 { padding-top: 3rem; padding-bottom: 3rem; }
+        .pt-1 { padding-top: 0.25rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mr-1 { margin-right: 0.25rem; }
+        .mr-2 { margin-right: 0.5rem; }
+        .mr-4 { margin-right: 1rem; }
+        .ml-3 { margin-left: 0.75rem; }
+        .ml-5 { margin-left: 1.25rem; }
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-4 { margin-top: 1rem; }
+        .mt-6 { margin-top: 1.5rem; }
+        .text-xs { font-size: 0.75rem; line-height: 1rem; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+        .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+        .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+        .font-medium { font-weight: 500; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .h-12 { height: 3rem; }
+        .h-16 { height: 4rem; }
+        .w-5 { width: 1.25rem; }
+        .w-0 { width: 0; }
+        .w-full { width: 100%; }
+        .max-w-7xl { max-width: 80rem; }
+        .max-w-lg { max-width: 32rem; }
+        .flex { display: flex; }
+        .flex-1 { flex: 1 1 0%; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .items-start { align-items: flex-start; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .space-x-2 > * + * { margin-left: 0.5rem; }
+        .space-x-4 > * + * { margin-left: 1rem; }
+        .space-x-8 > * + * { margin-left: 2rem; }
+        .space-y-2 > * + * { margin-top: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .gap-5 { gap: 1.25rem; }
+        .gap-6 { gap: 1.5rem; }
+        .grid { display: grid; }
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .col-span-full { grid-column: 1 / -1; }
+        .border { border-width: 1px; }
+        .border-2 { border-width: 2px; }
+        .border-b { border-bottom-width: 1px; }
+        .border-t { border-top-width: 1px; }
+        .border-l-4 { border-left-width: 4px; }
+        .border-transparent { border-color: transparent; }
+        .sticky { position: sticky; }
+        .top-0 { top: 0; }
+        .z-50 { z-index: 50; }
+        .cursor-pointer { cursor: pointer; }
+        .pointer-events-none { pointer-events: none; }
+        .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .transition-colors { transition-property: color, background-color, border-color; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+        .transition-shadow { transition-property: box-shadow; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+        .duration-150 { transition-duration: 150ms; }
+        .duration-300 { transition-duration: 300ms; }
+        .ease-in-out { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+        .hover\:bg-gray-50:hover { background-color: #f9fafb; }
+        .hover\:bg-gray-300:hover { background-color: #d1d5db; }
+        .hover\:bg-primary-700:hover { background-color: #1d4ed8; }
+        .hover\:bg-primary-900:hover { background-color: #1e3a8a; }
+        .hover\:text-gray-500:hover { color: #6b7280; }
+        .hover\:text-gray-700:hover { color: #374151; }
+        .hover\:text-primary-600:hover { color: #2563eb; }
+        .hover\:text-primary-900:hover { color: #1e3a8a; }
+        .hover\:text-blue-600:hover { color: #2563eb; }
+        .hover\:text-red-600:hover { color: #dc2626; }
+        .hover\:shadow-lg:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .focus\:outline-none:focus { outline: 2px solid transparent; outline-offset: 2px; }
+        .focus\:ring-1:focus { box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5); }
+        .focus\:ring-2:focus { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); }
+        .focus\:ring-primary-500:focus { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); }
+        .focus\:border-primary-500:focus { border-color: #3b82f6; }
+        .inline-flex { display: inline-flex; }
+        .hidden { display: none; }
+        .absolute { position: absolute; }
+        .relative { position: relative; }
+        .inset-y-0 { top: 0; bottom: 0; }
+        .left-0 { left: 0; }
+        .block { display: block; }
+        .leading-5 { line-height: 1.25rem; }
+        .uppercase { text-transform: uppercase; }
+        .tracking-wide { letter-spacing: 0.025em; }
+        .tracking-wider { letter-spacing: 0.05em; }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @media (min-width: 640px) {
+            .sm\:px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+            .sm\:text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+            .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .sm\:ml-6 { margin-left: 1.5rem; }
+            .sm\:flex { display: flex; }
+            .sm\:space-x-8 > * + * { margin-left: 2rem; }
+            .sm\:truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         }
-
-        .rfq-hero-content {
-            position: relative;
-            z-index: 1;
+        @media (min-width: 1024px) {
+            .lg\:px-8 { padding-left: 2rem; padding-right: 2rem; }
+            .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
         }
-
-        .rfq-hero h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .rfq-hero p {
-            font-size: 1.125rem;
-            opacity: 0.95;
-            margin-bottom: 2rem;
-        }
-
-        .rfq-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .rfq-stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: var(--transition);
-            border-left: 4px solid var(--color-primary);
-            animation: fadeInUp 0.6s ease backwards;
-        }
-
-        .rfq-stat-card:nth-child(1) { animation-delay: 0.1s; }
-        .rfq-stat-card:nth-child(2) { animation-delay: 0.2s; }
-        .rfq-stat-card:nth-child(3) { animation-delay: 0.3s; }
-        .rfq-stat-card:nth-child(4) { animation-delay: 0.4s; }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .rfq-stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        .rfq-stat-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .rfq-stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--color-primary-dark);
-            margin-bottom: 0.25rem;
-        }
-
-        .rfq-stat-label {
-            font-size: 0.875rem;
-            color: var(--color-neutral);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .rfq-actions-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .rfq-search-modern {
-            flex: 1;
-            min-width: 300px;
-            position: relative;
-        }
-
-        .rfq-search-modern input {
-            width: 100%;
-            padding: 1rem 1rem 1rem 3rem;
-            border: 2px solid #E0E7FF;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: var(--transition);
-            background: white;
-        }
-
-        .rfq-search-modern input:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-        }
-
-        .rfq-search-modern::before {
-            content: '<i class="fas fa-search"></i>';
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.25rem;
-            pointer-events: none;
-        }
-
-        .rfq-filter-modern {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .rfq-filter-modern select {
-            padding: 1rem 1.5rem;
-            border: 2px solid #E0E7FF;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            background: white;
-            cursor: pointer;
-            transition: var(--transition);
-            font-weight: 500;
-        }
-
-        .rfq-filter-modern select:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-        }
-
-        .rfq-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .rfq-card {
-            background: white;
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: var(--transition);
-            border: 1px solid rgba(0,0,0,0.05);
-            position: relative;
-            overflow: hidden;
-            animation: fadeInUp 0.5s ease backwards;
-        }
-
-        .rfq-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--color-primary);
-        }
-
-        .rfq-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        .rfq-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-        }
-
-        .rfq-card-number {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--color-primary-dark);
-            margin-bottom: 0.25rem;
-        }
-
-        .rfq-card-date {
-            font-size: 0.875rem;
-            color: var(--color-neutral);
-        }
-
-        .rfq-card-badge {
-            padding: 0.375rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .rfq-card-body {
-            margin-bottom: 1rem;
-        }
-
-        .rfq-card-info {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.75rem;
-            font-size: 0.875rem;
-            color: var(--color-neutral-dark);
-        }
-
-        .rfq-card-info-icon {
-            font-size: 1rem;
-            opacity: 0.7;
-        }
-
-        .rfq-card-footer {
-            display: flex;
-            gap: 0.5rem;
-            padding-top: 1rem;
-            border-top: 1px solid #E0E7FF;
-        }
-
-        .rfq-card-btn {
-            flex: 1;
-            padding: 0.625rem 1rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .rfq-card-btn-primary {
-            background: var(--color-primary);
-            color: white;
-        }
-
-        .rfq-card-btn-primary:hover {
-            background: var(--color-primary-dark);
-            transform: translateY(-2px);
-        }
-
-        .rfq-card-btn-secondary {
-            background: var(--color-background-light);
-            color: var(--color-primary-dark);
-        }
-
-        .rfq-card-btn-secondary:hover {
-            background: #E0E7FF;
-        }
-
-        .rfq-card-btn-danger {
-            background: #FEE2E2;
-            color: var(--color-danger);
-        }
-
-        .rfq-card-btn-danger:hover {
-            background: #FECACA;
-        }
-
-        .btn-create-rfq {
-            background: var(--color-primary);
-            color: white;
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-create-rfq:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
-        }
-
-        .btn-create-rfq::before {
-            content: '✨';
-            font-size: 1.25rem;
-        }
-
-        @media (max-width: 768px) {
-            .rfq-hero h1 {
-                font-size: 2rem;
-            }
-            .rfq-grid {
-                grid-template-columns: 1fr;
-            }
-            .rfq-actions-bar {
-                flex-direction: column;
-            }
+        @media (min-width: 768px) {
+            .md\:flex { display: flex; }
+            .md\:items-center { align-items: center; }
+            .md\:justify-between { justify-content: space-between; }
+            .md\:mt-0 { margin-top: 0; }
+            .md\:ml-4 { margin-left: 1rem; }
         }
     </style>
+
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+        /* Styles spécifiques à la page RFQ */
+        .rfq-card-modern {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .rfq-card-modern:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px -5px rgba(59, 130, 246, 0.2);
+            border-color: var(--color-primary);
+        }
+        
+        /* Badge de statut avec couleurs Pro Confiance */
+        .badge-brouillon { background-color: rgba(107, 114, 128, 0.1); color: #374151; }
+        .badge-envoye { background-color: rgba(255, 184, 0, 0.15); color: #854d0e; }
+        .badge-en-cours { background-color: rgba(59, 130, 246, 0.15); color: #1e40af; }
+        .badge-cloture { background-color: rgba(16, 185, 129, 0.15); color: #166534; }
+    </style>
 </head>
-<body>
-    <div class="header">
-        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
-        <div class="user-info">
-            <span id="user-name"></span>
-            <button onclick="logout()">Déconnexion</button>
-        </div>
-    </div>
-
-    <nav class="nav">
-        <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
-        <a href="demandes-devis.html"><i class="fas fa-inbox"></i> Demandes Devis</a>
-        <a href="clients.html"><i class="fas fa-users"></i> Clients</a>
-        <a href="rfq.html" class="active"><i class="fas fa-file-alt"></i> RFQ</a>
-        <a href="devis.html"><i class="fas fa-briefcase"></i> Devis</a>
-        <a href="commandes.html"><i class="fas fa-shopping-cart"></i> Commandes</a>
-        <a href="factures.html"><i class="fas fa-file-invoice"></i> Factures</a>
-        <a href="entreprises.html"><i class="fas fa-building"></i> Entreprises</a>
-        <a href="produits.html"><i class="fas fa-box"></i> Produits</a>
-        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
-    </nav>
-
-    <div class="container">
-        <!-- Hero Section -->
-        <div class="rfq-hero">
-            <div class="rfq-hero-content">
-                <h1><i class="fas fa-clipboard-list"></i> Demandes de Devis</h1>
-                <p>Gérez vos demandes de devis de manière efficace et professionnelle</p>
-                <button class="btn-create-rfq" onclick="window.location.href='rfq-create.html'">
-                    Créer une nouvelle RFQ
-                </button>
-            </div>
-        </div>
-
-        <!-- Statistiques -->
-        <div class="rfq-stats" id="rfq-stats">
-            <div class="rfq-stat-card">
-                <div class="rfq-stat-icon"><i class="fas fa-edit"></i></div>
-                <div class="rfq-stat-value" id="stat-total">-</div>
-                <div class="rfq-stat-label">Total RFQ</div>
-            </div>
-            <div class="rfq-stat-card">
-                <div class="rfq-stat-icon"><i class="fas fa-clock"></i></div>
-                <div class="rfq-stat-value" id="stat-en-cours">-</div>
-                <div class="rfq-stat-label">En cours</div>
-            </div>
-            <div class="rfq-stat-card">
-                <div class="rfq-stat-icon"><i class="fas fa-check"></i></div>
-                <div class="rfq-stat-value" id="stat-cloture">-</div>
-                <div class="rfq-stat-label">Clôturées</div>
-            </div>
-            <div class="rfq-stat-card">
-                <div class="rfq-stat-icon"><i class="fas fa-upload"></i></div>
-                <div class="rfq-stat-value" id="stat-envoye">-</div>
-                <div class="rfq-stat-label">Envoyées</div>
-            </div>
-        </div>
-
-        <!-- Barre de recherche et filtres -->
-        <div class="rfq-actions-bar">
-            <div class="rfq-search-modern">
-                <input type="text" id="rfq-search" placeholder="Rechercher par numéro, destinataire..." 
-                       onkeyup="filterRFQ()">
-            </div>
-            <div class="rfq-filter-modern">
-                <select class="filter-select" id="rfq-filter-statut" onchange="filterRFQ()">
-                    <option value="">Tous les statuts</option>
-                    <option value="brouillon"><i class="fas fa-edit"></i> Brouillon</option>
-                    <option value="envoye"><i class="fas fa-upload"></i> Envoyé</option>
-                    <option value="en_cours"><i class="fas fa-clock"></i> En cours</option>
-                    <option value="cloture"><i class="fas fa-check"></i> Clôturé</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Grille de cartes RFQ -->
-        <div class="rfq-grid" id="rfq-grid">
-            <div class="loading" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-                <div class="loading-spinner"></div>
-                <p style="margin-top: 1rem; color: var(--color-neutral);">Chargement des demandes de devis...</p>
-            </div>
-        </div>
-    </div>
-
+<body class="h-full flex flex-col">
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
     <script src="js/components.js"></script>
-        <script>window.DISABLE_SIDEBAR = true;</script>
+    <script>window.DISABLE_SIDEBAR = true;</script>
     <script src="js/sidebar.js"></script>
-<script src="js/forms.js"></script>
+    <script src="js/forms.js"></script>
+
+    <!-- Navbar Moderne selon charte Pro Confiance -->
+    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo & Nav Links -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
+                        <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
+                    </div>
+                    <nav class="hidden sm:ml-6 sm:flex sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
+                        <a href="dashboard.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="rfq.html" class="border-primary-500 text-primary-900 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold min-h-[44px] transition-colors whitespace-nowrap" aria-current="page">
+                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>RFQ</span>
+                        </a>
+                        <a href="devis.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Devis</span>
+                        </a>
+                        <a href="commandes.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Commandes</span>
+                        </a>
+                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Entreprises</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Search Bar & Profile -->
+                <div class="flex items-center gap-4">
+                    <!-- Global Search -->
+                    <div class="hidden lg:block relative text-neutral-500 focus-within:text-primary-600" role="search">
+                        <label for="global-search" class="sr-only">Rechercher dans l'application</label>
+                        <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </div>
+                        <input id="global-search" class="block w-64 bg-blue-50 py-2.5 pl-10 pr-4 border border-blue-200 rounded-full leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition duration-150 ease-in-out min-h-[44px]" placeholder="Rechercher..." type="search" aria-label="Rechercher">
+                    </div>
+
+                    <!-- Notifications -->
+                    <button class="relative p-2.5 text-neutral-500 hover:text-primary-600 transition-colors rounded-lg hover:bg-blue-50 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Notifications" title="Notifications">
+                        <i class="far fa-bell text-xl" aria-hidden="true"></i>
+                        <span class="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true"></span>
+                    </button>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm" aria-label="Profil utilisateur">
+                            <span id="user-initials">U</span>
+                        </div>
+                        <span id="user-name" class="hidden md:block text-sm font-semibold text-neutral-700 min-w-[120px]">Chargement...</span>
+                        <button onclick="logout()" class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5" aria-label="Déconnexion" title="Déconnexion">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                            <span class="hidden lg:inline">Déconnexion</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Menu mobile -->
+                    <div class="sm:hidden ml-2">
+                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Menu mobile déroulant -->
+            <div id="mobile-menu" class="hidden sm:hidden border-t-2 border-blue-100 bg-white shadow-lg">
+                <div class="px-4 pt-3 pb-4 space-y-1">
+                    <a href="dashboard.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-chart-line text-neutral-500" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="rfq.html" class="bg-gradient-to-r from-blue-50 to-primary-50 border-l-4 border-primary-500 text-primary-700 block px-4 py-3 rounded-lg text-base font-semibold min-h-[44px] flex items-center gap-3 transition-all">
+                        <i class="fas fa-file-contract text-primary-600" aria-hidden="true"></i>
+                        <span>RFQ</span>
+                    </a>
+                    <a href="devis.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-invoice-dollar text-neutral-500" aria-hidden="true"></i>
+                        <span>Devis</span>
+                    </a>
+                    <a href="commandes.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-shopping-cart text-neutral-500" aria-hidden="true"></i>
+                        <span>Commandes</span>
+                    </a>
+                    <a href="entreprises.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-building text-neutral-500" aria-hidden="true"></i>
+                        <span>Entreprises</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h1 class="hero-title"><i class="fas fa-file-alt"></i> Demandes de Devis (RFQ)</h1>
+            <p class="hero-description">Créez et suivez vos appels d'offres auprès des fournisseurs.</p>
+            <button class="btn btn-primary btn-lg" onclick="window.location.href='rfq-create.html'"><i class="fas fa-plus"></i> Nouvelle RFQ</button>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <!-- Total -->
+            <div class="stat-card">
+                <i class="fas fa-clipboard-list" style="font-size: 2rem; color: var(--color-primary); margin-bottom: 0.5rem;"></i>
+                <div class="stat-value" id="stat-total">-</div>
+                <div class="stat-label">Total RFQ</div>
+            </div>
+
+            <!-- En Cours -->
+            <div class="stat-card">
+                <i class="fas fa-clock" style="font-size: 2rem; color: var(--color-primary-light); margin-bottom: 0.5rem;"></i>
+                <div class="stat-value" id="stat-en-cours">-</div>
+                <div class="stat-label">En cours</div>
+            </div>
+
+            <!-- Envoyées -->
+            <div class="stat-card">
+                <i class="fas fa-paper-plane" style="font-size: 2rem; color: var(--color-warning); margin-bottom: 0.5rem;"></i>
+                <div class="stat-value" id="stat-envoye">-</div>
+                <div class="stat-label">Envoyées</div>
+            </div>
+
+            <!-- Clôturées -->
+            <div class="stat-card">
+                <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--color-success); margin-bottom: 0.5rem;"></i>
+                <div class="stat-value" id="stat-cloture">-</div>
+                <div class="stat-label">Clôturées</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-clipboard-list"></i> Liste des RFQ</h2>
+                <button class="btn btn-primary" onclick="window.location.href='rfq-create.html'"><i class="fas fa-plus"></i> Nouvelle RFQ</button>
+            </div>
+            
+            <div class="search-bar">
+                <div class="search-input">
+                    <input type="text" id="rfq-search" placeholder="Rechercher par numéro, fournisseur..." 
+                           onkeyup="filterRFQ()">
+                </div>
+                <div class="filter-group">
+                    <select class="filter-select" id="rfq-filter-statut" onchange="filterRFQ()">
+                        <option value="">Tous les statuts</option>
+                        <option value="brouillon">Brouillon</option>
+                        <option value="envoye">Envoyé</option>
+                        <option value="en_cours">En cours</option>
+                        <option value="cloture">Clôturé</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Numéro</th>
+                            <th>Destinataire</th>
+                            <th>Description</th>
+                            <th>Date d'émission</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rfq-table-body">
+                        <tr><td colspan="6" class="loading">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <script>
         checkAuth();
 
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+        // L'initialisation du nom d'utilisateur sera faite plus bas pour inclure les initiales
 
         let allRFQ = [];
 
@@ -429,7 +431,11 @@
         const formatDateFunc = typeof formatDate === 'function' ? formatDate : (dateString) => {
             if (!dateString) return '-';
             try {
-                return new Date(dateString).toLocaleDateString('fr-FR');
+                return new Date(dateString).toLocaleDateString('fr-FR', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
             } catch (e) {
                 return dateString;
             }
@@ -455,14 +461,14 @@
             return labels[status] || status;
         };
 
-        const getStatusIcon = (status) => {
-            const icons = {
-                'brouillon': '<i class="fas fa-edit"></i>',
-                'envoye': '<i class="fas fa-upload"></i>',
-                'en_cours': '<i class="fas fa-clock"></i>',
-                'cloture': '<i class="fas fa-check"></i>'
+        const getStatusConfig = (status) => {
+            const configs = {
+                'brouillon': { class: 'bg-gray-100 text-gray-800', icon: 'fa-edit', label: 'Brouillon' },
+                'envoye': { class: 'bg-yellow-100 text-yellow-800', icon: 'fa-paper-plane', label: 'Envoyé' },
+                'en_cours': { class: 'bg-blue-100 text-blue-800', icon: 'fa-clock', label: 'En cours' },
+                'cloture': { class: 'bg-green-100 text-green-800', icon: 'fa-check-circle', label: 'Clôturé' }
             };
-            return icons[status] || '<i class="fas fa-clipboard-list"></i>';
+            return configs[status] || { class: 'bg-gray-100 text-gray-800', icon: 'fa-question', label: status };
         };
 
         async function loadRFQ() {
@@ -506,72 +512,72 @@
             const cloture = rfqs.filter(r => r.statut === 'cloture').length;
             const envoye = rfqs.filter(r => r.statut === 'envoye').length;
 
-            document.getElementById('stat-total').textContent = total;
-            document.getElementById('stat-en-cours').textContent = enCours;
-            document.getElementById('stat-cloture').textContent = cloture;
-            document.getElementById('stat-envoye').textContent = envoye;
+            const totalEl = document.getElementById('stat-total');
+            const enCoursEl = document.getElementById('stat-en-cours');
+            const clotureEl = document.getElementById('stat-cloture');
+            const envoyeEl = document.getElementById('stat-envoye');
+
+            if (totalEl) totalEl.textContent = total;
+            if (enCoursEl) enCoursEl.textContent = enCours;
+            if (clotureEl) clotureEl.textContent = cloture;
+            if (envoyeEl) envoyeEl.textContent = envoye;
         }
 
         function displayRFQ(rfqs) {
-            const grid = document.getElementById('rfq-grid');
+            const tbody = document.getElementById('rfq-table-body');
             
-            if (!grid) {
-                console.error('rfq-grid non trouvé');
+            if (!tbody) {
+                console.error('rfq-table-body non trouvé');
                 return;
             }
 
             if (!rfqs || rfqs.length === 0) {
-                grid.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1 / -1;">
-                        <div class="empty-state-icon"><i class="fas fa-clipboard-list"></i></div>
-                        <div class="empty-state-title">Aucune RFQ</div>
-                        <div class="empty-state-text">Créez votre première demande de devis pour commencer</div>
-                        <button class="btn-create-rfq" onclick="window.location.href='rfq-create.html'" style="margin: 1.5rem auto 0;">
-                            Créer une RFQ
-                        </button>
-                    </div>
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-state-icon"><i class="fas fa-clipboard-list"></i></div>
+                                <div class="empty-state-title">Aucune RFQ</div>
+                                <div class="empty-state-text">Commencez par créer une nouvelle demande de devis</div>
+                                <div style="margin-top: 1.5rem;">
+                                    <button onclick="window.location.href='rfq-create.html'" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Créer une RFQ
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
                 `;
                 return;
             }
 
-            grid.innerHTML = rfqs.map((rfq, index) => `
-                <div class="rfq-card" style="animation-delay: ${index * 0.1}s">
-                    <div class="rfq-card-header">
-                        <div>
-                            <div class="rfq-card-number">${rfq.numero || 'N/A'}</div>
-                            <div class="rfq-card-date">${formatDateFunc(rfq.date_emission)}</div>
-                        </div>
-                        <span class="rfq-card-badge badge ${getStatusBadgeFunc(rfq.statut)}">
-                            ${getStatusIcon(rfq.statut)} ${getStatusLabelFunc(rfq.statut)}
-                        </span>
-                    </div>
-                    <div class="rfq-card-body">
-                        <div class="rfq-card-info">
-                            <span class="rfq-card-info-icon"><i class="fas fa-building"></i></span>
-                            <span><strong>Destinataire:</strong> ${rfq.destinataire_nom || 'Non spécifié'}</span>
-                        </div>
-                        ${rfq.description ? `
-                        <div class="rfq-card-info">
-                            <span class="rfq-card-info-icon"><i class="fas fa-file"></i></span>
-                            <span style="overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
-                                ${rfq.description}
-                            </span>
-                        </div>
-                        ` : ''}
-                    </div>
-                    <div class="rfq-card-footer">
-                        <button class="rfq-card-btn rfq-card-btn-primary" onclick="viewRFQ(${rfq.id})">
-                            <i class="fas fa-eye"></i> Voir
-                        </button>
-                        <button class="rfq-card-btn rfq-card-btn-secondary" onclick="editRFQ(${rfq.id})">
-                            <i class="fas fa-edit"></i> Modifier
-                        </button>
-                        <button class="rfq-card-btn rfq-card-btn-danger" onclick="deleteRFQ(${rfq.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+            tbody.innerHTML = rfqs.map(rfq => {
+                const status = getStatusConfig(rfq.statut);
+                const badgeClass = getStatusBadgeFunc(rfq.statut);
+                
+                return `
+                    <tr>
+                        <td><strong style="color: var(--color-primary);">${rfq.numero || 'N/A'}</strong></td>
+                        <td>${rfq.destinataire_nom || 'Non spécifié'}</td>
+                        <td>${rfq.description ? (rfq.description.length > 50 ? rfq.description.substring(0, 50) + '...' : rfq.description) : '-'}</td>
+                        <td>${formatDateFunc(rfq.date_emission)}</td>
+                        <td><span class="badge ${badgeClass}">${getStatusLabelFunc(rfq.statut)}</span></td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm" onclick="viewRFQ(${rfq.id})" title="Voir détails">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${rfq.statut === 'brouillon' ? `
+                            <button class="btn btn-primary btn-sm" onclick="editRFQ(${rfq.id})" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            ` : ''}
+                            <button class="btn btn-danger btn-sm" onclick="deleteRFQ(${rfq.id})" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function filterRFQ() {
@@ -604,25 +610,40 @@
         }
 
         function deleteRFQ(id) {
-            confirmAction(
-                'Êtes-vous sûr de vouloir supprimer cette RFQ ?',
-                async () => {
-                    try {
-                        showLoading('Suppression...');
-                        const response = await apiCall(`/api/rfq/${id}`, { method: 'DELETE' });
+            if (typeof confirmAction === 'function') {
+                confirmAction(
+                    'Êtes-vous sûr de vouloir supprimer cette RFQ ?',
+                    async () => {
+                        try {
+                            showLoading('Suppression...');
+                            const response = await apiCall(`/api/rfq/${id}`, { method: 'DELETE' });
+                            if (response && response.ok) {
+                                Toast.success('RFQ supprimée avec succès');
+                                loadRFQ();
+                            } else {
+                                Toast.error('Erreur lors de la suppression');
+                            }
+                        } catch (error) {
+                            Toast.error('Erreur de connexion');
+                        } finally {
+                            hideLoading();
+                        }
+                    }
+                );
+            } else {
+                if (confirm('Êtes-vous sûr de vouloir supprimer cette RFQ ?')) {
+                    apiCall(`/api/rfq/${id}`, { method: 'DELETE' }).then(response => {
                         if (response && response.ok) {
                             Toast.success('RFQ supprimée avec succès');
                             loadRFQ();
                         } else {
                             Toast.error('Erreur lors de la suppression');
                         }
-                    } catch (error) {
+                    }).catch(() => {
                         Toast.error('Erreur de connexion');
-                    } finally {
-                        hideLoading();
-                    }
+                    });
                 }
-            );
+            }
         }
 
         // Charger les RFQ au chargement de la page
@@ -634,6 +655,38 @@
         // Fallback si DOMContentLoaded a déjà été déclenché
         if (document.readyState !== 'loading') {
             loadRFQ();
+        }
+        
+        // Menu mobile
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const button = document.getElementById('mobile-menu-button');
+            if (menu && button) {
+                const isHidden = menu.classList.contains('hidden');
+                menu.classList.toggle('hidden');
+                button.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+                const icon = button.querySelector('i');
+                if (icon) {
+                    if (isHidden) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                }
+            }
+        }
+        window.toggleMobileMenu = toggleMobileMenu;
+        
+        // Initialiser le nom d'utilisateur et les initiales (user déjà déclaré plus haut)
+        const userNameEl = document.getElementById('user-name');
+        const userInitialsEl = document.getElementById('user-initials');
+        if (userNameEl) {
+            userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || 'Utilisateur';
+        }
+        if (userInitialsEl && user.prenom) {
+            userInitialsEl.textContent = (user.prenom.charAt(0) + (user.nom ? user.nom.charAt(0) : '')).toUpperCase();
         }
     </script>
 </body>

@@ -1,1134 +1,1368 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="h-full bg-gray-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - SilyProcure</title>
+    
+    <!-- CSS Charte Graphique Pro Confiance -->
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <link rel="stylesheet" href="css/animations.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#E0E7FF',
+                            100: '#DBEAFE',
+                            400: '#60A5FA',
+                            500: '#3B82F6',
+                            600: '#2563EB',
+                            700: '#1D4ED8',
+                            900: '#1E3A8A',
+                        },
+                        success: {
+                            500: '#10B981',
+                        },
+                        neutral: {
+                            500: '#64748B',
+                            600: '#475569',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        /* --- VARIABLES & RESET --- */
-        /* Utilise les variables CSS de la charte graphique Hapag-Lloyd */
+        /* Variables CSS selon la charte Pro Confiance */
         :root {
-            --primary: var(--color-primary, #00387A); /* Bleu foncé Hapag-Lloyd */
-            --primary-dark: var(--color-primary-dark, #002855);
-            --primary-light: var(--color-primary-light, #0052A3);
-            --secondary: var(--color-success, #00A651); /* Vert */
-            --accent: var(--color-accent, #FF6600); /* Orange Hapag-Lloyd */
-            --accent-light: var(--color-accent-light, #FF8533);
-            --accent-dark: var(--color-accent-dark, #E55A00);
-            --bg-color: var(--color-background-light, #F9FAFB);
-            --glass-bg: rgba(255, 255, 255, 0.85);
-            --glass-border: rgba(0, 56, 122, 0.1);
-            --text-main: var(--color-neutral-dark, #374151);
-            --text-muted: var(--color-neutral, #6B7280);
-            --card-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.1));
+            --color-primary-dark: #1E3A8A;
+            --color-primary: #3B82F6;
+            --color-primary-light: #60A5FA;
+            --color-success: #10B981;
+            --color-neutral: #64748B;
+            --color-neutral-dark: #475569;
+            --color-background: #FFFFFF;
+            --color-background-light: #F8FAFC;
+            --color-background-blue: #E0E7FF;
         }
-
-        body {
-            font-family: 'Inter', 'Outfit', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow-x: hidden;
-            min-height: 100vh;
+        
+        body { 
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-background-light);
+            color: var(--color-neutral-dark);
+            line-height: 1.5;
         }
-
-        /* --- CANVAS BACKGROUND --- */
-        #particleCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: linear-gradient(120deg, var(--color-background-light, #F9FAFB) 0%, var(--color-background-blue, #E0E7FF) 100%);
+        
+        /* Navbar selon charte */
+        nav {
+            background: var(--color-background) !important;
+            border-bottom: 2px solid var(--color-background-blue);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
-
-        /* --- GLASSMORPHISM CARD --- */
-        .glass {
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            box-shadow: var(--card-shadow);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        
+        /* Logo avec couleur charte */
+        .logo-primary {
+            color: var(--color-primary) !important;
         }
-
-        .glass:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
+        
+        /* Navigation active */
+        nav a.border-primary-500 {
+            border-bottom-color: var(--color-primary) !important;
+            color: var(--color-primary-dark) !important;
+            font-weight: 600;
         }
-
-        /* --- STATS GRID --- */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+        
+        /* Boutons selon charte */
+        button.bg-primary-600,
+        button.bg-primary-500 {
+            background-color: var(--color-primary) !important;
         }
-
-        .stat-card {
-            padding: 1.5rem;
+        
+        button.bg-primary-600:hover,
+        button.bg-primary-500:hover {
+            background-color: var(--color-primary-dark) !important;
+        }
+        
+        /* Cartes KPI avec style charte amélioré */
+        .kpi-card {
+            background: linear-gradient(135deg, var(--color-background) 0%, #FAFBFC 100%);
+            border-left: 4px solid var(--color-primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            cursor: pointer;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            box-shadow: var(--card-shadow);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-icon {
+        
+        .kpi-card::before {
+            content: '';
             position: absolute;
-            top: 1.5rem;
-            right: 1.5rem;
-            width: 48px;
-            height: 48px;
-            background: rgba(255, 102, 0, 0.1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            color: var(--accent);
-        }
-
-        .stat-label { 
-            font-size: 0.9rem; 
-            color: var(--text-muted); 
-            font-weight: 500; 
-            margin-bottom: 0.5rem; 
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+            opacity: 0;
+            transition: opacity 0.3s;
         }
         
-        .stat-value { 
-            font-size: 2.2rem; 
-            font-weight: 700; 
-            color: var(--text-main); 
-            line-height: 1; 
-            margin-bottom: 0.5rem; 
+        .kpi-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
         }
         
-        .stat-label-detail {
-            font-size: 0.85rem;
-            color: var(--text-muted);
+        .kpi-card:hover::before {
+            opacity: 1;
         }
-
-        .stat-change {
-            font-size: 0.85rem;
+        
+        .kpi-card.blue { 
+            border-left-color: var(--color-primary);
+        }
+        .kpi-card.blue::before {
+            background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+        }
+        
+        .kpi-card.green { 
+            border-left-color: var(--color-success);
+        }
+        .kpi-card.green::before {
+            background: linear-gradient(90deg, var(--color-success), #34D399);
+        }
+        
+        .kpi-card.yellow { 
+            border-left-color: #F59E0B;
+        }
+        .kpi-card.yellow::before {
+            background: linear-gradient(90deg, #F59E0B, #FBBF24);
+        }
+        
+        .kpi-card.purple { 
+            border-left-color: #8B5CF6;
+        }
+        .kpi-card.purple::before {
+            background: linear-gradient(90deg, #8B5CF6, #A78BFA);
+        }
+        
+        /* Graphiques avec couleurs charte améliorées */
+        .chart-container {
+            background: linear-gradient(135deg, var(--color-background) 0%, #FAFBFC 100%);
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .chart-container:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+            transform: translateY(-2px);
+        }
+        
+        /* Sections avec espacement charte */
+        .section-spacing {
+            margin-bottom: 32px;
+        }
+        
+        /* Titres selon charte améliorés */
+        h2 {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--color-primary-dark);
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+        
+        h3 {
+            font-size: 20px;
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--color-primary-dark);
+            letter-spacing: -0.01em;
+        }
+        
+        /* Amélioration des tableaux */
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        table thead th {
+            background: linear-gradient(135deg, #F0F4F8 0%, #E8F0F8 100%);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 11px;
+        }
+        
+        table tbody tr {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        table tbody tr:hover {
+            background: linear-gradient(90deg, #F8FAFC 0%, #F0F7FF 100%);
+            transform: scale(1.01);
+        }
+        
+        /* Amélioration des badges */
+        .badge {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            padding: 4px 8px;
-            border-radius: 20px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
         }
         
-        .trend-up { 
-            background: rgba(0, 166, 81, 0.1); 
-            color: var(--secondary); 
+        /* Animations selon charte */
+        .fade-in { 
+            animation: fadeIn 0.5s ease-out forwards; 
+            opacity: 0; 
+            transform: translateY(10px); 
         }
         
-        .trend-down { 
-            background: rgba(230, 0, 18, 0.1); 
-            color: var(--color-danger, #E60012); 
-        }
-
-        /* --- CHARTS AREA --- */
-        .charts-section {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        @media(max-width: 900px) { 
-            .charts-section { 
-                grid-template-columns: 1fr; 
+        @keyframes fadeIn { 
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
             } 
         }
-
-        .chart-card { 
-            padding: 1.5rem; 
-            height: 400px; 
-            display: flex; 
-            flex-direction: column; 
+        
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        .delay-500 { animation-delay: 500ms; }
+        
+        /* Transitions selon charte (200-300ms, ease-in-out) */
+        * {
+            transition: all 0.2s ease-in-out;
         }
         
-        .card-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            margin-bottom: 1.5rem; 
+        /* Custom Scrollbar amélioré */
+        ::-webkit-scrollbar { 
+            width: 8px; 
+            height: 8px; 
+        }
+        ::-webkit-scrollbar-track { 
+            background: #F1F5F9; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(180deg, #CBD5E1, #94A3B8); 
+            border-radius: 4px;
+            border: 2px solid #F1F5F9;
+        }
+        ::-webkit-scrollbar-thumb:hover { 
+            background: linear-gradient(180deg, #94A3B8, #64748B); 
         }
         
-        .card-title { 
-            font-weight: 600; 
-            font-size: 1.1rem; 
-            color: var(--text-main);
-        }
-        
-        .chart-container { 
-            flex: 1; 
-            position: relative; 
-            width: 100%; 
-            overflow: hidden; 
-        }
-
-        /* --- LISTS --- */
-        .lists-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .list-item {
-            display: flex;
-            align-items: center;
-            padding: 1rem;
-            border-bottom: 1px solid rgba(0,0,0,0.03);
-            transition: background 0.2s;
-        }
-        
-        .list-item:hover { 
-            background: rgba(255,255,255,0.3); 
-        }
-        
-        .avatar {
-            width: 40px; 
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-light), var(--primary));
-            color: white;
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            font-weight: bold;
-            margin-right: 1rem;
-        }
-        
-        .list-info h4 { 
-            font-size: 0.95rem; 
-            font-weight: 600; 
-            margin: 0;
-        }
-        
-        .list-info p { 
-            font-size: 0.8rem; 
-            color: var(--text-muted); 
-            margin: 0.25rem 0 0 0;
-        }
-        
+        /* Amélioration des badges de statut */
         .status-badge {
-            margin-left: auto;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        
-        .bg-new { 
-            background: var(--accent); 
-            color: white; 
-        }
-        
-        .bg-process { 
-            background: var(--color-background-blue, #E0E7FF); 
-            color: var(--primary); 
-        }
-
-        /* --- OVERRIDE CONTAINER --- */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        /* S'assurer que le container dans main-content est bien positionné */
-        .main-content .container {
-            margin-left: 0;
-            margin-right: 0;
-        }
-
-        /* --- PAGE HEADER --- */
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .page-header h1 {
-            font-size: 2rem;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 11px;
             font-weight: 700;
-            background: linear-gradient(45deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn {
-            background: white;
-            border: none;
-            padding: 0.7rem 1.2rem;
-            border-radius: 50px;
-            cursor: pointer;
-            font-family: inherit;
-            font-weight: 600;
-            color: var(--primary);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
-        .btn:hover { 
-            background: var(--accent); 
-            color: white; 
-            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
-        }
-
-        /* --- LOADING SPINNER --- */
-        .fa-spin { 
-            animation: fa-spin 2s infinite linear; 
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
-        @keyframes fa-spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
+        /* Amélioration des icônes dans les cartes */
+        .kpi-icon {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
         }
-
-        /* --- EMPTY STATE --- */
-        .empty-state {
-            padding: 2rem;
-            text-align: center;
-            color: var(--text-muted);
+        
+        .kpi-card:hover .kpi-icon {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
-
-        .empty-state-text {
-            font-size: 0.9rem;
+        
+        /* Liens avec couleur charte */
+        a {
+            color: var(--color-primary);
+        }
+        
+        a:hover {
+            color: var(--color-primary-dark);
+        }
+        
+        /* Amélioration de l'ergonomie */
+        section {
+            position: relative;
+        }
+        
+        section::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--color-background-blue), transparent);
+            opacity: 0.5;
+        }
+        
+        section:first-of-type::before {
+            display: none;
+        }
+        
+        /* Amélioration de la navigation */
+        nav a {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        /* Menu desktop toujours visible sur écrans moyens et grands */
+        @media (min-width: 640px) {
+            nav[aria-label="Menu de navigation"] {
+                display: flex !important;
+            }
+        }
+        
+        /* Menu mobile amélioré */
+        #mobile-menu {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        #mobile-menu.hidden {
+            display: none !important;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Amélioration de la visibilité du menu */
+        nav[aria-label="Menu de navigation"] a {
+            position: relative;
+        }
+        
+        nav[aria-label="Menu de navigation"] a:hover {
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: 4px 4px 0 0;
+        }
+        
+        /* Amélioration des zones tactiles */
+        button, .kpi-card, a[onclick] {
+            min-height: 44px;
+            touch-action: manipulation;
+        }
+        
+        /* Amélioration du flux de lecture */
+        main {
+            max-width: 1400px;
+        }
+        
+        /* Zones visuelles distinctes */
+        .section-primary {
+            background: linear-gradient(135deg, #FAFBFC 0%, #F8FAFC 100%);
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+        
+        /* Amélioration de la hiérarchie */
+        .kpi-section {
+            background: var(--color-background);
+            padding: 0;
+            border-radius: 0;
+        }
+        
+        .charts-section {
+            background: transparent;
         }
     </style>
 </head>
-<body>
-    <!-- CANVAS D'ARRIÈRE-PLAN -->
-    <canvas id="particleCanvas"></canvas>
+<body class="h-full flex flex-col">
 
-    <script src="js/auth.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/components.js"></script>
-    <script src="js/sidebar.js"></script>
+    <!-- Navbar Moderne selon charte Pro Confiance -->
+    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo & Nav Links -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
+                        <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
+                    </div>
+                    <nav class="hidden sm:ml-6 sm:flex sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
+                        <a href="dashboard.html" class="border-primary-500 text-primary-900 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold min-h-[44px] transition-colors whitespace-nowrap" aria-current="page">
+                            <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="rfq.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>RFQ</span>
+                        </a>
+                        <a href="devis.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Devis</span>
+                        </a>
+                        <a href="commandes.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Commandes</span>
+                        </a>
+                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Entreprises</span>
+                        </a>
+                    </nav>
+                </div>
 
-    <div class="container">
-        <div class="page-header">
-            <h1><i class="fas fa-cubes"></i> Tableau de bord</h1>
-            <button class="btn" onclick="refreshDashboard()" id="refreshBtn">
-                <i class="fas fa-sync-alt" id="refreshIcon"></i> Actualiser
-            </button>
-        </div>
+                <!-- Search Bar & Profile -->
+                <div class="flex items-center gap-4">
+                    <!-- Global Search -->
+                    <div class="hidden lg:block relative text-neutral-500 focus-within:text-primary-600" role="search">
+                        <label for="global-search" class="sr-only">Rechercher dans l'application</label>
+                        <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </div>
+                        <input id="global-search" class="block w-64 bg-blue-50 py-2.5 pl-10 pr-4 border border-blue-200 rounded-full leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition duration-150 ease-in-out min-h-[44px]" placeholder="Rechercher..." type="search" aria-label="Rechercher">
+                    </div>
 
-        <div class="stats-grid" id="stats-grid">
-            <div class="loading">Chargement des statistiques...</div>
-        </div>
+                    <!-- Notifications -->
+                    <button class="relative p-2.5 text-neutral-500 hover:text-primary-600 transition-colors rounded-lg hover:bg-blue-50 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Notifications" title="Notifications">
+                        <i class="far fa-bell text-xl" aria-hidden="true"></i>
+                        <span class="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true"></span>
+                    </button>
 
-        <div class="charts-section">
-            <div class="glass chart-card">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-chart-line"></i> Évolution des commandes</div>
-                    <select id="chartPeriod" style="border:none; background:transparent; font-family:'Outfit'; cursor:pointer; font-weight: 500; color: var(--primary);" onchange="updateChartPeriod()">
-                        <option value="6">6 derniers mois</option>
-                        <option value="12">Cette année</option>
-                    </select>
-                </div>
-                <div class="chart-container">
-                    <canvas id="chart-commandes"></canvas>
-                </div>
-            </div>
-
-            <div class="glass chart-card">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-chart-pie"></i> Répartition des RFQ</div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="chart-rfq"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="lists-section">
-            <div class="glass" style="padding: 1.5rem;">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-star"></i> Top 5 Fournisseurs</div>
-                </div>
-                <div id="top-fournisseurs">
-                    <div class="loading">Chargement...</div>
-                </div>
-            </div>
-
-            <div class="glass" style="padding: 1.5rem;">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-clock"></i> Activité récente</div>
-                </div>
-                <div id="recent-activity">
-                    <div class="loading">Chargement...</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="lists-section" style="margin-top: 1.5rem;">
-            <div class="glass" style="padding: 1.5rem;">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-tachometer-alt"></i> Vue d'ensemble</div>
-                </div>
-                <div id="overview-stats">
-                    <div class="loading">Chargement...</div>
-                </div>
-            </div>
-
-            <div class="glass" style="padding: 1.5rem;">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-chart-bar"></i> Comparaison mensuelle</div>
-                </div>
-                <div id="comparison-stats">
-                    <div class="loading">Chargement...</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section Messages de Contact -->
-        <div style="margin-top: 2rem;">
-            <div class="glass" style="padding: 1.5rem;">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-envelope"></i> Messages de Contact</div>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button class="btn" onclick="loadContactMessages('non_lu')" title="Non lus" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-                            <i class="fas fa-envelope"></i> Non lus
+                    <!-- Profile Dropdown -->
+                    <div class="relative flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm" aria-label="Profil utilisateur">
+                            <span id="user-initials">U</span>
+                        </div>
+                        <span id="user-name" class="hidden md:block text-sm font-semibold text-neutral-700 min-w-[120px]">Chargement...</span>
+                        <button onclick="logout()" class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5" aria-label="Déconnexion" title="Déconnexion">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                            <span class="hidden lg:inline">Déconnexion</span>
                         </button>
-                        <button class="btn" onclick="loadContactMessages('tous')" title="Tous" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-                            <i class="fas fa-list"></i> Tous
+                    </div>
+                    
+                    <!-- Menu mobile -->
+                    <div class="sm:hidden ml-2">
+                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
+                            <i class="fas fa-bars text-xl"></i>
                         </button>
                     </div>
                 </div>
-                <div id="contact-messages-container">
-                    <div class="loading">Chargement des messages...</div>
+            </div>
+            <!-- Menu mobile déroulant -->
+            <div id="mobile-menu" class="hidden sm:hidden border-t-2 border-blue-100 bg-white shadow-lg">
+                <div class="px-4 pt-3 pb-4 space-y-1">
+                    <a href="dashboard.html" class="bg-gradient-to-r from-blue-50 to-primary-50 border-l-4 border-primary-500 text-primary-700 block px-4 py-3 rounded-lg text-base font-semibold min-h-[44px] flex items-center gap-3 transition-all">
+                        <i class="fas fa-chart-line text-primary-600" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="rfq.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-contract text-neutral-500" aria-hidden="true"></i>
+                        <span>RFQ</span>
+                    </a>
+                    <a href="devis.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-invoice-dollar text-neutral-500" aria-hidden="true"></i>
+                        <span>Devis</span>
+                    </a>
+                    <a href="commandes.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-shopping-cart text-neutral-500" aria-hidden="true"></i>
+                        <span>Commandes</span>
+                    </a>
+                    <a href="entreprises.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-building text-neutral-500" aria-hidden="true"></i>
+                        <span>Entreprises</span>
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Header & Quick Actions -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8 border-b border-blue-100 pb-6">
+            <div>
+                <h2 class="text-3xl font-bold leading-tight text-primary-900 sm:text-4xl">
+                    Tableau de bord
+                </h2>
+                <p class="mt-2 text-base text-neutral-600 font-medium">
+                    Bienvenue, voici un aperçu complet de vos activités d'achat
+                </p>
+            </div>
+            
+            <!-- Quick Actions Toolbar -->
+            <div class="flex flex-wrap gap-3">
+                <button onclick="window.location.href='rfq-create.html'" class="inline-flex items-center px-5 py-2.5 border border-transparent shadow-lg text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all transform hover:scale-105 hover:shadow-xl">
+                    <i class="fas fa-plus mr-2"></i> Nouvelle RFQ
+                </button>
+                <button onclick="window.location.href='entreprises.html'" class="inline-flex items-center px-5 py-2.5 border-2 border-primary-200 shadow-sm text-sm font-semibold rounded-xl text-primary-700 bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-primary-50 hover:border-primary-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
+                    <i class="fas fa-user-plus mr-2 text-primary-500"></i> Fournisseur
+                </button>
+                <button onclick="refreshDashboard()" class="inline-flex items-center justify-center p-2.5 border-2 border-primary-200 shadow-sm text-sm font-semibold rounded-xl text-primary-700 bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-primary-50 hover:border-primary-300 focus:outline-none transition-all" title="Actualiser">
+                    <i class="fas fa-sync-alt text-primary-500"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Cards - Zone Principale -->
+        <section class="kpi-section mb-10">
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            
+            <!-- Commandes -->
+            <div class="kpi-card blue bg-white overflow-hidden rounded-2xl border border-blue-100 cursor-pointer fade-in delay-100" onclick="window.location.href='commandes.html'">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-5">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-sm kpi-icon">
+                                <i class="fas fa-shopping-cart text-primary-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm font-semibold text-neutral-600 uppercase tracking-wide">Commandes</span>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200">
+                            +12%
+                        </span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-bold text-primary-900" id="stats-cmd-count">-</span>
+                        <span class="text-sm font-medium text-neutral-500 ml-1">totales</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dépenses & Budget -->
+            <div class="kpi-card green bg-white overflow-hidden rounded-2xl border border-blue-100 fade-in delay-200">
+                <div class="p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                            <div class="p-3 bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-sm kpi-icon">
+                                <i class="fas fa-money-bill-wave text-success-600 text-xl"></i>
+                            </div>
+                        <span class="text-sm font-semibold text-neutral-600 uppercase tracking-wide">Dépenses (Mois)</span>
+                    </div>
+                    <div class="mt-2">
+                        <span class="text-3xl font-bold text-primary-900 block mb-4" id="stats-amount">-</span>
+                        <!-- Budget Bar -->
+                        <div class="mt-4 relative">
+                            <div class="flex mb-2 items-center justify-between">
+                                <div class="text-right w-full">
+                                    <span class="text-xs font-bold inline-block text-success-600" id="budget-percent">
+                                        75% du budget
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="overflow-hidden h-2.5 mb-1 text-xs flex rounded-full bg-green-100 shadow-inner">
+                                <div style="width: 75%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-success-500 to-emerald-500 rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RFQ -->
+            <div class="kpi-card yellow bg-white overflow-hidden rounded-2xl border border-blue-100 cursor-pointer fade-in delay-300" onclick="window.location.href='rfq.html'">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-5">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 bg-gradient-to-br from-yellow-50 to-amber-100 rounded-xl shadow-sm kpi-icon">
+                                <i class="fas fa-file-contract text-yellow-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm font-semibold text-neutral-600 uppercase tracking-wide">Appels d'offres</span>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-700 border border-yellow-200">
+                            Actif
+                        </span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-bold text-primary-900" id="stats-rfq-count">-</span>
+                        <span class="text-sm font-medium text-neutral-500 ml-1">en cours</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fournisseurs -->
+            <div class="kpi-card purple bg-white overflow-hidden rounded-2xl border border-blue-100 cursor-pointer fade-in delay-400" onclick="window.location.href='entreprises.html'">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-5">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 bg-gradient-to-br from-purple-50 to-violet-100 rounded-xl shadow-sm kpi-icon">
+                                <i class="fas fa-building text-purple-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm font-semibold text-neutral-600 uppercase tracking-wide">Fournisseurs</span>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-bold text-primary-900" id="stats-supplier-count">-</span>
+                        <span class="text-sm font-medium text-neutral-500 ml-1">actifs</span>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </section>
+
+        <!-- Charts Grid 1: Finances & RFQ - Graphiques Principaux -->
+        <section class="charts-section mb-10">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Main Chart: Evolution des achats -->
+            <div class="chart-container bg-white rounded-2xl p-8 lg:col-span-2 fade-in">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h3 class="text-xl font-bold text-primary-900 mb-1">Évolution des Achats</h3>
+                        <p class="text-sm text-neutral-500">6 derniers mois</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-100 to-primary-100 text-primary-800 border border-primary-200">
+                            <span class="w-2.5 h-2.5 bg-primary-500 rounded-full mr-2 shadow-sm"></span>
+                            Commandes
+                        </span>
+                    </div>
+                </div>
+                <div class="relative h-80 w-full">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Doughnut Chart: RFQ Statut -->
+            <div class="chart-container bg-white rounded-2xl p-8 fade-in flex flex-col">
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-primary-900 mb-1">Statut des RFQ</h3>
+                    <p class="text-sm text-neutral-500">Répartition</p>
+                </div>
+                <div class="relative flex-1 flex items-center justify-center min-h-[320px]">
+                    <canvas id="rfqChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Grid 2: Categories & Secteurs - Graphiques Secondaires -->
+        <section class="charts-section mb-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 fade-in delay-500">
+            
+            <!-- Bar Chart: Catégories -->
+            <div class="chart-container bg-white rounded-2xl p-8">
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-primary-900 mb-1">Catégories les plus demandées</h3>
+                    <p class="text-sm text-neutral-500">Top 5</p>
+                </div>
+                <div class="relative h-80 w-full">
+                    <canvas id="categoriesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Polar Area Chart: Secteurs -->
+            <div class="chart-container bg-white rounded-2xl p-8">
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-primary-900 mb-1">Secteurs les plus sollicités</h3>
+                    <p class="text-sm text-neutral-500">Top 5</p>
+                </div>
+                <div class="relative h-80 w-full flex justify-center">
+                    <canvas id="sectorsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Activity & Notifications - Activité Récente -->
+        <section class="charts-section mb-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Dernières Commandes (Tableau Amélioré) -->
+            <div class="bg-white shadow-lg rounded-2xl overflow-hidden fade-in border border-blue-100">
+                <div class="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-50 to-primary-50 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-primary-900 mb-1">Commandes Récentes</h3>
+                        <p class="text-xs text-neutral-500">5 dernières commandes</p>
+                    </div>
+                    <a href="commandes.html" class="text-sm font-semibold text-primary-600 hover:text-primary-900 transition-colors flex items-center gap-1">
+                        Tout voir <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-blue-100">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-primary-900 uppercase tracking-wider">Réf</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-primary-900 uppercase tracking-wider">Fournisseur</th>
+                                <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-primary-900 uppercase tracking-wider">Montant</th>
+                                <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-primary-900 uppercase tracking-wider">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-blue-100" id="recent-orders-tbody">
+                            <!-- JS Injection -->
+                            <tr><td colspan="4" class="px-6 py-8 text-center text-sm text-neutral-500">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="bg-white shadow-lg rounded-2xl overflow-hidden fade-in border border-blue-100">
+                <div class="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-50 to-primary-50 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-primary-900 mb-1">Derniers Messages</h3>
+                        <p class="text-xs text-neutral-500">Messages de contact</p>
+                    </div>
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-red-100 to-pink-100 text-red-700 border border-red-200" id="unread-count">0</span>
+                </div>
+                <ul class="divide-y divide-blue-100 overflow-y-auto max-h-[400px]" id="messages-list">
+                    <li class="p-8 text-center text-neutral-500 text-sm">Aucun message</li>
+                </ul>
+            </div>
+
+        </section>
+
+    </main>
 
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/components.js"></script>
-    <script src="js/notifications.js"></script>
     <script>
+        // ==========================================
+        // UTILITAIRES
+        // ==========================================
+
         // Vérifier l'authentification
         checkAuth();
 
-        // Afficher le nom de l'utilisateur
+        // Toast notifications
+        const Toast = {
+            success: (msg) => showToast(msg, 'bg-success-500'),
+            error: (msg) => showToast(msg, 'bg-red-500'),
+            info: (msg) => showToast(msg, 'bg-primary-500')
+        };
+
+        function showToast(msg, colorClass) {
+            const div = document.createElement('div');
+            div.className = `fixed bottom-4 right-4 ${colorClass} text-white px-6 py-3 rounded shadow-lg z-50 animate-bounce`;
+            div.innerHTML = `<span>${msg}</span>`;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 3000);
+        }
+
+        // formatCurrency est déjà défini dans app.js, mais on peut le redéfinir si nécessaire
+        if (typeof formatCurrency === 'undefined') {
+            function formatCurrency(val) {
+                if (!val && val !== 0) return '0 GNF';
+                return new Intl.NumberFormat('fr-FR', { 
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(val) + ' GNF';
+            }
+        }
+
+        // ==========================================
+        // LOGIQUE PRINCIPALE
+        // ==========================================
+
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const userNameElement = document.getElementById('user-name');
-        if (userNameElement) {
-            userNameElement.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+        const userNameEl = document.getElementById('user-name');
+        const userInitialsEl = document.getElementById('user-initials');
+        
+        if (userNameEl) {
+            userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || 'Utilisateur';
+        }
+        if (userInitialsEl) {
+            userInitialsEl.textContent = (user.prenom || user.nom || 'U').charAt(0).toUpperCase();
         }
 
-        let chartCommandes = null;
-        let chartRFQ = null;
-
-        // Charger les statistiques
-        async function loadStats() {
+        async function initDashboard() {
             try {
-                showLoading('Chargement des statistiques...');
-                const response = await apiCall('/api/dashboard/stats');
+                console.log('🔄 Initialisation du dashboard...');
                 
-                if (!response) {
-                    hideLoading();
-                    Toast.error('Impossible de charger les statistiques. Vérifiez votre connexion.');
-                    document.getElementById('stats-grid').innerHTML = '<div class="alert alert-error">Erreur de connexion</div>';
+                // Vérifier l'authentification
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    console.error('❌ Aucun token trouvé, redirection vers login');
+                    Toast.error('Veuillez vous connecter');
+                    setTimeout(() => window.location.href = 'index.html', 2000);
                     return;
                 }
                 
-                if (!response.ok) {
-                    hideLoading();
-                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
-                    Toast.error('Erreur: ' + (errorData.error || `Erreur ${response.status}`));
-                    document.getElementById('stats-grid').innerHTML = `<div class="alert alert-error">${errorData.error || 'Erreur lors du chargement'}</div>`;
-                    console.error('Erreur API stats:', errorData);
+                console.log('📡 Appel API /api/dashboard/stats...');
+                const statsRes = await apiCall('/api/dashboard/stats');
+                
+                if (!statsRes) {
+                    console.error('❌ apiCall a retourné null (probablement 401)');
+                    Toast.error('Session expirée. Redirection...');
+                    setTimeout(() => window.location.href = 'index.html', 2000);
                     return;
                 }
                 
-                const stats = await response.json();
-                hideLoading();
+                if (!statsRes.ok) {
+                    const errorText = await statsRes.text().catch(() => 'Erreur inconnue');
+                    console.error('❌ Erreur API stats:', {
+                        status: statsRes.status,
+                        statusText: statsRes.statusText,
+                        error: errorText
+                    });
+                    
+                    if (statsRes.status === 401) {
+                        Toast.error('Session expirée. Redirection...');
+                        setTimeout(() => window.location.href = 'index.html', 2000);
+                    } else if (statsRes.status === 500) {
+                        Toast.error('Erreur serveur. Vérifiez les logs du backend.');
+                    } else {
+                        Toast.error(`Erreur ${statsRes.status}: Impossible de charger les statistiques`);
+                    }
+                    return;
+                }
+                
+                console.log('✅ Réponse API reçue, parsing JSON...');
+                const stats = await statsRes.json();
+                console.log('📊 Statistiques reçues:', stats);
+                
+                // Update KPI Cards
+                const cmdCountEl = document.getElementById('stats-cmd-count');
+                const amountEl = document.getElementById('stats-amount');
+                const rfqCountEl = document.getElementById('stats-rfq-count');
+                const supplierCountEl = document.getElementById('stats-supplier-count');
+                
+                if (!cmdCountEl || !amountEl || !rfqCountEl || !supplierCountEl) {
+                    console.error('❌ Éléments DOM manquants pour les KPIs');
+                    Toast.error('Erreur: éléments de la page introuvables');
+                    return;
+                }
+                
+                console.log('📝 Mise à jour des KPIs...');
+                cmdCountEl.innerText = stats.commandes_total || 0;
+                amountEl.innerText = formatCurrency(stats.montant_mois || 0);
+                rfqCountEl.innerText = stats.rfq_en_cours || 0;
+                supplierCountEl.innerText = stats.fournisseurs_actifs || 0;
+                console.log('✅ KPIs mis à jour');
 
-                // Vérifier que stats est un objet valide
-                if (!stats || typeof stats !== 'object') {
-                    Toast.error('Format de données invalide');
-                    document.getElementById('stats-grid').innerHTML = '<div class="alert alert-error">Format de données invalide</div>';
-                    return;
-                }
+                // Init Charts
+                console.log('📊 Initialisation des graphiques...');
+                initCharts(stats);
 
-                // Afficher les cartes statistiques
-                displayStatCards(stats);
+                // Load Lists
+                console.log('📋 Chargement des listes...');
+                loadRecentOrders();
+                loadMessages();
                 
-                // Afficher les graphiques
-                displayCharts(stats);
-                
-                // Afficher les autres sections
-                displayTopFournisseurs(stats);
-                displayOverview(stats);
-                displayComparison(stats);
-                
+                console.log('✅ Dashboard initialisé avec succès');
+
             } catch (error) {
-                hideLoading();
-                Toast.error('Erreur lors du chargement des statistiques: ' + (error.message || 'Erreur inconnue'));
-                console.error('Erreur loadStats:', error);
-                document.getElementById('stats-grid').innerHTML = `<div class="alert alert-error">Erreur: ${error.message || 'Erreur inconnue'}</div>`;
+                console.error('❌ Erreur initDashboard:', error);
+                console.error('Stack:', error.stack);
+                Toast.error('Erreur initialisation dashboard: ' + (error.message || 'Erreur inconnue'));
             }
         }
 
-        function displayStatCards(stats) {
-            const statsGrid = document.getElementById('stats-grid');
+        function initCharts(stats) {
+            // Main Line Chart (Achats)
+            const ctxMain = document.getElementById('mainChart');
+            if (!ctxMain) return;
             
-            // Vérifier que stats est valide
-            if (!stats || typeof stats !== 'object') {
-                statsGrid.innerHTML = '<div class="alert alert-error">Données invalides</div>';
-                return;
-            }
+            const ctx = ctxMain.getContext('2d');
             
-            // Calculer l'évolution avec gestion des valeurs nulles/undefined
-            const montantMois = parseFloat(stats.montant_mois || 0);
-            const montantMoisDernier = parseFloat(stats.montant_mois_dernier || 0);
-            const evolutionMois = montantMoisDernier > 0 
-                ? ((montantMois - montantMoisDernier) / montantMoisDernier * 100).toFixed(1)
-                : (montantMois > 0 ? 100 : 0);
-            const evolutionClass = evolutionMois >= 0 ? 'positive' : 'negative';
-            const evolutionIcon = evolutionMois >= 0 ? '<i class="fas fa-arrow-up"></i>' : '<i class="fas fa-arrow-down"></i>';
+            // Gérer les cas où evolution_commandes peut être vide ou undefined
+            const evolutionData = stats.evolution_commandes || [];
+            const months = evolutionData.map(d => {
+                if (!d || !d.mois) return '';
+                const date = new Date(d.mois + '-01');
+                if (isNaN(date.getTime())) return d.mois;
+                return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+            }).filter(m => m !== '');
+            const amounts = evolutionData.map(d => parseFloat(d.montant || 0));
 
-            statsGrid.innerHTML = `
-                <div class="stat-card glass" onclick="window.location.href='rfq.html'">
-                    <div class="stat-icon"><i class="fas fa-file-invoice-dollar"></i></div>
-                    <div class="stat-label">RFQ Total</div>
-                    <div class="stat-value">${stats.rfq_total || 0}</div>
-                    <div class="stat-label-detail">
-                        ${stats.rfq_en_cours || 0} en cours • 
-                        ${stats.rfq_brouillon || 0} brouillon • 
-                        ${stats.rfq_cloture || 0} clôturées
-                    </div>
-                    <div class="stat-change trend-up"><i class="fas fa-file-alt"></i></div>
-                </div>
-                <div class="stat-card glass" onclick="window.location.href='devis.html'">
-                    <div class="stat-icon"><i class="fas fa-briefcase"></i></div>
-                    <div class="stat-label">Devis</div>
-                    <div class="stat-value">${stats.devis_total || 0}</div>
-                    <div class="stat-label-detail">
-                        ${stats.devis_envoye || 0} envoyés • 
-                        ${stats.devis_accepte || 0} acceptés
-                    </div>
-                    <div class="stat-change trend-up"><i class="fas fa-briefcase"></i></div>
-                </div>
-                <div class="stat-card glass" onclick="window.location.href='commandes.html'">
-                    <div class="stat-icon"><i class="fas fa-box-open"></i></div>
-                    <div class="stat-label">Commandes</div>
-                    <div class="stat-value">${stats.commandes_total || 0}</div>
-                    <div class="stat-label-detail">${stats.commandes_attente || 0} en attente</div>
-                    <div class="stat-change trend-up"><i class="fas fa-shopping-cart"></i></div>
-                </div>
-                <div class="stat-card glass" onclick="window.location.href='factures.html'">
-                    <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
-                    <div class="stat-label">Factures en attente</div>
-                    <div class="stat-value">${stats.factures_attente || 0}</div>
-                    <div class="stat-label-detail">${formatCurrency(stats.montant_attente || 0)}</div>
-                    <div class="stat-change ${stats.montant_attente > 0 ? 'trend-down' : 'trend-up'}"><i class="fas fa-money-bill-wave"></i></div>
-                </div>
-                <div class="stat-card glass" onclick="window.location.href='entreprises.html'">
-                    <div class="stat-icon"><i class="fas fa-users"></i></div>
-                    <div class="stat-label">Fournisseurs actifs</div>
-                    <div class="stat-value">${stats.fournisseurs_actifs || 0}</div>
-                    <div class="stat-label-detail">${stats.clients_actifs || 0} clients actifs</div>
-                    <div class="stat-change trend-up"><i class="fas fa-building"></i></div>
-                </div>
-                <div class="stat-card glass" onclick="window.location.href='produits.html'">
-                    <div class="stat-icon"><i class="fas fa-box"></i></div>
-                    <div class="stat-label">Produits</div>
-                    <div class="stat-value">${stats.produits_total || 0}</div>
-                    <div class="stat-label-detail">Catalogue produits</div>
-                    <div class="stat-change trend-up"><i class="fas fa-box"></i></div>
-                </div>
-                <div class="stat-card glass" onclick="window.location.href='demandes-devis.html'">
-                    <div class="stat-icon"><i class="fas fa-inbox"></i></div>
-                    <div class="stat-label">Demandes de devis</div>
-                    <div class="stat-value">${stats.demandes_devis_total || 0}</div>
-                    <div class="stat-label-detail">
-                        ${stats.demandes_devis_nouvelles || 0} nouvelles • 
-                        ${stats.demandes_devis_en_cours || 0} en cours
-                    </div>
-                    <div class="stat-change ${(stats.demandes_devis_nouvelles || 0) > 0 ? 'trend-down' : 'trend-up'}">
-                        <i class="fas fa-inbox"></i>
-                    </div>
-                </div>
-                <div class="stat-card glass">
-                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
-                    <div class="stat-label">Commandes du mois</div>
-                    <div class="stat-value">${stats.commandes_mois || 0}</div>
-                    <div class="stat-label-detail">${formatCurrency(stats.montant_mois || 0)}</div>
-                    <div class="stat-change ${evolutionClass}">
-                        ${evolutionIcon} ${Math.abs(evolutionMois)}%
-                    </div>
-                </div>
-            `;
-        }
+            // Gradient Fill
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(37, 99, 235, 0.2)');
+            gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
 
-        // Configuration Globale Chart.js
-        Chart.defaults.font.family = "'Inter', 'Outfit', sans-serif";
-        Chart.defaults.color = '#6B7280';
-
-        function displayCharts(stats) {
-            // Vérifier que stats est valide
-            if (!stats || typeof stats !== 'object') {
-                return;
-            }
-            
-            // Graphique évolution des commandes
-            const ctxCommandes = document.getElementById('chart-commandes');
-            if (ctxCommandes && stats.evolution_commandes && Array.isArray(stats.evolution_commandes)) {
-                if (chartCommandes) {
-                    chartCommandes.destroy();
-                }
-                
-                const labels = stats.evolution_commandes.map(e => {
-                    if (!e || !e.mois) return '';
-                    const [year, month] = e.mois.split('-');
-                    const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-                    return `${monthNames[parseInt(month) - 1] || month} ${year || ''}`;
-                }).filter(l => l !== '');
-                
-                const data = stats.evolution_commandes.map(e => parseFloat(e.montant || 0));
-                const counts = stats.evolution_commandes.map(e => parseInt(e.nombre || 0));
-
-                // Créer un gradient pour le graphique avec les couleurs Hapag-Lloyd
-                const gradient = ctxCommandes.getContext('2d').createLinearGradient(0, 0, 0, 400);
-                gradient.addColorStop(0, 'rgba(0, 56, 122, 0.5)');
-                gradient.addColorStop(1, 'rgba(0, 56, 122, 0.0)');
-
-                chartCommandes = new Chart(ctxCommandes, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Montant (GNF)',
-                            data: data,
-                            borderColor: '#00387A',
-                            backgroundColor: gradient,
-                            borderWidth: 3,
-                            pointBackgroundColor: '#fff',
-                            pointBorderColor: '#00387A',
-                            pointRadius: 5,
-                            fill: true,
-                            tension: 0.4,
-                            yAxisID: 'y'
-                        }, {
-                            label: 'Nombre de commandes',
-                            data: counts,
-                            borderColor: '#FF6600',
-                            backgroundColor: 'rgba(255, 102, 0, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.4,
-                            yAxisID: 'y1'
-                        }]
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Montant Achats (GNF)',
+                        data: amounts,
+                        borderColor: '#3B82F6',
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.5,
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#3B82F6',
+                        pointBorderWidth: 2,
+                        pointHoverBackgroundColor: '#3B82F6',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(30, 58, 138, 0.95)',
+                            padding: 16,
+                            cornerRadius: 12,
+                            titleFont: { family: 'Inter', size: 14, weight: '600' },
+                            bodyFont: { family: 'Inter', size: 13, weight: '500' },
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#3B82F6',
+                            borderWidth: 1,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return new Intl.NumberFormat('fr-FR', {
+                                        style: 'currency',
+                                        currency: 'XOF',
+                                        maximumFractionDigits: 0
+                                    }).format(context.parsed.y);
+                                }
+                            }
+                        }
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                                display: false
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { 
+                                borderDash: [4, 4], 
+                                color: 'rgba(59, 130, 246, 0.1)',
+                                drawBorder: false
                             },
-                            title: {
-                                display: false
+                            ticks: { 
+                                callback: (value) => (value / 1000000) + 'M', 
+                                font: { family: 'Inter', size: 12, weight: '500' },
+                                color: '#64748B',
+                                padding: 10
                             }
                         },
-                        scales: {
-                            y: {
-                                type: 'linear',
-                                display: true,
-                                position: 'left',
-                                grid: {
-                                    borderDash: [5, 5],
-                                    color: 'rgba(0,0,0,0.05)'
-                                },
-                                border: {
-                                    display: false
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'Montant (GNF)'
-                                }
-                            },
-                            y1: {
-                                type: 'linear',
-                                display: true,
-                                position: 'right',
-                                grid: {
-                                    drawOnChartArea: false,
-                                },
-                                border: {
-                                    display: false
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'Nombre'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    display: false
-                                },
-                                border: {
-                                    display: false
-                                }
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { 
+                                font: { family: 'Inter', size: 12, weight: '500' },
+                                color: '#64748B',
+                                padding: 10
                             }
                         }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
                     }
-                });
-            }
-
-            // Graphique répartition RFQ
-            const ctxRFQ = document.getElementById('chart-rfq');
-            if (ctxRFQ && stats.rfq_par_statut && Array.isArray(stats.rfq_par_statut)) {
-                if (chartRFQ) {
-                    chartRFQ.destroy();
                 }
+            });
 
-                const statutLabels = {
-                    'brouillon': 'Brouillon',
-                    'envoye': 'Envoyé',
-                    'en_cours': 'En cours',
-                    'cloture': 'Clôturé',
-                    'annule': 'Annulé'
-                };
+            // RFQ Doughnut
+            const ctxRfq = document.getElementById('rfqChart');
+            if (ctxRfq) {
+                const rfqCtx = ctxRfq.getContext('2d');
+                const rfqParStatut = stats.rfq_par_statut || [];
+                const rfqData = rfqParStatut.map(s => parseInt(s.nombre || 0));
+                const rfqLabels = rfqParStatut.map(s => {
+                    const statut = s.statut || '';
+                    return statut.charAt(0).toUpperCase() + statut.slice(1).replace('_', ' ');
+                });
+                const rfqColors = ['#cbd5e1', '#3b82f6', '#10b981', '#ef4444', '#f59e0b'];
 
-                const labels = stats.rfq_par_statut.map(s => statutLabels[s.statut] || s.statut);
-                const data = stats.rfq_par_statut.map(s => parseInt(s.nombre || 0));
-                const colors = ['#00387A', '#FF6600', '#00A651', '#E60012', '#6B7280'];
-
-                chartRFQ = new Chart(ctxRFQ, {
+                new Chart(rfqCtx, {
                     type: 'doughnut',
                     data: {
-                        labels: labels,
+                        labels: rfqLabels,
                         datasets: [{
-                            data: data,
-                            backgroundColor: colors.slice(0, data.length),
-                            borderWidth: 0,
-                            hoverOffset: 15
+                            data: rfqData,
+                            backgroundColor: [
+                                '#E0E7FF',
+                                '#3B82F6',
+                                '#10B981',
+                                '#F59E0B',
+                                '#EF4444'
+                            ],
+                            borderWidth: 3,
+                            borderColor: '#fff',
+                            hoverOffset: 15,
+                            hoverBorderWidth: 4
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '70%',
+                        cutout: '65%',
                         plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    usePointStyle: true,
-                                    padding: 20
-                                }
+                            legend: { 
+                                position: 'bottom', 
+                                labels: { 
+                                    usePointStyle: true, 
+                                    pointStyle: 'circle',
+                                    padding: 15,
+                                    font: { family: 'Inter', size: 12, weight: '500' },
+                                    color: '#475569'
+                                } 
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(30, 58, 138, 0.95)',
+                                padding: 12,
+                                cornerRadius: 8,
+                                titleFont: { family: 'Inter', size: 13, weight: '600' },
+                                bodyFont: { family: 'Inter', size: 12, weight: '500' },
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: '#3B82F6',
+                                borderWidth: 1
                             }
                         }
                     }
                 });
             }
-        }
 
-        function updateChartPeriod() {
-            // Fonction pour mettre à jour la période du graphique
-            loadStats();
-        }
+            // Categories Bar Chart - Utiliser les données réelles de la base de données
+            const ctxCat = document.getElementById('categoriesChart');
+            if (ctxCat) {
+                if (stats.top_categories && stats.top_categories.length > 0) {
+                    const catCtx = ctxCat.getContext('2d');
+                    const catLabels = stats.top_categories.map(c => c.nom || 'Autre');
+                    const catData = stats.top_categories.map(c => parseInt(c.valeur || 0));
 
-        function displayTopFournisseurs(stats) {
-            const container = document.getElementById('top-fournisseurs');
-            if (!container) return;
-            
-            if (!stats || !stats.top_fournisseurs || !Array.isArray(stats.top_fournisseurs) || stats.top_fournisseurs.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-text">Aucun fournisseur</div></div>';
-                return;
+                    new Chart(catCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: catLabels,
+                            datasets: [{
+                                label: 'Demandes',
+                                data: catData,
+                                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                                hoverBackgroundColor: '#3B82F6',
+                                borderRadius: 8,
+                                borderSkipped: false,
+                                barThickness: 35,
+                                maxBarThickness: 50
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                legend: { display: false },
+                                tooltip: {
+                                    backgroundColor: 'rgba(30, 58, 138, 0.95)',
+                                    padding: 12,
+                                    cornerRadius: 8,
+                                    titleFont: { family: 'Inter', size: 13, weight: '600' },
+                                    bodyFont: { family: 'Inter', size: 12, weight: '500' },
+                                    titleColor: '#fff',
+                                    bodyColor: '#fff',
+                                    borderColor: '#3B82F6',
+                                    borderWidth: 1
+                                }
+                            },
+                            scales: {
+                                y: { 
+                                    beginAtZero: true, 
+                                    grid: { 
+                                        borderDash: [4, 4], 
+                                        color: 'rgba(59, 130, 246, 0.1)',
+                                        drawBorder: false
+                                    },
+                                    ticks: {
+                                        font: { family: 'Inter', size: 12, weight: '500' },
+                                        color: '#64748B',
+                                        padding: 10
+                                    }
+                                },
+                                x: { 
+                                    grid: { display: false, drawBorder: false },
+                                    ticks: {
+                                        font: { family: 'Inter', size: 12, weight: '500' },
+                                        color: '#64748B',
+                                        padding: 10
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    // Afficher un message si pas de données
+                    ctxCat.parentElement.innerHTML = `
+                        <div class="flex items-center justify-center h-72 text-neutral-500">
+                            <div class="text-center">
+                                <i class="fas fa-chart-bar text-4xl mb-2 opacity-50"></i>
+                                <p>Aucune donnée de catégories disponible</p>
+                            </div>
+                        </div>
+                    `;
+                }
             }
 
-            const colors = ['#00387A', '#FF6600', '#00A651', '#0052A3', '#E55A00'];
-            container.innerHTML = stats.top_fournisseurs.map((f, index) => {
-                const initial = (f.nom || 'F').charAt(0).toUpperCase();
-                const bgColor = colors[index % colors.length];
-                return `
-                    <div class="list-item">
-                        <div class="avatar" style="background: ${bgColor}">${initial}</div>
-                        <div class="list-info">
-                            <h4>${index + 1}. ${f.nom}</h4>
-                            <p>${f.nb_commandes || 0} commande(s) • ${formatCurrency(f.montant_total || 0)}</p>
+            // Sectors Polar Area Chart - Utiliser les données réelles de la base de données
+            const ctxSect = document.getElementById('sectorsChart');
+            if (ctxSect) {
+                if (stats.top_secteurs && stats.top_secteurs.length > 0) {
+                    const sectCtx = ctxSect.getContext('2d');
+                    const sectLabels = stats.top_secteurs.map(s => s.nom || 'Autre');
+                    const sectData = stats.top_secteurs.map(s => parseInt(s.valeur || 0));
+                    const sectColors = ['#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef'];
+
+                    new Chart(sectCtx, {
+                        type: 'polarArea',
+                        data: {
+                            labels: sectLabels,
+                            datasets: [{
+                                data: sectData,
+                                backgroundColor: [
+                                    'rgba(59, 130, 246, 0.7)',
+                                    'rgba(99, 102, 241, 0.7)',
+                                    'rgba(139, 92, 246, 0.7)',
+                                    'rgba(168, 85, 247, 0.7)',
+                                    'rgba(217, 70, 239, 0.7)'
+                                ].slice(0, sectData.length),
+                                borderColor: '#fff',
+                                borderWidth: 3,
+                                hoverBorderWidth: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { 
+                                    position: 'right', 
+                                    labels: { 
+                                        usePointStyle: true,
+                                        padding: 15,
+                                        font: { family: 'Inter', size: 12, weight: '500' },
+                                        color: '#475569'
+                                    } 
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(30, 58, 138, 0.95)',
+                                    padding: 12,
+                                    cornerRadius: 8,
+                                    titleFont: { family: 'Inter', size: 13, weight: '600' },
+                                    bodyFont: { family: 'Inter', size: 12, weight: '500' },
+                                    titleColor: '#fff',
+                                    bodyColor: '#fff',
+                                    borderColor: '#3B82F6',
+                                    borderWidth: 1
+                                }
+                            },
+                            scales: {
+                                r: { 
+                                    ticks: { display: false },
+                                    grid: { 
+                                        color: 'rgba(59, 130, 246, 0.1)',
+                                        lineWidth: 1
+                                    },
+                                    pointLabels: {
+                                        font: { family: 'Inter', size: 11, weight: '500' },
+                                        color: '#64748B'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    // Afficher un message si pas de données
+                    ctxSect.parentElement.innerHTML = `
+                        <div class="flex items-center justify-center h-72 text-neutral-500">
+                            <div class="text-center">
+                                <i class="fas fa-chart-pie text-4xl mb-2 opacity-50"></i>
+                                <p>Aucune donnée de secteurs disponible</p>
+                            </div>
                         </div>
-                        <button class="btn" onclick="window.location.href='entreprises-detail.html?id=${f.id}'" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-                            Voir
-                        </button>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }
+            }
         }
 
-        function displayOverview(stats) {
-            const container = document.getElementById('overview-stats');
-            if (!container) return;
-            
-            if (!stats || typeof stats !== 'object') {
-                container.innerHTML = '<div class="alert alert-error">Données invalides</div>';
-                return;
+        async function loadRecentOrders() {
+            try {
+                console.log('📦 Chargement des commandes récentes...');
+                const res = await apiCall('/api/commandes?limit=5');
+                
+                if (!res) {
+                    console.error('❌ apiCall a retourné null pour les commandes');
+                    const list = document.getElementById('recent-orders-tbody');
+                    if (list) {
+                        list.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-sm text-red-500">Erreur d\'authentification</td></tr>';
+                    }
+                    return;
+                }
+                
+                if (!res.ok) {
+                    console.error('❌ Erreur API commandes:', res.status, res.statusText);
+                    const list = document.getElementById('recent-orders-tbody');
+                    if (list) {
+                        list.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-sm text-red-500">Erreur ${res.status}</td></tr>`;
+                    }
+                    return;
+                }
+                
+                const orders = await res.json();
+                console.log('📦 Commandes reçues:', orders?.length || 0);
+                const list = document.getElementById('recent-orders-tbody');
+                
+                if (!list) {
+                    console.error('❌ Élément recent-orders-tbody introuvable');
+                    return;
+                }
+                
+                if (!orders || orders.length === 0) {
+                    console.log('ℹ️ Aucune commande à afficher');
+                    list.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-sm text-neutral-500">Aucune commande</td></tr>';
+                    return;
+                }
+
+                list.innerHTML = orders.map(o => `
+                    <tr class="hover:bg-blue-50 cursor-pointer transition" onclick="window.location.href='commandes-detail.html?id=${o.id}'">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-600">${o.numero}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
+                            <div class="flex items-center">
+                                <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-primary-600 font-bold mr-3 text-xs">
+                                    ${o.fournisseur_nom.charAt(0)}
+                                </div>
+                                ${o.fournisseur_nom}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-neutral-600 font-medium">${formatCurrency(o.total_ttc)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="status-badge ${o.statut === 'livre' ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200' : 'bg-gradient-to-r from-blue-100 to-primary-100 text-primary-700 border border-primary-200'}">
+                                ${o.statut}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Erreur loadRecentOrders:', error);
             }
-            
-            container.innerHTML = `
-                <div style="padding: 1rem;">
-                    <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #E0E7FF;">
-                        <div style="font-size: 0.875rem; color: var(--color-neutral); margin-bottom: 0.25rem;">Demandes de devis</div>
-                        <div style="font-size: 1.25rem; font-weight: bold; color: var(--color-primary);">
-                            ${stats.demandes_devis_total || 0} total • ${stats.demandes_devis_nouvelles || 0} nouvelles
-                        </div>
-                    </div>
-                    <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #E0E7FF;">
-                        <div style="font-size: 0.875rem; color: var(--color-neutral); margin-bottom: 0.25rem;">RFQ</div>
-                        <div style="font-size: 1.25rem; font-weight: bold; color: var(--color-primary);">
-                            ${stats.rfq_total || 0} total • ${stats.rfq_en_cours || 0} en cours
-                        </div>
-                    </div>
-                    <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #E0E7FF;">
-                        <div style="font-size: 0.875rem; color: var(--color-neutral); margin-bottom: 0.25rem;">Devis</div>
-                        <div style="font-size: 1.25rem; font-weight: bold; color: var(--color-primary);">
-                            ${stats.devis_total || 0} total • ${stats.devis_accepte || 0} acceptés
-                        </div>
-                    </div>
-                    <div>
-                        <div style="font-size: 0.875rem; color: var(--color-neutral); margin-bottom: 0.25rem;">Entreprises</div>
-                        <div style="font-size: 1.25rem; font-weight: bold; color: var(--color-primary);">
-                            ${stats.fournisseurs_actifs || 0} fournisseurs • ${stats.clients_actifs || 0} clients
-                        </div>
-                    </div>
-                </div>
-            `;
         }
 
-        function displayComparison(stats) {
-            const container = document.getElementById('comparison-stats');
-            if (!container) return;
-            
-            if (!stats || typeof stats !== 'object') {
-                container.innerHTML = '<div class="alert alert-error">Données invalides</div>';
-                return;
-            }
-            
-            const montantMois = parseFloat(stats.montant_mois || 0);
-            const montantMoisDernier = parseFloat(stats.montant_mois_dernier || 0);
-            const evolution = montantMoisDernier > 0 
-                ? ((montantMois - montantMoisDernier) / montantMoisDernier * 100).toFixed(1)
-                : (montantMois > 0 ? 100 : 0);
-            const evolutionClass = evolution >= 0 ? 'positive' : 'negative';
-            const evolutionIcon = evolution >= 0 ? '<i class="fas fa-arrow-up"></i>' : '<i class="fas fa-arrow-down"></i>';
+        async function loadMessages() {
+            try {
+                console.log('💬 Chargement des messages...');
+                const res = await apiCall('/api/contact/messages?limit=10');
+                
+                if (!res) {
+                    console.error('❌ apiCall a retourné null pour les messages');
+                    const list = document.getElementById('messages-list');
+                    if (list) {
+                        list.innerHTML = '<li class="p-6 text-center text-red-500 text-sm">Erreur d\'authentification</li>';
+                    }
+                    return;
+                }
+                
+                if (!res.ok) {
+                    console.error('❌ Erreur API messages:', res.status, res.statusText);
+                    const list = document.getElementById('messages-list');
+                    if (list) {
+                        list.innerHTML = `<li class="p-6 text-center text-red-500 text-sm">Erreur ${res.status}</li>`;
+                    }
+                    return;
+                }
+                
+                const data = await res.json();
+                const messages = data.data || data || [];
+                console.log('💬 Messages reçus:', messages.length);
+                const list = document.getElementById('messages-list');
+                const badge = document.getElementById('unread-count');
+                
+                if (!list) {
+                    console.error('❌ Élément messages-list introuvable');
+                    return;
+                }
+                
+                const unreadCount = messages.filter(m => !m.lu).length;
+                if (badge) {
+                    badge.innerText = `${unreadCount} nouveaux`;
+                    badge.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${unreadCount > 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`;
+                }
 
-            container.innerHTML = `
-                <div style="padding: 1rem;">
-                    <div style="margin-bottom: 1.5rem;">
-                        <div style="font-size: 0.875rem; color: var(--color-neutral); margin-bottom: 0.5rem;">Ce mois</div>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);">
-                            ${stats.commandes_mois || 0} commandes
+                if (messages.length === 0) {
+                    list.innerHTML = '<li class="p-6 text-center text-neutral-500 text-sm">Aucun message</li>';
+                    return;
+                }
+
+                list.innerHTML = messages.map(m => `
+                    <li class="px-6 py-4 hover:bg-blue-50 transition cursor-pointer border-b border-blue-100 last:border-0 ${!m.lu ? 'bg-blue-50/50' : ''}">
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold text-xs">
+                                    ${m.nom.charAt(0)}
+                                </div>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-medium text-primary-900 flex justify-between">
+                                    <span>${m.sujet}</span>
+                                    <span class="text-xs text-neutral-400 font-normal">${new Date(m.date_creation).toLocaleDateString()}</span>
+                                </p>
+                                <p class="text-sm text-neutral-500 truncate">${m.message}</p>
+                            </div>
                         </div>
-                        <div style="font-size: 1rem; color: var(--color-neutral); margin-top: 0.25rem;">
-                            ${formatCurrency(stats.montant_mois || 0)}
-                        </div>
-                    </div>
-                    <div style="margin-bottom: 1.5rem; padding-top: 1rem; border-top: 1px solid #E0E7FF;">
-                        <div style="font-size: 0.875rem; color: var(--color-neutral); margin-bottom: 0.5rem;">Mois dernier</div>
-                        <div style="font-size: 1.25rem; font-weight: bold; color: var(--color-neutral-dark);">
-                            ${stats.commandes_mois_dernier || 0} commandes
-                        </div>
-                        <div style="font-size: 0.875rem; color: var(--color-neutral); margin-top: 0.25rem;">
-                            ${formatCurrency(stats.montant_mois_dernier || 0)}
-                        </div>
-                    </div>
-                    <div style="padding-top: 1rem; border-top: 2px solid #E0E7FF;">
-                        <div style="font-size: 0.875rem; color: var(--color-neutral); margin-bottom: 0.25rem;">Évolution</div>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: ${evolution >= 0 ? 'var(--color-success)' : 'var(--color-danger)'};">
-                            ${evolutionIcon} ${Math.abs(evolution)}%
-                        </div>
-                    </div>
-                </div>
-            `;
+                    </li>
+                `).join('');
+            } catch (error) {
+                console.error('Erreur loadMessages:', error);
+            }
         }
 
         function refreshDashboard() {
-            loadStats();
-            loadRecentActivity();
-            loadContactMessages('tous');
-            Toast.success('Dashboard actualisé');
-        }
-
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount) + ' GNF';
-        }
-
-        async function loadRecentActivity() {
-            try {
-                const [rfqs, devis, commandes, demandesDevis] = await Promise.all([
-                    apiCall('/api/rfq?statut=en_cours'),
-                    apiCall('/api/devis?statut=envoye'),
-                    apiCall('/api/commandes?statut=en_cours'),
-                    apiCall('/api/contact/demandes?statut=nouvelle&limit=5')
-                ]);
-
-                const container = document.getElementById('recent-activity');
-                let html = '';
-
-                // Demandes de devis nouvelles (priorité)
-                if (demandesDevis && demandesDevis.ok) {
-                    const demandesData = await demandesDevis.json();
-                    if (demandesData.data && demandesData.data.length > 0) {
-                        html += '<h3 style="margin-bottom: 0.5rem; font-size: 0.875rem; color: var(--color-neutral); font-weight: 600;"><i class="fas fa-inbox" style="color: var(--color-accent);"></i> Nouvelles demandes de devis</h3>';
-                        html += demandesData.data.slice(0, 3).map(d => `
-                            <div style="padding: 0.75rem; border-bottom: 1px solid #E0E7FF; font-size: 0.875rem; cursor: pointer; background: ${d.statut === 'nouvelle' ? '#fef3c7' : 'white'};" 
-                                 onclick="window.location.href='demandes-devis.html'">
-                                <div style="font-weight: 600; color: var(--color-primary-dark); display: flex; align-items: center; gap: 0.5rem;">
-                                    ${d.statut === 'nouvelle' ? '<span style="background: var(--color-accent); color: white; padding: 0.125rem 0.5rem; border-radius: 4px; font-size: 0.7rem;">NOUVEAU</span>' : ''}
-                                    ${d.reference || 'DEM-' + d.id}
-                                </div>
-                                <div style="color: var(--color-neutral); font-size: 0.75rem; margin-top: 0.25rem;">${d.nom || '-'}${d.entreprise ? ` • ${d.entreprise}` : ''}</div>
-                            </div>
-                        `).join('');
-                    }
-                }
-
-                if (rfqs && rfqs.ok) {
-                    const rfqsData = await rfqs.json();
-                    if (rfqsData.length > 0) {
-                        html += '<h3 style="margin: 1rem 0 0.5rem 0; font-size: 0.875rem; color: var(--text-muted); font-weight: 600;"><i class="fas fa-file-alt"></i> RFQ en cours</h3>';
-                        html += rfqsData.slice(0, 3).map(r => {
-                            const initial = (r.destinataire_nom || 'R').charAt(0).toUpperCase();
-                            return `
-                                <div class="list-item" onclick="window.location.href='rfq-detail.html?id=${r.id}'" style="cursor: pointer;">
-                                    <div class="avatar" style="background: #00387A">${initial}</div>
-                                    <div class="list-info">
-                                        <h4>${r.numero || 'RFQ-' + r.id}</h4>
-                                        <p>${r.destinataire_nom || '-'}</p>
-                                    </div>
-                                    <span class="status-badge bg-process">En cours</span>
-                                </div>
-                            `;
-                        }).join('');
-                    }
-                }
-
-                if (devis && devis.ok) {
-                    const devisData = await devis.json();
-                    if (devisData.length > 0) {
-                        html += '<h3 style="margin: 1rem 0 0.5rem 0; font-size: 0.875rem; color: var(--text-muted); font-weight: 600;"><i class="fas fa-briefcase"></i> Devis en attente</h3>';
-                        html += devisData.slice(0, 3).map(d => {
-                            const initial = (d.numero || 'D').charAt(0).toUpperCase();
-                            return `
-                                <div class="list-item" onclick="window.location.href='devis.html'" style="cursor: pointer;">
-                                    <div class="avatar" style="background: #00A651">${initial}</div>
-                                    <div class="list-info">
-                                        <h4>${d.numero || 'Devis-' + d.id}</h4>
-                                        <p>${formatCurrency(d.total_ttc || 0)}</p>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('');
-                    }
-                }
-
-                if (commandes && commandes.ok) {
-                    const commandesData = await commandes.json();
-                    if (commandesData.length > 0) {
-                        html += '<h3 style="margin: 1rem 0 0.5rem 0; font-size: 0.875rem; color: var(--text-muted); font-weight: 600;"><i class="fas fa-shopping-cart"></i> Commandes en cours</h3>';
-                        html += commandesData.slice(0, 3).map(c => {
-                            const initial = (c.numero || 'C').charAt(0).toUpperCase();
-                            return `
-                                <div class="list-item" onclick="window.location.href='commandes.html'" style="cursor: pointer;">
-                                    <div class="avatar" style="background: #0052A3">${initial}</div>
-                                    <div class="list-info">
-                                        <h4>${c.numero || 'BC-' + c.id}</h4>
-                                        <p>${formatCurrency(c.total_ttc || 0)}</p>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('');
-                    }
-                }
-
-                container.innerHTML = html || '<div class="empty-state"><div class="empty-state-text">Aucune activité récente</div></div>';
-            } catch (error) {
-                document.getElementById('recent-activity').innerHTML = '<div class="alert alert-error">Erreur de chargement</div>';
-                console.error('Erreur:', error);
-            }
+            Toast.info('Actualisation...');
+            initDashboard();
         }
 
         window.refreshDashboard = refreshDashboard;
 
-        async function loadContactMessages(filter = 'tous') {
-            try {
-                const container = document.getElementById('contact-messages-container');
-                if (!container) return;
+        // Menu mobile
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const button = document.getElementById('mobile-menu-button');
+            if (menu && button) {
+                const isHidden = menu.classList.contains('hidden');
+                menu.classList.toggle('hidden');
                 
-                container.innerHTML = '<div class="loading">Chargement...</div>';
+                // Mettre à jour l'état ARIA
+                button.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
                 
-                let url = '/api/contact/messages?limit=10';
-                if (filter === 'non_lu') {
-                    url += '&lu=false';
-                }
-                
-                const response = await apiCall(url);
-                if (!response || !response.ok) {
-                    container.innerHTML = '<div class="alert alert-error">Erreur de chargement</div>';
-                    return;
-                }
-                
-                const data = await response.json();
-                const messages = data.data || [];
-                
-                if (messages.length === 0) {
-                    container.innerHTML = `
-                        <div style="padding: 2rem; text-align: center; color: var(--color-neutral);">
-                            <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
-                            <p>Aucun message de contact</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                container.innerHTML = `
-                    <div style="padding: 1rem;">
-                        ${messages.map(msg => {
-                            const date = new Date(msg.date_creation);
-                            const dateStr = date.toLocaleDateString('fr-FR', { 
-                                day: 'numeric', 
-                                month: 'long', 
-                                year: 'numeric',
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                            });
-                            
-                            const unreadStyle = !msg.lu ? 'background: #f0f9ff; border-left: 4px solid #3B82F6;' : '';
-                            const unreadBadge = !msg.lu ? '<span style="background: #3B82F6; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-left: 0.5rem;">Nouveau</span>' : '';
-                            
-                            return `
-                                <div style="padding: 1.5rem; margin-bottom: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; ${unreadStyle}">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
-                                        <div style="flex: 1;">
-                                            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600; color: var(--color-primary-dark); display: flex; align-items: center;">
-                                                ${msg.sujet} ${unreadBadge}
-                                            </h3>
-                                            <div style="margin-top: 0.5rem; color: var(--color-neutral); font-size: 0.9rem;">
-                                                <i class="fas fa-user"></i> ${msg.nom}
-                                                ${msg.email ? ` • <i class="fas fa-envelope"></i> ${msg.email}` : ''}
-                                                ${msg.telephone ? ` • <i class="fas fa-phone"></i> ${msg.telephone}` : ''}
-                                            </div>
-                                        </div>
-                                        <div style="display: flex; gap: 0.5rem;">
-                                            ${!msg.lu ? `<button class="btn btn-sm btn-secondary" onclick="markMessageAsRead(${msg.id})" title="Marquer comme lu">
-                                                <i class="fas fa-check"></i>
-                                            </button>` : ''}
-                                            ${!msg.traite ? `<button class="btn btn-sm btn-primary" onclick="markMessageAsTreated(${msg.id})" title="Marquer comme traité">
-                                                <i class="fas fa-check-double"></i>
-                                            </button>` : '<span style="color: var(--color-success); font-size: 0.875rem;"><i class="fas fa-check-circle"></i> Traité</span>'}
-                                        </div>
-                                    </div>
-                                    <div style="background: white; padding: 1rem; border-radius: 6px; margin-top: 0.75rem; border: 1px solid #e5e7eb;">
-                                        <p style="margin: 0; color: var(--color-neutral-dark); line-height: 1.6; white-space: pre-wrap;">${escapeHtml(msg.message)}</p>
-                                    </div>
-                                    <div style="margin-top: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
-                                        <span style="color: #999; font-size: 0.85rem;"><i class="fas fa-clock"></i> ${dateStr}</span>
-                                        ${msg.traite_par_nom ? `<span style="color: #999; font-size: 0.85rem;">Traité par: ${msg.traite_par_prenom || ''} ${msg.traite_par_nom || ''}</span>` : ''}
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Erreur chargement messages:', error);
-                const container = document.getElementById('contact-messages-container');
-                if (container) {
-                    container.innerHTML = '<div class="alert alert-error">Erreur de chargement</div>';
+                // Changer l'icône
+                const icon = button.querySelector('i');
+                if (icon) {
+                    if (isHidden) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
                 }
             }
         }
+        window.toggleMobileMenu = toggleMobileMenu;
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        // Attendre que le DOM soit chargé
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('📄 DOM chargé, initialisation du dashboard...');
+                initDashboard();
+            });
+        } else {
+            console.log('📄 DOM déjà chargé, initialisation immédiate...');
+            initDashboard();
         }
-
-        async function markMessageAsRead(messageId) {
-            try {
-                const response = await apiCall(`/api/contact/messages/${messageId}/lu`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ lu: true })
-                });
-                if (response && response.ok) {
-                    Toast.success('Message marqué comme lu');
-                    loadContactMessages('tous');
-                } else {
-                    Toast.error('Erreur lors de la mise à jour');
-                }
-            } catch (error) {
-                console.error('Erreur:', error);
-                Toast.error('Erreur de connexion');
-            }
-        }
-
-        async function markMessageAsTreated(messageId) {
-            try {
-                const response = await apiCall(`/api/contact/messages/${messageId}/traite`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ traite: true })
-                });
-                if (response && response.ok) {
-                    Toast.success('Message marqué comme traité');
-                    loadContactMessages('tous');
-                } else {
-                    Toast.error('Erreur lors de la mise à jour');
-                }
-            } catch (error) {
-                console.error('Erreur:', error);
-                Toast.error('Erreur de connexion');
-            }
-        }
-
-        // Charger toutes les données au démarrage
-        loadStats();
-        loadRecentActivity();
-        loadContactMessages('tous');
-        
-        // Actualiser automatiquement toutes les 5 minutes
-        setInterval(() => {
-            loadStats();
-            loadRecentActivity();
-            loadContactMessages('tous');
-        }, 300000); // 5 minutes
     </script>
 </body>
 </html>
-

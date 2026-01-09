@@ -233,6 +233,9 @@ router.post('/proforma-from-devis', authenticate, async (req, res) => {
         } = req.body;
 
         console.log('🟦 Création facture proforma depuis devis comparés');
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'factures.js:221',message:'POST /proforma-from-devis - Entry',data:{demande_devis_id,client_id,devisCount:devis_fournisseurs?.length,marge_pourcentage},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
 
         // Validation
         if (!devis_fournisseurs || !Array.isArray(devis_fournisseurs) || devis_fournisseurs.length === 0) {
@@ -451,6 +454,9 @@ router.post('/proforma-from-commande/:commande_id', validateCommandeId, async (r
 
         console.log('🟦 Création facture proforma depuis commande:', commande_id);
         console.log('🟦 Données reçues:', req.body);
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'factures.js:447',message:'POST /proforma-from-commande - Entry',data:{commande_id,client_id_param,marge_pourcentage},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
 
         // Récupérer la commande avec ses lignes et le client_id via devis -> demande_devis
         // Note: On utilise client_id de demandes_devis, pas entreprise_id (qui peut ne pas exister)

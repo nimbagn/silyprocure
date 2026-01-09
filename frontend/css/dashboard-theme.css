@@ -1,0 +1,558 @@
+/**
+ * Dashboard Theme - Styles Pro Confiance
+ * À appliquer à toutes les pages du projet
+ */
+
+/* ==========================================
+   VARIABLES CSS - Charte Pro Confiance
+   ========================================== */
+:root {
+    --color-primary-dark: #1E3A8A;
+    --color-primary: #3B82F6;
+    --color-primary-light: #60A5FA;
+    --color-success: #10B981;
+    --color-neutral: #64748B;
+    --color-neutral-dark: #475569;
+    --color-background: #FFFFFF;
+    --color-background-light: #F8FAFC;
+    --color-background-blue: #E0E7FF;
+    
+    /* Espacements selon charte */
+    --spacing-xs: 0.25rem;   /* 4px */
+    --spacing-sm: 0.5rem;    /* 8px */
+    --spacing-md: 1rem;      /* 16px */
+    --spacing-lg: 1.5rem;    /* 24px */
+    --spacing-xl: 2rem;      /* 32px */
+    --spacing-xxl: 3rem;     /* 48px */
+    
+    /* Ombres */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+    
+    /* Transitions */
+    --transition-fast: 0.2s ease-in-out;
+    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================
+   BASE - Typographie et Body
+   ========================================== */
+body { 
+    font-family: 'Inter', 'Arial', sans-serif;
+    background-color: var(--color-background-light);
+    color: var(--color-neutral-dark);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================
+   NAVBAR - Navigation Principale
+   ========================================== */
+nav[role="navigation"] {
+    background: var(--color-background) !important;
+    border-bottom: 2px solid var(--color-background-blue);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.logo-primary {
+    color: var(--color-primary) !important;
+}
+
+/* Navigation active */
+nav a.border-primary-500,
+nav a[aria-current="page"] {
+    border-bottom-color: var(--color-primary) !important;
+    color: var(--color-primary-dark) !important;
+    font-weight: 600;
+}
+
+/* Menu desktop toujours visible sur écrans moyens et grands */
+@media (min-width: 640px) {
+    nav[aria-label="Menu de navigation"] {
+        display: flex !important;
+    }
+}
+
+/* Menu mobile amélioré */
+#mobile-menu {
+    animation: slideDown 0.3s ease-out;
+}
+
+#mobile-menu.hidden {
+    display: none !important;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Amélioration de la visibilité du menu */
+nav[aria-label="Menu de navigation"] a {
+    position: relative;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+}
+
+nav[aria-label="Menu de navigation"] a:hover {
+    background: rgba(59, 130, 246, 0.05);
+    border-radius: 4px 4px 0 0;
+}
+
+/* ==========================================
+   BOUTONS - Styles Pro Confiance
+   ========================================== */
+.btn-primary {
+    background: linear-gradient(to right, var(--color-primary), var(--color-primary-light));
+    color: white;
+    font-weight: 600;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.75rem;
+    border: none;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+    transition: var(--transition-normal);
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(to right, var(--color-primary-dark), var(--color-primary));
+    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: white;
+    color: var(--color-primary);
+    font-weight: 600;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.75rem;
+    border: 2px solid var(--color-primary-light);
+    transition: var(--transition-normal);
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(to right, #F0F7FF, var(--color-background-blue));
+    border-color: var(--color-primary);
+}
+
+/* ==========================================
+   CARTES - Styles Pro Confiance
+   ========================================== */
+.card {
+    background: linear-gradient(135deg, var(--color-background) 0%, #FAFBFC 100%);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(59, 130, 246, 0.1);
+    transition: var(--transition-normal);
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    padding: 1.5rem;
+    border-bottom: 2px solid var(--color-background-blue);
+    background: linear-gradient(to right, var(--color-background-blue), #F0F7FF);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.card-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--color-background-blue);
+    background: var(--color-background-light);
+}
+
+/* Cartes KPI */
+.kpi-card {
+    background: linear-gradient(135deg, var(--color-background) 0%, #FAFBFC 100%);
+    border-left: 4px solid var(--color-primary);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.kpi-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+}
+
+.kpi-card:hover::before {
+    opacity: 1;
+}
+
+.kpi-card.blue { border-left-color: var(--color-primary); }
+.kpi-card.green { border-left-color: var(--color-success); }
+.kpi-card.yellow { border-left-color: #F59E0B; }
+.kpi-card.purple { border-left-color: #8B5CF6; }
+
+.kpi-icon {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: var(--transition-normal);
+}
+
+.kpi-card:hover .kpi-icon {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ==========================================
+   TABLEAUX - Styles Pro Confiance
+   ========================================== */
+.table-container {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+table thead th {
+    background: linear-gradient(135deg, #F0F4F8 0%, #E8F0F8 100%);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.6875rem;
+    padding: 1rem 1.5rem;
+    color: var(--color-primary-dark);
+    border-bottom: 2px solid var(--color-background-blue);
+}
+
+table tbody tr {
+    transition: var(--transition-fast);
+    border-bottom: 1px solid var(--color-background-blue);
+}
+
+table tbody tr:hover {
+    background: linear-gradient(90deg, #F8FAFC 0%, #F0F7FF 100%);
+    transform: scale(1.01);
+}
+
+table tbody td {
+    padding: 1rem 1.5rem;
+    color: var(--color-neutral-dark);
+}
+
+/* ==========================================
+   FORMULAIRES - Styles Pro Confiance
+   ========================================== */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--color-background-blue);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: var(--transition-fast);
+    background: white;
+    color: var(--color-neutral-dark);
+    min-height: 44px;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background: white;
+}
+
+.form-input::placeholder {
+    color: var(--color-neutral);
+}
+
+/* ==========================================
+   BADGES - Styles Pro Confiance
+   ========================================== */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.75rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.status-badge {
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.75rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.badge-success {
+    background: linear-gradient(to right, #D1FAE5, #A7F3D0);
+    color: #065F46;
+    border: 1px solid #10B981;
+}
+
+.badge-warning {
+    background: linear-gradient(to right, #FEF3C7, #FDE68A);
+    color: #92400E;
+    border: 1px solid #F59E0B;
+}
+
+.badge-danger {
+    background: linear-gradient(to right, #FEE2E2, #FECACA);
+    color: #991B1B;
+    border: 1px solid #EF4444;
+}
+
+.badge-info {
+    background: linear-gradient(to right, #DBEAFE, #BFDBFE);
+    color: #1E40AF;
+    border: 1px solid var(--color-primary);
+}
+
+/* ==========================================
+   TYPOGRAPHIE - Styles Pro Confiance
+   ========================================== */
+h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-primary-dark);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+}
+
+h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-primary-dark);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+}
+
+h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--color-primary-dark);
+    letter-spacing: -0.01em;
+}
+
+h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--color-primary-dark);
+}
+
+/* ==========================================
+   LIENS - Styles Pro Confiance
+   ========================================== */
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: var(--transition-fast);
+}
+
+a:hover {
+    color: var(--color-primary-dark);
+    text-decoration: underline;
+}
+
+/* ==========================================
+   SECTIONS - Styles Pro Confiance
+   ========================================== */
+section {
+    position: relative;
+    margin-bottom: var(--spacing-xl);
+}
+
+section::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-background-blue), transparent);
+    opacity: 0.5;
+}
+
+section:first-of-type::before {
+    display: none;
+}
+
+.section-header {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--color-background-blue);
+}
+
+/* ==========================================
+   ANIMATIONS - Styles Pro Confiance
+   ========================================== */
+.fade-in { 
+    animation: fadeIn 0.5s ease-out forwards; 
+    opacity: 0; 
+    transform: translateY(10px); 
+}
+
+@keyframes fadeIn { 
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    } 
+}
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* ==========================================
+   SCROLLBAR - Styles Pro Confiance
+   ========================================== */
+::-webkit-scrollbar { 
+    width: 8px; 
+    height: 8px; 
+}
+
+::-webkit-scrollbar-track { 
+    background: #F1F5F9; 
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb { 
+    background: linear-gradient(180deg, #CBD5E1, #94A3B8); 
+    border-radius: 4px;
+    border: 2px solid #F1F5F9;
+}
+
+::-webkit-scrollbar-thumb:hover { 
+    background: linear-gradient(180deg, #94A3B8, #64748B); 
+}
+
+/* ==========================================
+   ZONES TACTILES - Accessibilité
+   ========================================== */
+button, 
+a[onclick],
+.kpi-card,
+.btn-primary,
+.btn-secondary {
+    min-height: 44px;
+    touch-action: manipulation;
+}
+
+/* ==========================================
+   RESPONSIVE - Breakpoints
+   ========================================== */
+@media (max-width: 639px) {
+    /* Mobile */
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.375rem; }
+    h3 { font-size: 1.125rem; }
+    
+    .card-body,
+    .card-header {
+        padding: 1rem;
+    }
+    
+    table thead th,
+    table tbody td {
+        padding: 0.75rem 1rem;
+        font-size: 0.8125rem;
+    }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+    /* Tablette */
+    .card-body,
+    .card-header {
+        padding: 1.25rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    /* Desktop */
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+}
+
+/* ==========================================
+   UTILITAIRES
+   ========================================== */
+.text-primary { color: var(--color-primary) !important; }
+.text-primary-dark { color: var(--color-primary-dark) !important; }
+.text-success { color: var(--color-success) !important; }
+.text-neutral { color: var(--color-neutral) !important; }
+.text-neutral-dark { color: var(--color-neutral-dark) !important; }
+
+.bg-primary { background-color: var(--color-primary) !important; }
+.bg-primary-light { background-color: var(--color-background-blue) !important; }
+.bg-success { background-color: var(--color-success) !important; }
+
+.shadow-card { box-shadow: var(--shadow-md); }
+.shadow-card-hover { box-shadow: var(--shadow-lg); }
+
+.rounded-card { border-radius: 1rem; }
+.rounded-card-lg { border-radius: 1.25rem; }
+

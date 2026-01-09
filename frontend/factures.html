@@ -1,107 +1,644 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="h-full bg-gray-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Factures - SilyProcure</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/animations.css"></head>
-<body>
-    <div class="header">
-        <div class="logo">SilyProcure</div>
-        <div class="user-info">
-            <span id="user-name"></span>
-            <button onclick="logout()">Déconnexion</button>
-        </div>
-    </div>
+    <!-- CSS Charte Graphique Pro Confiance -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#E0E7FF',
+                            100: '#DBEAFE',
+                            400: '#60A5FA',
+                            500: '#3B82F6',
+                            600: '#2563EB',
+                            700: '#1D4ED8',
+                            900: '#1E3A8A',
+                        },
+                        success: {
+                            500: '#10B981',
+                        },
+                        neutral: {
+                            500: '#64748B',
+                            600: '#475569',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Dashboard Theme CSS -->
+    <link rel="stylesheet" href="css/dashboard-theme.css">
+    <link rel="stylesheet" href="css/animations.css">
+    
+    <style>
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 1.25rem;
+            border-left: 4px solid var(--color-primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .stat-card.yellow { border-left-color: #fbbf24; }
+        .stat-card.green { border-left-color: var(--color-success); }
+        .stat-card.purple { border-left-color: #a78bfa; }
+        
+        .stat-icon {
+            font-size: 1.5rem;
+            color: var(--color-neutral);
+            margin-right: 1.25rem;
+        }
+        
+        .stat-card.yellow .stat-icon { color: #fbbf24; }
+        .stat-card.green .stat-icon { color: var(--color-success); }
+        .stat-card.purple .stat-icon { color: #a78bfa; }
+        
+        .stat-content {
+            flex: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-neutral);
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-value {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--color-neutral-dark);
+            word-break: break-word;
+            line-height: 1.2;
+        }
+        
+        #stat-montant {
+            font-size: 1rem;
+        }
+        
+        .factures-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .facture-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--color-background-light);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .facture-card:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .facture-card-header {
+            padding: 1.25rem;
+            flex: 1;
+        }
+        
+        .facture-card-footer {
+            background: var(--color-background-light);
+            padding: 0.75rem 1.25rem;
+            border-top: 1px solid var(--color-background-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0 0 8px 8px;
+        }
+        
+        .facture-numero {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--color-neutral-dark);
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .facture-numero:hover {
+            color: var(--color-primary);
+        }
+        
+        .facture-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .facture-type-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .facture-type-badge.proforma {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+        
+        .facture-type-badge.definitive {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .facture-date {
+            font-size: 0.75rem;
+            color: var(--color-neutral);
+        }
+        
+        .facture-details {
+            border-top: 1px solid var(--color-background-light);
+            padding-top: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        
+        .facture-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .facture-detail-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .facture-detail-label {
+            font-size: 0.875rem;
+            color: var(--color-neutral);
+        }
+        
+        .facture-detail-value {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-neutral-dark);
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .facture-amount {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--color-neutral-dark);
+        }
+        
+        .facture-reste {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--color-danger);
+        }
+        
+        .facture-footer-btn {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-primary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+        
+        .facture-footer-btn:hover {
+            color: var(--color-primary-dark);
+        }
+        
+        .facture-footer-icon {
+            color: var(--color-neutral);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 1rem;
+        }
+        
+        .facture-footer-icon:hover {
+            color: var(--color-neutral-dark);
+        }
+        
+        .filters-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .filters-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .filters-container {
+                flex-direction: row;
+                align-items: center;
+            }
+        }
+        
+        .search-input-wrapper {
+            position: relative;
+            flex: 1;
+            max-width: 500px;
+        }
+        
+        .search-input-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-neutral);
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+            border: 1px solid var(--color-background-light);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: all 0.15s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .filter-selects-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        
+        @media (min-width: 768px) {
+            .filter-selects-wrapper {
+                width: auto;
+            }
+        }
+        
+        .filter-select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--color-background-light);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            background: white;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        @media (min-width: 768px) {
+            .filter-select {
+                flex: 0 1 auto;
+                min-width: 150px;
+            }
+        }
+        
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+        
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 8px;
+            border: 2px dashed var(--color-background-light);
+        }
+        
+        .empty-state-icon {
+            font-size: 2.5rem;
+            color: var(--color-neutral);
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-neutral-dark);
+            margin-top: 0.5rem;
+        }
+        
+        .empty-state-text {
+            font-size: 0.875rem;
+            color: var(--color-neutral);
+            margin-top: 0.25rem;
+        }
+        
+        .loading-spinner {
+            border: 3px solid var(--color-background-light);
+            border-top: 3px solid var(--color-primary);
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 
-    <nav class="nav">
-        <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
-        <a href="demandes-devis.html"><i class="fas fa-inbox"></i> Demandes Devis</a>
-        <a href="clients.html"><i class="fas fa-users"></i> Clients</a>
-        <a href="rfq.html"><i class="fas fa-file-alt"></i> RFQ</a>
-        <a href="devis.html"><i class="fas fa-briefcase"></i> Devis</a>
-        <a href="commandes.html"><i class="fas fa-shopping-cart"></i> Commandes</a>
-        <a href="factures.html" class="active"><i class="fas fa-file-invoice"></i> Factures</a>
-        <a href="entreprises.html"><i class="fas fa-building"></i> Entreprises</a>
-        <a href="produits.html"><i class="fas fa-box"></i> Produits</a>
-        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="h-full flex flex-col">
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
+
+    <!-- Navbar Moderne selon charte Pro Confiance -->
+    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo & Nav Links -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
+                        <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
+                    </div>
+                    <nav class="hidden sm:ml-6 sm:flex sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
+                        <a href="dashboard.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="rfq.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>RFQ</span>
+                        </a>
+                        <a href="devis.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Devis</span>
+                        </a>
+                        <a href="commandes.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Commandes</span>
+                        </a>
+                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Entreprises</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Search Bar & Profile -->
+                <div class="flex items-center gap-4">
+                    <!-- Global Search -->
+                    <div class="hidden lg:block relative text-neutral-500 focus-within:text-primary-600" role="search">
+                        <label for="global-search" class="sr-only">Rechercher dans l'application</label>
+                        <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </div>
+                        <input id="global-search" class="block w-64 bg-blue-50 py-2.5 pl-10 pr-4 border border-blue-200 rounded-full leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition duration-150 ease-in-out min-h-[44px]" placeholder="Rechercher..." type="search" aria-label="Rechercher">
+                    </div>
+
+                    <!-- Notifications -->
+                    <button class="relative p-2.5 text-neutral-500 hover:text-primary-600 transition-colors rounded-lg hover:bg-blue-50 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Notifications" title="Notifications">
+                        <i class="far fa-bell text-xl" aria-hidden="true"></i>
+                        <span class="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true"></span>
+                    </button>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm" aria-label="Profil utilisateur">
+                            <span id="user-initials">U</span>
+                        </div>
+                        <span id="user-name" class="hidden md:block text-sm font-semibold text-neutral-700 min-w-[120px]">Chargement...</span>
+                        <button onclick="logout()" class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5" aria-label="Déconnexion" title="Déconnexion">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                            <span class="hidden lg:inline">Déconnexion</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Menu mobile -->
+                    <div class="sm:hidden ml-2">
+                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Menu mobile déroulant -->
+            <div id="mobile-menu" class="hidden sm:hidden border-t-2 border-blue-100 bg-white shadow-lg">
+                <div class="px-4 pt-3 pb-4 space-y-1">
+                    <a href="dashboard.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-chart-line text-neutral-500" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="rfq.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-contract text-neutral-500" aria-hidden="true"></i>
+                        <span>RFQ</span>
+                    </a>
+                    <a href="devis.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-invoice-dollar text-neutral-500" aria-hidden="true"></i>
+                        <span>Devis</span>
+                    </a>
+                    <a href="commandes.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-shopping-cart text-neutral-500" aria-hidden="true"></i>
+                        <span>Commandes</span>
+                    </a>
+                    <a href="entreprises.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-building text-neutral-500" aria-hidden="true"></i>
+                        <span>Entreprises</span>
+                    </a>
+                </div>
+            </div>
+        </div>
     </nav>
 
-    <div class="container">
-        <!-- Hero Section -->
-        <div class="hero-section">
-            <h1 class="hero-title"><i class="fas fa-file-invoice"></i> Gestion des Factures</h1>
-            <p class="hero-description">Consultez et gérez toutes vos factures, suivez les paiements et les relances.</p>
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8 border-b border-blue-100 pb-6">
+            <div>
+                <h1 class="text-3xl font-bold leading-tight text-primary-900 sm:text-4xl">
+                    <i class="fas fa-file-invoice mr-3"></i>Gestion des Factures
+                </h1>
+                <p class="mt-2 text-base text-neutral-600 font-medium">
+                    Suivez vos paiements, factures proforma et définitives
+                </p>
+            </div>
+            <div>
+                <button class="btn-secondary inline-flex items-center gap-2" onclick="showCreateFacture()">
+                    <i class="fas fa-info-circle"></i> Info Création
+                </button>
+            </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-clipboard-list"></i> Liste des factures</h2>
-                <button class="btn btn-secondary" onclick="showCreateFacture()"><i class="fas fa-info-circle"></i> Info</button>
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card fade-in delay-100">
+                <i class="fas fa-file-invoice stat-icon"></i>
+                <div class="stat-content">
+                    <div class="stat-label">Total Factures</div>
+                    <div class="stat-value" id="stat-total">-</div>
+                </div>
             </div>
-            
-            <div class="search-bar">
-                <div class="search-input">
-                    <input type="text" id="fact-search" placeholder="Rechercher par numéro, client..." 
-                           onkeyup="filterFactures()">
+
+            <div class="stat-card yellow fade-in delay-200">
+                <i class="fas fa-clock stat-icon"></i>
+                <div class="stat-content">
+                    <div class="stat-label">En attente paiement</div>
+                    <div class="stat-value" id="stat-attente">-</div>
                 </div>
-                <div class="filter-group">
-                    <select class="filter-select" id="fact-filter-type" onchange="filterFactures()">
-                        <option value="">Tous les types</option>
+            </div>
+
+            <div class="stat-card green fade-in delay-300">
+                <i class="fas fa-check-circle stat-icon"></i>
+                <div class="stat-content">
+                    <div class="stat-label">Payées</div>
+                    <div class="stat-value" id="stat-payee">-</div>
+                </div>
+            </div>
+
+            <div class="stat-card purple fade-in delay-300">
+                <i class="fas fa-coins stat-icon"></i>
+                <div class="stat-content">
+                    <div class="stat-label">Montant Total TTC</div>
+                    <div class="stat-value" id="stat-montant">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters & Search -->
+        <div class="filters-card">
+            <div class="filters-container">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-input-icon"></i>
+                    <input type="text" id="fact-search" onkeyup="filterFactures()" 
+                        class="search-input" 
+                        placeholder="Rechercher par n°, client...">
+                </div>
+                <div class="filter-selects-wrapper">
+                    <select id="fact-filter-type" onchange="filterFactures()" class="filter-select">
+                        <option value="">Tous types</option>
+                        <option value="facture">Facture Définitive</option>
                         <option value="proforma">Proforma</option>
-                        <option value="facture">Facture définitive</option>
                     </select>
-                </div>
-                <div class="filter-group">
-                    <select class="filter-select" id="fact-filter-statut" onchange="filterFactures()">
-                        <option value="">Tous les statuts</option>
+                    <select id="fact-filter-statut" onchange="filterFactures()" class="filter-select">
+                        <option value="">Tous statuts</option>
                         <option value="brouillon">Brouillon</option>
                         <option value="envoyee">Envoyée</option>
                         <option value="en_attente">En attente</option>
-                        <option value="partiellement_payee">Partiellement payée</option>
+                        <option value="partiellement_payee">Partiel</option>
                         <option value="payee">Payée</option>
                         <option value="annulee">Annulée</option>
                     </select>
                 </div>
             </div>
-            
-            <div class="table-container">
-                <table class="table">
-                <thead>
-                    <tr>
-                        <th>Numéro</th>
-                        <th>Type</th>
-                        <th>Client</th>
-                        <th>Date</th>
-                        <th>Total TTC</th>
-                        <th>Reste à payer</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="factures-table-body">
-                    <tr><td colspan="8" class="loading">Chargement...</td></tr>
-                </tbody>
-            </table>
+        </div>
+
+        <!-- Content Grid -->
+        <div id="factures-grid" class="factures-grid">
+            <!-- Loading State -->
+            <div style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem;">
+                <div class="loading-spinner"></div>
+                <p style="margin-top: 1rem; color: var(--color-neutral);">Chargement des factures...</p>
+            </div>
         </div>
     </div>
 
-    <script src="js/auth.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/components.js"></script>
-        <script>window.DISABLE_SIDEBAR = true;</script>
-    <script src="js/sidebar.js"></script>
-<script>
+    <script>
         checkAuth();
 
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+        const userNameEl = document.getElementById('user-name');
+        if(userNameEl) userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
 
         let allFactures = [];
+
+        function getStatusConfig(status) {
+            const configs = {
+                'brouillon': { class: 'badge-info', icon: 'fa-pencil-alt', label: 'Brouillon' },
+                'envoyee': { class: 'badge-info', icon: 'fa-paper-plane', label: 'Envoyée' },
+                'en_attente': { class: 'badge-warning', icon: 'fa-clock', label: 'En attente' },
+                'partiellement_payee': { class: 'badge-warning', icon: 'fa-adjust', label: 'Partiel' },
+                'payee': { class: 'badge-success', icon: 'fa-check-circle', label: 'Payée' },
+                'annulee': { class: 'badge-danger', icon: 'fa-times-circle', label: 'Annulée' }
+            };
+            return configs[status] || { class: 'badge-info', icon: 'fa-question', label: status };
+        }
+
+        function formatCompactCurrency(amount) {
+            if (!amount || amount === 0) return '0 GNF';
+            
+            const millions = amount / 1000000;
+            const milliards = amount / 1000000000;
+            
+            if (milliards >= 1) {
+                return (milliards.toFixed(1) + ' Md GNF').replace('.0', '');
+            } else if (millions >= 1) {
+                return (millions.toFixed(1) + ' M GNF').replace('.0', '');
+            } else {
+                const milliers = amount / 1000;
+                if (milliers >= 1) {
+                    return (milliers.toFixed(0) + ' K GNF');
+                }
+                return formatCurrency(amount);
+            }
+        }
 
         async function loadFactures() {
             try {
@@ -109,11 +646,21 @@
                 const response = await apiCall('/api/factures');
                 if (!response) {
                     hideLoading();
+                    Toast.error('Erreur de connexion');
+                    return;
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    hideLoading();
+                    Toast.error('Erreur: ' + (errorData.error || 'Erreur lors du chargement'));
                     return;
                 }
                 
                 allFactures = await response.json();
                 hideLoading();
+                
+                updateStats(allFactures);
                 displayFactures(allFactures);
             } catch (error) {
                 hideLoading();
@@ -122,48 +669,101 @@
             }
         }
 
-        function displayFactures(factures) {
-            const tbody = document.getElementById('factures-table-body');
+        function updateStats(facts) {
+            const stats = {
+                total: facts.length,
+                attente: facts.filter(f => ['en_attente', 'envoyee', 'partiellement_payee'].includes(f.statut)).length,
+                payee: facts.filter(f => f.statut === 'payee').length,
+                montant: facts.reduce((acc, curr) => acc + (parseFloat(curr.total_ttc) || 0), 0)
+            };
 
-                if (factures.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="8">
-                                <div class="empty-state">
-                                    <div class="empty-state-icon"><i class="fas fa-file-invoice"></i></div>
-                                    <div class="empty-state-title">Aucune facture</div>
-                                    <div class="empty-state-text">Les factures apparaîtront ici</div>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-
-                tbody.innerHTML = factures.map(f => {
-                    const typeBadge = f.type_facture === 'proforma' 
-                        ? '<span class="badge badge-warning"><i class="fas fa-file-invoice"></i> Proforma</span>'
-                        : '<span class="badge badge-info"><i class="fas fa-file-invoice-dollar"></i> Facture</span>';
-                    
-                    return `
-                    <tr>
-                        <td><strong>${f.numero || '-'}</strong></td>
-                        <td>${typeBadge}</td>
-                        <td>${f.client_nom || '-'}</td>
-                        <td>${formatDate(f.date_emission)}</td>
-                        <td>${formatCurrency(f.total_ttc)}</td>
-                        <td><strong style="color: ${f.reste_a_payer > 0 ? 'var(--color-danger)' : 'var(--color-success)'}">${formatCurrency(f.reste_a_payer)}</strong></td>
-                        <td><span class="badge ${getStatusBadge(f.statut)}">${getStatusLabel(f.statut)}</span></td>
-                        <td>
-                            <button class="btn btn-secondary btn-sm" onclick="viewFacture(${f.id})"><i class="fas fa-eye"></i></button>
-                        </td>
-                    </tr>
-                `;
-                }).join('');
+            document.getElementById('stat-total').textContent = stats.total;
+            document.getElementById('stat-attente').textContent = stats.attente;
+            document.getElementById('stat-payee').textContent = stats.payee;
+            document.getElementById('stat-montant').textContent = formatCompactCurrency(stats.montant);
         }
 
-        function showCreateFacture() {
-            Toast.info('Les factures sont créées automatiquement lors de la livraison');
+        function displayFactures(factures) {
+            const grid = document.getElementById('factures-grid');
+            
+            if (factures.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-file-invoice-dollar empty-state-icon"></i>
+                        <h3 class="empty-state-title">Aucune facture trouvée</h3>
+                        <p class="empty-state-text">Essayez de modifier vos filtres.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = factures.map((f, index) => {
+                const status = getStatusConfig(f.statut);
+                const isProforma = f.type_facture === 'proforma';
+                
+                return `
+                <div class="facture-card fade-in" style="animation-delay: ${index * 50}ms">
+                    <div class="facture-card-header">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                            <div style="flex: 1;">
+                                <h3 class="facture-numero" onclick="viewFacture(${f.id})">${f.numero || '-'}</h3>
+                                <div class="facture-meta">
+                                    <span class="facture-type-badge ${isProforma ? 'proforma' : 'definitive'}">
+                                        ${isProforma ? 'PROFORMA' : 'DEFINITIVE'}
+                                    </span>
+                                    <span class="facture-date">${formatDate(f.date_emission)}</span>
+                                </div>
+                            </div>
+                            <span class="badge ${status.class}">
+                                <i class="fas ${status.icon}"></i> ${status.label}
+                            </span>
+                        </div>
+                        
+                        <div class="facture-details">
+                            <div class="facture-detail-row">
+                                <span class="facture-detail-label">Client</span>
+                                <span class="facture-detail-value" title="${f.client_nom || '-'}">${f.client_nom || '-'}</span>
+                            </div>
+                            <div class="facture-detail-row">
+                                <span class="facture-detail-label">Total TTC</span>
+                                <span class="facture-amount">${formatCurrency(f.total_ttc || 0)}</span>
+                            </div>
+                            ${f.reste_a_payer > 0 ? `
+                            <div class="facture-detail-row" style="padding-top: 0.5rem; border-top: 1px dashed var(--color-background-light);">
+                                <span class="facture-detail-label" style="font-size: 0.75rem; font-weight: 600; color: var(--color-danger);">Reste à payer</span>
+                                <span class="facture-reste">${formatCurrency(f.reste_a_payer)}</span>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="facture-card-footer">
+                        <button class="facture-footer-btn" onclick="viewFacture(${f.id})">
+                            Voir détails
+                        </button>
+                        <button class="facture-footer-icon" onclick="downloadPDFFacture(${f.id})" title="Télécharger PDF">
+                            <i class="fas fa-file-pdf"></i>
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function filterFactures() {
+            const search = document.getElementById('fact-search').value.toLowerCase();
+            const type = document.getElementById('fact-filter-type').value;
+            const statut = document.getElementById('fact-filter-statut').value;
+            
+            const filtered = allFactures.filter(f => {
+                const matchSearch = !search || 
+                    (f.numero && f.numero.toLowerCase().includes(search)) ||
+                    (f.client_nom && f.client_nom.toLowerCase().includes(search));
+                const matchType = !type || f.type_facture === type;
+                const matchStatut = !statut || f.statut === statut;
+                return matchSearch && matchType && matchStatut;
+            });
+            
+            updateStats(filtered);
+            displayFactures(filtered);
         }
 
         function viewFacture(id) {
@@ -174,25 +774,95 @@
             }
         }
 
-        function filterFactures() {
-            const search = document.getElementById('fact-search').value.toLowerCase();
-            const type = document.getElementById('fact-filter-type').value;
-            const statut = document.getElementById('fact-filter-statut').value;
-            
-            let filtered = allFactures.filter(f => {
-                const matchSearch = !search || 
-                    (f.numero && f.numero.toLowerCase().includes(search)) ||
-                    (f.client_nom && f.client_nom.toLowerCase().includes(search));
-                const matchType = !type || f.type_facture === type;
-                const matchStatut = !statut || f.statut === statut;
-                return matchSearch && matchType && matchStatut;
-            });
-            
-            displayFactures(filtered);
+        function showCreateFacture() {
+            Toast.info('Les factures sont créées automatiquement lors de la livraison');
+        }
+
+        // Fonction pour télécharger le PDF d'une facture avec authentification
+        async function downloadPDFFacture(factureId) {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    Toast.error('Vous devez être connecté pour télécharger le PDF');
+                    return;
+                }
+                
+                showLoading('Génération du PDF...');
+                
+                // Détecter l'URL de base
+                let baseUrl = '';
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    baseUrl = 'http://localhost:3000';
+                } else {
+                    baseUrl = window.location.origin;
+                }
+                
+                const url = `${baseUrl}/api/pdf/facture/${factureId}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                hideLoading();
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        Toast.error('Session expirée. Veuillez vous reconnecter.');
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    Toast.error(errorData.error || 'Erreur lors du téléchargement du PDF');
+                    return;
+                }
+                
+                // Récupérer le blob
+                const blob = await response.blob();
+                
+                // Créer un lien de téléchargement
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `Facture-${factureId}-${Date.now()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+                
+                Toast.success('PDF téléchargé avec succès');
+            } catch (error) {
+                hideLoading();
+                console.error('Erreur téléchargement PDF:', error);
+                Toast.error('Erreur lors du téléchargement du PDF');
+            }
         }
 
         loadFactures();
+        
+        // Menu mobile
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const button = document.getElementById('mobile-menu-button');
+            if (menu && button) {
+                const isHidden = menu.classList.contains('hidden');
+                menu.classList.toggle('hidden');
+                button.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+                const icon = button.querySelector('i');
+                if (icon) {
+                    if (isHidden) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                }
+            }
+        }
+        window.toggleMobileMenu = toggleMobileMenu;
     </script>
 </body>
 </html>
-

@@ -1,43 +1,314 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="h-full bg-gray-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Créer une RFQ - SilyProcure</title>
+    
+    <!-- CSS Charte Graphique Pro Confiance -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/workflow.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#E0E7FF',
+                            100: '#DBEAFE',
+                            400: '#60A5FA',
+                            500: '#3B82F6',
+                            600: '#2563EB',
+                            700: '#1D4ED8',
+                            900: '#1E3A8A',
+                        },
+                        success: {
+                            500: '#10B981',
+                        },
+                        neutral: {
+                            500: '#64748B',
+                            600: '#475569',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Dashboard Theme CSS -->
+    <link rel="stylesheet" href="css/dashboard-theme.css">
+    
+    <style>
+        /* Stepper/Wizard Styles */
+        .wizard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .wizard-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .wizard-step {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        .wizard-step::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: var(--color-neutral-light, #E5E7EB);
+            z-index: 0;
+        }
+        
+        .wizard-step:first-child::before {
+            display: none;
+        }
+        
+        .wizard-step.completed::before,
+        .wizard-step.active::before {
+            background: var(--color-primary);
+        }
+        
+        .wizard-step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid var(--color-neutral-light, #E5E7EB);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--color-neutral);
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .wizard-step.active .wizard-step-circle {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
+        }
+        
+        .wizard-step.completed .wizard-step-circle {
+            background: var(--color-success);
+            border-color: var(--color-success);
+            color: white;
+        }
+        
+        .wizard-step-label {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--color-neutral);
+            text-align: center;
+        }
+        
+        .wizard-step.active .wizard-step-label {
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+        
+        .wizard-step.completed .wizard-step-label {
+            color: var(--color-success);
+        }
+        
+        .wizard-content {
+            min-height: 400px;
+        }
+        
+        .wizard-section {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .wizard-section.active {
+            display: block;
+        }
+        
+        .form-section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--color-background-blue, #E0E7FF);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .fournisseur-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .fournisseur-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .fournisseur-card.selected {
+            border-color: var(--color-primary);
+            background: rgba(0, 56, 122, 0.05);
+        }
+        
+        .ligne-article {
+            background: var(--color-background-light);
+            border: 1px solid var(--color-neutral-light, #E5E7EB);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        
+        .recap-box {
+            background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%);
+            border: 2px solid var(--color-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+    </style>
 </head>
-<body>
-    <div class="header">
-        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
-        <div class="user-info">
-            <span id="user-name"></span>
-            <button onclick="logout()">Déconnexion</button>
-        </div>
-    </div>
+<body class="h-full flex flex-col">
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
 
-    <nav class="nav">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="rfq.html">RFQ</a>
-        <a href="devis.html">Devis</a>
-        <a href="commandes.html">Commandes</a>
-        <a href="factures.html">Factures</a>
-        <a href="entreprises.html">Entreprises</a>
-        <a href="produits.html">Produits</a>
-        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
+    <!-- Navbar Moderne selon charte Pro Confiance -->
+    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo & Nav Links -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
+                        <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
+                    </div>
+                    <nav class="hidden sm:ml-6 sm:flex sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
+                        <a href="dashboard.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="rfq.html" class="border-primary-500 text-primary-900 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold min-h-[44px] transition-colors whitespace-nowrap" aria-current="page">
+                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>RFQ</span>
+                        </a>
+                        <a href="devis.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Devis</span>
+                        </a>
+                        <a href="commandes.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Commandes</span>
+                        </a>
+                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Entreprises</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Search Bar & Profile -->
+                <div class="flex items-center gap-4">
+                    <!-- Global Search -->
+                    <div class="hidden lg:block relative text-neutral-500 focus-within:text-primary-600" role="search">
+                        <label for="global-search" class="sr-only">Rechercher dans l'application</label>
+                        <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </div>
+                        <input id="global-search" class="block w-64 bg-blue-50 py-2.5 pl-10 pr-4 border border-blue-200 rounded-full leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition duration-150 ease-in-out min-h-[44px]" placeholder="Rechercher..." type="search" aria-label="Rechercher">
+                    </div>
+
+                    <!-- Notifications -->
+                    <button class="relative p-2.5 text-neutral-500 hover:text-primary-600 transition-colors rounded-lg hover:bg-blue-50 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Notifications" title="Notifications">
+                        <i class="far fa-bell text-xl" aria-hidden="true"></i>
+                        <span class="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true"></span>
+                    </button>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm" aria-label="Profil utilisateur">
+                            <span id="user-initials">U</span>
+                        </div>
+                        <span id="user-name" class="hidden md:block text-sm font-semibold text-neutral-700 min-w-[120px]">Chargement...</span>
+                        <button onclick="logout()" class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5" aria-label="Déconnexion" title="Déconnexion">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                            <span class="hidden lg:inline">Déconnexion</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Menu mobile -->
+                    <div class="sm:hidden ml-2">
+                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Menu mobile déroulant -->
+            <div id="mobile-menu" class="hidden sm:hidden border-t-2 border-blue-100 bg-white shadow-lg">
+                <div class="px-4 pt-3 pb-4 space-y-1">
+                    <a href="dashboard.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-chart-line text-neutral-500" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="rfq.html" class="bg-gradient-to-r from-blue-50 to-primary-50 border-l-4 border-primary-500 text-primary-700 block px-4 py-3 rounded-lg text-base font-semibold min-h-[44px] flex items-center gap-3 transition-all">
+                        <i class="fas fa-file-contract text-primary-600" aria-hidden="true"></i>
+                        <span>RFQ</span>
+                    </a>
+                    <a href="devis.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-invoice-dollar text-neutral-500" aria-hidden="true"></i>
+                        <span>Devis</span>
+                    </a>
+                    <a href="commandes.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-shopping-cart text-neutral-500" aria-hidden="true"></i>
+                        <span>Commandes</span>
+                    </a>
+                    <a href="entreprises.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-building text-neutral-500" aria-hidden="true"></i>
+                        <span>Entreprises</span>
+                    </a>
+                </div>
+            </div>
+        </div>
     </nav>
 
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="container">
         <!-- Hero Section -->
         <div class="hero-section" style="text-align: left; padding: 2rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <div>
                     <button class="btn btn-secondary" onclick="window.location.href='rfq.html'" style="margin-bottom: 1rem;">
-                        ← Retour
+                        <i class="fas fa-arrow-left"></i> Retour
                     </button>
                     <h1 class="hero-title" style="font-size: 2rem; margin: 0;"><i class="fas fa-clipboard-list"></i> Nouvelle demande de devis (RFQ)</h1>
                     <p class="hero-description" style="text-align: left; margin: 0.5rem 0 0 0; max-width: 100%;">
@@ -47,17 +318,36 @@
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Formulaire de création RFQ</h2>
+        <!-- Wizard Stepper -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div class="wizard-steps">
+                <div class="wizard-step active" id="wizard-step-1">
+                    <div class="wizard-step-circle">1</div>
+                    <div class="wizard-step-label">Informations</div>
+                </div>
+                <div class="wizard-step" id="wizard-step-2">
+                    <div class="wizard-step-circle">2</div>
+                    <div class="wizard-step-label">Fournisseurs</div>
+                </div>
+                <div class="wizard-step" id="wizard-step-3">
+                    <div class="wizard-step-circle">3</div>
+                    <div class="wizard-step-label">Articles</div>
+                </div>
+                <div class="wizard-step" id="wizard-step-4">
+                    <div class="wizard-step-circle">4</div>
+                    <div class="wizard-step-label">Conditions</div>
+                </div>
             </div>
+        </div>
 
+        <div class="card">
             <form id="rfq-form" onsubmit="handleCreateRFQ(event)">
                 <!-- Étape 1 : Informations générales -->
-                <div class="form-section" id="step-1">
-                    <h3 style="margin-bottom: 1.5rem; color: var(--color-primary); border-bottom: 2px solid var(--color-background-blue); padding-bottom: 0.5rem;">
-                        <i class="fas fa-clipboard-list"></i> Étape 1 : Informations générales
-                    </h3>
+                <div class="wizard-content">
+                    <div class="wizard-section active" id="step-1">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-clipboard-list"></i> Étape 1 : Informations générales
+                        </h3>
                     
                     <div class="form-row">
                         <div class="form-group">
@@ -107,14 +397,11 @@
                         </div>
                     </div>
 
-                    <button type="button" class="btn btn-primary" onclick="nextStep(2)" style="margin-top: 1rem;">
-                        Suivant : Rechercher des fournisseurs →
-                    </button>
-                </div>
+                    </div>
 
                 <!-- Étape 2 : Recherche et sélection de fournisseurs -->
-                <div class="form-section hidden" id="step-2">
-                    <h3 style="margin-bottom: 1.5rem; color: var(--color-primary); border-bottom: 2px solid var(--color-background-blue); padding-bottom: 0.5rem;">
+                <div class="wizard-section" id="step-2">
+                    <h3 class="form-section-title">
                         <i class="fas fa-search"></i> Étape 2 : Recherche de fournisseurs
                     </h3>
 
@@ -129,21 +416,16 @@
                     <div id="fournisseurs-suggestions" style="margin-top: 1.5rem;">
                         <div class="loading">Recherche de fournisseurs...</div>
                     </div>
-
-                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-                        <button type="button" class="btn btn-secondary" onclick="previousStep(1)">← Précédent</button>
-                        <button type="button" class="btn btn-primary" onclick="nextStep(3)">Suivant : Détails produits →</button>
-                    </div>
                 </div>
 
                 <!-- Étape 3 : Détails produits/services -->
-                <div class="form-section hidden" id="step-3">
-                    <h3 style="margin-bottom: 1.5rem; color: var(--color-primary); border-bottom: 2px solid var(--color-background-blue); padding-bottom: 0.5rem;">
+                <div class="wizard-section" id="step-3">
+                    <h3 class="form-section-title">
                         <i class="fas fa-box"></i> Étape 3 : Produits/Services demandés
                     </h3>
 
                     <div id="lignes-rfq">
-                        <div class="card" style="margin-bottom: 1rem;">
+                        <div class="ligne-article">
                             <div class="form-row">
                                 <div class="form-group" style="flex: 2;">
                                     <label>Description *</label>
@@ -177,16 +459,11 @@
                     <button type="button" class="btn btn-secondary" onclick="addLigneRFQ()" style="margin-bottom: 1rem;">
                         <i class="fas fa-plus"></i> Ajouter une ligne
                     </button>
-
-                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-                        <button type="button" class="btn btn-secondary" onclick="previousStep(2)">← Précédent</button>
-                        <button type="button" class="btn btn-primary" onclick="nextStep(4)">Suivant : Conditions →</button>
-                    </div>
                 </div>
 
                 <!-- Étape 4 : Conditions de livraison -->
-                <div class="form-section hidden" id="step-4">
-                    <h3 style="margin-bottom: 1.5rem; color: var(--color-primary); border-bottom: 2px solid var(--color-background-blue); padding-bottom: 0.5rem;">
+                <div class="wizard-section" id="step-4">
+                    <h3 class="form-section-title">
                         <i class="fas fa-truck"></i> Étape 4 : Conditions de livraison et paiement
                     </h3>
 
@@ -315,29 +592,37 @@
                     </div>
 
                     <!-- Récapitulatif -->
-                    <div class="card" style="background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%); border: 2px solid var(--color-primary);">
+                    <div class="recap-box">
                         <h4 style="margin-bottom: 1rem; color: var(--color-primary-dark); display: flex; align-items: center; gap: 0.5rem;">
                             <i class="fas fa-check"></i> Récapitulatif
                         </h4>
                         <div id="recap-summary" style="color: var(--color-neutral-dark); line-height: 1.8;">
                             <div><i class="fas fa-clipboard-list"></i> <strong>Lignes de commande:</strong> <span id="recap-lignes">-</span></div>
-                            <div>🏭 <strong>Fournisseurs sélectionnés:</strong> <span id="recap-fournisseurs">-</span></div>
-                            <div>📅 <strong>Date limite de réponse:</strong> <span id="recap-date-limite">-</span></div>
+                            <div><i class="fas fa-building"></i> <strong>Fournisseurs sélectionnés:</strong> <span id="recap-fournisseurs">-</span></div>
+                            <div><i class="far fa-calendar-alt"></i> <strong>Date limite de réponse:</strong> <span id="recap-date-limite">-</span></div>
                         </div>
                     </div>
+                </div>
+                </div>
 
-                    <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: space-between;">
-                        <button type="button" class="btn btn-secondary" onclick="previousStep(3)">
-                            ← Précédent
+                <!-- Navigation Buttons -->
+                <div class="card-footer" style="display: flex; justify-content: space-between; padding: 1.5rem; border-top: 1px solid var(--color-neutral-light, #E5E7EB);">
+                    <button type="button" id="btn-prev" class="btn btn-secondary" onclick="previousStep()" style="display: none;">
+                        <i class="fas fa-arrow-left"></i> Précédent
+                    </button>
+                    <div style="margin-left: auto; display: flex; gap: 1rem;">
+                        <button type="button" id="btn-next" class="btn btn-primary" onclick="nextStep()">
+                            Suivant <i class="fas fa-arrow-right"></i>
                         </button>
-                        <button type="submit" class="btn btn-success" style="padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600;">
-                            ✨ Créer la RFQ
+                        <button type="submit" id="btn-submit" class="btn btn-success" style="display: none; padding: 0.75rem 2rem; font-size: 1.1rem; font-weight: 600;">
+                            <i class="fas fa-check"></i> Créer la RFQ
                         </button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
+    </main>
 
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
@@ -349,6 +634,15 @@
         checkAuth();
 
         const user = JSON.parse(localStorage.getItem('user') || '{}');
+        // Initialisation du nom d'utilisateur et des initiales
+        const userNameEl = document.getElementById('user-name');
+        const userInitialsEl = document.getElementById('user-initials');
+        if (userNameEl) {
+            userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || 'Utilisateur';
+        }
+        if (userInitialsEl && user.prenom) {
+            userInitialsEl.textContent = (user.prenom.charAt(0) + (user.nom ? user.nom.charAt(0) : '')).toUpperCase();
+        }
         document.getElementById('user-name').textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
 
         let selectedFournisseurs = [];
@@ -408,6 +702,9 @@
                 autreDiv.style.display = 'none';
             }
         });
+        
+        // Initialiser le wizard au chargement
+        updateWizardUI();
 
         async function loadProjets() {
             try {
@@ -590,8 +887,7 @@
         function addLigneRFQ() {
             const container = document.getElementById('lignes-rfq');
             const ligne = document.createElement('div');
-            ligne.className = 'card';
-            ligne.style.marginBottom = '1rem';
+            ligne.className = 'ligne-article';
             ligne.innerHTML = `
                 <div class="form-row">
                     <div class="form-group" style="flex: 2;">
@@ -638,10 +934,56 @@
             }
         }
 
-        function nextStep(step) {
+        let currentWizardStep = 1;
+        const totalWizardSteps = 4;
+
+        function updateWizardUI() {
+            // Mettre à jour les étapes du wizard
+            for (let i = 1; i <= totalWizardSteps; i++) {
+                const stepEl = document.getElementById(`wizard-step-${i}`);
+                const sectionEl = document.getElementById(`step-${i}`);
+                
+                // Reset classes
+                stepEl.classList.remove('active', 'completed');
+                if (sectionEl) sectionEl.classList.remove('active');
+                
+                if (i < currentWizardStep) {
+                    stepEl.classList.add('completed');
+                } else if (i === currentWizardStep) {
+                    stepEl.classList.add('active');
+                    if (sectionEl) sectionEl.classList.add('active');
+                }
+            }
+            
+            // Mettre à jour les boutons
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const btnSubmit = document.getElementById('btn-submit');
+            
+            if (btnPrev) {
+                if (currentWizardStep === 1) {
+                    btnPrev.style.display = 'none';
+                } else {
+                    btnPrev.style.display = 'inline-flex';
+                }
+            }
+            
+            if (btnNext && btnSubmit) {
+                if (currentWizardStep === totalWizardSteps) {
+                    btnNext.style.display = 'none';
+                    btnSubmit.style.display = 'inline-flex';
+                } else {
+                    btnNext.style.display = 'inline-flex';
+                    btnSubmit.style.display = 'none';
+                }
+            }
+        }
+
+        function nextStep() {
             // Valider l'étape actuelle
-            const currentStep = step - 1;
-            const currentSection = document.getElementById(`step-${currentStep}`);
+            const currentSection = document.getElementById(`step-${currentWizardStep}`);
+            if (!currentSection) return;
+            
             const inputs = currentSection.querySelectorAll('input[required], select[required], textarea[required]');
             let valid = true;
 
@@ -649,6 +991,9 @@
                 if (!input.value.trim()) {
                     valid = false;
                     input.style.borderColor = 'var(--color-danger)';
+                    setTimeout(() => {
+                        input.style.borderColor = '';
+                    }, 2000);
                 } else {
                     input.style.borderColor = '';
                 }
@@ -660,38 +1005,48 @@
             }
 
             // Vérifications spécifiques
-            if (currentStep === 2 && selectedFournisseurs.length === 0) {
+            if (currentWizardStep === 2 && selectedFournisseurs.length === 0) {
                 Toast.error('Veuillez sélectionner au moins un fournisseur');
                 return;
             }
-
-            // Masquer l'étape actuelle
-            currentSection.classList.add('hidden');
-            // Afficher l'étape suivante
-            const nextSection = document.getElementById(`step-${step}`);
-            nextSection.classList.remove('hidden');
             
-            // Charger les produits si on arrive à l'étape 3
-            if (step === 3) {
-                loadProduits();
+            if (currentWizardStep === 3) {
+                const lignes = document.querySelectorAll('#lignes-rfq > .ligne-article, #lignes-rfq > .card');
+                if (lignes.length === 0) {
+                    Toast.error('Veuillez ajouter au moins une ligne de produit/service');
+                    return;
+                }
             }
 
-            // Mettre à jour le récapitulatif si on arrive à l'étape 4
-            if (step === 4) {
-                updateRecap();
-                // Recharger les adresses si nécessaire
-                setTimeout(() => {
-                    const select = document.getElementById('rfq-adresse-livraison');
-                    if (select && (select.options.length <= 1 || select.innerHTML.includes('Chargement'))) {
-                        loadAdressesLivraison();
-                    }
-                }, 300);
+            // Passer à l'étape suivante
+            if (currentWizardStep < totalWizardSteps) {
+                currentWizardStep++;
+                updateWizardUI();
+                
+                // Charger les produits si on arrive à l'étape 3
+                if (currentWizardStep === 3) {
+                    loadProduits();
+                }
+
+                // Mettre à jour le récapitulatif si on arrive à l'étape 4
+                if (currentWizardStep === 4) {
+                    updateRecap();
+                    // Recharger les adresses si nécessaire
+                    setTimeout(() => {
+                        const select = document.getElementById('rfq-adresse-livraison');
+                        if (select && (select.options.length <= 1 || select.innerHTML.includes('Chargement'))) {
+                            loadAdressesLivraison();
+                        }
+                    }, 300);
+                }
             }
         }
 
-        function previousStep(step) {
-            document.getElementById(`step-${step + 1}`).classList.add('hidden');
-            document.getElementById(`step-${step}`).classList.remove('hidden');
+        function previousStep() {
+            if (currentWizardStep > 1) {
+                currentWizardStep--;
+                updateWizardUI();
+            }
         }
 
         async function loadAdressesLivraison() {
@@ -972,6 +1327,28 @@
                 console.error('Erreur:', error);
             }
         }
+        
+        // Menu mobile
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const button = document.getElementById('mobile-menu-button');
+            if (menu && button) {
+                const isHidden = menu.classList.contains('hidden');
+                menu.classList.toggle('hidden');
+                button.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+                const icon = button.querySelector('i');
+                if (icon) {
+                    if (isHidden) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                }
+            }
+        }
+        window.toggleMobileMenu = toggleMobileMenu;
     </script>
 </body>
 </html>

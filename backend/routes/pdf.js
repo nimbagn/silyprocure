@@ -66,12 +66,24 @@ router.get('/devis/:id', validateId, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Récupérer le devis avec ses lignes
+        // Récupérer le devis avec ses lignes et informations complètes
         const [devisList] = await pool.execute(
             `SELECT d.*, 
-                    e.nom as fournisseur_nom
+                    e.nom as fournisseur_nom,
+                    e.telephone as fournisseur_telephone,
+                    e.email as fournisseur_email,
+                    ae.adresse_ligne1 as fournisseur_adresse,
+                    ae.ville as fournisseur_ville,
+                    c.nom as client_nom,
+                    c.telephone as client_telephone,
+                    c.email as client_email,
+                    ac.adresse_ligne1 as client_adresse,
+                    ac.ville as client_ville
              FROM devis d
              LEFT JOIN entreprises e ON d.fournisseur_id = e.id
+             LEFT JOIN adresses ae ON e.id = ae.entreprise_id AND ae.type_adresse = 'siege'
+             LEFT JOIN entreprises c ON d.client_id = c.id
+             LEFT JOIN adresses ac ON c.id = ac.entreprise_id AND ac.type_adresse = 'siege'
              WHERE d.id = ?`,
             [id]
         );
@@ -110,12 +122,17 @@ router.get('/commande/:id', validateId, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Récupérer la commande avec ses lignes
+        // Récupérer la commande avec ses lignes et informations complètes
         const [commandes] = await pool.execute(
             `SELECT c.*, 
-                    e.nom as fournisseur_nom
+                    e.nom as fournisseur_nom,
+                    e.telephone as fournisseur_telephone,
+                    e.email as fournisseur_email,
+                    a.adresse_ligne1 as fournisseur_adresse,
+                    a.ville as fournisseur_ville
              FROM commandes c
              LEFT JOIN entreprises e ON c.fournisseur_id = e.id
+             LEFT JOIN adresses a ON e.id = a.entreprise_id AND a.type_adresse = 'siege'
              WHERE c.id = $1`,
             [id]
         );
@@ -154,14 +171,22 @@ router.get('/facture/:id', validateId, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Récupérer la facture avec ses lignes
+        // Récupérer la facture avec ses lignes et informations complètes
         const [factures] = await pool.execute(
             `SELECT f.*, 
                     e1.nom as facturier_nom,
-                    e2.nom as client_nom
+                    a1.adresse_ligne1 as facturier_adresse,
+                    a1.ville as facturier_ville,
+                    e2.nom as client_nom,
+                    e2.telephone as client_telephone,
+                    e2.email as client_email,
+                    a2.adresse_ligne1 as client_adresse,
+                    a2.ville as client_ville
              FROM factures f
              LEFT JOIN entreprises e1 ON f.facturier_id = e1.id
+             LEFT JOIN adresses a1 ON e1.id = a1.entreprise_id AND a1.type_adresse = 'siege'
              LEFT JOIN entreprises e2 ON f.client_id = e2.id
+             LEFT JOIN adresses a2 ON e2.id = a2.entreprise_id AND a2.type_adresse = 'siege'
              WHERE f.id = ?`,
             [id]
         );

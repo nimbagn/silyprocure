@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const pool = require('../config/database');
@@ -95,11 +96,30 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
         const reference = generateReference();
         const trackingToken = generateTrackingToken();
 
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'contact.js:96',message:'POST /devis-request - Entry',data:{email,nom,articlesCount:articlesParsed?.length,filesCount:req.files?.length,reference},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+
         // Démarrer une transaction
         const connection = await pool.getConnection();
         await connection.beginTransaction();
 
         try {
+            // Détecter le type de base de données pour utiliser les bonnes colonnes
+            const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+            const adresseCol = usePostgreSQL ? 'adresse_livraison' : 'adresse';
+            const villeCol = usePostgreSQL ? 'ville_livraison' : 'ville';
+            const paysCol = usePostgreSQL ? 'pays_livraison' : 'pays';
+            
+            console.log('🔍 Détection DB:', {
+                DATABASE_URL: !!process.env.DATABASE_URL,
+                DB_TYPE: process.env.DB_TYPE,
+                usePostgreSQL,
+                adresseCol,
+                villeCol,
+                paysCol
+            });
+            
             // Créer ou récupérer le client dans la table clients
             let clientId = null;
             
@@ -113,15 +133,14 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                 // Client existe déjà, mettre à jour ses informations
                 clientId = existingClients[0].id;
                 // Utiliser COALESCE pour PostgreSQL au lieu de IFNULL (MySQL)
-                // Utiliser adresse_livraison au lieu de adresse (structure PostgreSQL)
                 await connection.execute(
                     `UPDATE clients 
                      SET nom = $1, 
                          telephone = COALESCE($2, telephone), 
                          entreprise = COALESCE($3, entreprise),
-                         adresse_livraison = COALESCE($4, adresse_livraison),
-                         ville_livraison = COALESCE($5, ville_livraison),
-                         pays_livraison = COALESCE($6, pays_livraison),
+                         ${adresseCol} = COALESCE($4, ${adresseCol}),
+                         ${villeCol} = COALESCE($5, ${villeCol}),
+                         ${paysCol} = COALESCE($6, ${paysCol}),
                          date_derniere_demande = NOW(),
                          nombre_demandes = nombre_demandes + 1,
                          statut = CASE WHEN statut = 'prospect' THEN 'actif' ELSE statut END,
@@ -131,32 +150,46 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                 );
             } else {
                 // Créer un nouveau client
-                // Utiliser adresse_livraison au lieu de adresse (structure PostgreSQL)
+                const insertSQL = `INSERT INTO clients (nom, email, telephone, entreprise, ${adresseCol}, ${villeCol}, ${paysCol}, date_derniere_demande, nombre_demandes, statut)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), 1, 'prospect') RETURNING id`;
+                console.log('🔍 SQL INSERT clients:', insertSQL);
+                console.log('🔍 Colonnes utilisées:', { adresseCol, villeCol, paysCol });
+                
                 const [clientRows, clientResult] = await connection.execute(
-                    `INSERT INTO clients (nom, email, telephone, entreprise, adresse_livraison, ville_livraison, pays_livraison, date_derniere_demande, nombre_demandes, statut)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), 1, 'prospect') RETURNING id`,
+                    insertSQL,
                     [nom, email, telephone, entreprise || null, adresse_livraison, ville_livraison, pays_livraison]
                 );
                 clientId = clientResult.rows && clientResult.rows[0] ? clientResult.rows[0].id : (clientResult.insertId || clientResult[0]?.id);
             }
 
             // Enregistrer la demande principale avec référence et token, liée au client
+            // NOTE: demandes_devis utilise TOUJOURS adresse_livraison, ville_livraison, pays_livraison
+            // (peu importe MySQL ou PostgreSQL)
+            const demandeInsertSQL = `INSERT INTO demandes_devis (client_id, nom, email, telephone, entreprise, message, adresse_livraison, ville_livraison, pays_livraison, latitude, longitude, statut, reference, token_suivi, mode_notification)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`;
+            console.log('🔍 SQL INSERT demandes_devis:', demandeInsertSQL);
+            
             const [demandeRows, demandeResult] = await connection.execute(
-                `INSERT INTO demandes_devis (client_id, nom, email, telephone, entreprise, message, adresse_livraison, ville_livraison, pays_livraison, latitude, longitude, statut, reference, token_suivi, mode_notification)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'nouvelle', $12, $13, $14) RETURNING id`,
+                demandeInsertSQL,
                 [
                     clientId, nom, email, telephone, entreprise || null, message || null, 
                     adresse_livraison, ville_livraison, pays_livraison,
                     latitude && !isNaN(parseFloat(latitude)) ? parseFloat(latitude) : null,
                     longitude && !isNaN(parseFloat(longitude)) ? parseFloat(longitude) : null,
+                    'nouvelle', // statut
                     reference, trackingToken, mode_notification || 'email'
                 ]
             );
 
             const demandeId = demandeResult.rows && demandeResult.rows[0] ? demandeResult.rows[0].id : (demandeResult.insertId || demandeResult[0]?.id);
 
+            // #region agent log
+            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'contact.js:180',message:'Demande créée avec succès',data:{demandeId,clientId,reference,articlesCount:articlesParsed.length},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+
             // Enregistrer les fichiers joints s'il y en a
             if (req.files && req.files.length > 0) {
+                console.log(`📎 ${req.files.length} fichier(s) à enregistrer pour la demande ${demandeId}`);
                 for (const file of req.files) {
                     try {
                         const cheminRelatif = path.relative(path.join(__dirname, '../../uploads'), file.path);
@@ -172,16 +205,31 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                         // Si uploader_id est NOT NULL, on doit fournir une valeur
                         const uploaderId = req.user?.id || 1; // Utiliser l'utilisateur connecté ou l'admin système (ID 1)
                         
+                        console.log(`📎 Enregistrement fichier: ${nomFichier} (${tailleFichier} octets) pour demande ${demandeId}`);
+                        
                         await connection.execute(
                             `INSERT INTO documents_joints (type_document, document_id, nom_fichier, chemin_fichier, taille_octets, type_mime, description, upload_par_id)
                              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
                             ['demande_devis', demandeId, nomFichier, cheminFichier, tailleFichier, typeMime, description, uploaderId]
                         );
+                        
+                        console.log(`✅ Fichier ${nomFichier} enregistré avec succès`);
+                        // #region agent log
+                        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'contact.js:208',message:'Fichier joint enregistré',data:{demandeId,nomFichier,tailleFichier,typeMime},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                        // #endregion
                     } catch (fileError) {
                         console.error('❌ Erreur lors de l\'enregistrement du fichier:', file.originalname, fileError);
+                        console.error('❌ Détails erreur:', {
+                            code: fileError.code,
+                            errno: fileError.errno,
+                            sqlMessage: fileError.sqlMessage,
+                            sql: fileError.sql
+                        });
                         // Continuer avec les autres fichiers même si celui-ci échoue
                     }
                 }
+            } else {
+                console.log('ℹ️  Aucun fichier joint à enregistrer');
             }
 
             // Enregistrer les lignes d'articles
@@ -202,6 +250,9 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
 
             // Commit de la transaction AVANT d'enregistrer l'historique
             await connection.commit();
+            // #region agent log
+            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'contact.js:241',message:'Transaction commitée',data:{demandeId,clientId,reference},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
             
             // Enregistrer l'interaction dans l'historique du client (après le commit pour éviter les deadlocks)
             // On le fait de manière asynchrone pour ne pas bloquer la réponse
@@ -424,6 +475,9 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
     try {
         const { id } = req.params;
         const { fournisseur_ids, date_limite_reponse, date_livraison_souhaitee, incoterms, conditions_paiement } = req.body;
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'contact.js:474',message:'POST /create-rfq - Entry',data:{demandeId:id,fournisseursCount:fournisseur_ids?.length},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
 
         // Vérifier que la demande existe
         const [demandes] = await pool.execute(
@@ -578,6 +632,9 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
 
             await connection.commit();
             // commit() libère déjà le client, pas besoin de release()
+            // #region agent log
+            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'contact.js:630',message:'RFQ créées avec succès',data:{demandeId:id,rfqsCreated:rfqsCreated.length,rfqs:rfqsCreated.map(r=>r.numero)},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
 
             // Notifier les fournisseurs par WhatsApp (en arrière-plan)
             for (const rfq of rfqsCreated) {

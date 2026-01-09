@@ -99,6 +99,9 @@ router.post('/', validateCommande, async (req, res) => {
         } = req.body;
 
         const commandeur_id = req.user.id;
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'commandes.js:90',message:'POST /commandes - Entry',data:{numero,type_commande,fournisseur_id,devis_id,rfq_id,lignesCount:lignes?.length},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
 
         // Calculer les totaux
         let total_ht = 0;
@@ -156,6 +159,9 @@ router.post('/', validateCommande, async (req, res) => {
         const commande_id = commandeResult.rows && commandeResult.rows[0] ? commandeResult.rows[0].id : (commandeResult.insertId || commandeResult[0]?.id);
         
         console.log('✅ Commande créée avec ID:', commande_id);
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'commandes.js:156',message:'Commande créée avec succès',data:{commande_id,numero,total_ht,total_ttc,lignesCount:lignes?.length},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
 
         // Enregistrer dans l'historique du client si la commande est liée à une demande client
         if (devis_id) {
