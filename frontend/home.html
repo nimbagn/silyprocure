@@ -26,6 +26,10 @@
                             700: '#1D4ED8',
                             900: '#1E3A8A',
                         },
+                        accent: {
+                            500: '#F59E0B',
+                            600: '#D97706',
+                        },
                         success: {
                             500: '#10B981',
                         },
@@ -36,11 +40,95 @@
                     },
                     fontFamily: {
                         sans: ['Inter', 'Arial', 'sans-serif'],
+                    },
+                    backgroundImage: {
+                        'hero-pattern': "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.1\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')",
                     }
                 }
             }
         }
     </script>
+    
+    <style>
+        /* Animations modernes */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes blob {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            33% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+        }
+        
+        /* S'assurer que les éléments sont visibles même si l'animation ne se déclenche pas */
+        @media (prefers-reduced-motion: no-preference) {
+            .fade-in-up {
+                animation: fadeInUp 0.8s ease-out forwards;
+            }
+        }
+        
+        /* Fallback pour les navigateurs qui ne supportent pas l'animation */
+        .fade-in-up:not(:hover) {
+            animation-fill-mode: forwards;
+        }
+        
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        
+        /* Smooth reveal on scroll */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Glass effect */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Navbar scroll effect */
+        #navbar.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
     
     <!-- Font Awesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -49,174 +137,321 @@
     <!-- Dashboard Theme CSS -->
     <link rel="stylesheet" href="css/dashboard-theme.css">
 </head>
-<body class="h-full flex flex-col">
-    <div class="home-page">
-        <!-- Header -->
-        <header class="home-header">
-            <a href="home.html" class="home-logo">
-                <i class="fas fa-shopping-cart"></i>
-                <span>SilyProcure</span>
-            </a>
-            <nav class="home-nav">
-                <a href="#tracking">Suivi</a>
-                <a href="#services">Services</a>
-                <a href="#features">Fonctionnalités</a>
-                <a href="#contact">Contact</a>
-                <a href="index.html" id="auth-link" class="btn-login">
-                    <i class="fas fa-sign-in-alt"></i>
-                    <span id="auth-text">Connexion</span>
+<body class="min-h-screen bg-white">
+    <!-- Navbar moderne avec effet scroll -->
+    <nav id="navbar" class="fixed w-full z-50 bg-gradient-to-r from-white via-blue-50 to-white backdrop-blur-md border-b-2 border-primary-200 transition-all duration-300 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <a href="home.html" class="flex-shrink-0 flex items-center gap-2 cursor-pointer group">
+                    <div class="w-12 h-12 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary-500/40 group-hover:shadow-xl group-hover:scale-110 transition-all">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-bold text-primary-700 tracking-tight">Sily<span class="text-primary-900">Procure</span></span>
+                        <p class="text-xs text-primary-500 hidden sm:block font-medium">Plateforme de gestion d'achats</p>
+                    </div>
                 </a>
-            </nav>
-        </header>
 
-        <!-- Hero Section -->
-        <section class="hero-section">
-            <div style="background: rgba(255, 102, 0, 0.15); padding: 0.75rem 1.5rem; border-radius: 50px; display: inline-block; margin-bottom: 1.5rem; border: 2px solid rgba(255, 102, 0, 0.3);">
-                <span style="color: var(--color-accent); font-weight: 600; font-size: 0.9rem;">
-                    <i class="fas fa-bolt"></i> Devis en 30 min - 1h maximum
-                </span>
+                <!-- Desktop Menu -->
+                <div class="hidden sm:flex items-center space-x-2 lg:space-x-4">
+                    <a href="#fonctionnement" class="text-primary-700 hover:text-white hover:bg-primary-600 font-semibold transition-all whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg hover:shadow-md min-h-[44px] border border-transparent hover:border-primary-700">
+                        <i class="fas fa-info-circle"></i>
+                        <span class="text-sm lg:text-base">Comment ça marche</span>
+                    </a>
+                    <a href="#services" class="text-primary-700 hover:text-white hover:bg-primary-600 font-semibold transition-all whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg hover:shadow-md min-h-[44px] border border-transparent hover:border-primary-700">
+                        <i class="fas fa-handshake"></i>
+                        <span class="text-sm lg:text-base">Services</span>
+                    </a>
+                    <a href="#tracking" class="text-primary-700 hover:text-white hover:bg-primary-600 font-semibold transition-all whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg hover:shadow-md min-h-[44px] border border-transparent hover:border-primary-700">
+                        <i class="fas fa-shipping-fast"></i>
+                        <span class="text-sm lg:text-base">Suivi</span>
+                    </a>
+                    <a href="#contact" class="text-primary-700 hover:text-white hover:bg-primary-600 font-semibold transition-all whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg hover:shadow-md min-h-[44px] border border-transparent hover:border-primary-700">
+                        <i class="fas fa-envelope"></i>
+                        <span class="text-sm lg:text-base">Contact</span>
+                    </a>
+                    <div class="h-8 w-px bg-primary-300 mx-2"></div>
+                    <a href="index.html" id="auth-link" class="text-white bg-primary-600 hover:bg-primary-700 font-bold transition-all whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg shadow-md hover:shadow-lg min-h-[44px] border-2 border-primary-700 hover:border-primary-800">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span id="auth-text" class="text-sm lg:text-base">Connexion</span>
+                    </a>
+                    <button onclick="openDevisModal()" class="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-5 py-2.5 rounded-full font-bold shadow-lg shadow-accent-500/40 transition transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 whitespace-nowrap min-h-[44px] text-sm lg:text-base border-2 border-accent-400">
+                        <i class="fas fa-paper-plane"></i>
+                        <span class="hidden lg:inline">Demander un devis</span>
+                        <span class="lg:hidden">Devis</span>
+                    </button>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="sm:hidden flex items-center gap-2">
+                    <button onclick="openDevisModal()" class="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-3 py-2 rounded-lg font-bold shadow-md transition min-h-[44px] min-w-[44px] flex items-center justify-center">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                    <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="text-primary-700 hover:text-white hover:bg-primary-600 focus:outline-none p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition border-2 border-primary-300 hover:border-primary-600" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
             </div>
-            <h1 class="hero-title">
-                Vos achats professionnels simplifiés en un clic
-            </h1>
-            <p class="hero-subtitle">
-                <strong>Ne perdez plus de temps à chercher des fournisseurs.</strong> Décrivez vos besoins, nous nous occupons de tout : contact des fournisseurs, négociation et comparaison des offres. Vous recevez un devis consolidé optimal dans les <strong style="color: var(--color-accent);">30 minutes à 1 heure maximum</strong>.
-            </p>
-            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem;">
-                <div style="background: rgba(255, 255, 255, 0.15); padding: 0.75rem 1.25rem; border-radius: 12px; backdrop-filter: blur(10px);">
-                    <i class="fas fa-check-circle" style="color: #4ade80; margin-right: 0.5rem;"></i>
-                    <span style="font-size: 0.9rem;">Aucun compte requis</span>
-                </div>
-                <div style="background: rgba(255, 255, 255, 0.15); padding: 0.75rem 1.25rem; border-radius: 12px; backdrop-filter: blur(10px);">
-                    <i class="fas fa-check-circle" style="color: #4ade80; margin-right: 0.5rem;"></i>
-                    <span style="font-size: 0.9rem;">Suivi en temps réel</span>
-                </div>
-                <div style="background: rgba(255, 255, 255, 0.15); padding: 0.75rem 1.25rem; border-radius: 12px; backdrop-filter: blur(10px);">
-                    <i class="fas fa-check-circle" style="color: #4ade80; margin-right: 0.5rem;"></i>
-                    <span style="font-size: 0.9rem;">100% gratuit pour les clients</span>
-                </div>
-            </div>
-            <div class="hero-cta">
-                <button class="btn-primary-large" onclick="openDevisModal()">
-                    <i class="fas fa-file-invoice"></i>
-                    Demander un devis gratuitement
-                </button>
-                <a href="#services" class="btn-secondary-large">
-                    <i class="fas fa-info-circle"></i>
-                    Découvrir comment ça marche
+        </div>
+            
+        <!-- Mobile Menu Panel -->
+        <div id="mobile-menu" class="hidden sm:hidden bg-gradient-to-b from-white to-blue-50 border-t-2 border-primary-200 absolute w-full shadow-xl z-40">
+            <div class="px-4 pt-3 pb-6 space-y-2">
+                <a href="#fonctionnement" class="block px-4 py-3 text-base font-semibold text-primary-700 hover:text-white hover:bg-primary-600 rounded-lg transition-all border-2 border-transparent hover:border-primary-700 min-h-[44px] flex items-center gap-3">
+                    <i class="fas fa-info-circle text-primary-500 group-hover:text-white"></i>
+                    <span>Comment ça marche</span>
                 </a>
+                <a href="#services" class="block px-4 py-3 text-base font-semibold text-primary-700 hover:text-white hover:bg-primary-600 rounded-lg transition-all border-2 border-transparent hover:border-primary-700 min-h-[44px] flex items-center gap-3">
+                    <i class="fas fa-handshake text-primary-500"></i>
+                    <span>Services</span>
+                </a>
+                <a href="#tracking" class="block px-4 py-3 text-base font-semibold text-primary-700 hover:text-white hover:bg-primary-600 rounded-lg transition-all border-2 border-transparent hover:border-primary-700 min-h-[44px] flex items-center gap-3">
+                    <i class="fas fa-shipping-fast text-primary-500"></i>
+                    <span>Suivi</span>
+                </a>
+                <a href="#contact" class="block px-4 py-3 text-base font-semibold text-primary-700 hover:text-white hover:bg-primary-600 rounded-lg transition-all border-2 border-transparent hover:border-primary-700 min-h-[44px] flex items-center gap-3">
+                    <i class="fas fa-envelope text-primary-500"></i>
+                    <span>Contact</span>
+                </a>
+                <div class="mt-4 pt-4 border-t-2 border-primary-200 flex flex-col gap-3">
+                    <a href="index.html" id="auth-link-mobile" class="w-full text-center px-4 py-3 bg-primary-600 text-white rounded-lg font-bold shadow-md hover:bg-primary-700 transition border-2 border-primary-700 min-h-[44px] flex items-center justify-center gap-2">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Connexion</span>
+                    </a>
+                    <button onclick="openDevisModal()" class="w-full text-center px-4 py-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white rounded-lg font-bold shadow-lg hover:from-accent-600 hover:to-accent-700 transition border-2 border-accent-400 min-h-[44px] flex items-center justify-center gap-2">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Demander un devis</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    </nav>
+
+    <!-- Hero Section Moderne -->
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900">
+            <!-- Abstract Background Pattern -->
+            <div class="absolute inset-0 bg-hero-pattern opacity-10"></div>
+            
+            <!-- Animated Blob Shapes -->
+            <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-primary-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+            <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-accent-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <!-- Badge -->
+                <span class="inline-block py-2 px-4 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-semibold mb-6 fade-in-up shadow-lg">
+                    <i class="fas fa-bolt mr-2 text-accent-400"></i>Devis en 30 min - 1h maximum
+                </span>
+                
+                <!-- Titre Principal -->
+                <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-6 leading-tight fade-in-up delay-100">
+                    Vos achats professionnels <br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-white to-blue-200">simplifiés et centralisés</span>
+                </h1>
+                
+                <!-- Sous-titre -->
+                <p class="mt-4 max-w-3xl mx-auto text-xl text-primary-100 mb-10 fade-in-up delay-200">
+                    <strong>Ne perdez plus de temps à chercher des fournisseurs.</strong> Déposez une demande, nous négocions pour vous. Obtenez le meilleur devis consolidé en <strong class="text-accent-400">moins d'une heure</strong>.
+                </p>
+                
+                <!-- Badges Avantages -->
+                <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12 fade-in-up delay-200">
+                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2.5 flex items-center gap-2">
+                        <i class="fas fa-check-circle text-green-400"></i>
+                        <span class="text-white text-sm font-medium">Aucun compte requis</span>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2.5 flex items-center gap-2">
+                        <i class="fas fa-check-circle text-green-400"></i>
+                        <span class="text-white text-sm font-medium">Suivi en temps réel</span>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2.5 flex items-center gap-2">
+                        <i class="fas fa-check-circle text-green-400"></i>
+                        <span class="text-white text-sm font-medium">100% gratuit</span>
+                    </div>
+                </div>
+                
+                <!-- CTA Buttons -->
+                <div class="flex flex-col sm:flex-row justify-center gap-4 mb-16 fade-in-up delay-300">
+                    <button onclick="openDevisModal()" class="px-8 py-4 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-full shadow-lg shadow-accent-500/30 transition transform hover:scale-105 flex items-center justify-center gap-2 min-h-[56px]">
+                        <i class="fas fa-paper-plane"></i> Faire une demande gratuite
+                    </button>
+                    <a href="#fonctionnement" class="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-full backdrop-blur-sm border border-white/20 transition flex items-center justify-center gap-2 min-h-[56px]">
+                        <i class="fas fa-play-circle"></i> Comment ça marche
+                    </a>
+                </div>
+
+                <!-- Floating Tracking Widget -->
+                <div id="tracking" class="max-w-3xl mx-auto glass-panel rounded-2xl p-4 sm:p-6 fade-in-up delay-400 transform translate-y-8 lg:translate-y-12">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-shipping-fast text-primary-600"></i>
+                        Suivez votre demande
+                    </h3>
+                    <form id="trackingFormHome" onsubmit="trackFromHome(event)" class="flex flex-col sm:flex-row gap-3">
+                        <div class="relative flex-grow">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-hashtag text-gray-400"></i>
+                            </div>
+                            <input type="text" id="ref-home" name="reference" placeholder="Référence (ex: DEV-XXXXX-XXXXX)" 
+                                   pattern="[A-Z0-9-]+" autocomplete="off" required
+                                   class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition">
+                        </div>
+                        <div class="relative flex-grow">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-key text-gray-400"></i>
+                            </div>
+                            <input type="text" id="token-home" name="token" placeholder="Code de suivi" 
+                                   autocomplete="off" required
+                                   class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition">
+                        </div>
+                        <button type="submit" class="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-semibold transition shadow-md whitespace-nowrap min-h-[48px] flex items-center justify-center gap-2">
+                            <i class="fas fa-search"></i> Suivre
+                        </button>
+                    </form>
+                    <div id="trackingErrorHome" class="mt-3 text-sm text-red-600 hidden"></div>
+                    <p class="mt-4 text-sm text-gray-600 text-center">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Vous avez reçu ces informations par email, SMS ou WhatsApp après avoir soumis votre demande
+                    </p>
+                </div>
             </div>
         </section>
 
-        <!-- Section Suivi de Demande -->
-        <section id="tracking" class="tracking-section">
-            <div class="section-container">
-                <div style="text-align: center; margin-bottom: 3rem;">
-                    <h2 class="section-title">
-                        <i class="fas fa-shipping-fast" style="color: var(--color-accent); margin-right: 0.75rem;"></i> 
-                        Suivez votre demande de devis
-                    </h2>
-                    <p class="section-subtitle">
-                        Entrez votre référence et votre code de suivi pour consulter l'état de votre demande en temps réel
+        <!-- Section Comment ça marche -->
+        <section id="fonctionnement" class="py-20 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto mb-16 reveal">
+                    <h2 class="text-base text-primary-600 font-semibold tracking-wide uppercase mb-2">Processus simplifié</h2>
+                    <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                        Du besoin à la livraison en 4 étapes
+                    </p>
+                    <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
+                        Plus besoin de multiplier les interlocuteurs. SilyProcure centralise tout.
                     </p>
                 </div>
-                <div class="tracking-box-home">
-                    <form id="trackingFormHome" onsubmit="trackFromHome(event)">
-                        <div class="tracking-input-group">
-                            <label for="ref-home">
-                                <i class="fas fa-barcode"></i> 
-                                <span>Référence de votre demande</span>
-                            </label>
-                            <input type="text" id="ref-home" name="reference" required 
-                                   placeholder="DEV-XXXXX-XXXXX" 
-                                   pattern="[A-Z0-9-]+"
-                                   autocomplete="off">
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+                    <!-- Line connector (desktop only) -->
+                    <div class="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gray-200 -z-10"></div>
+
+                    <!-- Step 1 -->
+                    <div class="relative bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center reveal group hover:-translate-y-2 transition duration-300">
+                        <div class="w-16 h-16 mx-auto bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
+                            1
                         </div>
-                        <div class="tracking-input-group">
-                            <label for="token-home">
-                                <i class="fas fa-key"></i> 
-                                <span>Code de suivi</span>
-                            </label>
-                            <input type="text" id="token-home" name="token" required 
-                                   placeholder="Code reçu par email/SMS/WhatsApp"
-                                   autocomplete="off">
-                        </div>
-                        <button type="submit" class="btn-track-home">
-                            <i class="fas fa-search"></i> 
-                            <span>Suivre</span>
-                        </button>
-                    </form>
-                    <div id="trackingErrorHome" class="tracking-error"></div>
-                    <div style="margin-top: 2.5rem; padding-top: 2rem; border-top: 2px solid rgba(255, 255, 255, 0.3); text-align: center;">
-                        <p style="color: rgba(255, 255, 255, 0.95); font-size: 1rem; margin: 0; font-weight: 600; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">
-                            <i class="fas fa-info-circle" style="color: var(--color-accent); font-size: 1.2rem; margin-right: 0.5rem; background: rgba(255, 255, 255, 0.2); padding: 0.4rem; border-radius: 50%;"></i>
-                            Vous avez reçu ces informations par email, SMS ou WhatsApp après avoir soumis votre demande
-                        </p>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Demande</h3>
+                        <p class="text-gray-600 text-sm">Remplissez le formulaire en ligne avec vos besoins spécifiques. Sans inscription.</p>
                     </div>
+
+                    <!-- Step 2 -->
+                    <div class="relative bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center reveal delay-100 group hover:-translate-y-2 transition duration-300">
+                        <div class="w-16 h-16 mx-auto bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
+                            2
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Négociation</h3>
+                        <p class="text-gray-600 text-sm">Notre équipe trouve les meilleurs fournisseurs et négocie pour vous.</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="relative bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center reveal delay-200 group hover:-translate-y-2 transition duration-300">
+                        <div class="w-16 h-16 mx-auto bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
+                            3
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Devis</h3>
+                        <p class="text-gray-600 text-sm">Recevez une offre consolidée (Proforma) au meilleur prix en moins d'une heure.</p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="relative bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center reveal delay-300 group hover:-translate-y-2 transition duration-300">
+                        <div class="w-16 h-16 mx-auto bg-green-100 text-green-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 group-hover:bg-green-600 group-hover:text-white transition">
+                            4
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Livraison</h3>
+                        <p class="text-gray-600 text-sm">Validez le devis et recevez vos produits à l'adresse indiquée.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Suivi de Demande (déplacée après hero) -->
+        <section class="py-16 bg-white">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-4">
+                        <i class="fas fa-shipping-fast text-primary-600 mr-2"></i>
+                        Suivez votre demande en temps réel
+                    </h2>
+                    <p class="text-lg text-gray-600">
+                        Consultez l'état de votre demande à tout moment avec votre référence et votre code de suivi
+                    </p>
                 </div>
             </div>
         </section>
 
         <!-- Services Section -->
-        <section id="services" class="services-section">
-            <div class="section-container">
-                <h2 class="section-title">Ce que nous proposons</h2>
-                <p class="section-subtitle">
-                    Des outils concrets pour améliorer votre gestion des achats
-                </p>
-                <div class="services-grid">
-                    <div class="service-card">
-                        <div class="service-icon">
-                            <i class="fas fa-bolt"></i>
+        <section id="services" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16 reveal">
+                    <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-4">
+                        Ce que nous proposons
+                    </h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        Des outils concrets pour améliorer votre gestion des achats
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal group">
+                        <div class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary-600 group-hover:scale-110 transition">
+                            <i class="fas fa-bolt text-primary-600 text-xl group-hover:text-white"></i>
                         </div>
-                        <h3 class="service-title">Devis ultra-rapide</h3>
-                        <p class="service-description">
-                            <strong>30 minutes à 1 heure maximum</strong> pour recevoir votre devis consolidé. Décrivez vos besoins en quelques clics, notre équipe contacte les fournisseurs et vous présente la meilleure offre. <strong>Gain de temps garanti !</strong>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Devis ultra-rapide</h3>
+                        <p class="text-gray-600">
+                            <strong>30 minutes à 1 heure maximum</strong> pour recevoir votre devis consolidé. Décrivez vos besoins en quelques clics, notre équipe contacte les fournisseurs et vous présente la meilleure offre.
                         </p>
                     </div>
-                    <div class="service-card">
-                        <div class="service-icon">
-                            <i class="fas fa-handshake"></i>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-100 group">
+                        <div class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary-600 group-hover:scale-110 transition">
+                            <i class="fas fa-handshake text-primary-600 text-xl group-hover:text-white"></i>
                         </div>
-                        <h3 class="service-title">Intermediation complète</h3>
-                        <p class="service-description">
-                            <strong>Vous ne contactez aucun fournisseur.</strong> Nous gérons tout : recherche des meilleurs fournisseurs, négociation des prix, comparaison des offres. Vous recevez une seule offre optimale, prête à valider.
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Intermediation complète</h3>
+                        <p class="text-gray-600">
+                            <strong>Vous ne contactez aucun fournisseur.</strong> Nous gérons tout : recherche des meilleurs fournisseurs, négociation des prix, comparaison des offres. Vous recevez une seule offre optimale.
                         </p>
                     </div>
-                    <div class="service-card">
-                        <div class="service-icon">
-                            <i class="fas fa-eye"></i>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-200 group">
+                        <div class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary-600 group-hover:scale-110 transition">
+                            <i class="fas fa-eye text-primary-600 text-xl group-hover:text-white"></i>
                         </div>
-                        <h3 class="service-title">Suivi transparent</h3>
-                        <p class="service-description">
-                            Suivez votre demande en temps réel avec une référence unique. Recevez des notifications par email, SMS ou WhatsApp à chaque étape : demande reçue, devis prêt, commande validée, livraison effectuée.
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Suivi transparent</h3>
+                        <p class="text-gray-600">
+                            Suivez votre demande en temps réel avec une référence unique. Recevez des notifications par email, SMS ou WhatsApp à chaque étape.
                         </p>
                     </div>
-                    <div class="service-card">
-                        <div class="service-icon">
-                            <i class="fas fa-user-check"></i>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-100 group">
+                        <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-green-600 group-hover:scale-110 transition">
+                            <i class="fas fa-user-check text-green-600 text-xl group-hover:text-white"></i>
                         </div>
-                        <h3 class="service-title">Aucun compte requis</h3>
-                        <p class="service-description">
-                            <strong>Commencez immédiatement</strong> sans créer de compte. Remplissez le formulaire, recevez votre référence de suivi, et suivez votre demande en toute simplicité. Accès sécurisé avec votre code de suivi.
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Aucun compte requis</h3>
+                        <p class="text-gray-600">
+                            <strong>Commencez immédiatement</strong> sans créer de compte. Remplissez le formulaire, recevez votre référence de suivi, c'est tout !
                         </p>
                     </div>
-                    <div class="service-card">
-                        <div class="service-icon">
-                            <i class="fas fa-shield-alt"></i>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-200 group">
+                        <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:scale-110 transition">
+                            <i class="fas fa-shield-alt text-blue-600 text-xl group-hover:text-white"></i>
                         </div>
-                        <h3 class="service-title">Sécurisé et confidentiel</h3>
-                        <p class="service-description">
-                            Vos données sont protégées et chaque action est tracée. Suivi sécurisé avec référence unique et code confidentiel. Vos informations ne sont partagées qu'avec les fournisseurs pertinents pour votre demande.
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Sécurisé et confidentiel</h3>
+                        <p class="text-gray-600">
+                            Vos données sont protégées et chaque action est tracée. Suivi sécurisé avec référence unique et code confidentiel.
                         </p>
                     </div>
-                    <div class="service-card">
-                        <div class="service-icon">
-                            <i class="fas fa-gift"></i>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-300 group">
+                        <div class="w-14 h-14 bg-yellow-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-yellow-500 group-hover:scale-110 transition">
+                            <i class="fas fa-gift text-yellow-600 text-xl group-hover:text-white"></i>
                         </div>
-                        <h3 class="service-title">100% gratuit</h3>
-                        <p class="service-description">
-                            <strong>Le service est entièrement gratuit pour les clients.</strong> Aucun frais caché, aucune commission à votre charge. Vous payez uniquement le prix du devis validé, rien de plus.
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">100% gratuit</h3>
+                        <p class="text-gray-600">
+                            <strong>Le service est entièrement gratuit pour les clients.</strong> Aucun frais caché, aucune commission. Vous payez uniquement le prix du devis validé.
                         </p>
                     </div>
                 </div>
@@ -224,138 +459,106 @@
         </section>
 
         <!-- Features Section -->
-        <section id="features" class="features-section">
-            <div class="section-container">
-                <div style="text-align: center; margin-bottom: 4rem;">
-                    <h2 class="section-title">Pourquoi choisir SilyProcure ?</h2>
-                    <p class="section-subtitle" style="font-size: 1.35rem; max-width: 800px; margin: 0 auto;">
-                        <strong style="color: var(--color-primary);">L'intermédiaire d'achats qui vous fait gagner du temps et de l'argent</strong>
+        <section id="features" class="py-20 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16 reveal">
+                    <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-4">
+                        Pourquoi choisir SilyProcure ?
+                    </h2>
+                    <p class="text-xl text-primary-700 font-semibold max-w-3xl mx-auto mb-4">
+                        L'intermédiaire d'achats qui vous fait gagner du temps et de l'argent
                     </p>
-                    <p style="color: var(--color-neutral); font-size: 1.1rem; margin-top: 1rem; max-width: 700px; margin-left: auto; margin-right: auto;">
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
                         Au lieu de perdre des heures à chercher et contacter des fournisseurs, déposez une seule demande. Nous nous occupons de tout et vous présentons le meilleur devis.
                     </p>
                 </div>
 
-                <!-- Catégorie 1: Gain de temps -->
-                <div style="margin-bottom: 4rem;">
-                    <div style="text-align: center; margin-bottom: 2.5rem;">
-                        <div style="display: inline-flex; align-items: center; gap: 0.75rem; background: rgba(255, 102, 0, 0.1); padding: 1rem 2rem; border-radius: 50px; border: 2px solid rgba(255, 102, 0, 0.2);">
-                            <i class="fas fa-clock" style="font-size: 1.5rem; color: var(--color-accent);"></i>
-                            <h3 style="margin: 0; font-size: 1.5rem; color: var(--color-primary); font-weight: 700;">Gain de temps garanti</h3>
+                <!-- Grid de features -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal group">
+                        <div class="w-14 h-14 bg-accent-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-accent-500 group-hover:scale-110 transition">
+                            <i class="fas fa-bolt text-accent-600 text-xl group-hover:text-white"></i>
                         </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">⚡ Devis en 30 min - 1h</h3>
+                        <p class="text-gray-600">
+                            Au lieu de contacter 10 ou 20 fournisseurs, déposez <strong>une seule demande</strong>. Notre équipe fait le travail et vous présente le meilleur devis en <strong class="text-accent-600">30 minutes à 1 heure maximum</strong>.
+                        </p>
                     </div>
-                    <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-                        <div class="feature-item">
-                            <div class="feature-icon" style="background: var(--color-accent);">
-                                <i class="fas fa-bolt"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">⚡ Devis en 30 min - 1h</h3>
-                                <p style="font-size: 1rem; line-height: 1.6;">Au lieu de contacter 10 ou 20 fournisseurs, déposez <strong>une seule demande</strong>. Notre équipe fait le travail et vous présente le meilleur devis en <strong style="color: var(--color-accent);">30 minutes à 1 heure maximum</strong>.</p>
-                            </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-100 group">
+                        <div class="w-14 h-14 bg-accent-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-accent-500 group-hover:scale-110 transition">
+                            <i class="fas fa-handshake text-accent-600 text-xl group-hover:text-white"></i>
                         </div>
-                        <div class="feature-item">
-                            <div class="feature-icon" style="background: var(--color-accent);">
-                                <i class="fas fa-handshake"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">🎯 Offre optimale garantie</h3>
-                                <p style="font-size: 1rem; line-height: 1.6;">Nous <strong>négocions et comparons</strong> les offres de plusieurs fournisseurs. Vous recevez <strong>une seule offre consolidée</strong> avec les meilleures conditions, sans effort.</p>
-                            </div>
-                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">🎯 Offre optimale garantie</h3>
+                        <p class="text-gray-600">
+                            Nous <strong>négocions et comparons</strong> les offres de plusieurs fournisseurs. Vous recevez <strong>une seule offre consolidée</strong> avec les meilleures conditions, sans effort.
+                        </p>
                     </div>
-                </div>
-
-                <!-- Catégorie 2: Simplicité -->
-                <div style="margin-bottom: 4rem;">
-                    <div style="text-align: center; margin-bottom: 2.5rem;">
-                        <div style="display: inline-flex; align-items: center; gap: 0.75rem; background: rgba(0, 56, 122, 0.1); padding: 1rem 2rem; border-radius: 50px; border: 2px solid rgba(0, 56, 122, 0.2);">
-                            <i class="fas fa-check-circle" style="font-size: 1.5rem; color: var(--color-primary);"></i>
-                            <h3 style="margin: 0; font-size: 1.5rem; color: var(--color-primary); font-weight: 700;">Simple et accessible</h3>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-200 group">
+                        <div class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary-600 group-hover:scale-110 transition">
+                            <i class="fas fa-user-check text-primary-600 text-xl group-hover:text-white"></i>
                         </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">✅ Aucun compte requis</h3>
+                        <p class="text-gray-600">
+                            Commencez <strong>immédiatement</strong> sans créer de compte. Remplissez le formulaire, recevez votre référence de suivi, c'est tout !
+                        </p>
                     </div>
-                    <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-                        <div class="feature-item">
-                            <div class="feature-icon" style="background: var(--color-primary);">
-                                <i class="fas fa-user-check"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">✅ Aucun compte requis</h3>
-                                <p style="font-size: 1rem; line-height: 1.6;">Commencez <strong>immédiatement</strong> sans créer de compte. Remplissez le formulaire, recevez votre référence de suivi, c'est tout !</p>
-                            </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-100 group">
+                        <div class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary-600 group-hover:scale-110 transition">
+                            <i class="fas fa-mobile-alt text-primary-600 text-xl group-hover:text-white"></i>
                         </div>
-                        <div class="feature-item">
-                            <div class="feature-icon" style="background: var(--color-primary);">
-                                <i class="fas fa-mobile-alt"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">📱 Accessible partout</h3>
-                                <p style="font-size: 1rem; line-height: 1.6;">Utilisez la plateforme sur <strong>ordinateur, tablette ou smartphone</strong>. Suivez votre demande depuis n'importe où, à tout moment.</p>
-                            </div>
-                        </div>
-                        <div class="feature-item">
-                            <div class="feature-icon" style="background: var(--color-primary);">
-                                <i class="fas fa-paperclip"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">📎 Joignez vos fichiers</h3>
-                                <p style="font-size: 1rem; line-height: 1.6;">Simplifiez votre demande en joignant des <strong>fichiers PDF, Excel ou images</strong>. Pas besoin de tout retaper !</p>
-                            </div>
-                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">📱 Accessible partout</h3>
+                        <p class="text-gray-600">
+                            Utilisez la plateforme sur <strong>ordinateur, tablette ou smartphone</strong>. Suivez votre demande depuis n'importe où, à tout moment.
+                        </p>
                     </div>
-                </div>
-
-                <!-- Catégorie 3: Transparence et sécurité -->
-                <div>
-                    <div style="text-align: center; margin-bottom: 2.5rem;">
-                        <div style="display: inline-flex; align-items: center; gap: 0.75rem; background: rgba(34, 197, 94, 0.1); padding: 1rem 2rem; border-radius: 50px; border: 2px solid rgba(34, 197, 94, 0.2);">
-                            <i class="fas fa-shield-alt" style="font-size: 1.5rem; color: #22c55e;"></i>
-                            <h3 style="margin: 0; font-size: 1.5rem; color: var(--color-primary); font-weight: 700;">Transparent et sécurisé</h3>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-200 group">
+                        <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-green-600 group-hover:scale-110 transition">
+                            <i class="fas fa-bell text-green-600 text-xl group-hover:text-white"></i>
                         </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">🔔 Notifications en temps réel</h3>
+                        <p class="text-gray-600">
+                            Recevez des notifications par <strong>email, SMS ou WhatsApp</strong> à chaque étape : demande reçue, devis prêt, commande validée, livraison effectuée.
+                        </p>
                     </div>
-                    <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-                        <div class="feature-item">
-                            <div class="feature-icon" style="background: #22c55e;">
-                                <i class="fas fa-bell"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">🔔 Notifications en temps réel</h3>
-                                <p style="font-size: 1rem; line-height: 1.6;">Recevez des notifications par <strong>email, SMS ou WhatsApp</strong> à chaque étape : demande reçue, devis prêt, commande validée, livraison effectuée.</p>
-                            </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-300 group">
+                        <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-green-600 group-hover:scale-110 transition">
+                            <i class="fas fa-shield-alt text-green-600 text-xl group-hover:text-white"></i>
                         </div>
-                        <div class="feature-item">
-                            <div class="feature-icon" style="background: #22c55e;">
-                                <i class="fas fa-shield-alt"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">🔒 Sécurisé et confidentiel</h3>
-                                <p style="font-size: 1rem; line-height: 1.6;">Vos données sont <strong>protégées</strong>. Suivi sécurisé avec référence unique. Vos informations ne sont partagées qu'avec les fournisseurs pertinents.</p>
-                            </div>
-                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">🔒 Sécurisé et confidentiel</h3>
+                        <p class="text-gray-600">
+                            Vos données sont <strong>protégées</strong>. Suivi sécurisé avec référence unique. Vos informations ne sont partagées qu'avec les fournisseurs pertinents.
+                        </p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- CTA Section -->
-        <section class="cta-section">
-            <div class="cta-content">
-                <h2 class="cta-title">Prêt à simplifier vos achats ?</h2>
-                <p class="cta-text">
-                    <strong>Ne perdez plus de temps à chercher des fournisseurs.</strong> Décrivez vos besoins en quelques clics. Notre équipe s'occupe de tout : contact des fournisseurs, négociation et comparaison des offres. 
-                    <br><br>
-                    <span style="font-size: 1.1rem; color: var(--color-accent); font-weight: 600;">
-                        <i class="fas fa-bolt"></i> Devis consolidé optimal en 30 minutes à 1 heure maximum
-                    </span>
-                    <br><br>
-                    <strong style="color: white;">100% gratuit • Aucun compte requis • Suivi en temps réel</strong>
+        <section class="py-20 bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900 relative overflow-hidden">
+            <!-- Background decoration -->
+            <div class="absolute inset-0 bg-hero-pattern opacity-10"></div>
+            <div class="absolute top-0 right-0 w-96 h-96 bg-primary-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+            <div class="absolute bottom-0 left-0 w-96 h-96 bg-accent-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+            
+            <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-6">
+                    Prêt à simplifier vos achats ?
+                </h2>
+                <p class="text-xl text-primary-100 mb-4">
+                    <strong>Ne perdez plus de temps à chercher des fournisseurs.</strong> Décrivez vos besoins en quelques clics. Notre équipe s'occupe de tout.
                 </p>
-                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem;">
-                    <button class="btn-primary-large" onclick="openDevisModal()" style="font-size: 1.125rem; padding: 1.5rem 3rem;">
+                <p class="text-lg text-white font-semibold mb-2 bg-accent-500/20 backdrop-blur-sm inline-block px-4 py-2 rounded-lg border border-accent-400/30">
+                    <i class="fas fa-bolt mr-2 text-accent-400"></i>Devis consolidé optimal en 30 minutes à 1 heure maximum
+                </p>
+                <p class="text-white font-medium mb-8">
+                    100% gratuit • Aucun compte requis • Suivi en temps réel
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <button onclick="openDevisModal()" class="px-8 py-4 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-full shadow-lg shadow-accent-500/30 transition transform hover:scale-105 flex items-center justify-center gap-2 min-h-[56px]">
                         <i class="fas fa-paper-plane"></i>
                         Demander un devis gratuitement
                     </button>
-                    <a href="#tracking" class="btn-secondary-large" style="font-size: 1.125rem; padding: 1.5rem 3rem;">
+                    <a href="#tracking" class="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-full backdrop-blur-sm border border-white/20 transition flex items-center justify-center gap-2 min-h-[56px]">
                         <i class="fas fa-search"></i>
                         Suivre une demande existante
                     </a>
@@ -364,16 +567,19 @@
         </section>
 
         <!-- Contact Section -->
-        <section id="contact" class="contact-section">
-            <div class="section-container">
-                <div style="text-align: center; margin-bottom: 3rem;">
-                    <h2 class="section-title">Contactez-nous</h2>
-                    <p class="section-subtitle">
+        <section id="contact" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12 reveal">
+                    <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-4">
+                        <i class="fas fa-envelope text-primary-600 mr-2"></i>
+                        Contactez-nous
+                    </h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
                         Une question ? Un besoin spécifique ? Notre équipe est là pour vous aider
                     </p>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; max-width: 1200px; margin: 0 auto; align-items: start;">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
                     <!-- Informations de contact -->
                     <div>
                         <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
@@ -518,24 +724,46 @@
         </section>
 
         <!-- Footer -->
-        <footer class="home-footer">
-            <div class="footer-content">
-                <div class="footer-links">
-                    <a href="#tracking">Suivi</a>
-                    <a href="#services">Services</a>
-                    <a href="#features">Fonctionnalités</a>
-                    <a href="#contact">Contact</a>
-                    <a href="index.html">Connexion</a>
+        <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div class="col-span-1 md:col-span-2">
+                        <span class="text-2xl font-bold tracking-tight">Sily<span class="text-primary-500">Procure</span></span>
+                        <p class="mt-4 text-gray-400 max-w-sm">
+                            La solution moderne pour centraliser et simplifier les achats des entreprises en Guinée et en Afrique de l'Ouest.
+                        </p>
+                        <div class="flex gap-4 mt-6">
+                            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-linkedin text-xl"></i></a>
+                            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-twitter text-xl"></i></a>
+                            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-facebook text-xl"></i></a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Liens Rapides</h3>
+                        <ul class="space-y-3">
+                            <li><a href="#fonctionnement" class="text-gray-400 hover:text-primary-400 transition">Comment ça marche</a></li>
+                            <li><a href="#services" class="text-gray-400 hover:text-primary-400 transition">Services</a></li>
+                            <li><a href="#tracking" class="text-gray-400 hover:text-primary-400 transition">Suivi</a></li>
+                            <li><a href="#contact" class="text-gray-400 hover:text-primary-400 transition">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Légal</h3>
+                        <ul class="space-y-3">
+                            <li><a href="#" class="text-gray-400 hover:text-primary-400 transition">Confidentialité</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-primary-400 transition">CGU</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-primary-400 transition">Mentions Légales</a></li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="footer-copyright">
-                    <p>&copy; 2026 Silycore - Tous droits réservés</p>
+                <div class="mt-12 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
+                    &copy; 2026 Silycore - Tous droits réservés
                 </div>
             </div>
         </footer>
-    </div>
 
     <!-- Modal Demande de Devis -->
-    <div id="devisModal" class="modal-overlay" onclick="closeModalOnOverlay(event)">
+    <div id="devisModal" class="modal-overlay hidden" onclick="closeModalOnOverlay(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <button class="modal-close" onclick="closeDevisModal()">
                 <i class="fas fa-times"></i>
@@ -704,46 +932,28 @@
             const token = localStorage.getItem('token');
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             const authLink = document.getElementById('auth-link');
+            const authLinkMobile = document.getElementById('auth-link-mobile');
             const authText = document.getElementById('auth-text');
             
             if (token && (user.role === 'admin' || user.role === 'superviseur')) {
                 // L'utilisateur est connecté (admin ou superviseur)
-                // Modifier le bouton pour afficher "Déconnexion"
                 if (authLink && authText) {
-                    authLink.href = '#';
-                    authLink.onclick = (e) => {
-                        e.preventDefault();
-                        logout();
-                    };
-                    authLink.innerHTML = `
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span id="auth-text">Déconnexion</span>
-                    `;
-                    authText.textContent = 'Déconnexion';
-                    
-                    // Ajouter un message de bienvenue dans le nav
-                    const nav = document.querySelector('.home-nav');
-                    if (nav) {
-                        const userInfo = document.createElement('span');
-                        userInfo.style.cssText = 'color: white; font-size: 1rem; font-weight: 600; margin-right: 1rem; padding: 0.5rem 1rem; background: rgba(255, 255, 255, 0.15); border-radius: 8px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);';
-                        userInfo.textContent = `Bonjour, ${user.prenom || user.nom || 'Utilisateur'}`;
-                        nav.insertBefore(userInfo, authLink);
-                        
-                        // Ajouter un lien vers le dashboard
-                        const dashboardLink = document.createElement('a');
-                        dashboardLink.href = 'dashboard.html';
-                        dashboardLink.className = 'btn-login';
-                        dashboardLink.style.cssText = 'background: rgba(255, 255, 255, 0.2); margin-right: 0.5rem; padding: 0.75rem 1.5rem;';
-                        dashboardLink.innerHTML = '<i class="fas fa-tachometer-alt"></i> Dashboard';
-                        nav.insertBefore(dashboardLink, authLink);
-                    }
+                    authLink.href = 'dashboard.html';
+                    authLink.innerHTML = '<i class="fas fa-tachometer-alt"></i><span>Dashboard</span>';
+                    authText.textContent = 'Dashboard';
+                }
+                if (authLinkMobile) {
+                    authLinkMobile.href = 'dashboard.html';
+                    authLinkMobile.innerHTML = '<i class="fas fa-tachometer-alt mr-2"></i><span>Dashboard</span>';
                 }
             } else {
                 // L'utilisateur n'est pas connecté ou n'est pas admin/superviseur
-                // Le bouton reste "Se connecter"
                 if (authLink) {
                     authLink.href = 'index.html';
                     authLink.onclick = null;
+                }
+                if (authLinkMobile) {
+                    authLinkMobile.href = 'index.html';
                 }
             }
         });
@@ -753,7 +963,9 @@
 
         // Ouvrir le modal de demande de devis
         function openDevisModal() {
-            document.getElementById('devisModal').classList.add('active');
+            const modal = document.getElementById('devisModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('active');
             document.body.style.overflow = 'hidden';
             // Réinitialiser le formulaire et ajouter une première ligne
             document.getElementById('devisForm').reset();
@@ -767,7 +979,9 @@
 
         // Fermer le modal
         function closeDevisModal() {
-            document.getElementById('devisModal').classList.remove('active');
+            const modal = document.getElementById('devisModal');
+            modal.classList.remove('active');
+            modal.classList.add('hidden');
             document.body.style.overflow = '';
             // Réinitialiser le formulaire
             document.getElementById('devisForm').reset();
@@ -960,7 +1174,7 @@
 
         // Fermer en cliquant sur l'overlay
         function closeModalOnOverlay(event) {
-            if (event.target.classList.contains('modal-overlay')) {
+            if (event.target.classList.contains('modal-overlay') || event.target.id === 'devisModal') {
                 closeDevisModal();
             }
         }
@@ -1214,16 +1428,26 @@
 
             if (!reference || !token) {
                 errorDiv.textContent = 'Veuillez remplir tous les champs';
-                errorDiv.classList.add('active');
+                errorDiv.classList.remove('hidden');
                 return;
             }
 
             // Masquer l'erreur précédente
-            errorDiv.classList.remove('active');
+            errorDiv.classList.add('hidden');
 
             // Rediriger vers la page de suivi avec les paramètres
             window.location.href = `/suivi?ref=${encodeURIComponent(reference)}&token=${encodeURIComponent(token)}`;
         }
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
 
         // Smooth scroll pour les liens d'ancrage
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -1231,35 +1455,44 @@
                 e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
+                    const offset = 80; // Offset pour la navbar fixe
+                    const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
                     });
                 }
             });
         });
 
-        // Animation au scroll
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -100px 0px'
-        };
-
+        // Scroll Reveal Animation
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
+                    entry.target.classList.add('active');
                 }
             });
-        }, observerOptions);
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
 
-        // Observer les cartes de services
-        document.querySelectorAll('.service-card, .feature-item').forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
-            observer.observe(el);
+        // Observer tous les éléments avec la classe reveal
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        
+        // Forcer l'animation fade-in-up au chargement de la page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Déclencher l'animation pour tous les éléments fade-in-up
+            const fadeElements = document.querySelectorAll('.fade-in-up');
+            fadeElements.forEach((el, index) => {
+                // Forcer le reflow pour déclencher l'animation
+                void el.offsetHeight;
+                // Ajouter un petit délai pour chaque élément
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 50);
+            });
         });
 
         // Fonction pour soumettre le formulaire de contact
@@ -1348,7 +1581,7 @@
                 submitButton.innerHTML = originalButtonText;
             }
         }
-    </script>
+        
         // Menu mobile
         function toggleMobileMenu() {
             const menu = document.getElementById('mobile-menu');
@@ -1370,6 +1603,51 @@
             }
         }
         window.toggleMobileMenu = toggleMobileMenu;
+
+        // Mettre à jour les liens d'authentification
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const authLink = document.getElementById('auth-link');
+            const authLinkMobile = document.getElementById('auth-link-mobile');
+            const authLinkTablet = document.getElementById('auth-link-tablet');
+            const authText = document.getElementById('auth-text');
+            
+            if (token && (user.role === 'admin' || user.role === 'superviseur' || user.role === 'comptable')) {
+                // Desktop
+                if (authLink && authText) {
+                    authLink.href = 'dashboard.html';
+                    authLink.innerHTML = '<i class="fas fa-tachometer-alt mr-1.5 text-sm"></i><span>Dashboard</span>';
+                    authText.textContent = 'Dashboard';
+                }
+                // Tablet
+                if (authLinkTablet) {
+                    authLinkTablet.href = 'dashboard.html';
+                    authLinkTablet.title = 'Dashboard';
+                }
+                // Mobile
+                if (authLinkMobile) {
+                    authLinkMobile.href = 'dashboard.html';
+                    authLinkMobile.innerHTML = '<i class="fas fa-tachometer-alt mr-2"></i><span>Dashboard</span>';
+                }
+            } else {
+                // Si non connecté, s'assurer que les liens pointent vers la page de connexion
+                if (authLink) {
+                    authLink.href = 'index.html';
+                    if (authText) {
+                        authText.textContent = 'Connexion';
+                    }
+                }
+                if (authLinkTablet) {
+                    authLinkTablet.href = 'index.html';
+                    authLinkTablet.title = 'Connexion';
+                }
+                if (authLinkMobile) {
+                    authLinkMobile.href = 'index.html';
+                }
+            }
+        });
+    </script>
 </body>
 </html>
 

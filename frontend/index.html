@@ -3,12 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SilyProcure - Connexion - SilyProcure</title>
-    
-    <!-- CSS Charte Graphique Pro Confiance -->
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <link rel="stylesheet" href="css/animations.css">
+    <title>Connexion - SilyProcure</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -26,6 +21,10 @@
                             700: '#1D4ED8',
                             900: '#1E3A8A',
                         },
+                        accent: {
+                            500: '#F59E0B',
+                            600: '#D97706',
+                        },
                         success: {
                             500: '#10B981',
                         },
@@ -36,157 +35,177 @@
                     },
                     fontFamily: {
                         sans: ['Inter', 'Arial', 'sans-serif'],
+                    },
+                    backgroundImage: {
+                        'hero-pattern': "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.1\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')",
                     }
                 }
             }
         }
     </script>
-    
+
     <!-- Font Awesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Dashboard Theme CSS -->
-    <link rel="stylesheet" href="css/dashboard-theme.css">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+
+        .input-group:focus-within i {
+            color: #2563eb; /* primary-600 */
+        }
+
+        @keyframes blob {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            33% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+        }
+        
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake { 
+            animation: shake 0.4s ease-in-out; 
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+    </style>
 </head>
-<body class="h-full flex flex-col">
-    <div class="login-container">
-        <div class="login-box">
-            <div class="logo">
-                <i class="fas fa-rocket"></i>
-                <span>SilyProcure</span>
+<body class="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900 flex items-center justify-center p-4 relative overflow-hidden">
+
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 bg-hero-pattern opacity-10 pointer-events-none"></div>
+    
+    <!-- Decor Shapes -->
+    <div class="absolute top-0 left-0 w-96 h-96 bg-primary-500 rounded-full mix-blend-multiply filter blur-[100px] opacity-20 animate-blob"></div>
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-accent-500 rounded-full mix-blend-multiply filter blur-[100px] opacity-20 animate-blob animation-delay-2000"></div>
+
+    <div class="w-full max-w-md relative z-10 fade-in-up">
+        
+        <!-- Header / Logo -->
+        <div class="text-center mb-8">
+            <a href="home.html" class="inline-flex items-center gap-3 group transition-transform hover:scale-105">
+                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-primary-600 font-bold text-2xl shadow-lg">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <span class="text-3xl font-bold text-white tracking-tight">Sily<span class="text-primary-300">Procure</span></span>
+            </a>
+            <p class="text-sm text-primary-200 mt-2">Plateforme de gestion d'achats</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="glass-card rounded-2xl p-8 sm:p-10 w-full">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Connexion</h2>
+                <p class="text-sm text-gray-500">Accédez à votre espace sécurisé</p>
             </div>
-            <h1>Bienvenue</h1>
-            <p class="subtitle">
-                Connectez-vous pour accéder à votre espace de gestion
-            </p>
+
             <div id="alert-container"></div>
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required 
-                           placeholder="votre.email@exemple.com"
-                           autocomplete="email">
-                    <i class="fas fa-envelope input-icon"></i>
+
+            <form id="login-form" class="space-y-6" onsubmit="handleLogin(event)">
+                
+                <!-- Email -->
+                <div class="space-y-1">
+                    <label for="email" class="block text-sm font-medium text-gray-700">Adresse Email</label>
+                    <div class="relative input-group">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400 transition-colors"></i>
+                        </div>
+                        <input type="email" id="email" name="email" required 
+                            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all sm:text-sm" 
+                            placeholder="exemple@entreprise.com"
+                            autocomplete="email">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="password">Mot de passe</label>
-                    <input type="password" id="password" name="password" required 
-                           placeholder="Votre mot de passe"
-                           autocomplete="current-password">
-                    <i class="fas fa-lock input-icon"></i>
+
+                <!-- Password -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center">
+                        <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                        <a href="#" class="text-xs font-semibold text-primary-600 hover:text-primary-800 transition-colors">Oublié ?</a>
+                    </div>
+                    <div class="relative input-group">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400 transition-colors"></i>
+                        </div>
+                        <input type="password" id="password" name="password" required 
+                            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all sm:text-sm" 
+                            placeholder="••••••••"
+                            autocomplete="current-password">
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary" id="login-submit">
+
+                <!-- Submit Button -->
+                <button type="submit" id="submit-btn" class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-primary-500/30 text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all transform hover:-translate-y-0.5 min-h-[48px]">
                     <span id="login-text">Se connecter</span>
                 </button>
+
             </form>
-            <div class="login-footer">
-                <p>© 2026 Silycore - Tous droits réservés</p>
+
+            <!-- Divider -->
+            <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                <p class="text-sm text-gray-500">
+                    Pas encore de compte ? 
+                    <a href="home.html#contact" class="font-semibold text-primary-600 hover:text-primary-800 transition-colors">Contactez-nous</a>
+                </p>
+                <div class="mt-4">
+                    <a href="home.html" class="text-sm text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-2 transition-colors">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Retour à l'accueil</span>
+                    </a>
+                </div>
             </div>
         </div>
+
+        <!-- Footer -->
+        <p class="text-center text-white/60 text-xs mt-8">
+            &copy; 2026 SilyProcure. Tous droits réservés. <br> Sécurisé par SSL.
+        </p>
     </div>
 
-        <!-- Navbar Moderne selon charte Pro Confiance -->
-    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo & Nav Links -->
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
-                        <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
-                    </div>
-                    <nav class="hidden sm:ml-6 sm:flex sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
-                        <a href="dashboard.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
-                            <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Dashboard</span>
-                        </a>
-                        <a href="rfq.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
-                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>RFQ</span>
-                        </a>
-                        <a href="devis.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
-                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Devis</span>
-                        </a>
-                        <a href="commandes.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
-                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Commandes</span>
-                        </a>
-                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
-                            <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Entreprises</span>
-                        </a>
-                    </nav>
-                </div>
-
-                <!-- Search Bar & Profile -->
-                <div class="flex items-center gap-4">
-                    <!-- Global Search -->
-                    <div class="hidden lg:block relative text-neutral-500 focus-within:text-primary-600" role="search">
-                        <label for="global-search" class="sr-only">Rechercher dans l'application</label>
-                        <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                            <i class="fas fa-search" aria-hidden="true"></i>
-                        </div>
-                        <input id="global-search" class="block w-64 bg-blue-50 py-2.5 pl-10 pr-4 border border-blue-200 rounded-full leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition duration-150 ease-in-out min-h-[44px]" placeholder="Rechercher..." type="search" aria-label="Rechercher">
-                    </div>
-
-                    <!-- Notifications -->
-                    <button class="relative p-2.5 text-neutral-500 hover:text-primary-600 transition-colors rounded-lg hover:bg-blue-50 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Notifications" title="Notifications">
-                        <i class="far fa-bell text-xl" aria-hidden="true"></i>
-                        <span class="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true"></span>
-                    </button>
-
-                    <!-- Profile Dropdown -->
-                    <div class="relative flex items-center gap-3">
-                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm" aria-label="Profil utilisateur">
-                            <span id="user-initials">U</span>
-                        </div>
-                        <span id="user-name" class="hidden md:block text-sm font-semibold text-neutral-700 min-w-[120px]">Chargement...</span>
-                        <button onclick="logout()" class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5" aria-label="Déconnexion" title="Déconnexion">
-                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
-                            <span class="hidden lg:inline">Déconnexion</span>
-                        </button>
-                    </div>
-                    
-                    <!-- Menu mobile -->
-                    <div class="sm:hidden ml-2">
-                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
-                            <i class="fas fa-bars text-xl"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <!-- Menu mobile déroulant -->
-            <div id="mobile-menu" class="hidden sm:hidden border-t-2 border-blue-100 bg-white shadow-lg">
-                <div class="px-4 pt-3 pb-4 space-y-1">
-                    <a href="dashboard.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
-                        <i class="fas fa-chart-line text-neutral-500" aria-hidden="true"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="rfq.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
-                        <i class="fas fa-file-contract text-neutral-500" aria-hidden="true"></i>
-                        <span>RFQ</span>
-                    </a>
-                    <a href="devis.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
-                        <i class="fas fa-file-invoice-dollar text-neutral-500" aria-hidden="true"></i>
-                        <span>Devis</span>
-                    </a>
-                    <a href="commandes.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
-                        <i class="fas fa-shopping-cart text-neutral-500" aria-hidden="true"></i>
-                        <span>Commandes</span>
-                    </a>
-                    <a href="entreprises.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
-                        <i class="fas fa-building text-neutral-500" aria-hidden="true"></i>
-                        <span>Entreprises</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
+    <!-- Scripts -->
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
     <script src="js/components.js"></script>
+    
     <script>
         // Vérifier si l'utilisateur est déjà connecté
         const token = localStorage.getItem('token');
@@ -194,19 +213,18 @@
             window.location.href = 'dashboard.html';
         }
 
-        // Gestion du formulaire de connexion
-        const loginForm = document.getElementById('login-form');
-        const submitButton = document.getElementById('login-submit');
-        const loginText = document.getElementById('login-text');
-
-        loginForm.addEventListener('submit', async (e) => {
+        async function handleLogin(e) {
             e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const loginText = document.getElementById('login-text');
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const originalText = loginText.innerHTML;
+            const originalClass = btn.className;
 
-            // Désactiver le bouton et afficher le chargement
-            submitButton.disabled = true;
-            loginText.innerHTML = '<span class="loading-spinner-login"></span>Connexion en cours...';
+            // Loading state
+            btn.disabled = true;
+            loginText.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Connexion...';
 
             try {
                 const response = await fetch('/api/auth/login', {
@@ -220,46 +238,43 @@
                 if (response.ok) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    Toast.success('Connexion réussie ! Redirection...');
                     
-                    // Animation de succès
-                    submitButton.style.background = '#10B981';
-                    loginText.innerHTML = '<i class="fas fa-check"></i> Connexion réussie';
+                    // Afficher un message de succès si Toast est disponible
+                    if (typeof Toast !== 'undefined') {
+                        Toast.success('Connexion réussie ! Redirection...');
+                    }
+                    
+                    // Success UI
+                    btn.className = "w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-success-500 transition-all min-h-[48px]";
+                    loginText.innerHTML = '<i class="fas fa-check mr-2"></i> Réussi !';
                     
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
-                    }, 1000);
+                    }, 800);
                 } else {
-                    // Réactiver le bouton
-                    submitButton.disabled = false;
-                    loginText.innerHTML = 'Se connecter';
-                    Toast.error(data.error || 'Erreur de connexion');
-                    
-                    // Animation d'erreur
-                    submitButton.style.animation = 'shake 0.5s';
-                    setTimeout(() => {
-                        submitButton.style.animation = '';
-                    }, 500);
+                    throw new Error(data.error || 'Identifiants incorrects');
                 }
+
             } catch (error) {
-                // Réactiver le bouton
-                submitButton.disabled = false;
-                loginText.innerHTML = 'Se connecter';
-                Toast.error('Erreur de connexion au serveur');
+                // Error UI
+                btn.disabled = false;
+                btn.className = originalClass;
+                loginText.innerHTML = originalText;
+                
+                // Shake animation
+                const card = document.querySelector('.glass-card');
+                card.classList.add('shake');
+                setTimeout(() => card.classList.remove('shake'), 400);
+
+                // Show Toast if available, else alert
+                if (typeof Toast !== 'undefined') {
+                    Toast.error('Email ou mot de passe incorrect');
+                } else {
+                    alert('Erreur de connexion : Vérifiez vos identifiants.');
+                }
                 console.error('Erreur:', error);
             }
-        });
-
-        // Animation shake pour les erreurs
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-10px); }
-                75% { transform: translateX(10px); }
-            }
-        `;
-        document.head.appendChild(style);
+        }
 
         // Focus automatique sur le premier champ
         document.addEventListener('DOMContentLoaded', () => {
@@ -268,4 +283,3 @@
     </script>
 </body>
 </html>
-
