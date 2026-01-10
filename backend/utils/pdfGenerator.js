@@ -51,35 +51,45 @@ function drawLogo(doc, startX = MARGIN, startY = MARGIN) {
         console.log('Logo PNG non trouvé, utilisation du logo texte');
     }
     
-    // Logo texte stylisé professionnel
+    // Logo texte stylisé professionnel avec meilleure visibilité
     const logoY = startY;
     
-    // Icône carrée avec "S"
-    doc.rect(startX, logoY, 40, 40)
+    // Encadré pour le logo
+    doc.rect(startX, logoY, 200, 45)
+       .fillColor(COLORS.white)
+       .fill();
+    
+    doc.rect(startX, logoY, 200, 45)
+       .strokeColor(COLORS.primary)
+       .lineWidth(1)
+       .stroke();
+    
+    // Icône carrée avec "S" (plus visible)
+    doc.rect(startX + 5, logoY + 2.5, 40, 40)
        .fillColor(COLORS.primary)
        .fill();
     
-    doc.fontSize(24)
+    doc.fontSize(26)
        .fillColor(COLORS.white)
        .font('Helvetica-Bold')
-       .text('S', startX + 12, logoY + 8);
+       .text('S', startX + 13, logoY + 10);
     
-    // Texte "SilyProcure"
-    doc.fontSize(20)
+    // Texte "SilyProcure" (plus grand et visible)
+    doc.fontSize(22)
        .fillColor(COLORS.text)
        .font('Helvetica-Bold')
-       .text('Sily', startX + 50, logoY, { continued: true });
+       .text('Sily', startX + 52, logoY + 5, { continued: true });
     
-    doc.fontSize(20)
+    doc.fontSize(22)
        .fillColor(COLORS.primary)
        .font('Helvetica-Bold')
        .text('Procure', { continued: false });
     
-    // Sous-titre
-    doc.fontSize(8)
+    // Sous-titre (plus visible)
+    doc.fontSize(9)
        .fillColor(COLORS.textLight)
        .font('Helvetica')
-       .text('Système de gestion des achats', startX + 50, logoY + 25);
+       .text('Système de gestion des achats', startX + 52, logoY + 28);
     
     return logoY + 50;
 }
@@ -91,173 +101,293 @@ function drawCompanyHeader(doc, startY) {
     const startX = MARGIN;
     let currentY = startY;
     
-    // Informations entreprise
-    doc.fontSize(9)
-       .fillColor(COLORS.text)
-       .font('Helvetica-Bold')
-       .text('SilyProcure SA', startX, currentY);
-    currentY += 12;
+    // Encadré pour les informations entreprise
+    const headerBoxHeight = 70;
+    doc.rect(startX, currentY, CONTENT_WIDTH, headerBoxHeight)
+       .fillColor(COLORS.gray50)
+       .fill();
     
+    doc.rect(startX, currentY, CONTENT_WIDTH, headerBoxHeight)
+       .strokeColor(COLORS.border)
+       .lineWidth(0.5)
+       .stroke();
+    
+    currentY += 8;
+    
+    // Nom de l'entreprise (plus visible)
+    doc.fontSize(11)
+       .fillColor(COLORS.primary)
+       .font('Helvetica-Bold')
+       .text('SilyProcure SA', startX + 8, currentY);
+    currentY += 14;
+    
+    // Informations en deux colonnes pour meilleure organisation
+    const leftCol = startX + 8;
+    const rightCol = startX + CONTENT_WIDTH / 2 + 10;
+    let leftY = currentY;
+    let rightY = currentY;
+    
+    // Colonne gauche
     doc.fontSize(8)
        .fillColor(COLORS.textLight)
+       .font('Helvetica-Bold')
+       .text('Adresse:', leftCol, leftY);
+    leftY += 10;
+    
+    doc.fontSize(8)
+       .fillColor(COLORS.text)
        .font('Helvetica')
-       .text('Immeuble Almamya, Kaloum', startX, currentY);
-    currentY += 10;
+       .text('Bambeto - Conakry', leftCol, leftY);
+    leftY += 9;
     
-    doc.text('Conakry, Guinée', startX, currentY);
-    currentY += 10;
+    doc.text('Pharmacie Diaguissa', leftCol, leftY);
+    leftY += 9;
     
-    doc.text('Tél: +224 600 00 00 00', startX, currentY);
-    currentY += 10;
+    doc.text('Guinée', leftCol, leftY);
     
-    doc.text('Email: contact@silyprocure.com', startX, currentY);
-    currentY += 10;
+    // Colonne droite
+    doc.fontSize(8)
+       .fillColor(COLORS.textLight)
+       .font('Helvetica-Bold')
+       .text('Contact:', rightCol, rightY);
+    rightY += 10;
     
-    doc.text('RCCM: GN.TCC.2024.B.00000', startX, currentY);
+    doc.fontSize(8)
+       .fillColor(COLORS.text)
+       .font('Helvetica')
+       .text('Tél: +224 622 69 24 33', rightCol, rightY);
+    rightY += 9;
     
-    return currentY + 20;
+    doc.text('Email: contact@silyprocure.com', rightCol, rightY);
+    rightY += 9;
+    
+    doc.text('RCCM: GN.TCC.2024.B.00000', rightCol, rightY);
+    
+    return startY + headerBoxHeight + 15;
 }
 
 /**
  * Fonction pour dessiner l'en-tête de document (titre + infos)
  */
 function drawDocumentHeader(doc, title, subtitle, documentInfo, startY) {
-    const rightX = A4_WIDTH - MARGIN - 200;
+    const rightX = A4_WIDTH - MARGIN - 220;
+    const infoBoxWidth = 220;
     let currentY = startY;
     
-    // Titre du document (grand et discret)
-    doc.fontSize(36)
-       .fillColor(COLORS.gray200)
-       .font('Helvetica-Bold')
-       .text(title, rightX, currentY, { width: 200, align: 'right' });
-    currentY += 45;
+    // Encadré pour les informations du document
+    const infoBoxHeight = 80 + (documentInfo.dateEcheance ? 12 : 0) + (documentInfo.dateValidite ? 12 : 0);
+    doc.rect(rightX, currentY, infoBoxWidth, infoBoxHeight)
+       .fillColor(COLORS.primary)
+       .fill();
     
-    // Informations du document
+    doc.rect(rightX, currentY, infoBoxWidth, infoBoxHeight)
+       .strokeColor(COLORS.primaryDark)
+       .lineWidth(1)
+       .stroke();
+    
+    currentY += 10;
+    
+    // Titre du document (dans l'encadré)
+    doc.fontSize(20)
+       .fillColor(COLORS.white)
+       .font('Helvetica-Bold')
+       .text(title, rightX + 10, currentY, { width: infoBoxWidth - 20, align: 'left' });
+    currentY += 18;
+    
+    // Sous-titre
+    doc.fontSize(9)
+       .fillColor(COLORS.white)
+       .font('Helvetica')
+       .opacity(0.9)
+       .text(subtitle, rightX + 10, currentY, { width: infoBoxWidth - 20, align: 'left' });
+    currentY += 15;
+    
+    // Ligne de séparation
+    doc.moveTo(rightX + 10, currentY)
+       .lineTo(rightX + infoBoxWidth - 10, currentY)
+       .strokeColor(COLORS.white)
+       .opacity(0.3)
+       .lineWidth(0.5)
+       .stroke();
+    currentY += 10;
+    
+    // Informations du document (en blanc pour contraste)
     if (documentInfo.numero) {
-        doc.fontSize(8)
-           .fillColor(COLORS.textLight)
+        doc.fontSize(7)
+           .fillColor(COLORS.white)
            .font('Helvetica')
-           .text('Numéro :', rightX, currentY, { width: 200, align: 'right' });
-        doc.fontSize(9)
-           .fillColor(COLORS.text)
+           .opacity(0.8)
+           .text('Numéro', rightX + 10, currentY);
+        doc.fontSize(10)
+           .fillColor(COLORS.white)
            .font('Helvetica-Bold')
-           .text(documentInfo.numero, rightX + 60, currentY, { width: 140, align: 'right' });
-        currentY += 12;
+           .opacity(1)
+           .text(documentInfo.numero, rightX + 10, currentY + 10, { width: infoBoxWidth - 20, align: 'left' });
+        currentY += 25;
     }
     
     if (documentInfo.date) {
-        doc.fontSize(8)
-           .fillColor(COLORS.textLight)
+        doc.fontSize(7)
+           .fillColor(COLORS.white)
            .font('Helvetica')
-           .text('Date :', rightX, currentY, { width: 200, align: 'right' });
+           .opacity(0.8)
+           .text('Date', rightX + 10, currentY);
         doc.fontSize(9)
-           .fillColor(COLORS.text)
+           .fillColor(COLORS.white)
            .font('Helvetica-Bold')
-           .text(documentInfo.date, rightX + 60, currentY, { width: 140, align: 'right' });
-        currentY += 12;
+           .opacity(1)
+           .text(documentInfo.date, rightX + 10, currentY + 10, { width: infoBoxWidth - 20, align: 'left' });
+        currentY += 25;
     }
     
     if (documentInfo.dateEcheance) {
-        doc.fontSize(8)
-           .fillColor(COLORS.textLight)
+        doc.fontSize(7)
+           .fillColor(COLORS.white)
            .font('Helvetica')
-           .text('Échéance :', rightX, currentY, { width: 200, align: 'right' });
+           .opacity(0.8)
+           .text('Échéance', rightX + 10, currentY);
         doc.fontSize(9)
-           .fillColor(COLORS.text)
+           .fillColor(COLORS.white)
            .font('Helvetica-Bold')
-           .text(documentInfo.dateEcheance, rightX + 60, currentY, { width: 140, align: 'right' });
-        currentY += 12;
+           .opacity(1)
+           .text(documentInfo.dateEcheance, rightX + 10, currentY + 10, { width: infoBoxWidth - 20, align: 'left' });
+        currentY += 25;
     }
     
     if (documentInfo.dateValidite) {
-        doc.fontSize(8)
-           .fillColor(COLORS.textLight)
+        doc.fontSize(7)
+           .fillColor(COLORS.white)
            .font('Helvetica')
-           .text('Validité :', rightX, currentY, { width: 200, align: 'right' });
+           .opacity(0.8)
+           .text('Validité', rightX + 10, currentY);
         doc.fontSize(9)
-           .fillColor(COLORS.text)
+           .fillColor(COLORS.white)
            .font('Helvetica-Bold')
-           .text(documentInfo.dateValidite, rightX + 60, currentY, { width: 140, align: 'right' });
-        currentY += 12;
+           .opacity(1)
+           .text(documentInfo.dateValidite, rightX + 10, currentY + 10, { width: infoBoxWidth - 20, align: 'left' });
+        currentY += 25;
     }
     
-    return currentY + 20;
+    doc.opacity(1); // Réinitialiser l'opacité
+    
+    return startY + infoBoxHeight + 15;
 }
 
 /**
  * Fonction pour dessiner la section destinataire
  */
 function drawRecipient(doc, recipientInfo, startY) {
-    const rightX = A4_WIDTH - MARGIN - 200;
+    const rightX = A4_WIDTH - MARGIN - 250;
+    const recipientWidth = 250;
     let currentY = startY;
+    
+    // Encadré pour le destinataire
+    let boxHeight = 50; // Hauteur de base
+    if (recipientInfo.contact) boxHeight += 12;
+    if (recipientInfo.adresse) boxHeight += 12;
+    if (recipientInfo.ville) boxHeight += 12;
+    if (recipientInfo.nif) boxHeight += 12;
+    
+    doc.rect(rightX, currentY, recipientWidth, boxHeight)
+       .fillColor(COLORS.gray50)
+       .fill();
+    
+    doc.rect(rightX, currentY, recipientWidth, boxHeight)
+       .strokeColor(COLORS.border)
+       .lineWidth(0.5)
+       .stroke();
+    
+    currentY += 8;
     
     // Label
     doc.fontSize(7)
        .fillColor(COLORS.textLighter)
        .font('Helvetica-Bold')
-       .text('FACTURÉ À', rightX, currentY, { width: 200, align: 'right' });
+       .text('DESTINATAIRE', rightX + 8, currentY);
     currentY += 12;
     
-    // Nom
-    doc.fontSize(12)
+    // Nom (plus visible)
+    doc.fontSize(13)
        .fillColor(COLORS.text)
        .font('Helvetica-Bold')
-       .text(recipientInfo.nom || '-', rightX, currentY, { width: 200, align: 'right' });
-    currentY += 12;
+       .text(recipientInfo.nom || '-', rightX + 8, currentY, { width: recipientWidth - 16, align: 'left' });
+    currentY += 15;
     
     // Détails
     if (recipientInfo.contact) {
         doc.fontSize(8)
            .fillColor(COLORS.textLight)
            .font('Helvetica')
-           .text(`Attn: ${recipientInfo.contact}`, rightX, currentY, { width: 200, align: 'right' });
-        currentY += 10;
+           .text(`Contact: ${recipientInfo.contact}`, rightX + 8, currentY, { width: recipientWidth - 16, align: 'left' });
+        currentY += 11;
     }
     
     if (recipientInfo.adresse) {
         doc.fontSize(8)
            .fillColor(COLORS.textLight)
            .font('Helvetica')
-           .text(recipientInfo.adresse, rightX, currentY, { width: 200, align: 'right' });
-        currentY += 10;
+           .text(recipientInfo.adresse, rightX + 8, currentY, { width: recipientWidth - 16, align: 'left' });
+        currentY += 11;
     }
     
     if (recipientInfo.ville) {
         doc.fontSize(8)
            .fillColor(COLORS.textLight)
            .font('Helvetica')
-           .text(recipientInfo.ville, rightX, currentY, { width: 200, align: 'right' });
-        currentY += 10;
+           .text(recipientInfo.ville, rightX + 8, currentY, { width: recipientWidth - 16, align: 'left' });
+        currentY += 11;
     }
     
-    // NIF n'est plus disponible directement, on peut l'omettre ou le récupérer depuis une autre source si nécessaire
+    if (recipientInfo.nif) {
+        doc.fontSize(8)
+           .fillColor(COLORS.textLight)
+           .font('Helvetica')
+           .text(`NIF: ${recipientInfo.nif}`, rightX + 8, currentY, { width: recipientWidth - 16, align: 'left' });
+        currentY += 11;
+    }
     
-    return currentY + 30;
+    return startY + boxHeight + 20;
 }
 
 /**
  * Fonction pour dessiner un tableau professionnel
  */
 function drawTable(doc, startY, columns, rows, options = {}) {
-    const { headerBackground = COLORS.gray900, headerTextColor = COLORS.white, 
-            rowHeight = 25, alternateRowColor = COLORS.gray50 } = options;
+    const { headerBackground = COLORS.primary, headerTextColor = COLORS.white, 
+            rowHeight = 28, alternateRowColor = COLORS.gray50 } = options;
     
     let y = startY;
     const tableWidth = CONTENT_WIDTH;
     const colWidths = columns.map(col => col.width);
     
-    // En-tête du tableau avec fond sombre
+    // En-tête du tableau avec fond primaire
     doc.rect(MARGIN, y, tableWidth, rowHeight)
        .fillColor(headerBackground)
        .fill();
     
+    // Bordure de l'en-tête
+    doc.rect(MARGIN, y, tableWidth, rowHeight)
+       .strokeColor(COLORS.primaryDark)
+       .lineWidth(1)
+       .stroke();
+    
     let x = MARGIN;
     columns.forEach((col, index) => {
-        doc.fontSize(8)
+        // Séparateur vertical entre colonnes
+        if (index > 0) {
+            doc.moveTo(x, y)
+               .lineTo(x, y + rowHeight)
+               .strokeColor(COLORS.white)
+               .opacity(0.2)
+               .lineWidth(0.5)
+               .stroke();
+        }
+        
+        doc.fontSize(9)
            .fillColor(headerTextColor)
            .font('Helvetica-Bold')
-           .text(col.label.toUpperCase(), x + 8, y + 8, { 
-               width: colWidths[index] - 16, 
+           .text(col.label.toUpperCase(), x + 10, y + 9, { 
+               width: colWidths[index] - 20, 
                align: col.align || 'left' 
            });
         x += colWidths[index];
@@ -267,27 +397,52 @@ function drawTable(doc, startY, columns, rows, options = {}) {
     
     // Lignes du tableau
     rows.forEach((row, rowIndex) => {
-        // Couleur alternée
+        // Couleur alternée pour meilleure lisibilité
         if (rowIndex % 2 === 1) {
             doc.rect(MARGIN, y, tableWidth, rowHeight)
                .fillColor(alternateRowColor)
                .fill();
         }
         
-        // Bordures
-        doc.rect(MARGIN, y, tableWidth, rowHeight)
+        // Bordures horizontales
+        doc.moveTo(MARGIN, y)
+           .lineTo(MARGIN + tableWidth, y)
            .strokeColor(COLORS.border)
            .lineWidth(0.5)
            .stroke();
         
-        // Contenu
+        doc.moveTo(MARGIN, y + rowHeight)
+           .lineTo(MARGIN + tableWidth, y + rowHeight)
+           .strokeColor(COLORS.border)
+           .lineWidth(0.5)
+           .stroke();
+        
+        // Bordures verticales
+        x = MARGIN;
+        columns.forEach((col, colIndex) => {
+            if (colIndex > 0) {
+                doc.moveTo(x, y)
+                   .lineTo(x, y + rowHeight)
+                   .strokeColor(COLORS.border)
+                   .opacity(0.3)
+                   .lineWidth(0.3)
+                   .stroke();
+            }
+            x += colWidths[colIndex];
+        });
+        
+        // Contenu avec meilleur espacement
         x = MARGIN;
         row.forEach((cell, cellIndex) => {
+            const cellColor = columns[cellIndex].align === 'right' && !isNaN(parseFloat(cell)) 
+                ? COLORS.primary 
+                : COLORS.text;
+            
             doc.fontSize(9)
-               .fillColor(COLORS.text)
-               .font('Helvetica')
-               .text(cell || '-', x + 8, y + 8, { 
-                   width: colWidths[cellIndex] - 16, 
+               .fillColor(cellColor)
+               .font(columns[cellIndex].align === 'right' && !isNaN(parseFloat(cell)) ? 'Helvetica-Bold' : 'Helvetica')
+               .text(cell || '-', x + 10, y + 9, { 
+                   width: colWidths[cellIndex] - 20, 
                    align: columns[cellIndex].align || 'left' 
                });
             x += colWidths[cellIndex];
@@ -301,17 +456,31 @@ function drawTable(doc, startY, columns, rows, options = {}) {
             y = MARGIN + 50;
             
             // Réafficher l'en-tête
-            x = MARGIN;
             doc.rect(MARGIN, y, tableWidth, rowHeight)
                .fillColor(headerBackground)
                .fill();
             
+            doc.rect(MARGIN, y, tableWidth, rowHeight)
+               .strokeColor(COLORS.primaryDark)
+               .lineWidth(1)
+               .stroke();
+            
+            x = MARGIN;
             columns.forEach((col, index) => {
-                doc.fontSize(8)
+                if (index > 0) {
+                    doc.moveTo(x, y)
+                       .lineTo(x, y + rowHeight)
+                       .strokeColor(COLORS.white)
+                       .opacity(0.2)
+                       .lineWidth(0.5)
+                       .stroke();
+                }
+                
+                doc.fontSize(9)
                    .fillColor(headerTextColor)
                    .font('Helvetica-Bold')
-                   .text(col.label.toUpperCase(), x + 8, y + 8, { 
-                       width: colWidths[index] - 16, 
+                   .text(col.label.toUpperCase(), x + 10, y + 9, { 
+                       width: colWidths[index] - 20, 
                        align: col.align || 'left' 
                    });
                 x += colWidths[index];
@@ -320,6 +489,12 @@ function drawTable(doc, startY, columns, rows, options = {}) {
         }
     });
     
+    // Bordure finale du tableau
+    doc.rect(MARGIN, startY, tableWidth, y - startY)
+       .strokeColor(COLORS.border)
+       .lineWidth(1)
+       .stroke();
+    
     return y;
 }
 
@@ -327,37 +502,58 @@ function drawTable(doc, startY, columns, rows, options = {}) {
  * Fonction pour dessiner les totaux
  */
 function drawTotals(doc, startY, totals, rightAlign = true) {
-    const totalsX = rightAlign ? A4_WIDTH - MARGIN - 200 : MARGIN;
-    const totalsWidth = 200;
+    const totalsX = rightAlign ? A4_WIDTH - MARGIN - 250 : MARGIN;
+    const totalsWidth = 250;
     let currentY = startY;
+    
+    // Encadré pour les totaux
+    let boxHeight = totals.length * 18;
+    totals.forEach(total => {
+        if (total.separator) boxHeight += 8;
+        else if (total.label === 'Net à Payer' || total.label === 'Reste à payer') boxHeight += 5;
+    });
+    
+    doc.rect(totalsX, currentY, totalsWidth, boxHeight)
+       .fillColor(COLORS.gray50)
+       .fill();
+    
+    doc.rect(totalsX, currentY, totalsWidth, boxHeight)
+       .strokeColor(COLORS.border)
+       .lineWidth(0.5)
+       .stroke();
+    
+    currentY += 8;
     
     totals.forEach((total, index) => {
         const isLast = index === totals.length - 1;
+        const isTotal = total.label === 'Net à Payer' || total.label === 'Reste à payer';
         
         if (total.separator) {
             // Ligne de séparation
-            doc.moveTo(totalsX, currentY)
-               .lineTo(totalsX + totalsWidth, currentY)
+            doc.moveTo(totalsX + 10, currentY)
+               .lineTo(totalsX + totalsWidth - 10, currentY)
                .strokeColor(COLORS.border)
                .lineWidth(0.5)
                .stroke();
-            currentY += 8;
+            currentY += 10;
         } else {
-            doc.fontSize(isLast ? 12 : 9)
-               .fillColor(isLast ? COLORS.primary : COLORS.text)
-               .font(isLast ? 'Helvetica-Bold' : 'Helvetica')
-               .text(total.label, totalsX, currentY, { width: totalsWidth - 100, align: 'right' });
+            // Label
+            doc.fontSize(isTotal ? 10 : 9)
+               .fillColor(isTotal ? COLORS.primary : COLORS.text)
+               .font(isTotal ? 'Helvetica-Bold' : 'Helvetica')
+               .text(total.label, totalsX + 10, currentY, { width: totalsWidth - 150, align: 'left' });
             
-            doc.fontSize(isLast ? 14 : 9)
-               .fillColor(isLast ? COLORS.primary : COLORS.text)
-               .font(isLast ? 'Helvetica-Bold' : 'Helvetica')
-               .text(total.value, totalsX + totalsWidth - 100, currentY, { width: 100, align: 'right' });
+            // Valeur
+            doc.fontSize(isTotal ? 14 : 10)
+               .fillColor(isTotal ? COLORS.primary : COLORS.text)
+               .font('Helvetica-Bold')
+               .text(total.value, totalsX + totalsWidth - 140, currentY, { width: 130, align: 'right' });
             
-            currentY += isLast ? 20 : 15;
+            currentY += isTotal ? 18 : 15;
         }
     });
     
-    return currentY;
+    return startY + boxHeight + 10;
 }
 
 /**
@@ -366,92 +562,158 @@ function drawTotals(doc, startY, totals, rightAlign = true) {
 function drawFooterInfo(doc, startY, notes, bankInfo) {
     const colWidth = (CONTENT_WIDTH - 20) / 2;
     let currentY = startY;
+    let maxHeight = 0;
     
     // Colonne gauche - Notes
     if (notes) {
-        doc.rect(MARGIN, currentY, colWidth, 60)
+        // Calculer la hauteur nécessaire pour les notes
+        const notesLines = notes.split('\n').length;
+        const notesHeight = Math.max(80, 30 + (notesLines * 12));
+        
+        doc.rect(MARGIN, currentY, colWidth, notesHeight)
            .fillColor(COLORS.gray50)
            .fill();
         
-        doc.rect(MARGIN, currentY, colWidth, 60)
+        doc.rect(MARGIN, currentY, colWidth, notesHeight)
            .strokeColor(COLORS.border)
            .lineWidth(0.5)
            .stroke();
         
-        doc.fontSize(7)
-           .fillColor(COLORS.textLight)
+        // Titre avec icône visuelle
+        doc.rect(MARGIN, currentY, colWidth, 20)
+           .fillColor(COLORS.primary)
+           .fill();
+        
+        doc.fontSize(8)
+           .fillColor(COLORS.white)
            .font('Helvetica-Bold')
-           .text('CONDITIONS & NOTES', MARGIN + 8, currentY + 8);
+           .text('CONDITIONS & NOTES', MARGIN + 8, currentY + 6);
         
         doc.fontSize(8)
            .fillColor(COLORS.text)
            .font('Helvetica')
-           .text(notes, MARGIN + 8, currentY + 20, { width: colWidth - 16, align: 'left' });
+           .text(notes, MARGIN + 8, currentY + 25, { width: colWidth - 16, align: 'left', lineGap: 2 });
+        
+        maxHeight = Math.max(maxHeight, notesHeight);
     }
     
     // Colonne droite - Informations bancaires
     if (bankInfo) {
         const rightX = MARGIN + colWidth + 20;
-        doc.rect(rightX, currentY, colWidth, 60)
+        const bankInfoLines = [
+            bankInfo.banque ? 1 : 0,
+            bankInfo.titulaire ? 1 : 0,
+            bankInfo.iban ? 1 : 0,
+            bankInfo.swift ? 1 : 0
+        ].reduce((a, b) => a + b, 0);
+        
+        const bankHeight = Math.max(80, 30 + (bankInfoLines * 12));
+        
+        doc.rect(rightX, currentY, colWidth, bankHeight)
            .fillColor(COLORS.gray50)
            .fill();
         
-        doc.rect(rightX, currentY, colWidth, 60)
+        doc.rect(rightX, currentY, colWidth, bankHeight)
            .strokeColor(COLORS.border)
            .lineWidth(0.5)
            .stroke();
         
-        doc.fontSize(7)
-           .fillColor(COLORS.textLight)
-           .font('Helvetica-Bold')
-           .text('INFORMATIONS BANCAIRES', rightX + 8, currentY + 8);
+        // Titre avec fond primaire
+        doc.rect(rightX, currentY, colWidth, 20)
+           .fillColor(COLORS.primary)
+           .fill();
         
-        let infoY = currentY + 20;
+        doc.fontSize(8)
+           .fillColor(COLORS.white)
+           .font('Helvetica-Bold')
+           .text('INFORMATIONS BANCAIRES', rightX + 8, currentY + 6);
+        
+        let infoY = currentY + 25;
         if (bankInfo.banque) {
             doc.fontSize(8)
                .fillColor(COLORS.text)
+               .font('Helvetica-Bold')
+               .text('Banque:', rightX + 8, infoY);
+            doc.fontSize(8)
+               .fillColor(COLORS.text)
                .font('Helvetica')
-               .text(`Banque: ${bankInfo.banque}`, rightX + 8, infoY);
-            infoY += 10;
+               .text(bankInfo.banque, rightX + 50, infoY);
+            infoY += 12;
         }
         if (bankInfo.titulaire) {
-            doc.text(`Titulaire: ${bankInfo.titulaire}`, rightX + 8, infoY);
-            infoY += 10;
+            doc.fontSize(8)
+               .fillColor(COLORS.text)
+               .font('Helvetica-Bold')
+               .text('Titulaire:', rightX + 8, infoY);
+            doc.fontSize(8)
+               .fillColor(COLORS.text)
+               .font('Helvetica')
+               .text(bankInfo.titulaire, rightX + 50, infoY);
+            infoY += 12;
         }
         if (bankInfo.iban) {
-            doc.text(`IBAN: ${bankInfo.iban}`, rightX + 8, infoY);
-            infoY += 10;
+            doc.fontSize(8)
+               .fillColor(COLORS.text)
+               .font('Helvetica-Bold')
+               .text('IBAN:', rightX + 8, infoY);
+            doc.fontSize(8)
+               .fillColor(COLORS.text)
+               .font('Helvetica')
+               .text(bankInfo.iban, rightX + 50, infoY);
+            infoY += 12;
         }
         if (bankInfo.swift) {
-            doc.text(`SWIFT: ${bankInfo.swift}`, rightX + 8, infoY);
+            doc.fontSize(8)
+               .fillColor(COLORS.text)
+               .font('Helvetica-Bold')
+               .text('SWIFT:', rightX + 8, infoY);
+            doc.fontSize(8)
+               .fillColor(COLORS.text)
+               .font('Helvetica')
+               .text(bankInfo.swift, rightX + 50, infoY);
         }
+        
+        maxHeight = Math.max(maxHeight, bankHeight);
     }
     
-    return currentY + 70;
+    return currentY + maxHeight + 15;
 }
 
 /**
  * Fonction pour dessiner le pied de page
  */
 function drawFooter(doc) {
-    const footerY = A4_HEIGHT - MARGIN - 30;
+    const footerY = A4_HEIGHT - MARGIN - 40;
     
-    // Ligne de séparation
+    // Fond du footer
+    doc.rect(MARGIN, footerY, CONTENT_WIDTH, 35)
+       .fillColor(COLORS.gray100)
+       .fill();
+    
+    // Ligne de séparation supérieure
     doc.moveTo(MARGIN, footerY)
        .lineTo(A4_WIDTH - MARGIN, footerY)
        .strokeColor(COLORS.border)
        .lineWidth(0.5)
        .stroke();
     
-    // Texte du pied de page
+    // Texte du pied de page (plus structuré)
     doc.fontSize(7)
+       .fillColor(COLORS.textLight)
+       .font('Helvetica-Bold')
+       .text('SilyProcure SA', MARGIN, footerY + 5, { align: 'center', width: CONTENT_WIDTH });
+    
+    doc.fontSize(6)
        .fillColor(COLORS.textLighter)
        .font('Helvetica')
-       .text('SilyProcure SA - Société Anonyme au capital de 100 000 000 GNF - RCCM GN.TCC.2024.B.00000', 
-             MARGIN, footerY + 5, { align: 'center', width: CONTENT_WIDTH });
+       .text('Société Anonyme au capital de 100 000 000 GNF - RCCM GN.TCC.2024.B.00000', 
+             MARGIN, footerY + 13, { align: 'center', width: CONTENT_WIDTH });
     
-    doc.text('Merci de votre confiance.', 
-             MARGIN, footerY + 15, { align: 'center', width: CONTENT_WIDTH });
+    doc.fontSize(7)
+       .fillColor(COLORS.primary)
+       .font('Helvetica-Bold')
+       .text('Merci de votre confiance.', 
+             MARGIN, footerY + 23, { align: 'center', width: CONTENT_WIDTH });
 }
 
 /**
@@ -497,7 +759,15 @@ async function generateRFQPDF(rfq, outputPath) {
                 dateEcheance: dateLimite
             }, currentY);
             
-            currentY += 20;
+            currentY += 15;
+            
+            // Séparateur visuel
+            doc.moveTo(MARGIN, currentY)
+               .lineTo(A4_WIDTH - MARGIN, currentY)
+               .strokeColor(COLORS.border)
+               .lineWidth(0.5)
+               .stroke();
+            currentY += 15;
             
             // Destinataire
             if (rfq.destinataire_nom) {
@@ -510,14 +780,36 @@ async function generateRFQPDF(rfq, outputPath) {
                 }, currentY);
             }
             
-            // Description
+            // Description avec encadré
             if (rfq.description) {
-                doc.fontSize(10)
+                const descHeight = 40;
+                doc.rect(MARGIN, currentY, CONTENT_WIDTH, descHeight)
+                   .fillColor(COLORS.gray50)
+                   .fill();
+                
+                doc.rect(MARGIN, currentY, CONTENT_WIDTH, descHeight)
+                   .strokeColor(COLORS.border)
+                   .lineWidth(0.5)
+                   .stroke();
+                
+                doc.fontSize(8)
+                   .fillColor(COLORS.textLight)
+                   .font('Helvetica-Bold')
+                   .text('DESCRIPTION', MARGIN + 8, currentY + 6);
+                
+                doc.fontSize(9)
                    .fillColor(COLORS.text)
                    .font('Helvetica')
-                   .text(rfq.description, MARGIN, currentY, { width: CONTENT_WIDTH, align: 'left' });
-                currentY += 30;
+                   .text(rfq.description, MARGIN + 8, currentY + 18, { width: CONTENT_WIDTH - 16, align: 'left' });
+                currentY += descHeight + 15;
             }
+            
+            // Titre de section pour le tableau
+            doc.fontSize(10)
+               .fillColor(COLORS.primary)
+               .font('Helvetica-Bold')
+               .text('ARTICLES DEMANDÉS', MARGIN, currentY);
+            currentY += 12;
             
             // Tableau des articles
             if (rfq.lignes && rfq.lignes.length > 0) {
@@ -539,8 +831,15 @@ async function generateRFQPDF(rfq, outputPath) {
                 currentY += 20;
             }
             
-            // Conditions de paiement
+            // Séparateur avant les conditions
             if (rfq.conditions_paiement) {
+                doc.moveTo(MARGIN, currentY)
+                   .lineTo(A4_WIDTH - MARGIN, currentY)
+                   .strokeColor(COLORS.border)
+                   .lineWidth(0.5)
+                   .stroke();
+                currentY += 15;
+                
                 currentY = drawFooterInfo(doc, currentY, rfq.conditions_paiement, null);
             }
             
@@ -599,7 +898,15 @@ async function generateDevisPDF(devis, outputPath) {
                 dateValidite: dateValidite
             }, currentY);
             
-            currentY += 20;
+            currentY += 15;
+            
+            // Séparateur visuel
+            doc.moveTo(MARGIN, currentY)
+               .lineTo(A4_WIDTH - MARGIN, currentY)
+               .strokeColor(COLORS.border)
+               .lineWidth(0.5)
+               .stroke();
+            currentY += 15;
             
             // Destinataire (client ou fournisseur selon le contexte)
             // Pour un devis, le destinataire est généralement le client
@@ -612,6 +919,13 @@ async function generateDevisPDF(devis, outputPath) {
                     nif: devis.client_nif || devis.fournisseur_nif || ''
                 }, currentY);
             }
+            
+            // Titre de section pour le tableau
+            doc.fontSize(10)
+               .fillColor(COLORS.primary)
+               .font('Helvetica-Bold')
+               .text('DÉTAIL DES ARTICLES', MARGIN, currentY);
+            currentY += 12;
             
             // Tableau des lignes
             if (devis.lignes && devis.lignes.length > 0) {
@@ -656,7 +970,17 @@ async function generateDevisPDF(devis, outputPath) {
                 ];
                 
                 currentY = drawTotals(doc, currentY, totals);
-                currentY += 20;
+                currentY += 15;
+            }
+            
+            // Séparateur avant les conditions
+            if (devis.conditions_paiement || devis.garanties || devis.delai_livraison) {
+                doc.moveTo(MARGIN, currentY)
+                   .lineTo(A4_WIDTH - MARGIN, currentY)
+                   .strokeColor(COLORS.border)
+                   .lineWidth(0.5)
+                   .stroke();
+                currentY += 15;
             }
             
             // Conditions et garanties
@@ -730,7 +1054,15 @@ async function generateCommandePDF(commande, outputPath) {
                 dateEcheance: dateLivraison
             }, currentY);
             
-            currentY += 20;
+            currentY += 15;
+            
+            // Séparateur visuel
+            doc.moveTo(MARGIN, currentY)
+               .lineTo(A4_WIDTH - MARGIN, currentY)
+               .strokeColor(COLORS.border)
+               .lineWidth(0.5)
+               .stroke();
+            currentY += 15;
             
             // Destinataire (fournisseur)
             if (commande.fournisseur_nom) {
@@ -742,6 +1074,13 @@ async function generateCommandePDF(commande, outputPath) {
                     nif: commande.fournisseur_nif || ''
                 }, currentY);
             }
+            
+            // Titre de section pour le tableau
+            doc.fontSize(10)
+               .fillColor(COLORS.primary)
+               .font('Helvetica-Bold')
+               .text('ARTICLES COMMANDÉS', MARGIN, currentY);
+            currentY += 12;
             
             // Tableau des lignes
             if (commande.lignes && commande.lignes.length > 0) {
@@ -781,11 +1120,18 @@ async function generateCommandePDF(commande, outputPath) {
                 ];
                 
                 currentY = drawTotals(doc, currentY, totals);
-                currentY += 20;
+                currentY += 15;
             }
             
-            // Instructions de livraison
+            // Séparateur avant les instructions
             if (commande.instructions_livraison) {
+                doc.moveTo(MARGIN, currentY)
+                   .lineTo(A4_WIDTH - MARGIN, currentY)
+                   .strokeColor(COLORS.border)
+                   .lineWidth(0.5)
+                   .stroke();
+                currentY += 15;
+                
                 currentY = drawFooterInfo(doc, currentY, commande.instructions_livraison, null);
             }
             
@@ -845,7 +1191,15 @@ async function generateFacturePDF(facture, outputPath) {
                 dateEcheance: dateEcheance
             }, currentY);
             
-            currentY += 20;
+            currentY += 15;
+            
+            // Séparateur visuel
+            doc.moveTo(MARGIN, currentY)
+               .lineTo(A4_WIDTH - MARGIN, currentY)
+               .strokeColor(COLORS.border)
+               .lineWidth(0.5)
+               .stroke();
+            currentY += 15;
             
             // Destinataire (client)
             if (facture.client_nom) {
@@ -857,6 +1211,13 @@ async function generateFacturePDF(facture, outputPath) {
                     nif: facture.client_nif || ''
                 }, currentY);
             }
+            
+            // Titre de section pour le tableau
+            doc.fontSize(10)
+               .fillColor(COLORS.primary)
+               .font('Helvetica-Bold')
+               .text('DÉTAIL DE LA FACTURATION', MARGIN, currentY);
+            currentY += 12;
             
             // Tableau des lignes
             if (facture.lignes && facture.lignes.length > 0) {
@@ -906,8 +1267,16 @@ async function generateFacturePDF(facture, outputPath) {
                 }
                 
                 currentY = drawTotals(doc, currentY, totals);
-                currentY += 20;
+                currentY += 15;
             }
+            
+            // Séparateur avant les notes
+            doc.moveTo(MARGIN, currentY)
+               .lineTo(A4_WIDTH - MARGIN, currentY)
+               .strokeColor(COLORS.border)
+               .lineWidth(0.5)
+               .stroke();
+            currentY += 15;
             
             // Notes et informations bancaires
             const notes = [];
