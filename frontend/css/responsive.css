@@ -157,6 +157,7 @@ h5, h6 { font-size: var(--font-size-sm); }
 .form-group {
   margin-bottom: var(--spacing-md);
   width: 100%;
+  box-sizing: border-box;
 }
 
 .form-group label {
@@ -165,6 +166,7 @@ h5, h6 { font-size: var(--font-size-sm); }
   font-size: var(--font-size-base);
   font-weight: 500;
   color: var(--color-neutral-dark);
+  width: 100%;
 }
 
 .form-group input,
@@ -176,9 +178,10 @@ h5, h6 { font-size: var(--font-size-sm); }
   font-size: var(--font-size-base);
   box-sizing: border-box;
   min-height: var(--touch-target-min);
-  border: 1px solid var(--color-neutral-light);
-  border-radius: 6px;
-  transition: border-color 0.2s ease;
+  border: 2px solid var(--color-neutral-light);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-family: inherit;
 }
 
 .form-group input:focus,
@@ -189,10 +192,30 @@ h5, h6 { font-size: var(--font-size-sm); }
   box-shadow: 0 0 0 3px rgba(0, 56, 122, 0.1);
 }
 
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
 .form-row {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  width: 100%;
+}
+
+/* Sur mobile, réduire les espacements */
+@media (max-width: 767px) {
+  .form-group {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 0.625rem;
+    font-size: 16px; /* Empêche le zoom sur iOS */
+  }
 }
 
 /* ============================================
@@ -204,6 +227,9 @@ h5, h6 { font-size: var(--font-size-sm); }
   -webkit-overflow-scrolling: touch;
   width: 100%;
   margin: var(--spacing-md) 0;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
 }
 
 .table {
@@ -211,6 +237,7 @@ h5, h6 { font-size: var(--font-size-sm); }
   min-width: 600px;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
+  background: white;
 }
 
 .table th,
@@ -218,6 +245,7 @@ h5, h6 { font-size: var(--font-size-sm); }
   padding: var(--spacing-sm) var(--spacing-md);
   text-align: left;
   border-bottom: 1px solid var(--color-neutral-light);
+  white-space: nowrap;
 }
 
 .table th {
@@ -226,29 +254,108 @@ h5, h6 { font-size: var(--font-size-sm); }
   position: sticky;
   top: 0;
   z-index: 10;
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table td {
+  font-size: var(--font-size-sm);
+}
+
+/* Sur mobile, rendre les tableaux plus compacts */
+@media (max-width: 767px) {
+  .table {
+    min-width: 500px;
+    font-size: var(--font-size-xs);
+  }
+  
+  .table th,
+  .table td {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+  
+  /* Optionnel : transformer les tableaux en cartes sur très petits écrans */
+  .table-responsive-cards {
+    display: block;
+  }
+  
+  .table-responsive-cards thead {
+    display: none;
+  }
+  
+  .table-responsive-cards tbody,
+  .table-responsive-cards tr,
+  .table-responsive-cards td {
+    display: block;
+    width: 100%;
+  }
+  
+  .table-responsive-cards tr {
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--color-neutral-light);
+    border-radius: 8px;
+    padding: var(--spacing-md);
+    background: white;
+  }
+  
+  .table-responsive-cards td {
+    border: none;
+    padding: var(--spacing-xs) 0;
+    text-align: left;
+  }
+  
+  .table-responsive-cards td:before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    display: inline-block;
+    min-width: 100px;
+    color: var(--color-primary);
+  }
 }
 
 /* ============================================
    MODALES RESPONSIVE
    ============================================ */
 
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--spacing-md);
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
 .modal {
-  width: 95vw;
+  width: 100%;
   max-width: 100%;
   padding: var(--spacing-md);
   box-sizing: border-box;
-  margin: var(--spacing-md);
   background: var(--color-background);
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: var(--shadow-xl);
-  max-height: 90vh;
+  max-height: 95vh;
   overflow-y: auto;
+  position: relative;
+  margin: auto;
 }
 
 .modal-header {
   margin-bottom: var(--spacing-lg);
   padding-bottom: var(--spacing-md);
   border-bottom: 1px solid var(--color-neutral-light);
+  position: sticky;
+  top: 0;
+  background: var(--color-background);
+  z-index: 10;
 }
 
 .modal-body {
@@ -261,10 +368,31 @@ h5, h6 { font-size: var(--font-size-sm); }
   gap: var(--spacing-sm);
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--color-neutral-light);
+  position: sticky;
+  bottom: 0;
+  background: var(--color-background);
+  z-index: 10;
 }
 
 .modal-footer .btn {
   width: 100%;
+  min-height: var(--touch-target-min);
+}
+
+.modal-close {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--color-background-light);
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 20;
 }
 
 /* ============================================
@@ -415,7 +543,7 @@ h5, h6 { font-size: var(--font-size-sm); }
   
   /* Modales plus larges */
   .modal {
-    width: 80vw;
+    width: 90vw;
     max-width: 600px;
     padding: var(--spacing-lg);
   }
@@ -427,6 +555,7 @@ h5, h6 { font-size: var(--font-size-sm); }
   
   .modal-footer .btn {
     width: auto;
+    min-width: 120px;
   }
   
   /* Sidebar visible */
@@ -483,8 +612,12 @@ h5, h6 { font-size: var(--font-size-sm); }
   
   /* Modales desktop */
   .modal {
-    width: auto;
+    width: 90vw;
     max-width: 800px;
+    padding: var(--spacing-xl);
+  }
+  
+  .modal-overlay {
     padding: var(--spacing-xl);
   }
   
@@ -661,6 +794,301 @@ iframe {
   select,
   textarea {
     font-size: 16px; /* Empêche le zoom automatique sur iOS */
+  }
+}
+
+/* ============================================
+   AMÉLIORATIONS GLOBALES RESPONSIVE
+   ============================================ */
+
+/* Empêcher le débordement horizontal sur toutes les pages */
+* {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Images et médias responsives */
+img, video, iframe, embed, object {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Améliorer les boutons sur mobile */
+button, .btn, a[role="button"] {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  touch-action: manipulation;
+}
+
+/* Améliorer les inputs sur mobile */
+input, select, textarea {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Améliorer les selects sur mobile */
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 12px;
+  padding-right: 2.5rem;
+}
+
+/* Améliorer les cartes sur mobile */
+.card, .card-body {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Améliorer les grilles sur mobile */
+.grid, .grid-2, .grid-3 {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Améliorer les sections avec padding */
+section {
+  padding-left: var(--spacing-md);
+  padding-right: var(--spacing-md);
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  section {
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+  }
+}
+
+/* Améliorer les headers et footers */
+header, footer {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Améliorer les navbars */
+nav {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Améliorer les containers flex */
+.flex, .flex-row, .flex-column {
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .flex, .flex-row {
+    flex-wrap: nowrap;
+  }
+}
+
+/* Améliorer les search bars */
+.search-bar, .search-input {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Améliorer les filtres */
+.filter-group {
+  flex-wrap: wrap;
+  width: 100%;
+  gap: var(--spacing-sm);
+}
+
+/* Améliorer les stats grids */
+.stats-grid {
+  grid-template-columns: 1fr;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Améliorer les paginations */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  justify-content: center;
+  width: 100%;
+}
+
+.pagination button,
+.pagination a {
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+}
+
+/* Améliorer les badges et tags */
+.badge, .tag {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+  padding: 0.25rem 0.5rem;
+}
+
+/* Améliorer les tooltips sur mobile */
+@media (max-width: 767px) {
+  [title]:hover::after {
+    display: none; /* Désactiver les tooltips au hover sur mobile */
+  }
+}
+
+/* Améliorer les dropdowns */
+.dropdown, .dropdown-menu {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .dropdown, .dropdown-menu {
+    width: auto;
+    min-width: 200px;
+  }
+}
+
+/* Améliorer les alertes et messages */
+.alert, .toast, .message {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+}
+
+/* Améliorer les progress bars */
+.progress, .progress-bar {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Améliorer les listes */
+ul, ol {
+  padding-left: var(--spacing-lg);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Améliorer les définitions */
+dl {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+dt, dd {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  dt {
+    width: 30%;
+    float: left;
+    clear: left;
+  }
+  
+  dd {
+    width: 70%;
+    float: left;
+    margin-left: 0;
+  }
+}
+
+/* Améliorer les breadcrumbs */
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Améliorer les tabs */
+.tabs, .tab-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tab {
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  white-space: nowrap;
+}
+
+/* Améliorer les accordions */
+.accordion {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.accordion-item {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.accordion-header {
+  min-height: var(--touch-target-min);
+  width: 100%;
+}
+
+/* Améliorer les carousels */
+.carousel, .slider {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+.carousel-item, .slide {
+  scroll-snap-align: start;
+  min-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .carousel-item, .slide {
+    min-width: 50%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .carousel-item, .slide {
+    min-width: 33.333%;
   }
 }
 

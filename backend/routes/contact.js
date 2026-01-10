@@ -8,7 +8,7 @@ const { sendDevisRequestNotification, sendDevisRequestConfirmation } = require('
 const { generateReference, generateTrackingToken, sendNotification } = require('../utils/notificationService');
 const { enregistrerInteraction } = require('../utils/historiqueClient');
 const { notifyAdminsAndSupervisors } = require('./notifications');
-const { notifyClientDemandeDevis, notifyFournisseurDemandeDevis } = require('../utils/whatsappNotifications');
+const { notifyClientDemandeDevis, notifyFournisseurDemandeDevis, notifyAdminsMessageContact } = require('../utils/whatsappNotifications');
 const path = require('path');
 const fs = require('fs');
 const router = express.Router();
@@ -375,6 +375,62 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
     }
 });
 
+// Route publique pour les messages de contact (AVANT l'authentification)
+router.post('/message', async (req, res) => {
+    try {
+        const { nom, email, telephone, sujet, message } = req.body;
+        
+        // Validation
+        if (!nom || !email || !sujet || !message) {
+            return res.status(400).json({ error: 'Tous les champs obligatoires doivent être remplis' });
+        }
+        
+        // Enregistrer le message dans la base de données
+        // Le wrapper PostgreSQL ajoute automatiquement RETURNING id si nécessaire
+        const [messageRows, messageResult] = await pool.execute(
+            `INSERT INTO messages_contact (nom, email, telephone, sujet, message) 
+             VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+            [nom, email, telephone || null, sujet, message]
+        );
+        
+        // Récupérer l'ID : le wrapper PostgreSQL le met dans insertId ou dans le premier row
+        const messageId = messageResult.insertId || (messageRows && messageRows.length > 0 ? messageRows[0].id : null);
+        
+        // Créer une notification pour les admins/superviseurs dans le dashboard
+        notifyAdminsAndSupervisors(
+            'message_contact',
+            `Nouveau message de contact - ${sujet}`,
+            `Message reçu de ${nom} (${email})${telephone ? ` - ${telephone}` : ''}:\n\n${message}`,
+            'contact',
+            messageId
+        ).catch(err => {
+            console.error('❌ Erreur création notification dashboard:', err);
+        });
+        
+        // Envoyer une notification WhatsApp aux admins (en arrière-plan, ne bloque pas la réponse)
+        notifyAdminsMessageContact(nom, email, telephone, sujet, message).catch(err => {
+            console.error('❌ Erreur envoi WhatsApp notification admin:', err);
+        });
+        
+        res.status(200).json({
+            message: 'Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.'
+        });
+    } catch (error) {
+        console.error('Erreur traitement message contact:', error);
+        
+        // Vérifier si c'est une erreur de table manquante
+        if (error.message && error.message.includes('does not exist') && error.message.includes('messages_contact')) {
+            console.error('❌ Table messages_contact n\'existe pas. Exécutez: npm run render:update');
+            return res.status(500).json({ 
+                error: 'Erreur de configuration serveur. Veuillez contacter le support.',
+                details: 'La table messages_contact n\'existe pas encore. Veuillez réessayer dans quelques instants ou nous contacter directement.'
+            });
+        }
+        
+        res.status(500).json({ error: 'Erreur lors de l\'envoi du message. Veuillez réessayer ou nous contacter directement.' });
+    }
+});
+
 // Routes protégées pour l'administration des demandes
 router.use(authenticate);
 
@@ -391,9 +447,11 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
         let query = `
             SELECT d.*, 
                    u.nom as traite_par_nom, 
-                   u.prenom as traite_par_prenom
+                   u.prenom as traite_par_prenom,
+                   COALESCE(COUNT(l.id), 0) as nb_articles
             FROM demandes_devis d
             LEFT JOIN utilisateurs u ON d.traite_par = u.id
+            LEFT JOIN demandes_devis_lignes l ON d.id = l.demande_devis_id
         `;
         const params = [];
 
@@ -402,6 +460,8 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
             params.push(statut);
         }
 
+        query += ' GROUP BY d.id, u.nom, u.prenom';
+        
         // Note: LIMIT et OFFSET ne peuvent pas être des paramètres préparés dans certaines versions MySQL
         // Utiliser l'interpolation directe après validation
         query += ` ORDER BY d.date_creation DESC LIMIT ${limitNum} OFFSET ${offset}`;
@@ -777,54 +837,6 @@ router.get('/tracking', async (req, res) => {
 });
 
 // Route publique pour recevoir les messages de contact depuis le formulaire
-router.post('/message', async (req, res) => {
-    try {
-        const { nom, email, telephone, sujet, message } = req.body;
-        
-        // Validation
-        if (!nom || !email || !sujet || !message) {
-            return res.status(400).json({ error: 'Tous les champs obligatoires doivent être remplis' });
-        }
-        
-        // Enregistrer le message dans la base de données
-        // Le wrapper PostgreSQL ajoute automatiquement RETURNING id si nécessaire
-        const [messageRows, messageResult] = await pool.execute(
-            `INSERT INTO messages_contact (nom, email, telephone, sujet, message) 
-             VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-            [nom, email, telephone || null, sujet, message]
-        );
-        
-        // Récupérer l'ID : le wrapper PostgreSQL le met dans insertId ou dans le premier row
-        const messageId = messageResult.insertId || (messageRows && messageRows.length > 0 ? messageRows[0].id : null);
-        
-        // Créer une notification pour les admins/superviseurs
-        await notifyAdminsAndSupervisors(
-            'message_contact',
-            `Nouveau message de contact - ${sujet}`,
-            `Message reçu de ${nom} (${email})${telephone ? ` - ${telephone}` : ''}:\n\n${message}`,
-            'contact',
-            messageId
-        );
-        
-        res.status(200).json({
-            message: 'Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.'
-        });
-    } catch (error) {
-        console.error('Erreur traitement message contact:', error);
-        
-        // Vérifier si c'est une erreur de table manquante
-        if (error.message && error.message.includes('does not exist') && error.message.includes('messages_contact')) {
-            console.error('❌ Table messages_contact n\'existe pas. Exécutez: npm run render:update');
-            return res.status(500).json({ 
-                error: 'Erreur de configuration serveur. Veuillez contacter le support.',
-                details: 'La table messages_contact n\'existe pas encore. Veuillez réessayer dans quelques instants ou nous contacter directement.'
-            });
-        }
-        
-        res.status(500).json({ error: 'Erreur lors de l\'envoi du message. Veuillez réessayer ou nous contacter directement.' });
-    }
-});
-
 // Route pour récupérer les messages de contact (admin/superviseur)
 router.get('/messages', requireRole('admin', 'superviseur'), async (req, res) => {
     try {

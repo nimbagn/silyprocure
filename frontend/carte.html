@@ -57,8 +57,16 @@
         #map {
             height: 100%;
             width: 100%;
+            min-height: 600px;
             z-index: 0;
             background: #f8fafc; /* Match page bg to avoid white flash */
+        }
+        
+        /* S'assurer que le conteneur parent a une hauteur */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
         }
 
         /* Custom Marker */
@@ -177,7 +185,7 @@
     </nav>
 
     <!-- Main Content Area (Full height minus navbar) -->
-    <div class="flex-1 flex overflow-hidden relative">
+    <div class="flex-1 flex overflow-hidden relative" style="height: calc(100vh - 64px);">
         
         <!-- Sidebar Control Panel (Floating) -->
         <div class="absolute top-4 left-4 bottom-4 w-80 z-[1000] flex flex-col gap-4 pointer-events-none">
@@ -370,8 +378,20 @@
                     headers['Authorization'] = `Bearer ${token}`;
                 }
                 
+                // Détecter l'URL de base
+                let baseUrl = '';
+                if (url.startsWith('http')) {
+                    baseUrl = '';
+                } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    baseUrl = 'http://localhost:3000';
+                } else {
+                    baseUrl = window.location.origin;
+                }
+                
+                const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+                
                 try {
-                    const response = await fetch(url, {
+                    const response = await fetch(fullUrl, {
                         method: 'GET',
                         headers: headers
                     });
@@ -421,19 +441,58 @@
         };
 
         async function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([9.6412, -13.5784], 13);
+            // Vérifier que Leaflet est chargé
+            if (typeof L === 'undefined') {
+                console.error('Leaflet n\'est pas chargé');
+                Toast.error('Erreur: Bibliothèque de carte non chargée');
+                return;
+            }
+            
+            // Vérifier que le conteneur existe
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer) {
+                console.error('Conteneur de carte introuvable');
+                Toast.error('Erreur: Conteneur de carte introuvable');
+                return;
+            }
+            
+            try {
+                map = L.map('map', { zoomControl: false }).setView([9.6412, -13.5784], 13);
 
-            // Add standard zoom control to bottom right
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
+                // Add standard zoom control to bottom right
+                L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-            // Tuiles modernes et claires (CartoDB Positron pour un look pro)
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                subdomains: 'abcd',
-                maxZoom: 20
-            }).addTo(map);
+                // Tuiles modernes et claires (CartoDB Positron pour un look pro)
+                // Fallback vers OpenStreetMap si CartoDB ne fonctionne pas
+                const cartoTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                    subdomains: 'abcd',
+                    maxZoom: 20
+                });
+                
+                // Essayer d'ajouter CartoDB, avec fallback vers OSM
+                cartoTileLayer.addTo(map);
+                cartoTileLayer.on('tileerror', function() {
+                    // Si erreur, utiliser OpenStreetMap
+                    map.removeLayer(cartoTileLayer);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                        maxZoom: 19
+                    }).addTo(map);
+                });
 
-            await loadLocations();
+                // Forcer le redimensionnement de la carte après un court délai
+                setTimeout(() => {
+                    if (map) {
+                        map.invalidateSize();
+                    }
+                }, 100);
+
+                await loadLocations();
+            } catch (error) {
+                console.error('Erreur initialisation carte:', error);
+                Toast.error('Erreur lors de l\'initialisation de la carte: ' + error.message);
+            }
         }
 
         async function loadLocations() {
@@ -590,7 +649,39 @@
             loadLocations();
         }
 
-        document.addEventListener('DOMContentLoaded', initMap);
+        // Initialiser la carte une fois que tout est chargé
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                // Attendre que Leaflet soit chargé
+                if (typeof L !== 'undefined') {
+                    initMap();
+                } else {
+                    // Attendre un peu plus si Leaflet n'est pas encore chargé
+                    setTimeout(() => {
+                        if (typeof L !== 'undefined') {
+                            initMap();
+                        } else {
+                            console.error('Leaflet n\'a pas pu être chargé');
+                            Toast.error('Erreur: Impossible de charger la bibliothèque de carte');
+                        }
+                    }, 500);
+                }
+            });
+        } else {
+            // DOM déjà chargé
+            if (typeof L !== 'undefined') {
+                initMap();
+            } else {
+                setTimeout(() => {
+                    if (typeof L !== 'undefined') {
+                        initMap();
+                    } else {
+                        console.error('Leaflet n\'a pas pu être chargé');
+                        Toast.error('Erreur: Impossible de charger la bibliothèque de carte');
+                    }
+                }, 500);
+            }
+        }
     </script>
 </body>
 </html>

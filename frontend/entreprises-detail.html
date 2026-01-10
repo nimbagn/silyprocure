@@ -429,7 +429,7 @@
                     </div>
                     <div id="contacts-list">
                         ${entreprise.contacts && entreprise.contacts.length > 0 
-                            ? `<table class="table">
+                            ? `<div class="table-container"><table class="table">
                                 <thead>
                                     <tr>
                                         <th>Nom</th>
@@ -453,7 +453,7 @@
                                         </tr>
                                     `).join('')}
                                 </tbody>
-                            </table>`
+                            </table></div>`
                             : '<div class="empty-state"><div class="empty-state-icon"><i class="fas fa-users"></i></div><div class="empty-state-title">Aucun contact</div></div>'
                         }
                     </div>

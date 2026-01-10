@@ -48,6 +48,11 @@ body.has-sidebar {
     min-height: 100vh;
 }
 
+/* Body avec classe h-full - flex-wrap nowrap */
+body.h-full {
+    flex-wrap: nowrap;
+}
+
 /* Sidebar Navigation (Style Hapag-Lloyd) */
 .sidebar {
     width: 280px;

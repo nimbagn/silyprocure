@@ -368,40 +368,49 @@
         /* Amélioration de la visibilité du menu */
         nav[aria-label="Menu de navigation"] {
             align-items: center;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            overflow-y: hidden;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
+            justify-content: center;
         }
         
-        nav[aria-label="Menu de navigation"]::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
+        nav[aria-label="Menu de navigation"] > div {
+            display: flex;
+            align-items: center;
+            gap: 0;
         }
         
         nav[aria-label="Menu de navigation"] a {
             position: relative;
             white-space: nowrap;
             flex-shrink: 0;
+            transition: all 0.2s ease;
         }
         
         nav[aria-label="Menu de navigation"] a:hover {
-            background: rgba(59, 130, 246, 0.05);
-            border-radius: 4px 4px 0 0;
+            transform: translateY(-1px);
+        }
+        
+        nav[aria-label="Menu de navigation"] a.bg-primary-600 {
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
         }
         
         /* Assurer la visibilité du menu sur tous les écrans */
-        @media (max-width: 639px) {
+        @media (max-width: 767px) {
             nav[aria-label="Menu de navigation"] {
                 display: none !important;
             }
         }
         
-        /* Sur les écrans moyens, permettre le scroll horizontal si nécessaire */
-        @media (min-width: 640px) and (max-width: 1024px) {
-            nav[aria-label="Menu de navigation"] {
-                max-width: calc(100vw - 400px);
+        /* Sur les écrans moyens, ajuster l'espacement */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            nav[aria-label="Menu de navigation"] > div {
+                flex-wrap: wrap;
+                gap: 2px;
+            }
+            nav[aria-label="Menu de navigation"] a {
+                font-size: 0.75rem;
+                padding: 0.375rem 0.5rem;
+            }
+            nav[aria-label="Menu de navigation"] a i {
+                display: none;
             }
         }
         
@@ -440,84 +449,86 @@
 
     <!-- Navbar Moderne selon charte Pro Confiance -->
     <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <!-- Logo & Nav Links -->
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
-                        <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
-                    </div>
-                    <nav class="hidden sm:flex sm:ml-6 sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
-                        <a href="dashboard.html" class="border-primary-500 text-primary-900 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold min-h-[44px] transition-colors whitespace-nowrap" aria-current="page">
-                            <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Dashboard</span>
-                        </a>
-                        <a href="rfq.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
-                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>RFQ</span>
-                        </a>
-                        <a href="devis.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
-                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Devis</span>
-                        </a>
-                        <a href="commandes.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
-                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Commandes</span>
-                        </a>
-                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
-                            <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Entreprises</span>
-                        </a>
-                        <a href="factures.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
-                            <i class="fas fa-money-bill-wave mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Factures</span>
-                        </a>
-                        <a href="carte.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
-                            <i class="fas fa-map-marked-alt mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Carte</span>
-                        </a>
-                    </nav>
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
+                    <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-primary-500/30 mr-2">S</div>
+                    <span class="text-xl font-bold text-gray-900 tracking-tight">Sily<span class="text-primary-600">Procure</span></span>
                 </div>
 
-                <!-- Search Bar & Profile -->
-                <div class="flex items-center gap-4">
-                    <!-- Global Search -->
-                    <div class="hidden lg:block relative text-neutral-500 focus-within:text-primary-600" role="search">
-                        <label for="global-search" class="sr-only">Rechercher dans l'application</label>
+                <!-- Menu de Navigation Centré -->
+                <nav class="hidden md:flex items-center justify-center flex-1 mx-8" aria-label="Menu de navigation">
+                    <div class="flex items-center space-x-1 bg-gray-50 rounded-lg p-1 border border-gray-200">
+                        <a href="dashboard.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-semibold min-h-[36px] transition-all bg-primary-600 text-white shadow-sm" aria-current="page">
+                            <i class="fas fa-chart-line mr-2 text-xs" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="rfq.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
+                            <i class="fas fa-file-contract mr-2 text-xs" aria-hidden="true"></i>
+                            <span>RFQ</span>
+                        </a>
+                        <a href="devis.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
+                            <i class="fas fa-file-invoice-dollar mr-2 text-xs" aria-hidden="true"></i>
+                            <span>Devis</span>
+                        </a>
+                        <a href="commandes.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
+                            <i class="fas fa-shopping-cart mr-2 text-xs" aria-hidden="true"></i>
+                            <span>Commandes</span>
+                        </a>
+                        <a href="entreprises.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
+                            <i class="fas fa-building mr-2 text-xs" aria-hidden="true"></i>
+                            <span>Entreprises</span>
+                        </a>
+                        <a href="factures.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
+                            <i class="fas fa-money-bill-wave mr-2 text-xs" aria-hidden="true"></i>
+                            <span>Factures</span>
+                        </a>
+                        <a href="carte.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
+                            <i class="fas fa-map-marked-alt mr-2 text-xs" aria-hidden="true"></i>
+                            <span>Carte</span>
+                        </a>
+                    </div>
+                </nav>
+
+                <!-- Actions Right Side -->
+                <div class="flex items-center gap-3 flex-shrink-0">
+                    <!-- Global Search (Réduit) -->
+                    <div class="hidden xl:block relative text-neutral-500 focus-within:text-primary-600" role="search">
+                        <label for="global-search" class="sr-only">Rechercher</label>
                         <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <i class="fas fa-search text-sm" aria-hidden="true"></i>
                         </div>
-                        <input id="global-search" class="block w-64 bg-blue-50 py-2.5 pl-10 pr-4 border border-blue-200 rounded-full leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition duration-150 ease-in-out min-h-[44px]" placeholder="Rechercher..." type="search" aria-label="Rechercher">
+                        <input id="global-search" class="block w-48 bg-blue-50 py-2 pl-9 pr-3 border border-blue-200 rounded-lg leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm transition duration-150 ease-in-out h-9" placeholder="Rechercher..." type="search" aria-label="Rechercher">
                     </div>
 
                     <!-- Notifications -->
-                    <button class="relative p-2.5 text-neutral-500 hover:text-primary-600 transition-colors rounded-lg hover:bg-blue-50 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Notifications" title="Notifications">
-                        <i class="far fa-bell text-xl" aria-hidden="true"></i>
-                        <span class="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true"></span>
+                    <button class="relative p-2 text-neutral-500 hover:text-primary-600 transition-colors rounded-lg hover:bg-blue-50 min-w-[36px] min-h-[36px] flex items-center justify-center" aria-label="Notifications" title="Notifications">
+                        <i class="far fa-bell text-lg" aria-hidden="true"></i>
+                        <span class="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true"></span>
                     </button>
 
-                    <!-- Profile Dropdown -->
-                    <div class="relative flex items-center gap-3">
-                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm" aria-label="Profil utilisateur">
-                            <span id="user-initials">U</span>
+                    <!-- Profile -->
+                    <div class="relative flex items-center gap-2">
+                        <div class="h-9 w-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm" aria-label="Profil utilisateur">
+                            <span id="user-initials" class="text-xs">U</span>
                         </div>
-                        <span id="user-name" class="hidden md:block text-sm font-semibold text-neutral-700 min-w-[120px]">Chargement...</span>
-                        <button onclick="logout()" class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5" aria-label="Déconnexion" title="Déconnexion">
-                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
-                            <span class="hidden lg:inline">Déconnexion</span>
+                        <span id="user-name" class="hidden lg:block text-sm font-semibold text-neutral-700 max-w-[100px] truncate">Chargement...</span>
+                        <button onclick="logout()" class="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50" title="Déconnexion" aria-label="Déconnexion">
+                            <i class="fas fa-power-off text-sm"></i>
                         </button>
                     </div>
                     
                     <!-- Menu mobile -->
-                    <div class="sm:hidden ml-2">
-                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
-                            <i class="fas fa-bars text-xl"></i>
+                    <div class="md:hidden ml-1">
+                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[36px] min-h-[36px]" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
+                            <i class="fas fa-bars text-lg"></i>
                         </button>
                     </div>
                 </div>
             </div>
             <!-- Menu mobile déroulant -->
-            <div id="mobile-menu" class="hidden sm:hidden border-t-2 border-blue-100 bg-white shadow-lg">
+            <div id="mobile-menu" class="hidden md:hidden border-t-2 border-blue-100 bg-white shadow-lg">
                 <div class="px-4 pt-3 pb-4 space-y-1">
                     <a href="dashboard.html" class="bg-gradient-to-r from-blue-50 to-primary-50 border-l-4 border-primary-500 text-primary-700 block px-4 py-3 rounded-lg text-base font-semibold min-h-[44px] flex items-center gap-3 transition-all">
                         <i class="fas fa-chart-line text-primary-600" aria-hidden="true"></i>

@@ -362,6 +362,54 @@ async function notifyInscriptionEntreprise(entreprise, type) {
     }
 }
 
+/**
+ * Notifie les admins par WhatsApp lorsqu'un nouveau message de contact est reçu
+ */
+async function notifyAdminsMessageContact(nom, email, telephone, sujet, message) {
+    try {
+        // Récupérer le numéro WhatsApp de l'entreprise depuis les paramètres
+        const [params] = await pool.execute(
+            'SELECT valeur FROM parametres WHERE cle = $1',
+            ['WHATSAPP_ENTREPRISE']
+        );
+        
+        let whatsappEntreprise = null;
+        if (params && params.length > 0 && params[0].valeur) {
+            whatsappEntreprise = formatPhoneNumber(params[0].valeur);
+        } else if (process.env.WHATSAPP_ENTREPRISE) {
+            whatsappEntreprise = formatPhoneNumber(process.env.WHATSAPP_ENTREPRISE);
+        } else {
+            // Par défaut, utiliser le numéro de contact de l'entreprise
+            whatsappEntreprise = formatPhoneNumber('+224622692433');
+        }
+        
+        if (!whatsappEntreprise) {
+            console.warn('⚠️  Numéro WhatsApp entreprise non configuré');
+            return false;
+        }
+        
+        const messageWhatsApp = `📧 *Nouveau message de contact - SilyProcure*\n\n` +
+            `👤 *Nom:* ${nom}\n` +
+            `📧 *Email:* ${email}\n` +
+            (telephone ? `📱 *Téléphone:* ${telephone}\n` : '') +
+            `🏷️ *Sujet:* ${sujet}\n\n` +
+            `💬 *Message:*\n${message}\n\n` +
+            `⏰ Reçu le ${new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Conakry' })}\n\n` +
+            `🔗 Connectez-vous au dashboard pour répondre.`;
+        
+        const result = await sendWhatsAppSafe(whatsappEntreprise, messageWhatsApp);
+        
+        if (result) {
+            console.log(`✅ Notification WhatsApp envoyée aux admins pour message de contact de ${nom}`);
+        }
+        
+        return result;
+    } catch (error) {
+        console.error('❌ Erreur notification WhatsApp message contact:', error);
+        return false;
+    }
+}
+
 module.exports = {
     sendWhatsAppSafe,
     formatPhoneNumber,
@@ -371,6 +419,7 @@ module.exports = {
     notifyClientFactureProforma,
     notifyClientLivraison,
     notifyClientFactureDefinitive,
-    notifyInscriptionEntreprise
+    notifyInscriptionEntreprise,
+    notifyAdminsMessageContact
 };
 

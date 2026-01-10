@@ -17,13 +17,15 @@ router.get('/', async (req, res) => {
                    u.nom as utilisateur_nom, u.prenom as utilisateur_prenom
             FROM notifications n
             LEFT JOIN utilisateurs u ON n.utilisateur_id = u.id
-            WHERE n.utilisateur_id = ?
+            WHERE n.utilisateur_id = $1
         `;
         const params = [userId];
+        let paramIndex = 2;
 
         if (lu !== undefined) {
-            query += ' AND n.lu = ?';
+            query += ` AND n.lu = $${paramIndex}`;
             params.push(lu === 'true' ? 1 : 0);
+            paramIndex++;
         }
 
         // LIMIT doit être interpolé directement, pas via paramètre préparé
@@ -43,7 +45,7 @@ router.get('/unread-count', async (req, res) => {
     try {
         const userId = req.user.id;
         const [result] = await pool.execute(
-            'SELECT COUNT(*) as count FROM notifications WHERE utilisateur_id = ? AND lu = FALSE',
+            'SELECT COUNT(*) as count FROM notifications WHERE utilisateur_id = $1 AND lu = FALSE',
             [userId]
         );
         res.json({ count: result[0].count || 0 });
@@ -61,7 +63,7 @@ router.patch('/:id/read', validateId, async (req, res) => {
 
         // Vérifier que la notification appartient à l'utilisateur
         const [notifications] = await pool.execute(
-            'SELECT id FROM notifications WHERE id = ? AND utilisateur_id = ?',
+            'SELECT id FROM notifications WHERE id = $1 AND utilisateur_id = $2',
             [id, userId]
         );
 
@@ -70,7 +72,7 @@ router.patch('/:id/read', validateId, async (req, res) => {
         }
 
         await pool.execute(
-            'UPDATE notifications SET lu = TRUE WHERE id = ?',
+            'UPDATE notifications SET lu = TRUE WHERE id = $1',
             [id]
         );
 
@@ -87,7 +89,7 @@ router.patch('/read-all', async (req, res) => {
         const userId = req.user.id;
 
         await pool.execute(
-            'UPDATE notifications SET lu = TRUE WHERE utilisateur_id = ? AND lu = FALSE',
+            'UPDATE notifications SET lu = TRUE WHERE utilisateur_id = $1 AND lu = FALSE',
             [userId]
         );
 
@@ -106,7 +108,7 @@ router.delete('/:id', validateId, async (req, res) => {
 
         // Vérifier que la notification appartient à l'utilisateur
         const [notifications] = await pool.execute(
-            'SELECT id FROM notifications WHERE id = ? AND utilisateur_id = ?',
+            'SELECT id FROM notifications WHERE id = $1 AND utilisateur_id = $2',
             [id, userId]
         );
 
@@ -114,7 +116,7 @@ router.delete('/:id', validateId, async (req, res) => {
             return res.status(404).json({ error: 'Notification non trouvée' });
         }
 
-        await pool.execute('DELETE FROM notifications WHERE id = ?', [id]);
+        await pool.execute('DELETE FROM notifications WHERE id = $1', [id]);
 
         res.json({ message: 'Notification supprimée' });
     } catch (error) {
@@ -127,20 +129,21 @@ router.delete('/:id', validateId, async (req, res) => {
 async function createNotification(userId, typeNotification, titre, message, typeDocument = null, documentId = null) {
     try {
         await pool.execute(
-            'INSERT INTO notifications (utilisateur_id, type_notification, titre, message, type_document, document_id) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO notifications (utilisateur_id, type_notification, titre, message, type_document, document_id) VALUES ($1, $2, $3, $4, $5, $6)',
             [userId, typeNotification, titre, message, typeDocument, documentId]
         );
     } catch (error) {
         console.error('Erreur création notification:', error);
+        throw error;
     }
 }
 
 // Notifier tous les admins et superviseurs
 async function notifyAdminsAndSupervisors(typeNotification, titre, message, typeDocument = null, documentId = null) {
     try {
-        // Récupérer tous les utilisateurs avec rôle admin ou superviseur
+        // Récupérer tous les utilisateurs avec rôle admin ou superviseur (syntaxe PostgreSQL)
         const [users] = await pool.execute(
-            'SELECT id FROM utilisateurs WHERE role IN (?, ?) AND actif = TRUE',
+            'SELECT id FROM utilisateurs WHERE role IN ($1, $2) AND actif = TRUE',
             ['admin', 'superviseur']
         );
         
@@ -150,8 +153,10 @@ async function notifyAdminsAndSupervisors(typeNotification, titre, message, type
         }
         
         console.log(`✅ Notifications créées pour ${users.length} admin(s)/superviseur(s)`);
+        return users.length;
     } catch (error) {
         console.error('❌ Erreur notification admins/superviseurs:', error);
+        throw error;
     }
 }
 
