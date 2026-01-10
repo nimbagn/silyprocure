@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Commandes - SilyProcure</title>
     
-    <!-- CSS Charte Graphique Pro Confiance -->
-    <link rel="stylesheet" href="css/style.css">
-    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -44,10 +41,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Dashboard Theme CSS -->
-    <link rel="stylesheet" href="css/dashboard-theme.css">
-    
     <style>
+        body { 
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC;
+        }
+        
         .fade-in {
             animation: fadeIn 0.4s ease-out forwards;
             opacity: 0;
@@ -65,406 +64,251 @@
         .delay-200 { animation-delay: 200ms; }
         .delay-300 { animation-delay: 300ms; }
         
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.25rem;
-            margin-bottom: 2rem;
-        }
-        
         .stat-card {
             background: white;
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-            padding: 1.25rem;
-            border-left: 4px solid var(--color-primary);
-            display: flex;
-            align-items: center;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            border-left: 4px solid #3B82F6;
+            transition: all 0.3s ease;
         }
         
-        .stat-card.blue { border-left-color: #60a5fa; }
-        .stat-card.green { border-left-color: var(--color-success); }
-        .stat-card.purple { border-left-color: #a78bfa; }
-        
-        .stat-icon {
-            font-size: 1.5rem;
-            color: var(--color-neutral);
-            margin-right: 1.25rem;
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
         }
         
-        .stat-card.blue .stat-icon { color: #60a5fa; }
-        .stat-card.green .stat-icon { color: var(--color-success); }
-        .stat-card.purple .stat-icon { color: #a78bfa; }
-        
-        .stat-content {
-            flex: 1;
-        }
-        
-        .stat-label {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--color-neutral);
-            margin-bottom: 0.25rem;
-        }
-        
-        .stat-value {
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: var(--color-neutral-dark);
-            word-break: break-word;
-            line-height: 1.2;
-        }
-        
-        #stat-montant {
-            font-size: 1rem;
-        }
-        
-        .commandes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
+        .stat-card.blue { border-left-color: #60A5FA; }
+        .stat-card.green { border-left-color: #10B981; }
+        .stat-card.purple { border-left-color: #A78BFA; }
         
         .commande-card {
             background: white;
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--color-background-light);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #E5E7EB;
             transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
+            overflow: hidden;
         }
         
         .commande-card:hover {
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
             transform: translateY(-2px);
         }
         
-        .commande-card-header {
-            padding: 1.25rem;
-            flex: 1;
-        }
-        
-        .commande-card-footer {
-            background: var(--color-background-light);
-            padding: 0.75rem 1.25rem;
-            border-top: 1px solid var(--color-background-light);
-            display: flex;
-            justify-content: space-between;
+        nav[aria-label="Menu de navigation"] {
             align-items: center;
-            border-radius: 0 0 8px 8px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
         
-        .commande-numero {
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: var(--color-neutral-dark);
-            margin-bottom: 0.5rem;
-            cursor: pointer;
+        nav[aria-label="Menu de navigation"]::-webkit-scrollbar {
+            display: none;
         }
         
-        .commande-numero:hover {
-            color: var(--color-primary);
-        }
-        
-        .commande-meta {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-        
-        .commande-type-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            background: var(--color-background-light);
-            color: var(--color-neutral-dark);
-        }
-        
-        .commande-date {
-            font-size: 0.75rem;
-            color: var(--color-neutral);
-        }
-        
-        .commande-details {
-            border-top: 1px solid var(--color-background-light);
-            padding-top: 0.75rem;
-            margin-top: 0.5rem;
-        }
-        
-        .commande-detail-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-        
-        .commande-detail-row:last-child {
-            margin-bottom: 0;
-        }
-        
-        .commande-detail-label {
-            font-size: 0.875rem;
-            color: var(--color-neutral);
-        }
-        
-        .commande-detail-value {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--color-neutral-dark);
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        nav[aria-label="Menu de navigation"] a {
+            position: relative;
             white-space: nowrap;
+            flex-shrink: 0;
         }
         
-        .commande-amount {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--color-primary);
-        }
-        
-        .commande-footer-btn {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--color-primary);
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-        }
-        
-        .commande-footer-btn:hover {
-            color: var(--color-primary-dark);
-        }
-        
-        .commande-footer-icon {
-            color: var(--color-neutral);
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.25rem;
-            font-size: 1rem;
-        }
-        
-        .commande-footer-icon:hover {
-            color: var(--color-neutral-dark);
-        }
-        
-        .filters-card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .filters-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        
-        @media (min-width: 768px) {
-            .filters-container {
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
+        @media (max-width: 639px) {
+            nav[aria-label="Menu de navigation"] {
+                display: none !important;
             }
         }
-        
-        .search-input-wrapper {
-            position: relative;
-            flex: 1;
-            max-width: 500px;
-        }
-        
-        .search-input-icon {
-            position: absolute;
-            left: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--color-neutral);
-        }
-        
-        .search-input {
-            width: 100%;
-            padding: 0.5rem 0.75rem 0.5rem 2.5rem;
-            border: 1px solid var(--color-background-light);
-            border-radius: 6px;
-            font-size: 0.875rem;
-            transition: all 0.15s ease;
-        }
-        
-        .search-input:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        
-        .filter-select-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .filter-select {
-            padding: 0.5rem 0.75rem;
-            border: 1px solid var(--color-background-light);
-            border-radius: 6px;
-            font-size: 0.875rem;
-            background: white;
-            cursor: pointer;
-        }
-        
-        .filter-select:focus {
-            outline: none;
-            border-color: var(--color-primary);
-        }
-        
-        .empty-state {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 3rem;
-            background: white;
-            border-radius: 8px;
-            border: 2px dashed var(--color-background-light);
-        }
-        
-        .empty-state-icon {
-            font-size: 2.5rem;
-            color: var(--color-neutral);
-            margin-bottom: 1rem;
-        }
-        
-        .empty-state-title {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--color-neutral-dark);
-            margin-top: 0.5rem;
-        }
-        
-        .empty-state-text {
-            font-size: 0.875rem;
-            color: var(--color-neutral);
-            margin-top: 0.25rem;
-        }
-        
-        .loading-spinner {
-            border: 3px solid var(--color-background-light);
-            border-top: 3px solid var(--color-primary);
-            border-radius: 50%;
-            width: 3rem;
-            height: 3rem;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
-<body>
-    <script src="js/auth.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/components.js"></script>
-    <script>window.DISABLE_SIDEBAR = true;</script>
-    <script src="js/sidebar.js"></script>
+<body class="h-full flex flex-col">
 
-    <div class="header">
-        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
-        <div class="user-info">
-            <span id="user-name"></span>
-            <button onclick="logout()">Déconnexion</button>
+    <!-- Navbar Moderne -->
+    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo & Nav Links -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
+                        <span class="text-2xl font-bold text-primary-600">Sily<span class="text-gray-900">Procure</span></span>
+                    </div>
+                    <nav class="hidden sm:flex sm:ml-6 sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
+                        <a href="dashboard.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="rfq.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>RFQ</span>
+                        </a>
+                        <a href="devis.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Devis</span>
+                        </a>
+                        <a href="commandes.html" class="border-primary-500 text-primary-900 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold min-h-[44px] transition-colors whitespace-nowrap" aria-current="page">
+                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Commandes</span>
+                        </a>
+                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Entreprises</span>
+                        </a>
+                        <a href="factures.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-money-bill-wave mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Factures</span>
+                        </a>
+                        <a href="carte.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-map-marked-alt mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Carte</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Profile & Mobile Menu -->
+                <div class="flex items-center gap-4">
+                    <div class="relative flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm">
+                            <span id="user-initials">U</span>
+                        </div>
+                        <span id="user-name" class="hidden md:block text-sm font-semibold text-neutral-700 min-w-[120px]">Chargement...</span>
+                        <button onclick="logout()" class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                            <span class="hidden lg:inline">Déconnexion</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Menu mobile -->
+                    <div class="sm:hidden ml-2">
+                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Menu mobile déroulant -->
+            <div id="mobile-menu" class="hidden sm:hidden border-t-2 border-blue-100 bg-white shadow-lg">
+                <div class="px-4 pt-3 pb-4 space-y-1">
+                    <a href="dashboard.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-chart-line text-neutral-500" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="rfq.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-contract text-neutral-500" aria-hidden="true"></i>
+                        <span>RFQ</span>
+                    </a>
+                    <a href="devis.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-file-invoice-dollar text-neutral-500" aria-hidden="true"></i>
+                        <span>Devis</span>
+                    </a>
+                    <a href="commandes.html" class="bg-gradient-to-r from-blue-50 to-primary-50 border-l-4 border-primary-500 text-primary-700 block px-4 py-3 rounded-lg text-base font-semibold min-h-[44px] flex items-center gap-3 transition-all">
+                        <i class="fas fa-shopping-cart text-primary-600" aria-hidden="true"></i>
+                        <span>Commandes</span>
+                    </a>
+                    <a href="entreprises.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-building text-neutral-500" aria-hidden="true"></i>
+                        <span>Entreprises</span>
+                    </a>
+                    <a href="factures.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-money-bill-wave text-neutral-500" aria-hidden="true"></i>
+                        <span>Factures</span>
+                    </a>
+                    <a href="carte.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-map-marked-alt text-neutral-500" aria-hidden="true"></i>
+                        <span>Carte</span>
+                    </a>
+                </div>
+            </div>
         </div>
-    </div>
-
-    <nav class="nav">
-        <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
-        <a href="demandes-devis.html"><i class="fas fa-inbox"></i> Demandes Devis</a>
-        <a href="clients.html"><i class="fas fa-users"></i> Clients</a>
-        <a href="rfq.html"><i class="fas fa-file-alt"></i> RFQ</a>
-        <a href="devis.html"><i class="fas fa-briefcase"></i> Devis</a>
-        <a href="commandes.html" class="active"><i class="fas fa-shopping-cart"></i> Commandes</a>
-        <a href="factures.html"><i class="fas fa-file-invoice"></i> Factures</a>
-        <a href="entreprises.html"><i class="fas fa-building"></i> Entreprises</a>
-        <a href="produits.html"><i class="fas fa-box"></i> Produits</a>
-        <a href="carte.html"><i class="fas fa-map"></i> Carte</a>
     </nav>
 
-    <div>
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
         <!-- Header -->
-        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
-            <div style="flex: 1;">
-                <h1 style="font-size: 1.875rem; font-weight: 700; color: var(--color-neutral-dark); margin: 0;">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8 border-b border-blue-100 pb-6">
+            <div>
+                <h1 class="text-3xl font-bold leading-tight text-primary-900 sm:text-4xl">
                     Gestion des Commandes
                 </h1>
-                <p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--color-neutral);">
+                <p class="mt-2 text-base text-neutral-600 font-medium">
                     Suivez vos commandes d'achat, de la validation à la livraison.
                 </p>
             </div>
-            <div>
-                <button class="btn btn-secondary btn-sm" onclick="showInfo()">
-                    <i class="fas fa-info-circle"></i> Comment créer ?
+            
+            <div class="flex gap-3">
+                <button onclick="showInfo()" class="inline-flex items-center px-4 py-2 border-2 border-primary-200 shadow-sm text-sm font-semibold rounded-xl text-primary-700 bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-primary-50 hover:border-primary-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
+                    <i class="fas fa-info-circle mr-2"></i> Comment créer ?
                 </button>
             </div>
         </div>
 
         <!-- Stats Cards -->
-        <div class="stats-grid">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div class="stat-card fade-in delay-100">
-                <i class="fas fa-shopping-cart stat-icon"></i>
-                <div class="stat-content">
-                    <div class="stat-label">Total Commandes</div>
-                    <div class="stat-value" id="stat-total">-</div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-neutral-500 mb-1">Total Commandes</p>
+                        <p class="text-2xl font-bold text-neutral-900" id="stat-total">-</p>
+                    </div>
+                    <div class="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center">
+                        <i class="fas fa-shopping-cart text-blue-600 text-xl"></i>
+                    </div>
                 </div>
             </div>
 
             <div class="stat-card blue fade-in delay-200">
-                <i class="fas fa-shipping-fast stat-icon"></i>
-                <div class="stat-content">
-                    <div class="stat-label">En cours</div>
-                    <div class="stat-value" id="stat-en-cours">-</div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-neutral-500 mb-1">En cours</p>
+                        <p class="text-2xl font-bold text-neutral-900" id="stat-en-cours">-</p>
+                    </div>
+                    <div class="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center">
+                        <i class="fas fa-shipping-fast text-blue-500 text-xl"></i>
+                    </div>
                 </div>
             </div>
 
             <div class="stat-card green fade-in delay-300">
-                <i class="fas fa-check-circle stat-icon"></i>
-                <div class="stat-content">
-                    <div class="stat-label">Livrées</div>
-                    <div class="stat-value" id="stat-livre">-</div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-neutral-500 mb-1">Livrées</p>
+                        <p class="text-2xl font-bold text-neutral-900" id="stat-livre">-</p>
+                    </div>
+                    <div class="h-12 w-12 rounded-lg bg-green-50 flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                    </div>
                 </div>
             </div>
             
             <div class="stat-card purple fade-in delay-300">
-                <i class="fas fa-wallet stat-icon"></i>
-                <div class="stat-content">
-                    <div class="stat-label">Volume d'achat</div>
-                    <div class="stat-value" id="stat-montant">-</div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-neutral-500 mb-1">Volume d'achat</p>
+                        <p class="text-lg font-bold text-neutral-900" id="stat-montant">-</p>
+                    </div>
+                    <div class="h-12 w-12 rounded-lg bg-purple-50 flex items-center justify-center">
+                        <i class="fas fa-wallet text-purple-500 text-xl"></i>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Filters & Search -->
-        <div class="filters-card">
-            <div class="filters-container">
-                <div class="search-input-wrapper">
-                    <i class="fas fa-search search-input-icon"></i>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+                <div class="flex-1 w-full md:max-w-md relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-neutral-400"></i>
+                    </div>
                     <input type="text" id="cmd-search" onkeyup="filterCommandes()" 
-                        class="search-input" 
+                        class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg leading-5 bg-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm" 
                         placeholder="Rechercher par numéro, fournisseur...">
                 </div>
-                <div class="filter-select-wrapper">
-                    <i class="fas fa-filter" style="color: var(--color-neutral);"></i>
-                    <select id="cmd-filter-statut" onchange="filterCommandes()" class="filter-select">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-filter text-neutral-500"></i>
+                    <select id="cmd-filter-statut" onchange="filterCommandes()" class="block w-full md:w-auto px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         <option value="">Tous les statuts</option>
                         <option value="brouillon">Brouillon</option>
                         <option value="en_cours">En cours</option>
@@ -472,44 +316,49 @@
                         <option value="annule">Annulé</option>
                     </select>
                 </div>
-                </div>
-            </div>
-            
-        <!-- Content Grid -->
-        <div id="commandes-grid" class="commandes-grid">
-            <!-- Loading State -->
-            <div style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem;">
-                <div class="loading-spinner"></div>
-                <p style="margin-top: 1rem; color: var(--color-neutral);">Chargement des commandes...</p>
             </div>
         </div>
-    </div>
+            
+        <!-- Content Grid -->
+        <div id="commandes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Loading State -->
+            <div class="col-span-full flex flex-col items-center justify-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary-100 border-t-primary-600 mb-4"></div>
+                <p class="text-neutral-500">Chargement des commandes...</p>
+            </div>
+        </div>
+    </main>
 
-<script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script>window.DISABLE_SIDEBAR = true;</script>
+    <script src="js/sidebar.js"></script>
+
+    <script>
         checkAuth();
 
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        // Initialisation du nom d'utilisateur et des initiales
         const userNameEl = document.getElementById('user-name');
         const userInitialsEl = document.getElementById('user-initials');
         if (userNameEl) {
             userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || 'Utilisateur';
         }
-        if (userInitialsEl && user.prenom) {
-            userInitialsEl.textContent = (user.prenom.charAt(0) + (user.nom ? user.nom.charAt(0) : '')).toUpperCase();
+        if (userInitialsEl) {
+            userInitialsEl.textContent = (user.prenom || user.nom || 'U').charAt(0).toUpperCase();
         }
 
         let allCommandes = [];
 
         function getStatusConfig(status) {
             const configs = {
-                'brouillon': { class: 'badge-info', icon: 'fa-pencil-alt', label: 'Brouillon' },
-                'envoye': { class: 'badge-warning', icon: 'fa-paper-plane', label: 'Envoyé' },
-                'en_cours': { class: 'badge-info', icon: 'fa-truck', label: 'En cours' },
-                'livre': { class: 'badge-success', icon: 'fa-check-circle', label: 'Livré' },
-                'annule': { class: 'badge-danger', icon: 'fa-times-circle', label: 'Annulé' }
+                'brouillon': { class: 'bg-yellow-100 text-yellow-800', icon: 'fa-pencil-alt', label: 'Brouillon' },
+                'envoye': { class: 'bg-blue-100 text-blue-800', icon: 'fa-paper-plane', label: 'Envoyé' },
+                'en_cours': { class: 'bg-blue-100 text-blue-800', icon: 'fa-truck', label: 'En cours' },
+                'livre': { class: 'bg-green-100 text-green-800', icon: 'fa-check-circle', label: 'Livré' },
+                'annule': { class: 'bg-red-100 text-red-800', icon: 'fa-times-circle', label: 'Annulé' }
             };
-            return configs[status] || { class: 'badge-info', icon: 'fa-question', label: status };
+            return configs[status] || { class: 'bg-gray-100 text-gray-800', icon: 'fa-question', label: status };
         }
 
         async function loadCommandes() {
@@ -577,53 +426,61 @@
         function displayCommandes(commandes) {
             const grid = document.getElementById('commandes-grid');
 
-                if (commandes.length === 0) {
+            if (commandes.length === 0) {
                 grid.innerHTML = `
-                                <div class="empty-state">
-                        <i class="fas fa-box-open empty-state-icon"></i>
-                        <h3 class="empty-state-title">Aucune commande trouvée</h3>
-                        <p class="empty-state-text">Essayez de modifier vos filtres.</p>
-                                </div>
-                    `;
-                    return;
-                }
+                    <div class="col-span-full bg-white rounded-xl shadow-sm border-2 border-dashed border-gray-200 p-12 text-center">
+                        <i class="fas fa-box-open text-5xl text-neutral-400 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-neutral-700 mb-2">Aucune commande trouvée</h3>
+                        <p class="text-sm text-neutral-500">Essayez de modifier vos filtres.</p>
+                    </div>
+                `;
+                return;
+            }
 
             grid.innerHTML = commandes.map((c, index) => {
                 const status = getStatusConfig(c.statut);
                 return `
                 <div class="commande-card fade-in" style="animation-delay: ${index * 50}ms">
-                    <div class="commande-card-header">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                            <div style="flex: 1;">
-                                <h3 class="commande-numero" onclick="viewCommande(${c.id})">${c.numero || '-'}</h3>
-                                <div class="commande-meta">
-                                    <span class="commande-type-badge">${c.type_commande || '-'}</span>
-                                    <span class="commande-date">${formatDate(c.date_commande)}</span>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold text-primary-900 mb-2 cursor-pointer hover:text-primary-600 transition-colors" onclick="viewCommande(${c.id})">
+                                    ${c.numero || '-'}
+                                </h3>
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                        ${c.type_commande || '-'}
+                                    </span>
+                                    <span class="text-xs text-neutral-500">${formatDate(c.date_commande)}</span>
                                 </div>
                             </div>
-                            <span class="badge ${status.class}">
-                                <i class="fas ${status.icon}"></i> ${status.label}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${status.class}">
+                                <i class="fas ${status.icon} mr-1.5"></i> ${status.label}
                             </span>
                         </div>
                         
-                        <div class="commande-details">
-                            <div class="commande-detail-row">
-                                <span class="commande-detail-label">Fournisseur</span>
-                                <span class="commande-detail-value" title="${c.fournisseur_nom || '-'}">${c.fournisseur_nom || '-'}</span>
+                        <div class="space-y-3 pt-4 border-t border-gray-100">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-neutral-500">Fournisseur</span>
+                                <span class="text-sm font-medium text-neutral-900 truncate ml-2 max-w-[150px]" title="${c.fournisseur_nom || '-'}">
+                                    ${c.fournisseur_nom || '-'}
+                                </span>
                             </div>
-                            <div class="commande-detail-row">
-                                <span class="commande-detail-label">Montant TTC</span>
-                                <span class="commande-amount">${formatCurrency(c.total_ttc || 0)}</span>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-neutral-500">Montant TTC</span>
+                                <span class="text-base font-bold text-primary-600">
+                                    ${formatCurrency(c.total_ttc || 0)}
+                                </span>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="commande-card-footer">
-                        <button class="commande-footer-btn" onclick="viewCommande(${c.id})">
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+                        <button onclick="viewCommande(${c.id})" class="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors">
                             Voir détails
                         </button>
-                        <button class="commande-footer-icon" onclick="downloadPDFCommande(${c.id})" title="Télécharger PDF">
-                            <i class="fas fa-file-pdf"></i>
+                        <button onclick="downloadPDFCommande(${c.id})" class="p-2 text-neutral-500 hover:text-red-600 transition-colors" title="Télécharger PDF">
+                            <i class="fas fa-file-pdf text-lg"></i>
                         </button>
                     </div>
                 </div>
@@ -658,7 +515,6 @@
             Toast.info('Les commandes sont créées automatiquement lors de l\'acceptation d\'un devis');
         }
 
-        // Fonction pour télécharger le PDF d'une commande avec authentification
         async function downloadPDFCommande(commandeId) {
             try {
                 const token = localStorage.getItem('token');
@@ -669,7 +525,6 @@
                 
                 showLoading('Génération du PDF...');
                 
-                // Détecter l'URL de base
                 let baseUrl = '';
                 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                     baseUrl = 'http://localhost:3000';
@@ -699,10 +554,7 @@
                     return;
                 }
                 
-                // Récupérer le blob
                 const blob = await response.blob();
-                
-                // Créer un lien de téléchargement
                 const downloadUrl = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = downloadUrl;
@@ -720,9 +572,6 @@
             }
         }
 
-        loadCommandes();
-        
-        // Menu mobile
         function toggleMobileMenu() {
             const menu = document.getElementById('mobile-menu');
             const button = document.getElementById('mobile-menu-button');
@@ -743,6 +592,8 @@
             }
         }
         window.toggleMobileMenu = toggleMobileMenu;
+
+        loadCommandes();
     </script>
 </body>
 </html>

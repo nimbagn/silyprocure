@@ -368,11 +368,22 @@
         /* Amélioration de la visibilité du menu */
         nav[aria-label="Menu de navigation"] {
             align-items: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+        
+        nav[aria-label="Menu de navigation"]::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
         }
         
         nav[aria-label="Menu de navigation"] a {
             position: relative;
             white-space: nowrap;
+            flex-shrink: 0;
         }
         
         nav[aria-label="Menu de navigation"] a:hover {
@@ -384,6 +395,13 @@
         @media (max-width: 639px) {
             nav[aria-label="Menu de navigation"] {
                 display: none !important;
+            }
+        }
+        
+        /* Sur les écrans moyens, permettre le scroll horizontal si nécessaire */
+        @media (min-width: 640px) and (max-width: 1024px) {
+            nav[aria-label="Menu de navigation"] {
+                max-width: calc(100vw - 400px);
             }
         }
         
@@ -450,6 +468,14 @@
                             <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
                             <span>Entreprises</span>
                         </a>
+                        <a href="factures.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-money-bill-wave mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Factures</span>
+                        </a>
+                        <a href="carte.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-map-marked-alt mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                            <span>Carte</span>
+                        </a>
                     </nav>
                 </div>
 
@@ -512,6 +538,14 @@
                     <a href="entreprises.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
                         <i class="fas fa-building text-neutral-500" aria-hidden="true"></i>
                         <span>Entreprises</span>
+                    </a>
+                    <a href="factures.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-money-bill-wave text-neutral-500" aria-hidden="true"></i>
+                        <span>Factures</span>
+                    </a>
+                    <a href="carte.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-map-marked-alt text-neutral-500" aria-hidden="true"></i>
+                        <span>Carte</span>
                     </a>
                 </div>
             </div>
@@ -763,19 +797,15 @@
         // Vérifier l'authentification
         checkAuth();
 
-        // Toast notifications
-        const Toast = {
-            success: (msg) => showToast(msg, 'bg-success-500'),
-            error: (msg) => showToast(msg, 'bg-red-500'),
-            info: (msg) => showToast(msg, 'bg-primary-500')
-        };
-
-        function showToast(msg, colorClass) {
-            const div = document.createElement('div');
-            div.className = `fixed bottom-4 right-4 ${colorClass} text-white px-6 py-3 rounded shadow-lg z-50 animate-bounce`;
-            div.innerHTML = `<span>${msg}</span>`;
-            document.body.appendChild(div);
-            setTimeout(() => div.remove(), 3000);
+        // Toast est défini dans components.js, on utilise celui-là
+        // Si Toast n'existe pas, créer une version de fallback
+        if (typeof Toast === 'undefined') {
+            window.Toast = {
+                success: (msg) => alert('✅ ' + msg),
+                error: (msg) => alert('❌ ' + msg),
+                info: (msg) => alert('ℹ️ ' + msg),
+                warning: (msg) => alert('⚠️ ' + msg)
+            };
         }
 
         // formatCurrency est déjà défini dans app.js, mais on peut le redéfinir si nécessaire
@@ -887,7 +917,36 @@
             }
         }
 
+        // Variables pour stocker les instances de graphiques
+        let mainChartInstance = null;
+        let rfqChartInstance = null;
+        let categoriesChartInstance = null;
+        let sectorsChartInstance = null;
+
+        function destroyCharts() {
+            // Détruire les graphiques existants
+            if (mainChartInstance) {
+                mainChartInstance.destroy();
+                mainChartInstance = null;
+            }
+            if (rfqChartInstance) {
+                rfqChartInstance.destroy();
+                rfqChartInstance = null;
+            }
+            if (categoriesChartInstance) {
+                categoriesChartInstance.destroy();
+                categoriesChartInstance = null;
+            }
+            if (sectorsChartInstance) {
+                sectorsChartInstance.destroy();
+                sectorsChartInstance = null;
+            }
+        }
+
         function initCharts(stats) {
+            // Détruire les graphiques existants avant d'en créer de nouveaux
+            destroyCharts();
+            
             // Main Line Chart (Achats)
             const ctxMain = document.getElementById('mainChart');
             if (!ctxMain) return;
@@ -909,7 +968,7 @@
             gradient.addColorStop(0, 'rgba(37, 99, 235, 0.2)');
             gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
 
-            new Chart(ctx, {
+            mainChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: months,
@@ -1001,7 +1060,7 @@
                 });
                 const rfqColors = ['#cbd5e1', '#3b82f6', '#10b981', '#ef4444', '#f59e0b'];
 
-                new Chart(rfqCtx, {
+                rfqChartInstance = new Chart(rfqCtx, {
                     type: 'doughnut',
                     data: {
                         labels: rfqLabels,
@@ -1059,7 +1118,7 @@
                     const catLabels = stats.top_categories.map(c => c.nom || 'Autre');
                     const catData = stats.top_categories.map(c => parseInt(c.valeur || 0));
 
-                    new Chart(catCtx, {
+                    categoriesChartInstance = new Chart(catCtx, {
                         type: 'bar',
                         data: {
                             labels: catLabels,
@@ -1138,7 +1197,7 @@
                     const sectData = stats.top_secteurs.map(s => parseInt(s.valeur || 0));
                     const sectColors = ['#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef'];
 
-                    new Chart(sectCtx, {
+                    sectorsChartInstance = new Chart(sectCtx, {
                         type: 'polarArea',
                         data: {
                             labels: sectLabels,

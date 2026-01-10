@@ -362,14 +362,16 @@ if (document.readyState === 'loading') {
 }
 
 // Gérer le responsive avec debounce pour performance
-let resizeTimeout;
+if (typeof window.resizeTimeout === 'undefined') {
+    window.resizeTimeout = null;
+}
 window.addEventListener('resize', () => {
     if (window.DISABLE_SIDEBAR === true) {
         return;
     }
     
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
+    clearTimeout(window.resizeTimeout);
+    window.resizeTimeout = setTimeout(() => {
         updateSidebarVisibility();
         
         // Fermer le menu si on passe en mode desktop
