@@ -331,28 +331,17 @@
             align-items: center;
         }
         
-        /* Menu desktop toujours visible sur écrans moyens et grands */
-        @media (min-width: 640px) {
-            nav[aria-label="Menu de navigation"] {
-                display: flex !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-            }
+        /* Menu de navigation - Visible par défaut, caché seulement sur mobile */
+        nav[aria-label="Menu de navigation"] {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
         
-        /* Assurer que le menu desktop n'est pas caché sur les grands écrans */
-        @media (min-width: 640px) {
-            nav[aria-label="Menu de navigation"].hidden {
-                display: flex !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-            }
-        }
-        
-        /* Forcer la visibilité du menu sur tous les écrans >= 640px */
-        @media (min-width: 640px) {
+        /* Cacher le menu desktop sur les très petits écrans (< 640px) */
+        @media (max-width: 639px) {
             nav[aria-label="Menu de navigation"] {
-                display: flex !important;
+                display: none !important;
             }
         }
         
@@ -403,7 +392,14 @@
             box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
         }
         
-        /* Cacher le menu desktop sur les petits écrans */
+        /* Menu de navigation - Toujours visible par défaut */
+        nav[aria-label="Menu de navigation"] {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* Cacher le menu desktop sur les très petits écrans */
         @media (max-width: 639px) {
             nav[aria-label="Menu de navigation"] {
                 display: none !important;
@@ -415,6 +411,7 @@
             nav[aria-label="Menu de navigation"] {
                 display: flex !important;
                 visibility: visible !important;
+                opacity: 1 !important;
             }
         }
         
@@ -477,7 +474,7 @@
                 </div>
 
                 <!-- Menu de Navigation Centré -->
-                <nav class="hidden sm:flex items-center justify-center flex-1 mx-8" aria-label="Menu de navigation">
+                <nav class="flex items-center justify-center flex-1 mx-8" aria-label="Menu de navigation">
                     <div class="flex items-center space-x-1 bg-gray-50 rounded-lg p-1 border border-gray-200">
                         <a href="dashboard.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-semibold min-h-[36px] transition-all bg-primary-600 text-white shadow-sm" aria-current="page">
                             <i class="fas fa-chart-line mr-2 text-xs" aria-hidden="true"></i>
