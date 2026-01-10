@@ -438,7 +438,7 @@
         
         /* Amélioration du flux de lecture */
         main {
-            max-width: 1400px;
+            max-width: 100%;
         }
         
         /* Zones visuelles distinctes */
@@ -458,6 +458,30 @@
         
         .charts-section {
             background: transparent;
+        }
+        
+        /* Organisation des sections */
+        section {
+            margin-bottom: 3rem;
+        }
+        
+        section h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--color-primary-dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        section p {
+            color: var(--color-neutral);
+            font-size: 0.875rem;
+        }
+        
+        /* Espacement amélioré entre les sections */
+        section + section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(59, 130, 246, 0.1);
         }
     </style>
 </head>
@@ -583,32 +607,38 @@
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         <!-- Header & Quick Actions -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8 border-b border-blue-100 pb-6">
-            <div>
-                <h2 class="text-3xl font-bold leading-tight text-primary-900 sm:text-4xl">
-                    Tableau de bord
-                </h2>
-                <p class="mt-2 text-base text-neutral-600 font-medium">
-                    Bienvenue, voici un aperçu complet de vos activités d'achat
-                </p>
-            </div>
-            
-            <!-- Quick Actions Toolbar -->
-            <div class="flex flex-wrap gap-3">
-                <button onclick="window.location.href='rfq-create.html'" class="inline-flex items-center px-5 py-2.5 border border-transparent shadow-lg text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all transform hover:scale-105 hover:shadow-xl">
-                    <i class="fas fa-plus mr-2"></i> Nouvelle RFQ
-                </button>
-                <button onclick="window.location.href='entreprises.html'" class="inline-flex items-center px-5 py-2.5 border-2 border-primary-200 shadow-sm text-sm font-semibold rounded-xl text-primary-700 bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-primary-50 hover:border-primary-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
-                    <i class="fas fa-user-plus mr-2 text-primary-500"></i> Fournisseur
-                </button>
-                <button onclick="refreshDashboard()" class="inline-flex items-center justify-center p-2.5 border-2 border-primary-200 shadow-sm text-sm font-semibold rounded-xl text-primary-700 bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-primary-50 hover:border-primary-300 focus:outline-none transition-all" title="Actualiser">
-                    <i class="fas fa-sync-alt text-primary-500"></i>
-                </button>
+        <div class="mb-10">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
+                <div>
+                    <h1 class="text-4xl font-bold leading-tight text-primary-900 mb-2">
+                        Tableau de bord
+                    </h1>
+                    <p class="text-lg text-neutral-600 font-medium">
+                        Bienvenue, voici un aperçu complet de vos activités d'achat
+                    </p>
+                </div>
+                
+                <!-- Quick Actions Toolbar -->
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="window.location.href='rfq-create.html'" class="inline-flex items-center px-5 py-2.5 border border-transparent shadow-lg text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all transform hover:scale-105 hover:shadow-xl">
+                        <i class="fas fa-plus mr-2"></i> Nouvelle RFQ
+                    </button>
+                    <button onclick="window.location.href='entreprises.html'" class="inline-flex items-center px-5 py-2.5 border-2 border-primary-200 shadow-sm text-sm font-semibold rounded-xl text-primary-700 bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-primary-50 hover:border-primary-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
+                        <i class="fas fa-user-plus mr-2 text-primary-500"></i> Fournisseur
+                    </button>
+                    <button onclick="refreshDashboard()" class="inline-flex items-center justify-center p-2.5 border-2 border-primary-200 shadow-sm text-sm font-semibold rounded-xl text-primary-700 bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-primary-50 hover:border-primary-300 focus:outline-none transition-all" title="Actualiser">
+                        <i class="fas fa-sync-alt text-primary-500"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- KPI Cards - Zone Principale -->
-        <section class="kpi-section mb-10">
+        <!-- KPI Cards - Indicateurs Clés -->
+        <section class="mb-12">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-primary-900 mb-2">Indicateurs Clés</h2>
+                <p class="text-sm text-neutral-500">Vue d'ensemble de vos performances</p>
+            </div>
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             
             <!-- Commandes -->
@@ -702,7 +732,11 @@
         </section>
 
         <!-- Charts Grid 1: Finances & RFQ - Graphiques Principaux -->
-        <section class="charts-section mb-10">
+        <section class="mb-12">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-primary-900 mb-2">Analyses et Tendances</h2>
+                <p class="text-sm text-neutral-500">Évolution de vos activités et répartition des données</p>
+            </div>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             <!-- Main Chart: Evolution des achats -->
@@ -737,7 +771,11 @@
         </section>
 
         <!-- Charts Grid 2: Categories & Secteurs - Graphiques Secondaires -->
-        <section class="charts-section mb-10">
+        <section class="mb-12">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-primary-900 mb-2">Répartition par Catégories et Secteurs</h2>
+                <p class="text-sm text-neutral-500">Analyse détaillée de vos demandes</p>
+            </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 fade-in delay-500">
             
             <!-- Bar Chart: Catégories -->
@@ -764,7 +802,11 @@
         </section>
 
         <!-- Recent Activity & Notifications - Activité Récente -->
-        <section class="charts-section mb-6">
+        <section class="mb-8">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-primary-900 mb-2">Activité Récente</h2>
+                <p class="text-sm text-neutral-500">Dernières commandes et messages</p>
+            </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
             <!-- Dernières Commandes (Tableau Amélioré) -->
