@@ -342,6 +342,38 @@
             padding: 0.75rem 1rem !important;
             border-bottom: 1px solid #e5e7eb !important;
         }
+        
+        /* Menu de navigation - Visible par défaut, caché seulement sur mobile */
+        nav[aria-label="Menu de navigation"] {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 10 !important;
+        }
+        
+        /* Cacher le menu desktop sur les très petits écrans (< 640px) */
+        @media (max-width: 639px) {
+            nav[aria-label="Menu de navigation"] {
+                display: none !important;
+            }
+        }
+        
+        /* Assurer que le menu desktop est visible sur les écrans >= 640px */
+        @media (min-width: 640px) {
+            nav[aria-label="Menu de navigation"] {
+                display: flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+        }
+        
+        /* S'assurer que le conteneur du menu n'a pas d'overflow qui cache le menu */
+        nav[aria-label="Menu de navigation"] > div {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
     </style>
 </head>
 <body class="h-full flex flex-col">
@@ -356,34 +388,45 @@
     <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <!-- Logo & Nav Links -->
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
-                        <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
-                    </div>
-                    <nav class="hidden sm:ml-6 sm:flex sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
-                        <a href="dashboard.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
-                            <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
+                    <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-primary-500/30 mr-2">S</div>
+                    <span class="text-xl font-bold text-gray-900 tracking-tight">Sily<span class="text-primary-600">Procure</span></span>
+                </div>
+
+                <!-- Menu de Navigation Centré -->
+                <nav class="flex items-center justify-center flex-1 mx-8" aria-label="Menu de navigation">
+                    <div class="flex items-center space-x-1 bg-gray-50 rounded-lg p-1 border border-gray-200">
+                        <a href="dashboard.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
+                            <i class="fas fa-chart-line mr-2 text-xs" aria-hidden="true"></i>
                             <span>Dashboard</span>
                         </a>
-                        <a href="rfq.html" class="border-primary-500 text-primary-900 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold min-h-[44px] transition-colors whitespace-nowrap" aria-current="page">
-                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                        <a href="rfq.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-semibold min-h-[36px] transition-all bg-primary-600 text-white shadow-sm" aria-current="page">
+                            <i class="fas fa-file-contract mr-2 text-xs" aria-hidden="true"></i>
                             <span>RFQ</span>
                         </a>
-                        <a href="devis.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
-                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                        <a href="devis.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
+                            <i class="fas fa-file-invoice-dollar mr-2 text-xs" aria-hidden="true"></i>
                             <span>Devis</span>
                         </a>
-                        <a href="commandes.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
-                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                        <a href="commandes.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
+                            <i class="fas fa-shopping-cart mr-2 text-xs" aria-hidden="true"></i>
                             <span>Commandes</span>
                         </a>
-                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
-                            <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
+                        <a href="entreprises.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
+                            <i class="fas fa-building mr-2 text-xs" aria-hidden="true"></i>
                             <span>Entreprises</span>
                         </a>
-                    </nav>
-                </div>
+                        <a href="factures.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
+                            <i class="fas fa-money-bill-wave mr-2 text-xs" aria-hidden="true"></i>
+                            <span>Factures</span>
+                        </a>
+                        <a href="carte.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
+                            <i class="fas fa-map-marked-alt mr-2 text-xs" aria-hidden="true"></i>
+                            <span>Carte</span>
+                        </a>
+                    </div>
+                </nav>
 
                 <!-- Search Bar & Profile -->
                 <div class="flex items-center gap-4">
@@ -444,6 +487,14 @@
                     <a href="entreprises.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
                         <i class="fas fa-building text-neutral-500" aria-hidden="true"></i>
                         <span>Entreprises</span>
+                    </a>
+                    <a href="factures.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-money-bill-wave text-neutral-500" aria-hidden="true"></i>
+                        <span>Factures</span>
+                    </a>
+                    <a href="carte.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 block px-4 py-3 rounded-lg text-base font-medium transition-all min-h-[44px] flex items-center gap-3">
+                        <i class="fas fa-map-marked-alt text-neutral-500" aria-hidden="true"></i>
+                        <span>Carte</span>
                     </a>
                 </div>
             </div>
