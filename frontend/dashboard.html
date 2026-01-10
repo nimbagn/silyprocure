@@ -7,6 +7,7 @@
     
     <!-- CSS Charte Graphique Pro Confiance -->
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -337,6 +338,13 @@
             }
         }
         
+        /* Assurer que le menu desktop n'est pas caché sur les grands écrans */
+        @media (min-width: 640px) {
+            nav[aria-label="Menu de navigation"].hidden {
+                display: flex !important;
+            }
+        }
+        
         /* Menu mobile amélioré */
         #mobile-menu {
             animation: slideDown 0.3s ease-out;
@@ -358,13 +366,25 @@
         }
         
         /* Amélioration de la visibilité du menu */
+        nav[aria-label="Menu de navigation"] {
+            align-items: center;
+        }
+        
         nav[aria-label="Menu de navigation"] a {
             position: relative;
+            white-space: nowrap;
         }
         
         nav[aria-label="Menu de navigation"] a:hover {
             background: rgba(59, 130, 246, 0.05);
             border-radius: 4px 4px 0 0;
+        }
+        
+        /* Assurer la visibilité du menu sur tous les écrans */
+        @media (max-width: 639px) {
+            nav[aria-label="Menu de navigation"] {
+                display: none !important;
+            }
         }
         
         /* Amélioration des zones tactiles */
@@ -409,7 +429,7 @@
                     <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
                         <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
                     </div>
-                    <nav class="hidden sm:ml-6 sm:flex sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
+                    <nav class="hidden sm:flex sm:ml-6 sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
                         <a href="dashboard.html" class="border-primary-500 text-primary-900 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold min-h-[44px] transition-colors whitespace-nowrap" aria-current="page">
                             <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
                             <span>Dashboard</span>
@@ -697,8 +717,8 @@
                         Tout voir <i class="fas fa-arrow-right text-xs"></i>
                     </a>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-blue-100">
+                <div class="table-container">
+                    <table class="table min-w-full divide-y divide-blue-100">
                         <thead>
                             <tr>
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-primary-900 uppercase tracking-wider">Réf</th>
