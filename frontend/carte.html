@@ -1,14 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="h-full antialiased bg-gray-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carte des Tiers - SilyProcure</title>
-    
-    <!-- CSS Charte Graphique Pro Confiance -->
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <link rel="stylesheet" href="css/animations.css">
+    <title>Carte Interactive - SilyProcure</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,399 +13,548 @@
                 extend: {
                     colors: {
                         primary: {
-                            50: '#E0E7FF',
-                            100: '#DBEAFE',
-                            400: '#60A5FA',
-                            500: '#3B82F6',
-                            600: '#2563EB',
-                            700: '#1D4ED8',
-                            900: '#1E3A8A',
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
                         },
-                        success: {
-                            500: '#10B981',
-                        },
-                        neutral: {
-                            500: '#64748B',
-                            600: '#475569',
+                        dark: {
+                            900: '#0f172a',
+                            800: '#1e293b',
                         }
                     },
                     fontFamily: {
-                        sans: ['Inter', 'Arial', 'sans-serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                        'float': '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)',
                     }
                 }
             }
         }
     </script>
-    
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
     <!-- Font Awesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Dashboard Theme CSS -->
-    <link rel="stylesheet" href="css/dashboard-theme.css">
-</head>
-<body class="h-full flex flex-col">
-    <div class="header">
-        <div class="logo" onclick="window.location.href='dashboard.html'">SilyProcure</div>
-        <div class="user-info">
-            <span id="user-name"></span>
-            <button onclick="logout()">Déconnexion</button>
-        </div>
-    </div>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    <nav class="nav">
-        <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
-        <a href="demandes-devis.html"><i class="fas fa-inbox"></i> Demandes Devis</a>
-        <a href="clients.html"><i class="fas fa-users"></i> Clients</a>
-        <a href="rfq.html"><i class="fas fa-file-alt"></i> RFQ</a>
-        <a href="devis.html"><i class="fas fa-briefcase"></i> Devis</a>
-        <a href="commandes.html"><i class="fas fa-shopping-cart"></i> Commandes</a>
-        <a href="factures.html"><i class="fas fa-file-invoice"></i> Factures</a>
-        <a href="entreprises.html"><i class="fas fa-building"></i> Entreprises</a>
-        <a href="produits.html"><i class="fas fa-box"></i> Produits</a>
-        <a href="carte.html" class="active"><i class="fas fa-map"></i> Carte</a>
+        /* Map styling */
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 0;
+            background: #f8fafc; /* Match page bg to avoid white flash */
+        }
+
+        /* Custom Marker */
+        .custom-marker-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            color: white;
+            font-size: 14px;
+            transition: transform 0.2s ease;
+        }
+        .custom-marker-icon:hover {
+            transform: scale(1.1);
+            z-index: 1000 !important;
+        }
+
+        /* Leaflet Popup Customization to match Tailwind Theme */
+        .leaflet-popup-content-wrapper {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            padding: 0;
+            overflow: hidden;
+        }
+        .leaflet-popup-content {
+            margin: 0;
+            line-height: 1.5;
+        }
+        .leaflet-popup-tip {
+            background: white;
+        }
+        .leaflet-container a.leaflet-popup-close-button {
+            top: 10px;
+            right: 10px;
+            color: #94a3b8;
+            padding: 4px;
+            font-size: 18px;
+        }
+        .leaflet-container a.leaflet-popup-close-button:hover {
+            color: #ef4444;
+        }
+
+        /* Toggles */
+        .toggle-checkbox {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        .toggle-label {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background-color: #cbd5e1;
+            border-radius: 9999px;
+            transition: background-color 0.2s ease-in;
+        }
+        .toggle-dot {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            background-color: white;
+            border-radius: 50%;
+            height: 20px;
+            width: 20px;
+            transition: transform 0.2s ease-in;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #3b82f6;
+        }
+        .toggle-checkbox:checked + .toggle-label .toggle-dot {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col overflow-hidden">
+
+    <!-- Navbar Professionnelle -->
+    <nav class="bg-white/90 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Brand & Links -->
+                <div class="flex items-center gap-8">
+                    <div class="flex-shrink-0 flex items-center cursor-pointer gap-2" onclick="window.location.href='dashboard.html'">
+                        <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-primary-500/30">S</div>
+                        <span class="text-xl font-bold text-gray-900 tracking-tight">Sily<span class="text-primary-600">Procure</span></span>
+                    </div>
+                    
+                    <div class="hidden md:flex space-x-1">
+                        <a href="dashboard.html" class="text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md text-sm font-medium transition-colors">Dashboard</a>
+                        <a href="rfq.html" class="text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md text-sm font-medium transition-colors">RFQ</a>
+                        <a href="devis.html" class="text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md text-sm font-medium transition-colors">Devis</a>
+                        <a href="commandes.html" class="text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md text-sm font-medium transition-colors">Commandes</a>
+                        <a href="entreprises.html" class="text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md text-sm font-medium transition-colors">Entreprises</a>
+                        <a href="carte.html" class="bg-primary-50 text-primary-700 px-3 py-2 rounded-md text-sm font-medium shadow-sm ring-1 ring-primary-200">Carte</a>
+                    </div>
+                </div>
+
+                <!-- User Profile -->
+                <div class="flex items-center gap-4">
+                    <div class="hidden md:flex flex-col items-end mr-2">
+                        <span id="user-name" class="text-sm font-semibold text-gray-900 leading-none">Chargement...</span>
+                        <span class="text-xs text-gray-500 mt-1">Admin</span>
+                    </div>
+                    <button onclick="logout()" class="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50" title="Déconnexion">
+                        <i class="fas fa-power-off"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
     </nav>
 
-        <!-- Main Content -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="container">
-        <!-- Hero Section -->
-        <div class="hero-section" style="text-align: left; padding: 2rem; margin-bottom: 1.5rem;">
-            <h1 class="hero-title" style="font-size: 2rem; margin: 0;"><i class="fas fa-map"></i> Carte des Tiers</h1>
-            <p class="hero-description" style="text-align: left; margin: 0.5rem 0 0 0; max-width: 100%;">
-                Visualisez la géolocalisation de tous vos partenaires sur une carte interactive
-            </p>
+    <!-- Main Content Area (Full height minus navbar) -->
+    <div class="flex-1 flex overflow-hidden relative">
+        
+        <!-- Sidebar Control Panel (Floating) -->
+        <div class="absolute top-4 left-4 bottom-4 w-80 z-[1000] flex flex-col gap-4 pointer-events-none">
+            
+            <!-- Header Card -->
+            <div class="bg-white/95 backdrop-blur-sm shadow-float rounded-xl p-5 border border-white/50 pointer-events-auto">
+                <h1 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <i class="fas fa-map-marked-alt text-primary-600"></i> Carte des Tiers
+                </h1>
+                <p class="text-xs text-gray-500 mt-1">Gérez la logistique et visualisez vos partenaires.</p>
+                
+                <div class="mt-4 grid grid-cols-2 gap-2">
+                    <button onclick="centerOnUser()" class="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-medium rounded-lg border border-gray-200 transition-colors">
+                        <i class="fas fa-crosshairs"></i> Ma position
+                    </button>
+                    <button onclick="refreshMap()" class="flex items-center justify-center gap-2 px-3 py-2 bg-primary-50 hover:bg-primary-100 text-primary-700 text-xs font-medium rounded-lg border border-primary-200 transition-colors">
+                        <i class="fas fa-sync-alt"></i> Actualiser
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters Card -->
+            <div class="bg-white/95 backdrop-blur-sm shadow-float rounded-xl p-5 border border-white/50 flex-1 overflow-y-auto pointer-events-auto">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-semibold text-gray-900">Filtres</h3>
+                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full" id="marker-count">0 affichés</span>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Toggle Item -->
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <div class="flex items-center gap-3">
+                            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+                                <i class="fas fa-industry text-sm"></i>
+                            </span>
+                            <span class="text-sm font-medium text-gray-700">Fournisseurs</span>
+                        </div>
+                        <div class="relative">
+                            <input type="checkbox" id="filter-fournisseur" class="toggle-checkbox" checked onchange="updateMap()">
+                            <div class="toggle-label"><div class="toggle-dot"></div></div>
+                        </div>
+                    </label>
+
+                    <!-- Toggle Item -->
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <div class="flex items-center gap-3">
+                            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 transition-colors">
+                                <i class="fas fa-building text-sm"></i>
+                            </span>
+                            <span class="text-sm font-medium text-gray-700">Clients</span>
+                        </div>
+                        <div class="relative">
+                            <input type="checkbox" id="filter-client" class="toggle-checkbox" checked onchange="updateMap()">
+                            <div class="toggle-label"><div class="toggle-dot"></div></div>
+                        </div>
+                    </label>
+
+                    <!-- Toggle Item -->
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <div class="flex items-center gap-3">
+                            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 group-hover:bg-amber-100 transition-colors">
+                                <i class="fas fa-shopping-cart text-sm"></i>
+                            </span>
+                            <span class="text-sm font-medium text-gray-700">Acheteurs</span>
+                        </div>
+                        <div class="relative">
+                            <input type="checkbox" id="filter-acheteur" class="toggle-checkbox" checked onchange="updateMap()">
+                            <div class="toggle-label"><div class="toggle-dot"></div></div>
+                        </div>
+                    </label>
+
+                    <!-- Toggle Item -->
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <div class="flex items-center gap-3">
+                            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600 group-hover:bg-red-100 transition-colors">
+                                <i class="fas fa-truck text-sm"></i>
+                            </span>
+                            <span class="text-sm font-medium text-gray-700">Transporteurs</span>
+                        </div>
+                        <div class="relative">
+                            <input type="checkbox" id="filter-transporteur" class="toggle-checkbox" checked onchange="updateMap()">
+                            <div class="toggle-label"><div class="toggle-dot"></div></div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-gray-100">
+                     <div class="rounded-lg bg-blue-50 p-3 border border-blue-100">
+                        <div class="flex gap-3">
+                            <i class="fas fa-lightbulb text-blue-500 mt-0.5"></i>
+                            <div class="text-xs text-blue-800 leading-relaxed">
+                                Cliquez sur un marqueur pour voir les détails ou lancer la navigation GPS.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <div class="card" style="position: relative; padding: 0; overflow: hidden;">
-            <div class="map-controls">
-                <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--color-primary-dark);"><i class="fas fa-search"></i> Filtres</h3>
-            <div class="map-filters">
-                <div class="filter-checkbox">
-                    <input type="checkbox" id="filter-fournisseur" checked onchange="updateMap()">
-                    <label for="filter-fournisseur">Fournisseurs</label>
-                </div>
-                <div class="filter-checkbox">
-                    <input type="checkbox" id="filter-client" checked onchange="updateMap()">
-                    <label for="filter-client">Clients</label>
-                </div>
-                <div class="filter-checkbox">
-                    <input type="checkbox" id="filter-acheteur" checked onchange="updateMap()">
-                    <label for="filter-acheteur">Acheteurs</label>
-                </div>
-                <div class="filter-checkbox">
-                    <input type="checkbox" id="filter-transporteur" checked onchange="updateMap()">
-                    <label for="filter-transporteur">Transporteurs</label>
-                </div>
-            </div>
-            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #E0E7FF;">
-                <button class="btn btn-primary btn-sm" onclick="centerOnUser()" style="width: 100%;">
-                    <i class="fas fa-map-marker-alt"></i> Ma position
-                </button>
-                <button class="btn btn-secondary btn-sm" onclick="centerOnGuinea()" style="width: 100%; margin-top: 0.5rem;">
-                    <i class="fas fa-map"></i> Centrer sur Guinée
-                </button>
-            </div>
-            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #E0E7FF;">
-                <div style="font-size: 0.75rem; color: var(--color-neutral);">
-                    <strong id="marker-count">0</strong> tiers affichés
-                </div>
-            </div>
+        <!-- Map Container -->
+        <div id="map" class="h-full w-full outline-none"></div>
+
+        <!-- Loading Overlay (Initial) -->
+        <div id="map-loading" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-[2000]">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary-100 border-t-primary-600 mb-4"></div>
+            <span class="text-sm font-medium text-gray-600">Chargement de la cartographie...</span>
         </div>
 
-        <div class="map-legend">
-            <h4 style="margin-bottom: 0.5rem; font-size: 0.875rem;">Légende</h4>
-            <div class="legend-item">
-                <div class="legend-icon" style="background: #3B82F6;"></div>
-                <span style="font-size: 0.75rem;">Fournisseur</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-icon" style="background: #10B981;"></div>
-                <span style="font-size: 0.75rem;">Client</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-icon" style="background: #F59E0B;"></div>
-                <span style="font-size: 0.75rem;">Acheteur</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-icon" style="background: #EF4444;"></div>
-                <span style="font-size: 0.75rem;">Transporteur</span>
-            </div>
-        </div>
-
-            <div id="map"></div>
-        </div>
     </div>
 
     <!-- Leaflet JS -->
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-        <!-- Navbar Moderne selon charte Pro Confiance -->
-    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo & Nav Links -->
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
-                        <span class="text-2xl font-bold logo-primary">Sily<span class="text-gray-900">Procure</span></span>
-                    </div>
-                    <nav class="hidden sm:ml-6 sm:flex sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
-                        <a href="dashboard.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
-                            <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Dashboard</span>
-                        </a>
-                        <a href="rfq.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
-                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>RFQ</span>
-                        </a>
-                        <a href="devis.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
-                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Devis</span>
-                        </a>
-                        <a href="commandes.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
-                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Commandes</span>
-                        </a>
-                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 font-medium inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm transition-colors min-h-[44px] whitespace-nowrap" >
-                            <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
-                            <span>Entreprises</span>
-                        </a>
-                    </nav>
-                </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-                <!-- Search Bar & Profile -->
-                <div class="flex items-center gap-4">
-                    <!-- Global Search -->
-                    <div class="hidden lg:block relative text-neutral-500 focus-within:text-primary-600" role="search">
-                        <label for="global-search" class="sr-only">Rechercher dans l'application</label>
-                        <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                            <i class="fas fa-search" aria-hidden="true"></i>
-                        </div>
-                        <input id="global-search" class="block w-64 bg-blue-50 py-2.5 pl-10 pr-4 border border-blue-200 rounded-full leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition duration-150 ease-in-out min-h-[44px]" placeholder="Rechercher..." type="search" aria-label="Rechercher">
-                    </div>
-
-                    <!-- Notifications -->
-                    <button class="relative p-2.5 text-neutral-500 hover:text-primary-600 transition-colors rounded-lg hover:bg-blue-50 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Notifications" title="Notifications">
-                        <i class="far fa-bell text-xl" aria-hidden="true"></i>
-                        <span class="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true"></span>
-                    </button>
-
-                    <!-- Profile Dropdown -->
-                    <div class="relative flex items-center gap-3">
-                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm" aria-label="Profil utilisateur">
-                            <span id="user-initials">U</span>
-                        </div>
-                        <span id="user-name" class="hidden md:block text-sm font-semibold text-neutral-700 min-w-[120px]">Chargement...</span>
-                        <button onclick="logout()" class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5" aria-label="Déconnexion" title="Déconnexion">
-                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
-                            <span class="hidden lg:inline">Déconnexion</span>
-                        </button>
-                    </div>
-                    
-                    <!-- Menu mobile -->
-                    <div class="sm:hidden ml-2">
-                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
-                            <i class="fas fa-bars text-xl"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <!-- Menu mobile déroulant -->
-            <div id="mobile-menu" class="hidden sm:hidden border-t-2 border-blue-100 bg-white shadow-lg">
-                <div class="px-4 pt-3 pb-4 space-y-1">
-                    <a href="dashboard.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
-                        <i class="fas fa-chart-line text-neutral-500" aria-hidden="true"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="rfq.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
-                        <i class="fas fa-file-contract text-neutral-500" aria-hidden="true"></i>
-                        <span>RFQ</span>
-                    </a>
-                    <a href="devis.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
-                        <i class="fas fa-file-invoice-dollar text-neutral-500" aria-hidden="true"></i>
-                        <span>Devis</span>
-                    </a>
-                    <a href="commandes.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
-                        <i class="fas fa-shopping-cart text-neutral-500" aria-hidden="true"></i>
-                        <span>Commandes</span>
-                    </a>
-                    <a href="entreprises.html" class="border-transparent text-neutral-700 hover:bg-blue-50 hover:text-primary-700 hover:border-l-4 hover:border-primary-300 font-medium block px-4 py-3 rounded-lg text-base transition-all min-h-[44px] flex items-center gap-3">
-                        <i class="fas fa-building text-neutral-500" aria-hidden="true"></i>
-                        <span>Entreprises</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <script src="js/auth.js"></script>
+    <!-- Scripts de l'application (si disponibles) -->
+    <script>
+        // Vérifier si les scripts d'auth existent, sinon utiliser des fonctions mock
+        let authScriptsLoaded = false;
+        try {
+            // Essayer de charger les scripts existants
+            if (typeof checkAuth === 'undefined') {
+                // Charger les scripts si disponibles
+                const authScript = document.createElement('script');
+                authScript.src = 'js/auth.js';
+                authScript.onerror = () => { authScriptsLoaded = false; };
+                document.head.appendChild(authScript);
+            } else {
+                authScriptsLoaded = true;
+            }
+        } catch(e) {
+            authScriptsLoaded = false;
+        }
+    </script>
     <script src="js/app.js"></script>
     <script src="js/components.js"></script>
-        <script>window.DISABLE_SIDEBAR = true;</script>
+    <script>window.DISABLE_SIDEBAR = true;</script>
     <script src="js/sidebar.js"></script>
-<script src="js/map-utils.js"></script>
-    <script>
-        checkAuth();
 
+    <script>
+        // ==========================================
+        // CONFIGURATION & UTILS
+        // ==========================================
+        
+        // Fonctions d'authentification (utiliser les vraies si disponibles, sinon mock)
+        function checkAuth() {
+            if (typeof window.checkAuth === 'function') {
+                window.checkAuth();
+            } else {
+                const user = localStorage.getItem('user');
+                if (!user) {
+                    // Rediriger vers la page de connexion si pas d'utilisateur
+                    window.location.href = 'index.html';
+                }
+            }
+        }
+        
+        function logout() {
+            if (typeof window.logout === 'function') {
+                window.logout();
+            } else {
+                if(confirm('Déconnexion ?')) { 
+                    localStorage.removeItem('user'); 
+                    localStorage.removeItem('token');
+                    window.location.href = 'index.html';
+                }
+            }
+        }
+
+        // Utiliser Toast si disponible, sinon alert
+        const Toast = typeof window.Toast !== 'undefined' ? window.Toast : {
+            success: (m) => console.log('✅ ' + m),
+            error: (m) => {
+                console.error('❌ ' + m);
+                alert('❌ ' + m);
+            }
+        };
+
+        // Utiliser apiCall si disponible, sinon créer une fonction de fallback
+        let apiCall;
+        if (typeof window.apiCall === 'function') {
+            apiCall = window.apiCall;
+        } else {
+            // Fallback: utiliser fetch avec token
+            apiCall = async function(url) {
+                const token = localStorage.getItem('token');
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: headers
+                    });
+                    
+                    if (!response.ok && response.status === 401) {
+                        // Token expiré ou invalide
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                        window.location.href = 'index.html';
+                        return { ok: false };
+                    }
+                    
+                    return response;
+                } catch (error) {
+                    console.error('Erreur API:', error);
+                    return { ok: false, json: async () => ({ error: error.message }) };
+                }
+            };
+        }
+
+        // ==========================================
+        // INITIALISATION
+        // ==========================================
+        
+        checkAuth();
+        
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        // Initialisation du nom d'utilisateur et des initiales
         const userNameEl = document.getElementById('user-name');
-        const userInitialsEl = document.getElementById('user-initials');
         if (userNameEl) {
-            userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+            userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || 'Utilisateur';
+        }
+
+        // ==========================================
+        // MAP LOGIC
+        // ==========================================
 
         let map;
         let markers = [];
         let allLocations = [];
 
-        // Initialiser la carte
-        function initMap() {
-            // Centrer sur Conakry, Guinée
-            map = L.map('map').setView([9.6412, -13.5784], 8);
+        // Configuration visuelle des types
+        const typeConfig = {
+            'fournisseur': { color: '#3b82f6', bg: 'bg-blue-500', icon: '<i class="fas fa-industry"></i>', label: 'Fournisseur' },
+            'client': { color: '#10b981', bg: 'bg-emerald-500', icon: '<i class="fas fa-building"></i>', label: 'Client' },
+            'acheteur': { color: '#f59e0b', bg: 'bg-amber-500', icon: '<i class="fas fa-shopping-cart"></i>', label: 'Acheteur' },
+            'transporteur': { color: '#ef4444', bg: 'bg-red-500', icon: '<i class="fas fa-truck"></i>', label: 'Transporteur' }
+        };
 
-            // Ajouter les tuiles OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
+        async function initMap() {
+            map = L.map('map', { zoomControl: false }).setView([9.6412, -13.5784], 13);
+
+            // Add standard zoom control to bottom right
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            // Tuiles modernes et claires (CartoDB Positron pour un look pro)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
             }).addTo(map);
 
-            // Charger les entreprises avec géolocalisation
-            return loadLocations();
+            await loadLocations();
         }
 
-        // Couleurs par type d'entreprise
-        const typeColors = {
-            'fournisseur': '#3B82F6',
-            'client': '#10B981',
-            'acheteur': '#F59E0B',
-            'transporteur': '#EF4444'
-        };
-
-        const typeIcons = {
-            'fournisseur': '🏭',
-            'client': '<i class="fas fa-building"></i>',
-            'acheteur': '<i class="fas fa-shopping-cart"></i>',
-            'transporteur': '<i class="fas fa-truck"></i>'
-        };
-
         async function loadLocations() {
+            const loading = document.getElementById('map-loading');
+            if (loading) loading.style.display = 'flex';
+
             try {
-                showLoading('Chargement des localisations...');
-                const response = await apiCall('/api/entreprises');
-                if (!response) {
-                    hideLoading();
-                    return Promise.resolve();
+                const res = await apiCall('/api/entreprises');
+                if (!res || !res.ok) {
+                    throw new Error('Erreur lors du chargement des entreprises');
                 }
 
-                const entreprises = await response.json();
+                const data = await res.json();
+                const entreprises = data.entreprises || data || [];
+                
                 allLocations = [];
-
-                // Charger les adresses avec géolocalisation pour chaque entreprise
-                for (const entreprise of entreprises) {
-                    const detailResponse = await apiCall(`/api/entreprises/${entreprise.id}`);
-                    if (detailResponse && detailResponse.ok) {
-                        const details = await detailResponse.json();
-                        if (details.adresses && details.adresses.length > 0) {
-                            details.adresses.forEach(adresse => {
-                                if (adresse.latitude && adresse.longitude) {
-                                    allLocations.push({
-                                        entreprise: entreprise,
-                                        adresse: adresse,
-                                        type: entreprise.type_entreprise
-                                    });
-                                }
-                            });
+                
+                // Fetch details en parallèle
+                const promises = entreprises.map(async (ent) => {
+                    try {
+                        const detailRes = await apiCall(`/api/entreprises/${ent.id}`);
+                        if (detailRes && detailRes.ok) {
+                            const details = await detailRes.json();
+                            const addr = details.adresses?.find(a => a.latitude && a.longitude) || details.adresses?.[0];
+                            if (addr && addr.latitude && addr.longitude) {
+                                return { entreprise: ent, adresse: addr, type: ent.type_entreprise };
+                            }
                         }
+                    } catch (err) {
+                        console.warn(`Erreur pour entreprise ${ent.id}:`, err);
                     }
-                }
+                    return null;
+                });
 
-                hideLoading();
+                const results = await Promise.all(promises);
+                allLocations = results.filter(l => l !== null);
+                
                 updateMap();
-                return Promise.resolve();
-            } catch (error) {
-                hideLoading();
-                Toast.error('Erreur lors du chargement des localisations');
-                console.error('Erreur:', error);
-                return Promise.reject(error);
+
+            } catch (e) {
+                console.error('Erreur chargement locations:', e);
+                Toast.error('Erreur lors du chargement des données de la carte');
+            } finally {
+                if (loading) loading.style.display = 'none';
             }
         }
 
         function updateMap() {
-            // Supprimer tous les marqueurs existants
-            markers.forEach(marker => map.removeLayer(marker));
+            markers.forEach(m => map.removeLayer(m));
             markers = [];
 
-            // Récupérer les filtres
-            const showFournisseur = document.getElementById('filter-fournisseur').checked;
-            const showClient = document.getElementById('filter-client').checked;
-            const showAcheteur = document.getElementById('filter-acheteur').checked;
-            const showTransporteur = document.getElementById('filter-transporteur').checked;
+            const filters = {
+                fournisseur: document.getElementById('filter-fournisseur').checked,
+                client: document.getElementById('filter-client').checked,
+                acheteur: document.getElementById('filter-acheteur').checked,
+                transporteur: document.getElementById('filter-transporteur').checked
+            };
 
-            // Filtrer les localisations
-            const filtered = allLocations.filter(loc => {
-                switch(loc.type) {
-                    case 'fournisseur': return showFournisseur;
-                    case 'client': return showClient;
-                    case 'acheteur': return showAcheteur;
-                    case 'transporteur': return showTransporteur;
-                    default: return false;
-                }
-            });
+            const filtered = allLocations.filter(loc => filters[loc.type]);
+            const countEl = document.getElementById('marker-count');
+            if (countEl) {
+                countEl.textContent = `${filtered.length} affichés`;
+            }
 
-            // Ajouter les marqueurs
             filtered.forEach(loc => {
-                const color = typeColors[loc.type] || '#64748B';
-                const icon = typeIcons[loc.type] || '<i class="fas fa-map-marker-alt"></i>';
-
-                // Créer une icône personnalisée
+                const config = typeConfig[loc.type] || typeConfig['client'];
+                
                 const customIcon = L.divIcon({
-                    className: 'custom-marker',
-                    html: `<div style="background: ${color}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${icon}</div>`,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
+                    className: 'bg-transparent',
+                    html: `<div class="custom-marker-icon ${config.bg}" style="width: 36px; height: 36px;">${config.icon}</div>`,
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 36],
+                    popupAnchor: [0, -36]
                 });
 
-                const marker = L.marker(
-                    [parseFloat(loc.adresse.latitude), parseFloat(loc.adresse.longitude)],
-                    { icon: customIcon }
-                ).addTo(map);
-
-                // Popup avec informations
                 const popupContent = `
-                    <div style="min-width: 200px;">
-                        <h3 style="margin: 0 0 0.5rem 0; color: ${color}; font-size: 1rem;">
-                            ${icon} ${loc.entreprise.nom}
-                        </h3>
-                        <p style="margin: 0.25rem 0; font-size: 0.875rem;">
-                            <strong>Type:</strong> ${loc.type}<br>
-                            <strong>Adresse:</strong> ${loc.adresse.adresse_ligne1}<br>
-                            ${loc.adresse.adresse_ligne2 ? loc.adresse.adresse_ligne2 + '<br>' : ''}
-                            ${loc.adresse.code_postal} ${loc.adresse.ville}<br>
-                            <strong>RCCM:</strong> ${loc.entreprise.rccm || '-'}
-                        </p>
-                        <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+                    <div class="w-64 font-sans">
+                        <div class="flex items-center gap-3 mb-3 border-b border-gray-100 pb-2">
+                            <div class="w-8 h-8 rounded-lg ${config.bg} bg-opacity-10 flex items-center justify-center text-${config.bg.replace('bg-', '')}">
+                                ${config.icon}
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900 text-sm leading-tight">${loc.entreprise.nom || 'Entreprise'}</h3>
+                                <p class="text-xs text-gray-500">${config.label}</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 mb-3">
+                            <div class="flex items-start gap-2 text-xs text-gray-600">
+                                <i class="fas fa-map-marker-alt mt-0.5 text-gray-400"></i>
+                                <span>${loc.adresse.adresse_ligne1 || ''}, ${loc.adresse.ville || ''}</span>
+                            </div>
+                            ${loc.entreprise.description ? `
+                            <div class="flex items-start gap-2 text-xs text-gray-600">
+                                <i class="fas fa-info-circle mt-0.5 text-gray-400"></i>
+                                <span>${loc.entreprise.description}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
                             <button onclick="viewEntreprise(${loc.entreprise.id})" 
-                                    style="padding: 0.25rem 0.5rem; background: var(--color-primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">
-                                Voir détails
+                                class="flex items-center justify-center px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-medium rounded-md border border-gray-200 transition-colors">
+                                Détails
                             </button>
-                            <button onclick="getDirections(${loc.adresse.latitude}, ${loc.adresse.longitude})" 
-                                    style="padding: 0.25rem 0.5rem; background: var(--color-success); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">
-                                Itinéraire
+                            <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${loc.adresse.latitude},${loc.adresse.longitude}', '_blank')" 
+                                class="flex items-center justify-center px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 text-xs font-medium rounded-md border border-primary-200 transition-colors">
+                                <i class="fas fa-location-arrow mr-1.5"></i> Y aller
                             </button>
                         </div>
                     </div>
                 `;
 
-                marker.bindPopup(popupContent);
+                const marker = L.marker([loc.adresse.latitude, loc.adresse.longitude], { icon: customIcon })
+                    .bindPopup(popupContent);
+                
+                marker.addTo(map);
                 markers.push(marker);
             });
 
-            // Mettre à jour le compteur
-            document.getElementById('marker-count').textContent = filtered.length;
-
-            // Ajuster la vue pour voir tous les marqueurs
-            if (filtered.length > 0) {
+            if (markers.length > 0) {
                 const group = new L.featureGroup(markers);
-                map.fitBounds(group.getBounds().pad(0.1));
+                map.fitBounds(group.getBounds().pad(0.2));
             }
         }
 
@@ -418,96 +562,35 @@
             window.location.href = `entreprises-detail.html?id=${id}`;
         }
 
-        function getDirections(lat, lng) {
-            // Ouvrir dans Google Maps ou autre service de navigation
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-            window.open(url, '_blank');
-        }
-
         function centerOnUser() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    position => {
-                        const userLat = position.coords.latitude;
-                        const userLng = position.coords.longitude;
-                        
-                        map.setView([userLat, userLng], 15);
-                        
-                        // Marqueur de position utilisateur
-                        const userMarker = L.marker([userLat, userLng], {
-                            icon: L.divIcon({
-                                className: 'user-marker',
-                                html: '<div style="background: #EF4444; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"><i class="fas fa-map-marker-alt"></i></div>',
-                                iconSize: [30, 30],
-                                iconAnchor: [15, 15]
-                            })
-                        }).addTo(map).bindPopup('<i class="fas fa-map-marker-alt"></i> Votre position').openPopup();
-                        
-                        // Trouver les entreprises les plus proches
-                        if (allLocations.length > 0 && typeof findNearestLocations === 'function') {
-                            const nearest = findNearestLocations(userLat, userLng, allLocations, 3);
-                            if (nearest.length > 0) {
-                                let popupContent = '<strong>Entreprises les plus proches :</strong><br>';
-                                nearest.forEach((loc, index) => {
-                                    popupContent += `${index + 1}. ${loc.entreprise.nom} - ${formatDistance(loc.distance)}<br>`;
-                                });
-                                const nearestModal = new Modal('nearest', 'Entreprises les plus proches', 
-                                    `<div style="max-height: 300px; overflow-y: auto;">
-                                        ${nearest.map((loc, index) => `
-                                            <div style="padding: 0.75rem; border-bottom: 1px solid #E0E7FF; cursor: pointer;" 
-                                                 onclick="viewEntreprise(${loc.entreprise.id}); Modal.hide('nearest');">
-                                                <strong>${index + 1}. ${loc.entreprise.nom}</strong><br>
-                                                <span style="font-size: 0.75rem; color: var(--color-neutral);">
-                                                    <i class="fas fa-map-marker-alt"></i> ${formatDistance(loc.distance)} - ${loc.adresse.ville}
-                                                </span>
-                                            </div>
-                                        `).join('')}
-                                    </div>`,
-                                    '<button class="btn btn-secondary" onclick="Modal.hide(\'nearest\')">Fermer</button>'
-                                );
-                                nearestModal.show();
-                            }
-                        }
-                    },
-                    error => {
-                        Toast.error('Impossible d\'obtenir votre position');
-                    }
-                );
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const { latitude, longitude } = position.coords;
+                    const userIcon = L.divIcon({
+                        className: 'bg-transparent',
+                        html: '<div class="w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow-lg relative"><div class="absolute -inset-1 bg-blue-500 rounded-full opacity-30 animate-ping"></div></div>',
+                        iconSize: [16, 16]
+                    });
+                    
+                    L.marker([latitude, longitude], { icon: userIcon, zIndexOffset: 1000 })
+                        .addTo(map)
+                        .bindPopup('<div class="text-center font-medium text-sm p-1">Vous êtes ici</div>')
+                        .openPopup();
+                    
+                    map.flyTo([latitude, longitude], 15, { duration: 1.5 });
+                }, () => {
+                    Toast.error("Position indisponible");
+                });
             } else {
-                Toast.error('Géolocalisation non supportée par votre navigateur');
+                Toast.error("Géolocalisation non supportée");
             }
         }
 
-        function centerOnGuinea() {
-            map.setView([9.6412, -13.5784], 8);
+        function refreshMap() {
+            loadLocations();
         }
 
-        // Initialiser la carte
-        initMap().then(() => {
-            // Vérifier si on doit centrer sur une entreprise spécifique
-            const urlParams = new URLSearchParams(window.location.search);
-            const entrepriseId = urlParams.get('entreprise');
-            if (entrepriseId) {
-                setTimeout(() => {
-                    const entrepriseLocation = allLocations.find(loc => loc.entreprise.id == entrepriseId);
-                    if (entrepriseLocation) {
-                        map.setView(
-                            [parseFloat(entrepriseLocation.adresse.latitude), parseFloat(entrepriseLocation.adresse.longitude)],
-                            15
-                        );
-                        // Trouver et ouvrir le popup
-                        markers.forEach(marker => {
-                            const latlng = marker.getLatLng();
-                            if (Math.abs(latlng.lat - parseFloat(entrepriseLocation.adresse.latitude)) < 0.0001 &&
-                                Math.abs(latlng.lng - parseFloat(entrepriseLocation.adresse.longitude)) < 0.0001) {
-                                marker.openPopup();
-                            }
-                        });
-                    }
-                }, 500);
-            }
-        });
+        document.addEventListener('DOMContentLoaded', initMap);
     </script>
 </body>
 </html>
-
