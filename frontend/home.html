@@ -1,56 +1,80 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SilyProcure - Plateforme de Gestion d'Achats Professionnels - SilyProcure</title>
+    <title>SilyProcure - Centralisation d'Achats pour Entreprises</title>
+    <meta name="description" content="La plateforme d'achat B2B qui simplifie vos approvisionnements en Guinée.">
+
+    <!-- Google Fonts: Inter pour un look pro et lisible -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- CSS Charte Graphique Pro Confiance -->
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <link rel="stylesheet" href="css/animations.css">
-    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
                     colors: {
-                        primary: {
-                            50: '#E0E7FF',
-                            100: '#DBEAFE',
-                            400: '#60A5FA',
-                            500: '#3B82F6',
-                            600: '#2563EB',
-                            700: '#1D4ED8',
-                            900: '#1E3A8A',
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6', // Bleu Sily
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a', // Bleu Nuit
                         },
                         accent: {
-                            500: '#F59E0B',
-                            600: '#D97706',
-                        },
-                        success: {
-                            500: '#10B981',
-                        },
-                        neutral: {
-                            500: '#64748B',
-                            600: '#475569',
+                            500: '#f59e0b', // Orange/Ambre
+                            600: '#d97706',
                         }
                     },
-                    fontFamily: {
-                        sans: ['Inter', 'Arial', 'sans-serif'],
-                    },
-                    backgroundImage: {
-                        'hero-pattern': "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.1\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')",
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'card': '0 10px 40px -10px rgba(0,0,0,0.08)',
+                        'glow': '0 0 20px rgba(59, 130, 246, 0.5)'
                     }
                 }
             }
         }
     </script>
-    
+
     <style>
-        /* Animations modernes */
+        /* Optimisations visuelles */
+        body { font-family: 'Inter', sans-serif; }
+        
+        .hero-bg {
+            background: radial-gradient(circle at top right, #1e3a8a 0%, #1e40af 40%, #1d4ed8 100%);
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        /* Animations douces */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Fade in up animation */
+        .fade-in-up {
+            opacity: 1;
+            transform: translateY(0);
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+        
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -61,1593 +85,1103 @@
                 transform: translateY(0);
             }
         }
-        
-        @keyframes blob {
+
+        /* Menu Item Hover Effect */
+        .nav-link {
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: #2563eb;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Modal Backdrop Blur */
+        .modal-backdrop {
+            background-color: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Tracking Widget Visibility */
+        #tracking {
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+
+        /* Pulse animation for tracking highlight */
+        @keyframes pulse {
             0%, 100% {
-                transform: translate(0, 0) scale(1);
+                transform: scale(1);
+                box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
             }
-            33% {
-                transform: translate(30px, -50px) scale(1.1);
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 20px 60px -10px rgba(59, 130, 246, 0.3);
             }
-            66% {
-                transform: translate(-20px, 20px) scale(0.9);
-            }
-        }
-        
-        .fade-in-up {
-            animation: fadeInUp 0.8s ease-out forwards;
-            opacity: 0;
-        }
-        
-        /* S'assurer que les éléments sont visibles même si l'animation ne se déclenche pas */
-        @media (prefers-reduced-motion: no-preference) {
-            .fade-in-up {
-                animation: fadeInUp 0.8s ease-out forwards;
-            }
-        }
-        
-        /* Fallback pour les navigateurs qui ne supportent pas l'animation */
-        .fade-in-up:not(:hover) {
-            animation-fill-mode: forwards;
-        }
-        
-        .delay-100 { animation-delay: 100ms; }
-        .delay-200 { animation-delay: 200ms; }
-        .delay-300 { animation-delay: 300ms; }
-        .delay-400 { animation-delay: 400ms; }
-        
-        .animate-blob {
-            animation: blob 7s infinite;
-        }
-        
-        .animation-delay-2000 {
-            animation-delay: 2s;
-        }
-        
-        /* Smooth reveal on scroll */
-        .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s ease-out;
-        }
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        /* Glass effect */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        
-        /* Navbar scroll effect */
-        #navbar.scrolled {
-            background: rgba(255, 255, 255, 0.98);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
     </style>
-    
-    <!-- Font Awesome & Google Fonts -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Dashboard Theme CSS -->
-    <link rel="stylesheet" href="css/dashboard-theme.css">
 </head>
-<body class="min-h-screen bg-white">
-    <!-- Navbar moderne avec effet scroll -->
-    <nav id="navbar" class="fixed w-full z-50 bg-gradient-to-r from-white via-blue-50 to-white backdrop-blur-md border-b-2 border-primary-200 transition-all duration-300 shadow-lg">
+<body class="bg-gray-50 text-slate-800 antialiased selection:bg-brand-200 selection:text-brand-900">
+
+    <!-- NAVBAR PREMIUM -->
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-300 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
+                
                 <!-- Logo -->
-                <a href="home.html" class="flex-shrink-0 flex items-center gap-2 cursor-pointer group">
-                    <div class="w-12 h-12 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary-500/40 group-hover:shadow-xl group-hover:scale-110 transition-all">
-                        <i class="fas fa-shopping-cart"></i>
+                <a href="#" class="flex items-center gap-3 group">
+                    <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-brand-500/30 transition transform group-hover:scale-105">
+                        <i class="fas fa-cube text-lg"></i>
                     </div>
-                    <div>
-                        <span class="text-2xl font-bold text-primary-700 tracking-tight">Sily<span class="text-primary-900">Procure</span></span>
-                        <p class="text-xs text-primary-500 hidden sm:block font-medium">Plateforme de gestion d'achats</p>
+                    <div class="flex flex-col">
+                        <span class="text-2xl font-bold text-slate-900 tracking-tight leading-none">Sily<span class="text-brand-600">Procure</span></span>
                     </div>
                 </a>
 
                 <!-- Desktop Menu -->
-                <div class="hidden sm:flex items-center space-x-2 lg:space-x-4">
-                    <a href="#fonctionnement" class="text-primary-700 hover:text-white hover:bg-primary-600 font-semibold transition-all whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg hover:shadow-md min-h-[44px] border border-transparent hover:border-primary-700">
-                        <i class="fas fa-info-circle"></i>
-                        <span class="text-sm lg:text-base">Comment ça marche</span>
-                    </a>
-                    <a href="#services" class="text-primary-700 hover:text-white hover:bg-primary-600 font-semibold transition-all whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg hover:shadow-md min-h-[44px] border border-transparent hover:border-primary-700">
-                        <i class="fas fa-handshake"></i>
-                        <span class="text-sm lg:text-base">Services</span>
-                    </a>
-                    <a href="#tracking" class="text-primary-700 hover:text-white hover:bg-primary-600 font-semibold transition-all whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg hover:shadow-md min-h-[44px] border border-transparent hover:border-primary-700">
-                        <i class="fas fa-shipping-fast"></i>
-                        <span class="text-sm lg:text-base">Suivi</span>
-                    </a>
-                    <a href="#contact" class="text-primary-700 hover:text-white hover:bg-primary-600 font-semibold transition-all whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg hover:shadow-md min-h-[44px] border border-transparent hover:border-primary-700">
-                        <i class="fas fa-envelope"></i>
-                        <span class="text-sm lg:text-base">Contact</span>
-                    </a>
-                    <div class="h-8 w-px bg-primary-300 mx-2"></div>
-                    <a href="index.html" id="auth-link" class="text-white bg-primary-600 hover:bg-primary-700 font-bold transition-all whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg shadow-md hover:shadow-lg min-h-[44px] border-2 border-primary-700 hover:border-primary-800">
-                        <i class="fas fa-sign-in-alt"></i>
-                        <span id="auth-text" class="text-sm lg:text-base">Connexion</span>
-                    </a>
-                    <button onclick="openDevisModal()" class="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-5 py-2.5 rounded-full font-bold shadow-lg shadow-accent-500/40 transition transform hover:-translate-y-0.5 hover:scale-105 flex items-center gap-2 whitespace-nowrap min-h-[44px] text-sm lg:text-base border-2 border-accent-400">
-                        <i class="fas fa-paper-plane"></i>
-                        <span class="hidden lg:inline">Demander un devis</span>
-                        <span class="lg:hidden">Devis</span>
-                    </button>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#fonctionnement" class="nav-link text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">Comment ça marche</a>
+                    <a href="#avantages" class="nav-link text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">Avantages</a>
+                    <a href="#tracking" class="nav-link text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">Suivi</a>
+                    <a href="#contact" class="nav-link text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">Contact</a>
                 </div>
 
-                <!-- Mobile menu button -->
-                <div class="sm:hidden flex items-center gap-2">
-                    <button onclick="openDevisModal()" class="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-3 py-2 rounded-lg font-bold shadow-md transition min-h-[44px] min-w-[44px] flex items-center justify-center">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                    <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="text-primary-700 hover:text-white hover:bg-primary-600 focus:outline-none p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition border-2 border-primary-300 hover:border-primary-600" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
-                        <i class="fas fa-bars text-xl"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-            
-        <!-- Mobile Menu Panel -->
-        <div id="mobile-menu" class="hidden sm:hidden bg-gradient-to-b from-white to-blue-50 border-t-2 border-primary-200 absolute w-full shadow-xl z-40">
-            <div class="px-4 pt-3 pb-6 space-y-2">
-                <a href="#fonctionnement" class="block px-4 py-3 text-base font-semibold text-primary-700 hover:text-white hover:bg-primary-600 rounded-lg transition-all border-2 border-transparent hover:border-primary-700 min-h-[44px] flex items-center gap-3">
-                    <i class="fas fa-info-circle text-primary-500 group-hover:text-white"></i>
-                    <span>Comment ça marche</span>
-                </a>
-                <a href="#services" class="block px-4 py-3 text-base font-semibold text-primary-700 hover:text-white hover:bg-primary-600 rounded-lg transition-all border-2 border-transparent hover:border-primary-700 min-h-[44px] flex items-center gap-3">
-                    <i class="fas fa-handshake text-primary-500"></i>
-                    <span>Services</span>
-                </a>
-                <a href="#tracking" class="block px-4 py-3 text-base font-semibold text-primary-700 hover:text-white hover:bg-primary-600 rounded-lg transition-all border-2 border-transparent hover:border-primary-700 min-h-[44px] flex items-center gap-3">
-                    <i class="fas fa-shipping-fast text-primary-500"></i>
-                    <span>Suivi</span>
-                </a>
-                <a href="#contact" class="block px-4 py-3 text-base font-semibold text-primary-700 hover:text-white hover:bg-primary-600 rounded-lg transition-all border-2 border-transparent hover:border-primary-700 min-h-[44px] flex items-center gap-3">
-                    <i class="fas fa-envelope text-primary-500"></i>
-                    <span>Contact</span>
-                </a>
-                <div class="mt-4 pt-4 border-t-2 border-primary-200 flex flex-col gap-3">
-                    <a href="index.html" id="auth-link-mobile" class="w-full text-center px-4 py-3 bg-primary-600 text-white rounded-lg font-bold shadow-md hover:bg-primary-700 transition border-2 border-primary-700 min-h-[44px] flex items-center justify-center gap-2">
-                        <i class="fas fa-sign-in-alt"></i>
-                        <span>Connexion</span>
+                <!-- Auth Buttons -->
+                <div class="hidden md:flex items-center gap-4">
+                    <a href="index.html" class="text-sm font-semibold text-slate-700 hover:text-brand-600 transition px-3 py-2">
+                        Connexion
                     </a>
-                    <button onclick="openDevisModal()" class="w-full text-center px-4 py-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white rounded-lg font-bold shadow-lg hover:from-accent-600 hover:to-accent-700 transition border-2 border-accent-400 min-h-[44px] flex items-center justify-center gap-2">
-                        <i class="fas fa-paper-plane"></i>
+                    <button onclick="openDevisModal()" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold px-6 py-3 rounded-full shadow-lg shadow-brand-500/20 transition transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2">
                         <span>Demander un devis</span>
+                        <i class="fas fa-arrow-right text-xs"></i>
                     </button>
                 </div>
+
+                <!-- Mobile Button -->
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-slate-600 hover:text-brand-600 transition">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 absolute w-full left-0 shadow-xl">
+            <div class="flex flex-col p-4 space-y-4">
+                <a href="#fonctionnement" class="text-base font-medium text-slate-700 hover:text-brand-600 py-2">Comment ça marche</a>
+                <a href="#avantages" class="text-base font-medium text-slate-700 hover:text-brand-600 py-2">Avantages</a>
+                <a href="#tracking" class="text-base font-medium text-slate-700 hover:text-brand-600 py-2">Suivi de commande</a>
+                <a href="#contact" class="text-base font-medium text-slate-700 hover:text-brand-600 py-2">Contact</a>
+                <div class="h-px bg-gray-100 my-2"></div>
+                <a href="index.html" class="text-center w-full py-3 text-brand-700 font-semibold bg-brand-50 rounded-lg">Connexion</a>
+                <button onclick="openDevisModal()" class="w-full py-3 bg-brand-600 text-white font-bold rounded-lg shadow-md">Demander un devis</button>
             </div>
         </div>
     </nav>
-    </nav>
 
-    <!-- Hero Section Moderne -->
-    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900">
-            <!-- Abstract Background Pattern -->
-            <div class="absolute inset-0 bg-hero-pattern opacity-10"></div>
+    <!-- HERO SECTION -->
+    <section class="relative pt-32 pb-32 lg:pt-48 lg:pb-56 overflow-x-hidden hero-bg text-white" style="overflow-y: visible;">
+        <!-- Background Patterns -->
+        <div class="absolute inset-0 opacity-10" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div>
+        
+        <!-- Content -->
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm mb-8 fade-in-up">
+                <span class="w-2 h-2 rounded-full bg-accent-500 animate-pulse"></span>
+                <span class="text-sm font-medium tracking-wide">La référence B2B en Guinée</span>
+            </div>
             
-            <!-- Animated Blob Shapes -->
-            <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-primary-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-            <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-accent-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-8 leading-tight fade-in-up delay-100">
+                Vos achats d'entreprise, <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-white to-blue-200">enfin simplifiés.</span>
+            </h1>
+            
+            <p class="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-blue-100 mb-12 leading-relaxed fade-in-up delay-200">
+                Arrêtez de multiplier les fournisseurs. Déposez une seule demande, nous négocions pour vous et livrons partout. Gain de temps et économies garantis.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-4 fade-in-up delay-300">
+                <button onclick="openDevisModal()" class="px-8 py-4 bg-accent-500 hover:bg-accent-600 text-white text-lg font-bold rounded-full shadow-xl shadow-accent-500/20 transition transform hover:scale-105 flex items-center justify-center gap-3">
+                    <i class="fas fa-paper-plane"></i>
+                    Faire une demande gratuite
+                </button>
+                <a href="#fonctionnement" class="px-8 py-4 bg-white/10 hover:bg-white/20 text-white text-lg font-semibold rounded-full backdrop-blur-sm border border-white/30 transition flex items-center justify-center gap-3">
+                    <i class="far fa-play-circle"></i>
+                    Voir le processus
+                </a>
+            </div>
+        </div>
 
-            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <!-- Badge -->
-                <span class="inline-block py-2 px-4 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-semibold mb-6 fade-in-up shadow-lg">
-                    <i class="fas fa-bolt mr-2 text-accent-400"></i>Devis en 30 min - 1h maximum
-                </span>
-                
-                <!-- Titre Principal -->
-                <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-6 leading-tight fade-in-up delay-100">
-                    Vos achats professionnels <br>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-white to-blue-200">simplifiés et centralisés</span>
-                </h1>
-                
-                <!-- Sous-titre -->
-                <p class="mt-4 max-w-3xl mx-auto text-xl text-primary-100 mb-10 fade-in-up delay-200">
-                    <strong>Ne perdez plus de temps à chercher des fournisseurs.</strong> Déposez une demande, nous négocions pour vous. Obtenez le meilleur devis consolidé en <strong class="text-accent-400">moins d'une heure</strong>.
-                </p>
-                
-                <!-- Badges Avantages -->
-                <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12 fade-in-up delay-200">
-                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2.5 flex items-center gap-2">
-                        <i class="fas fa-check-circle text-green-400"></i>
-                        <span class="text-white text-sm font-medium">Aucun compte requis</span>
-                    </div>
-                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2.5 flex items-center gap-2">
-                        <i class="fas fa-check-circle text-green-400"></i>
-                        <span class="text-white text-sm font-medium">Suivi en temps réel</span>
-                    </div>
-                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2.5 flex items-center gap-2">
-                        <i class="fas fa-check-circle text-green-400"></i>
-                        <span class="text-white text-sm font-medium">100% gratuit</span>
-                    </div>
-                </div>
-                
-                <!-- CTA Buttons -->
-                <div class="flex flex-col sm:flex-row justify-center gap-4 mb-16 fade-in-up delay-300">
-                    <button onclick="openDevisModal()" class="px-8 py-4 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-full shadow-lg shadow-accent-500/30 transition transform hover:scale-105 flex items-center justify-center gap-2 min-h-[56px]">
-                        <i class="fas fa-paper-plane"></i> Faire une demande gratuite
-                    </button>
-                    <a href="#fonctionnement" class="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-full backdrop-blur-sm border border-white/20 transition flex items-center justify-center gap-2 min-h-[56px]">
-                        <i class="fas fa-play-circle"></i> Comment ça marche
-                    </a>
-                </div>
-
-                <!-- Floating Tracking Widget -->
-                <div id="tracking" class="max-w-3xl mx-auto glass-panel rounded-2xl p-4 sm:p-6 fade-in-up delay-400 transform translate-y-8 lg:translate-y-12">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <i class="fas fa-shipping-fast text-primary-600"></i>
-                        Suivez votre demande
-                    </h3>
-                    <form id="trackingFormHome" onsubmit="trackFromHome(event)" class="flex flex-col sm:flex-row gap-3">
-                        <div class="relative flex-grow">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-hashtag text-gray-400"></i>
-                            </div>
-                            <input type="text" id="ref-home" name="reference" placeholder="Référence (ex: DEV-XXXXX-XXXXX)" 
-                                   pattern="[A-Z0-9-]+" autocomplete="off" required
-                                   class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition">
+        <!-- Floating Tracking Widget -->
+        <div id="tracking" class="absolute bottom-8 left-1/2 -translate-x-1/2 translate-y-0 w-full max-w-4xl px-4 z-30" style="opacity: 1 !important; visibility: visible !important; display: block !important;">
+            <div class="bg-white rounded-2xl shadow-card p-6 md:p-8 border border-gray-100 w-full mx-auto">
+                <div class="flex flex-col md:flex-row items-center gap-6">
+                    <div class="flex items-center gap-3 min-w-max">
+                        <div class="w-12 h-12 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center text-xl">
+                            <i class="fas fa-shipping-fast"></i>
                         </div>
-                        <div class="relative flex-grow">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-key text-gray-400"></i>
-                            </div>
-                            <input type="text" id="token-home" name="token" placeholder="Code de suivi" 
-                                   autocomplete="off" required
-                                   class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition">
+                        <div>
+                            <h3 class="font-bold text-slate-900">Suivi Express</h3>
+                            <p class="text-xs text-slate-500">Où est ma commande ?</p>
                         </div>
-                        <button type="submit" class="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-semibold transition shadow-md whitespace-nowrap min-h-[48px] flex items-center justify-center gap-2">
-                            <i class="fas fa-search"></i> Suivre
+                    </div>
+                    <form onsubmit="trackOrder(event)" class="flex-1 w-full flex flex-col sm:flex-row gap-3">
+                        <div class="relative flex-1">
+                            <i class="fas fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="track-ref" placeholder="Référence (ex: RFQ-2024-001)" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:bg-white transition outline-none" required>
+                        </div>
+                        <div class="relative flex-1">
+                            <i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="track-token" placeholder="Code secret" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:bg-white transition outline-none" required>
+                        </div>
+                        <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                            <span>Suivre</span>
+                            <i class="fas fa-search text-xs"></i>
                         </button>
                     </form>
-                    <div id="trackingErrorHome" class="mt-3 text-sm text-red-600 hidden"></div>
-                    <p class="mt-4 text-sm text-gray-600 text-center">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Vous avez reçu ces informations par email, SMS ou WhatsApp après avoir soumis votre demande
-                    </p>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Section Comment ça marche -->
-        <section id="fonctionnement" class="py-20 bg-gray-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center max-w-3xl mx-auto mb-16 reveal">
-                    <h2 class="text-base text-primary-600 font-semibold tracking-wide uppercase mb-2">Processus simplifié</h2>
-                    <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                        Du besoin à la livraison en 4 étapes
-                    </p>
-                    <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
-                        Plus besoin de multiplier les interlocuteurs. SilyProcure centralise tout.
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
-                    <!-- Line connector (desktop only) -->
-                    <div class="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gray-200 -z-10"></div>
-
-                    <!-- Step 1 -->
-                    <div class="relative bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center reveal group hover:-translate-y-2 transition duration-300">
-                        <div class="w-16 h-16 mx-auto bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
-                            1
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Demande</h3>
-                        <p class="text-gray-600 text-sm">Remplissez le formulaire en ligne avec vos besoins spécifiques. Sans inscription.</p>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div class="relative bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center reveal delay-100 group hover:-translate-y-2 transition duration-300">
-                        <div class="w-16 h-16 mx-auto bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
-                            2
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Négociation</h3>
-                        <p class="text-gray-600 text-sm">Notre équipe trouve les meilleurs fournisseurs et négocie pour vous.</p>
-                    </div>
-
-                    <!-- Step 3 -->
-                    <div class="relative bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center reveal delay-200 group hover:-translate-y-2 transition duration-300">
-                        <div class="w-16 h-16 mx-auto bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 group-hover:bg-primary-600 group-hover:text-white transition">
-                            3
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Devis</h3>
-                        <p class="text-gray-600 text-sm">Recevez une offre consolidée (Proforma) au meilleur prix en moins d'une heure.</p>
-                    </div>
-
-                    <!-- Step 4 -->
-                    <div class="relative bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center reveal delay-300 group hover:-translate-y-2 transition duration-300">
-                        <div class="w-16 h-16 mx-auto bg-green-100 text-green-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 group-hover:bg-green-600 group-hover:text-white transition">
-                            4
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Livraison</h3>
-                        <p class="text-gray-600 text-sm">Validez le devis et recevez vos produits à l'adresse indiquée.</p>
+    <!-- TRUST SECTION -->
+    <section class="pt-32 pb-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-8">Nos partenaires et fournisseurs</p>
+            <div id="partners-logos" class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500 min-h-[80px]">
+                <!-- Les logos seront chargés dynamiquement depuis la base de données -->
+                <div class="flex items-center justify-center w-full">
+                    <div class="animate-pulse flex space-x-4">
+                        <div class="h-12 w-32 bg-gray-200 rounded"></div>
+                        <div class="h-12 w-32 bg-gray-200 rounded"></div>
+                        <div class="h-12 w-32 bg-gray-200 rounded"></div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Section Suivi de Demande (déplacée après hero) -->
-        <section class="py-16 bg-white">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-8">
-                    <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-4">
-                        <i class="fas fa-shipping-fast text-primary-600 mr-2"></i>
-                        Suivez votre demande en temps réel
-                    </h2>
-                    <p class="text-lg text-gray-600">
-                        Consultez l'état de votre demande à tout moment avec votre référence et votre code de suivi
-                    </p>
-                </div>
+    <!-- HOW IT WORKS -->
+    <section id="fonctionnement" class="py-24 bg-slate-50 relative overflow-hidden">
+        <!-- Decor -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-brand-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-accent-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-20 reveal">
+                <span class="text-brand-600 font-bold tracking-wide uppercase text-sm">Simple & Efficace</span>
+                <h2 class="mt-2 text-3xl md:text-4xl font-extrabold text-slate-900">4 étapes, c'est tout.</h2>
+                <p class="mt-4 text-lg text-slate-600">Nous avons supprimé toutes les frictions. Vous demandez, nous livrons.</p>
             </div>
-        </section>
 
-        <!-- Services Section -->
-        <section id="services" class="py-20 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16 reveal">
-                    <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-4">
-                        Ce que nous proposons
-                    </h2>
-                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                        Des outils concrets pour améliorer votre gestion des achats
-                    </p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal group">
-                        <div class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary-600 group-hover:scale-110 transition">
-                            <i class="fas fa-bolt text-primary-600 text-xl group-hover:text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Devis ultra-rapide</h3>
-                        <p class="text-gray-600">
-                            <strong>30 minutes à 1 heure maximum</strong> pour recevoir votre devis consolidé. Décrivez vos besoins en quelques clics, notre équipe contacte les fournisseurs et vous présente la meilleure offre.
-                        </p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-100 group">
-                        <div class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary-600 group-hover:scale-110 transition">
-                            <i class="fas fa-handshake text-primary-600 text-xl group-hover:text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Intermediation complète</h3>
-                        <p class="text-gray-600">
-                            <strong>Vous ne contactez aucun fournisseur.</strong> Nous gérons tout : recherche des meilleurs fournisseurs, négociation des prix, comparaison des offres. Vous recevez une seule offre optimale.
-                        </p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-200 group">
-                        <div class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary-600 group-hover:scale-110 transition">
-                            <i class="fas fa-eye text-primary-600 text-xl group-hover:text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Suivi transparent</h3>
-                        <p class="text-gray-600">
-                            Suivez votre demande en temps réel avec une référence unique. Recevez des notifications par email, SMS ou WhatsApp à chaque étape.
-                        </p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-100 group">
-                        <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-green-600 group-hover:scale-110 transition">
-                            <i class="fas fa-user-check text-green-600 text-xl group-hover:text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Aucun compte requis</h3>
-                        <p class="text-gray-600">
-                            <strong>Commencez immédiatement</strong> sans créer de compte. Remplissez le formulaire, recevez votre référence de suivi, c'est tout !
-                        </p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-200 group">
-                        <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:scale-110 transition">
-                            <i class="fas fa-shield-alt text-blue-600 text-xl group-hover:text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Sécurisé et confidentiel</h3>
-                        <p class="text-gray-600">
-                            Vos données sont protégées et chaque action est tracée. Suivi sécurisé avec référence unique et code confidentiel.
-                        </p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-300 group">
-                        <div class="w-14 h-14 bg-yellow-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-yellow-500 group-hover:scale-110 transition">
-                            <i class="fas fa-gift text-yellow-600 text-xl group-hover:text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">100% gratuit</h3>
-                        <p class="text-gray-600">
-                            <strong>Le service est entièrement gratuit pour les clients.</strong> Aucun frais caché, aucune commission. Vous payez uniquement le prix du devis validé.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Features Section -->
-        <section id="features" class="py-20 bg-gray-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16 reveal">
-                    <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-4">
-                        Pourquoi choisir SilyProcure ?
-                    </h2>
-                    <p class="text-xl text-primary-700 font-semibold max-w-3xl mx-auto mb-4">
-                        L'intermédiaire d'achats qui vous fait gagner du temps et de l'argent
-                    </p>
-                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                        Au lieu de perdre des heures à chercher et contacter des fournisseurs, déposez une seule demande. Nous nous occupons de tout et vous présentons le meilleur devis.
-                    </p>
-                </div>
-
-                <!-- Grid de features -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal group">
-                        <div class="w-14 h-14 bg-accent-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-accent-500 group-hover:scale-110 transition">
-                            <i class="fas fa-bolt text-accent-600 text-xl group-hover:text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">⚡ Devis en 30 min - 1h</h3>
-                        <p class="text-gray-600">
-                            Au lieu de contacter 10 ou 20 fournisseurs, déposez <strong>une seule demande</strong>. Notre équipe fait le travail et vous présente le meilleur devis en <strong class="text-accent-600">30 minutes à 1 heure maximum</strong>.
-                        </p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-100 group">
-                        <div class="w-14 h-14 bg-accent-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-accent-500 group-hover:scale-110 transition">
-                            <i class="fas fa-handshake text-accent-600 text-xl group-hover:text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">🎯 Offre optimale garantie</h3>
-                        <p class="text-gray-600">
-                            Nous <strong>négocions et comparons</strong> les offres de plusieurs fournisseurs. Vous recevez <strong>une seule offre consolidée</strong> avec les meilleures conditions, sans effort.
-                        </p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-200 group">
-                        <div class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary-600 group-hover:scale-110 transition">
-                            <i class="fas fa-user-check text-primary-600 text-xl group-hover:text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">✅ Aucun compte requis</h3>
-                        <p class="text-gray-600">
-                            Commencez <strong>immédiatement</strong> sans créer de compte. Remplissez le formulaire, recevez votre référence de suivi, c'est tout !
-                        </p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-100 group">
-                        <div class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary-600 group-hover:scale-110 transition">
-                            <i class="fas fa-mobile-alt text-primary-600 text-xl group-hover:text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">📱 Accessible partout</h3>
-                        <p class="text-gray-600">
-                            Utilisez la plateforme sur <strong>ordinateur, tablette ou smartphone</strong>. Suivez votre demande depuis n'importe où, à tout moment.
-                        </p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-200 group">
-                        <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-green-600 group-hover:scale-110 transition">
-                            <i class="fas fa-bell text-green-600 text-xl group-hover:text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">🔔 Notifications en temps réel</h3>
-                        <p class="text-gray-600">
-                            Recevez des notifications par <strong>email, SMS ou WhatsApp</strong> à chaque étape : demande reçue, devis prêt, commande validée, livraison effectuée.
-                        </p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 reveal delay-300 group">
-                        <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-green-600 group-hover:scale-110 transition">
-                            <i class="fas fa-shield-alt text-green-600 text-xl group-hover:text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">🔒 Sécurisé et confidentiel</h3>
-                        <p class="text-gray-600">
-                            Vos données sont <strong>protégées</strong>. Suivi sécurisé avec référence unique. Vos informations ne sont partagées qu'avec les fournisseurs pertinents.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- CTA Section -->
-        <section class="py-20 bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900 relative overflow-hidden">
-            <!-- Background decoration -->
-            <div class="absolute inset-0 bg-hero-pattern opacity-10"></div>
-            <div class="absolute top-0 right-0 w-96 h-96 bg-primary-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-            <div class="absolute bottom-0 left-0 w-96 h-96 bg-accent-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-            
-            <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-6">
-                    Prêt à simplifier vos achats ?
-                </h2>
-                <p class="text-xl text-primary-100 mb-4">
-                    <strong>Ne perdez plus de temps à chercher des fournisseurs.</strong> Décrivez vos besoins en quelques clics. Notre équipe s'occupe de tout.
-                </p>
-                <p class="text-lg text-white font-semibold mb-2 bg-accent-500/20 backdrop-blur-sm inline-block px-4 py-2 rounded-lg border border-accent-400/30">
-                    <i class="fas fa-bolt mr-2 text-accent-400"></i>Devis consolidé optimal en 30 minutes à 1 heure maximum
-                </p>
-                <p class="text-white font-medium mb-8">
-                    100% gratuit • Aucun compte requis • Suivi en temps réel
-                </p>
-                <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <button onclick="openDevisModal()" class="px-8 py-4 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-full shadow-lg shadow-accent-500/30 transition transform hover:scale-105 flex items-center justify-center gap-2 min-h-[56px]">
-                        <i class="fas fa-paper-plane"></i>
-                        Demander un devis gratuitement
-                    </button>
-                    <a href="#tracking" class="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-full backdrop-blur-sm border border-white/20 transition flex items-center justify-center gap-2 min-h-[56px]">
-                        <i class="fas fa-search"></i>
-                        Suivre une demande existante
-                    </a>
-                </div>
-            </div>
-        </section>
-
-        <!-- Contact Section -->
-        <section id="contact" class="py-20 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12 reveal">
-                    <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-4">
-                        <i class="fas fa-envelope text-primary-600 mr-2"></i>
-                        Contactez-nous
-                    </h2>
-                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                        Une question ? Un besoin spécifique ? Notre équipe est là pour vous aider
-                    </p>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Step 1 -->
+                <div class="group relative bg-white p-8 rounded-2xl shadow-soft hover:shadow-card transition-all duration-300 hover:-translate-y-2 reveal">
+                    <div class="w-14 h-14 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center text-2xl font-bold mb-6 group-hover:bg-brand-600 group-hover:text-white transition-colors">1</div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">La Demande</h3>
+                    <p class="text-slate-600 leading-relaxed">Remplissez le formulaire en 2 minutes. Pas de création de compte nécessaire.</p>
                 </div>
                 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-                    <!-- Informations de contact -->
-                    <div>
-                        <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
-                            <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary); margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
-                                <i class="fas fa-info-circle" style="color: var(--color-accent);"></i>
-                                Nos coordonnées
-                            </h3>
-                            
-                            <div style="display: flex; flex-direction: column; gap: 2rem;">
-                                <div style="display: flex; align-items: flex-start; gap: 1rem;">
-                                    <div style="width: 50px; height: 50px; background: var(--color-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                        <i class="fas fa-envelope" style="color: white; font-size: 1.25rem;"></i>
+                <!-- Step 2 -->
+                <div class="group relative bg-white p-8 rounded-2xl shadow-soft hover:shadow-card transition-all duration-300 hover:-translate-y-2 reveal delay-100">
+                    <div class="w-14 h-14 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center text-2xl font-bold mb-6 group-hover:bg-brand-600 group-hover:text-white transition-colors">2</div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Le Sourcing</h3>
+                    <p class="text-slate-600 leading-relaxed">Nos algos et experts interrogent le réseau pour trouver le meilleur rapport qualité/prix.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="group relative bg-white p-8 rounded-2xl shadow-soft hover:shadow-card transition-all duration-300 hover:-translate-y-2 reveal delay-200">
+                    <div class="w-14 h-14 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center text-2xl font-bold mb-6 group-hover:bg-brand-600 group-hover:text-white transition-colors">3</div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">L'Offre</h3>
+                    <p class="text-slate-600 leading-relaxed">Recevez un devis unique et consolidé (Proforma) en moins d'une heure.</p>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="group relative bg-white p-8 rounded-2xl shadow-soft hover:shadow-card transition-all duration-300 hover:-translate-y-2 reveal delay-300 border-2 border-transparent hover:border-green-100">
+                    <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-2xl font-bold mb-6 group-hover:bg-green-500 group-hover:text-white transition-colors">4</div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">La Livraison</h3>
+                    <p class="text-slate-600 leading-relaxed">Validez et payez. Nous livrons la marchandise directement sur votre site.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AVANTAGES / SERVICES -->
+    <section id="avantages" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div class="reveal">
+                    <span class="text-accent-600 font-bold tracking-wide uppercase text-sm">Pourquoi nous ?</span>
+                    <h2 class="mt-2 text-3xl md:text-4xl font-extrabold text-slate-900 mb-6">
+                        Plus qu'un simple fournisseur, <br>votre partenaire achats.
+                    </h2>
+                    <p class="text-lg text-slate-600 mb-8">
+                        SilyProcure combine technologie et expertise humaine pour éliminer les frictions de l'approvisionnement B2B.
+                    </p>
+
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-xl">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-slate-900">Vitesse d'exécution</h4>
+                                <p class="text-slate-600 mt-1">Ne stoppez plus vos chantiers. Nous réagissons immédiatement à vos demandes.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-xl">
+                                <i class="fas fa-tags"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-slate-900">Prix compétitifs</h4>
+                                <p class="text-slate-600 mt-1">Grâce à nos volumes d'achat, nous négocions des tarifs que vous n'auriez pas seul.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-xl">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-slate-900">Conformité Administrative</h4>
+                                <p class="text-slate-600 mt-1">Factures normalisées, TVA, NIF. Tout est carré pour votre comptabilité.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative reveal delay-200">
+                    <!-- Card de démo visuelle -->
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 shadow-2xl text-white transform rotate-2 hover:rotate-0 transition duration-500">
+                        <div class="flex items-center justify-between mb-8">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <div class="text-xs text-gray-400">Dashboard Client</div>
+                        </div>
+                        <!-- Fake Content -->
+                        <div class="space-y-4">
+                            <div class="h-4 bg-gray-700 rounded w-3/4"></div>
+                            <div class="h-4 bg-gray-700 rounded w-1/2"></div>
+                            <div class="h-32 bg-gray-700/50 rounded-lg mt-6 flex items-center justify-center border border-gray-600 border-dashed">
+                                <span class="text-gray-500 text-sm">Graphique des dépenses</span>
+                            </div>
+                            <div class="flex justify-between items-center mt-6">
+                                <div class="text-sm text-gray-400">Total économisé</div>
+                                <div class="text-2xl font-bold text-green-400">15,400,000 GNF</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Badge flottant -->
+                    <div class="absolute -bottom-6 -left-6 bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex items-center gap-3 animate-bounce" style="animation-duration: 3s;">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Commande validée</p>
+                            <p class="font-bold text-slate-800">Il y a 2 min</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT SECTION -->
+    <section id="contact" class="py-24 bg-slate-50 relative overflow-hidden">
+        <!-- Decor -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-brand-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-accent-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-16 reveal">
+                <span class="text-brand-600 font-bold tracking-wide uppercase text-sm">Contactez-nous</span>
+                <h2 class="mt-2 text-3xl md:text-4xl font-extrabold text-slate-900">Une question ? Un projet ?</h2>
+                <p class="mt-4 text-lg text-slate-600">Notre équipe est à votre écoute pour répondre à toutes vos questions et vous accompagner dans vos achats.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Informations de contact -->
+                <div class="reveal">
+                    <div class="bg-white rounded-2xl shadow-soft p-8">
+                        <h3 class="text-2xl font-bold text-slate-900 mb-6">Informations de contact</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 w-12 h-12 bg-brand-100 rounded-lg flex items-center justify-center text-brand-600 text-xl">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 mb-1">Adresse</h4>
+                                    <p class="text-slate-600">Bambeto - Conakry<br>Pharmacie Diaguissa</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 w-12 h-12 bg-brand-100 rounded-lg flex items-center justify-center text-brand-600 text-xl">
+                                    <i class="fas fa-phone"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 mb-1">Téléphone</h4>
+                                    <a href="tel:+224622692433" class="text-brand-600 hover:text-brand-700 transition">+224 622 69 24 33</a>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 w-12 h-12 bg-brand-100 rounded-lg flex items-center justify-center text-brand-600 text-xl">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 mb-1">Email</h4>
+                                    <a href="mailto:contact@silyprocure.com" class="text-brand-600 hover:text-brand-700 transition">contact@silyprocure.com</a>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 w-12 h-12 bg-brand-100 rounded-lg flex items-center justify-center text-brand-600 text-xl">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 mb-1">Horaires</h4>
+                                    <p class="text-slate-600">Lundi - Vendredi : 8h00 - 18h00<br>Samedi : 9h00 - 13h00</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-8 pt-6 border-t border-gray-200">
+                            <h4 class="font-bold text-slate-900 mb-4">Suivez-nous</h4>
+                            <div class="flex gap-3">
+                                <a href="#" class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-brand-600 text-slate-600 hover:text-white flex items-center justify-center transition"><i class="fab fa-linkedin-in"></i></a>
+                                <a href="#" class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-brand-600 text-slate-600 hover:text-white flex items-center justify-center transition"><i class="fab fa-facebook-f"></i></a>
+                                <a href="#" class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-brand-600 text-slate-600 hover:text-white flex items-center justify-center transition"><i class="fab fa-whatsapp"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulaire de contact -->
+                <div class="reveal delay-200">
+                    <div class="bg-white rounded-2xl shadow-soft p-8">
+                        <h3 class="text-2xl font-bold text-slate-900 mb-6">Envoyez-nous un message</h3>
+                        <form id="contact-form" onsubmit="submitContactForm(event)" class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Nom complet *</label>
+                                <input type="text" name="name" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                                <input type="email" name="email" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Téléphone</label>
+                                <input type="tel" name="phone" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Sujet *</label>
+                                <select name="subject" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border">
+                                    <option value="">Sélectionnez un sujet</option>
+                                    <option value="devis">Demande de devis</option>
+                                    <option value="info">Demande d'information</option>
+                                    <option value="support">Support technique</option>
+                                    <option value="partenariat">Partenariat</option>
+                                    <option value="autre">Autre</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Message *</label>
+                                <textarea name="message" rows="5" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border"></textarea>
+                            </div>
+                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-base font-bold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-all transform hover:-translate-y-0.5">
+                                <i class="fas fa-paper-plane mr-2"></i>
+                                Envoyer le message
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-300 pt-16 pb-8 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                <div class="col-span-1 md:col-span-2">
+                    <span class="text-2xl font-bold text-white tracking-tight">Sily<span class="text-brand-500">Procure</span></span>
+                    <p class="mt-4 text-slate-400 leading-relaxed max-w-sm">
+                        La solution digitale qui transforme l'approvisionnement des entreprises en Afrique de l'Ouest. Simple, rapide, sécurisé.
+                    </p>
+                    <div class="flex gap-4 mt-6">
+                        <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-brand-600 hover:text-white transition"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-brand-600 hover:text-white transition"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-brand-600 hover:text-white transition"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4 uppercase text-sm tracking-wider">Navigation</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="hover:text-white transition">Accueil</a></li>
+                        <li><a href="#fonctionnement" class="hover:text-white transition">Comment ça marche</a></li>
+                        <li><a href="#contact" class="hover:text-white transition">Contact</a></li>
+                        <li><a href="index.html" class="hover:text-white transition">Espace Client</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4 uppercase text-sm tracking-wider">Contact</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-map-marker-alt mt-1 text-brand-500"></i>
+                            <span>Bambeto - Conakry<br>Pharmacie Diaguissa</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i class="fas fa-phone text-brand-500"></i>
+                            <span>+224 622 69 24 33</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i class="fas fa-envelope text-brand-500"></i>
+                            <span>contact@silyprocure.com</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="pt-8 border-t border-slate-800 text-center text-sm text-slate-500">
+                <p>&copy; 2026 SilyProcure. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL DEMANDE DE DEVIS -->
+    <div id="devisModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 modal-backdrop transition-opacity opacity-0" id="modalBackdrop" onclick="closeDevisModal()"></div>
+
+        <!-- Panel -->
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-3xl opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" id="modalPanel">
+                    
+                    <!-- Header Modal -->
+                    <div class="bg-slate-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900" id="modal-title">Nouvelle Demande</h3>
+                            <p class="text-xs text-slate-500">Gratuit et sans engagement</p>
+                        </div>
+                        <button onclick="closeDevisModal()" class="text-gray-400 hover:text-gray-600 transition">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <!-- Formulaire -->
+                    <form id="devis-form" onsubmit="submitDevisRequest(event)" class="px-6 py-6 space-y-6 max-h-[80vh] overflow-y-auto">
+                        <!-- Contact -->
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <i class="fas fa-user text-brand-600"></i>
+                                Informations de contact
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Nom complet *</label>
+                                    <input type="text" name="name" id="devis-name" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Entreprise</label>
+                                    <input type="text" name="company" id="devis-company" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                                    <input type="email" name="email" id="devis-email" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Téléphone *</label>
+                                    <input type="tel" name="phone" id="devis-phone" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Adresse et Géolocalisation -->
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-brand-600"></i>
+                                Adresse de livraison
+                            </h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Adresse ligne 1 *</label>
+                                    <input type="text" name="adresse_ligne1" id="devis-addr-ligne1" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border" placeholder="Rue, avenue, boulevard...">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Adresse ligne 2</label>
+                                    <input type="text" name="adresse_ligne2" id="devis-addr-ligne2" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border" placeholder="Complément d'adresse (optionnel)">
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Ville *</label>
+                                        <input type="text" name="ville" id="devis-ville" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border" placeholder="Conakry">
                                     </div>
                                     <div>
-                                        <h4 style="font-size: 1rem; font-weight: 600; color: var(--color-primary); margin-bottom: 0.25rem;">Email</h4>
-                                        <p style="color: var(--color-neutral); font-size: 0.95rem; margin: 0;">
-                                            <a href="mailto:silycore@gmail.com" style="color: var(--color-primary); text-decoration: none;">silycore@gmail.com</a>
-                                        </p>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Code postal</label>
+                                        <input type="text" name="code_postal" id="devis-code-postal" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border" placeholder="00000">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Pays *</label>
+                                        <select name="pays" id="devis-pays" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border">
+                                            <option value="Guinée" selected>Guinée</option>
+                                            <option value="Sénégal">Sénégal</option>
+                                            <option value="Côte d'Ivoire">Côte d'Ivoire</option>
+                                            <option value="Mali">Mali</option>
+                                            <option value="Autre">Autre</option>
+                                        </select>
                                     </div>
                                 </div>
-                                
-                                <div style="display: flex; align-items: flex-start; gap: 1rem;">
-                                    <div style="width: 50px; height: 50px; background: var(--color-accent); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                        <i class="fas fa-phone" style="color: white; font-size: 1.25rem;"></i>
-                                    </div>
-                                    <div>
-                                        <h4 style="font-size: 1rem; font-weight: 600; color: var(--color-primary); margin-bottom: 0.25rem;">Téléphone</h4>
-                                        <p style="color: var(--color-neutral); font-size: 0.95rem; margin: 0;">
-                                            <a href="tel:+224622692433" style="color: var(--color-primary); text-decoration: none;">+224 622 69 24 33</a>
-                                        </p>
-                                    </div>
-                                </div>
-                                
-                                <div style="display: flex; align-items: flex-start; gap: 1rem;">
-                                    <div style="width: 50px; height: 50px; background: #22c55e; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                        <i class="fab fa-whatsapp" style="color: white; font-size: 1.25rem;"></i>
-                                    </div>
-                                    <div>
-                                        <h4 style="font-size: 1rem; font-weight: 600; color: var(--color-primary); margin-bottom: 0.25rem;">WhatsApp</h4>
-                                        <p style="color: var(--color-neutral); font-size: 0.95rem; margin: 0;">
-                                            <a href="https://wa.me/224622692433" target="_blank" style="color: var(--color-primary); text-decoration: none;">+224 622 69 24 33</a>
-                                        </p>
-                                    </div>
-                                </div>
-                                
-                                <div style="display: flex; align-items: flex-start; gap: 1rem;">
-                                    <div style="width: 50px; height: 50px; background: var(--color-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                        <i class="fas fa-clock" style="color: white; font-size: 1.25rem;"></i>
-                                    </div>
-                                    <div>
-                                        <h4 style="font-size: 1rem; font-weight: 600; color: var(--color-primary); margin-bottom: 0.25rem;">Horaires</h4>
-                                        <p style="color: var(--color-neutral); font-size: 0.95rem; margin: 0;">
-                                            Lundi - Vendredi : 8h - 18h<br>
-                                            Samedi : 9h - 13h
-                                        </p>
+                                <div class="bg-brand-50 p-4 rounded-lg border border-brand-200">
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div class="flex-1">
+                                            <label class="block text-sm font-medium text-slate-700 mb-2">Coordonnées GPS (optionnel)</label>
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <input type="number" step="any" name="latitude" id="devis-latitude" placeholder="Latitude" class="w-full rounded-md border-gray-300 text-sm focus:ring-brand-500 focus:border-brand-500 py-2 px-3 border">
+                                                <input type="number" step="any" name="longitude" id="devis-longitude" placeholder="Longitude" class="w-full rounded-md border-gray-300 text-sm focus:ring-brand-500 focus:border-brand-500 py-2 px-3 border">
+                                            </div>
+                                            <p class="text-xs text-slate-500 mt-2">
+                                                <i class="fas fa-info-circle"></i> Les coordonnées GPS permettent une livraison plus précise
+                                            </p>
+                                        </div>
+                                        <button type="button" onclick="useCurrentLocationForDevis(event)" class="flex-shrink-0 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2 whitespace-nowrap">
+                                            <i class="fas fa-crosshairs"></i>
+                                            Ma position
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Formulaire de contact -->
-                    <div>
-                        <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
-                            <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary); margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
-                                <i class="fas fa-paper-plane" style="color: var(--color-accent);"></i>
-                                Envoyez-nous un message
-                            </h3>
-                            
-                            <form id="contactForm" onsubmit="submitContactForm(event)" style="display: flex; flex-direction: column; gap: 1.5rem;">
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label for="contact-nom" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-primary);">
-                                        <i class="fas fa-user"></i> Nom complet *
-                                    </label>
-                                    <input type="text" id="contact-nom" name="nom" required 
-                                           placeholder="Votre nom complet"
-                                           style="width: 100%; padding: 1rem; border: 2px solid #E0E7FF; border-radius: 12px; font-size: 1rem; font-family: inherit; transition: all 0.3s; box-sizing: border-box;"
-                                           onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 3px rgba(0, 56, 122, 0.1)'"
-                                           onblur="this.style.borderColor='#E0E7FF'; this.style.boxShadow='none'">
+
+                        <!-- Articles List -->
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fas fa-shopping-cart text-brand-600"></i>
+                                    Articles souhaités
+                                </h4>
+                                <button type="button" onclick="addArticleRow()" class="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                                    <i class="fas fa-plus-circle"></i> Ajouter une ligne
+                                </button>
+                            </div>
+                            <div id="articles-container" class="space-y-3 bg-slate-50 p-4 rounded-xl border border-gray-200 max-h-48 overflow-y-auto">
+                                <!-- Row Template -->
+                                <div class="flex gap-2 items-start article-row">
+                                    <input type="text" name="articles[]" placeholder="Désignation (ex: Laptop Dell XPS 15)" class="flex-grow rounded-md border-gray-300 text-sm focus:ring-brand-500 focus:border-brand-500 py-2 px-3 border" required>
+                                    <input type="number" name="quantites[]" placeholder="Qté" class="w-20 rounded-md border-gray-300 text-sm focus:ring-brand-500 focus:border-brand-500 py-2 px-3 border" min="1" value="1" required>
                                 </div>
-                                
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label for="contact-email" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-primary);">
-                                        <i class="fas fa-envelope"></i> Email *
-                                    </label>
-                                    <input type="email" id="contact-email" name="email" required 
-                                           placeholder="votre.email@exemple.com"
-                                           style="width: 100%; padding: 1rem; border: 2px solid #E0E7FF; border-radius: 12px; font-size: 1rem; font-family: inherit; transition: all 0.3s; box-sizing: border-box;"
-                                           onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 3px rgba(0, 56, 122, 0.1)'"
-                                           onblur="this.style.borderColor='#E0E7FF'; this.style.boxShadow='none'">
+                            </div>
+                        </div>
+
+                        <!-- Informations complémentaires -->
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <i class="fas fa-info-circle text-brand-600"></i>
+                                Informations complémentaires
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Date de livraison souhaitée</label>
+                                    <input type="date" name="date_livraison" id="devis-date-livraison" min="" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border">
                                 </div>
-                                
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label for="contact-telephone" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-primary);">
-                                        <i class="fas fa-phone"></i> Téléphone
-                                    </label>
-                                    <input type="tel" id="contact-telephone" name="telephone" 
-                                           placeholder="+224 622 69 24 33"
-                                           style="width: 100%; padding: 1rem; border: 2px solid #E0E7FF; border-radius: 12px; font-size: 1rem; font-family: inherit; transition: all 0.3s; box-sizing: border-box;"
-                                           onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 3px rgba(0, 56, 122, 0.1)'"
-                                           onblur="this.style.borderColor='#E0E7FF'; this.style.boxShadow='none'">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Budget estimé (GNF)</label>
+                                    <input type="number" name="budget" id="devis-budget" min="0" step="1000" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border" placeholder="0">
                                 </div>
-                                
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label for="contact-sujet" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-primary);">
-                                        <i class="fas fa-tag"></i> Sujet *
-                                    </label>
-                                    <select id="contact-sujet" name="sujet" required
-                                            style="width: 100%; padding: 1rem; border: 2px solid #E0E7FF; border-radius: 12px; font-size: 1rem; font-family: inherit; transition: all 0.3s; box-sizing: border-box; cursor: pointer; background: white;"
-                                            onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 3px rgba(0, 56, 122, 0.1)'"
-                                            onblur="this.style.borderColor='#E0E7FF'; this.style.boxShadow='none'">
-                                        <option value="">Sélectionnez un sujet</option>
-                                        <option value="demande-info">Demande d'information</option>
-                                        <option value="support">Support technique</option>
-                                        <option value="partenariat">Partenariat</option>
-                                        <option value="autre">Autre</option>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Type de livraison</label>
+                                    <select name="type_livraison" id="devis-type-livraison" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border">
+                                        <option value="">Sélectionnez un type</option>
+                                        <option value="standard">Livraison standard</option>
+                                        <option value="express">Livraison express</option>
+                                        <option value="sur_site">Livraison sur site</option>
+                                        <option value="retrait">Retrait en magasin</option>
                                     </select>
                                 </div>
-                                
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label for="contact-message" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-primary);">
-                                        <i class="fas fa-comment-alt"></i> Message *
-                                    </label>
-                                    <textarea id="contact-message" name="message" required rows="5"
-                                              placeholder="Décrivez votre demande ou votre question..."
-                                              style="width: 100%; padding: 1rem; border: 2px solid #E0E7FF; border-radius: 12px; font-size: 1rem; font-family: inherit; transition: all 0.3s; box-sizing: border-box; resize: vertical;"
-                                              onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 3px rgba(0, 56, 122, 0.1)'"
-                                              onblur="this.style.borderColor='#E0E7FF'; this.style.boxShadow='none'"></textarea>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Notes ou commentaires</label>
+                                    <textarea name="notes" id="devis-notes" rows="3" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm py-2.5 px-3 border" placeholder="Informations supplémentaires, contraintes particulières..."></textarea>
                                 </div>
-                                
-                                <button type="submit" class="btn-primary-large" style="width: 100%; margin-top: 0.5rem; padding: 1.25rem; font-size: 1.125rem; border: none; cursor: pointer;">
-                                    <i class="fas fa-paper-plane"></i>
-                                    Envoyer le message
-                                </button>
-                                
-                                <div id="contact-form-message" style="margin-top: 1rem; padding: 1rem; border-radius: 12px; display: none;"></div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div class="col-span-1 md:col-span-2">
-                        <span class="text-2xl font-bold tracking-tight">Sily<span class="text-primary-500">Procure</span></span>
-                        <p class="mt-4 text-gray-400 max-w-sm">
-                            La solution moderne pour centraliser et simplifier les achats des entreprises en Guinée et en Afrique de l'Ouest.
-                        </p>
-                        <div class="flex gap-4 mt-6">
-                            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-linkedin text-xl"></i></a>
-                            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-twitter text-xl"></i></a>
-                            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-facebook text-xl"></i></a>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Liens Rapides</h3>
-                        <ul class="space-y-3">
-                            <li><a href="#fonctionnement" class="text-gray-400 hover:text-primary-400 transition">Comment ça marche</a></li>
-                            <li><a href="#services" class="text-gray-400 hover:text-primary-400 transition">Services</a></li>
-                            <li><a href="#tracking" class="text-gray-400 hover:text-primary-400 transition">Suivi</a></li>
-                            <li><a href="#contact" class="text-gray-400 hover:text-primary-400 transition">Contact</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Légal</h3>
-                        <ul class="space-y-3">
-                            <li><a href="#" class="text-gray-400 hover:text-primary-400 transition">Confidentialité</a></li>
-                            <li><a href="#" class="text-gray-400 hover:text-primary-400 transition">CGU</a></li>
-                            <li><a href="#" class="text-gray-400 hover:text-primary-400 transition">Mentions Légales</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="mt-12 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
-                    &copy; 2026 Silycore - Tous droits réservés
-                </div>
-            </div>
-        </footer>
-
-    <!-- Modal Demande de Devis -->
-    <div id="devisModal" class="modal-overlay hidden" onclick="closeModalOnOverlay(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeDevisModal()">
-                <i class="fas fa-times"></i>
-            </button>
-            <h2 class="modal-title">Demander un devis</h2>
-            <p style="color: var(--color-neutral); margin-bottom: 2rem;">
-                Remplissez le formulaire ci-dessous avec vos besoins. Notre équipe traite votre demande rapidement et vous présente un devis consolidé dans les <strong style="color: var(--color-accent);">30 minutes à 1 heure maximum</strong>.
-            </p>
-            <form id="devisForm" class="modal-form" onsubmit="submitDevisRequest(event)">
-                <!-- Informations du client -->
-                <h3 class="section-title-form"><i class="fas fa-user"></i> Vos informations</h3>
-                <div class="form-group">
-                    <label for="nom"><i class="fas fa-user"></i> Nom complet *</label>
-                    <input type="text" id="nom" name="nom" required placeholder="Votre nom">
-                </div>
-                <div class="form-group">
-                    <label for="email"><i class="fas fa-envelope"></i> Email *</label>
-                    <input type="email" id="email" name="email" required placeholder="votre.email@exemple.com">
-                </div>
-                <div class="form-group">
-                    <label for="telephone"><i class="fas fa-phone"></i> Téléphone *</label>
-                    <input type="tel" id="telephone" name="telephone" required placeholder="+224 622 69 24 33">
-                </div>
-                <div class="form-group" style="background: var(--color-background-light); padding: 1rem; border-radius: 12px; border-left: 4px solid var(--color-accent);">
-                    <label for="mode_notification" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-                        <i class="fas fa-bell" style="color: var(--color-accent);"></i> 
-                        <span>Mode de notification *</span>
-                    </label>
-                    <select id="mode_notification" name="mode_notification" required style="font-weight: 500;">
-                        <option value="email">Email</option>
-                        <option value="sms">SMS</option>
-                        <option value="whatsapp">WhatsApp</option>
-                    </select>
-                    <small style="color: var(--color-neutral); font-size: 0.85rem; margin-top: 0.5rem; display: block; font-style: italic;">
-                        <i class="fas fa-info-circle"></i> Vous recevrez la référence de suivi et le lien de suivi par ce moyen
-                    </small>
-                </div>
-                <div class="form-group">
-                    <label for="entreprise"><i class="fas fa-building"></i> Entreprise</label>
-                    <input type="text" id="entreprise" name="entreprise" placeholder="Nom de votre entreprise">
-                </div>
-
-                <!-- Articles demandés -->
-                <h3 class="section-title-form"><i class="fas fa-box"></i> Articles demandés</h3>
-                <p style="color: var(--color-neutral); font-size: 0.9rem; margin-bottom: 1rem;">
-                    Ajoutez les articles pour lesquels vous souhaitez recevoir un devis. Vous pouvez ajouter plusieurs lignes.
-                </p>
-                <div id="articles-container">
-                    <!-- Les lignes d'articles seront ajoutées ici dynamiquement -->
-                </div>
-                <button type="button" class="btn-add-ligne" onclick="addArticleLigne()">
-                    <i class="fas fa-plus"></i> Ajouter un article
-                </button>
-
-                <!-- Adresse de livraison -->
-                <h3 class="section-title-form"><i class="fas fa-truck"></i> Adresse de livraison</h3>
-                <div class="form-group">
-                    <label for="adresse_livraison"><i class="fas fa-map-marker-alt"></i> Adresse complète *</label>
-                    <textarea id="adresse_livraison" name="adresse_livraison" required rows="3" 
-                              placeholder="Rue, quartier, numéro..."></textarea>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label for="ville_livraison"><i class="fas fa-city"></i> Ville *</label>
-                        <input type="text" id="ville_livraison" name="ville_livraison" required placeholder="Conakry">
-                    </div>
-                    <div class="form-group">
-                        <label for="pays_livraison"><i class="fas fa-globe"></i> Pays *</label>
-                        <input type="text" id="pays_livraison" name="pays_livraison" required value="Guinée" placeholder="Guinée">
-                    </div>
-                </div>
-                
-                <!-- Géolocalisation optionnelle -->
-                <div class="form-group" style="background: var(--color-background-light); padding: 1rem; border-radius: 12px; border-left: 4px solid var(--color-accent);">
-                    <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-                        <i class="fas fa-map-marked-alt" style="color: var(--color-accent);"></i> 
-                        <span>Géolocalisation (optionnel)</span>
-                    </label>
-                    <p style="color: var(--color-neutral); font-size: 0.85rem; margin-bottom: 1rem; font-style: italic;">
-                        <i class="fas fa-info-circle"></i> 
-                        Partagez votre position GPS pour faciliter la livraison. Vos coordonnées restent confidentielles.
-                    </p>
-                    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-                        <button type="button" class="btn btn-secondary" onclick="getCurrentLocation()" id="btn-geoloc" style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-crosshairs"></i> Utiliser ma position
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="clearGeolocation()" id="btn-clear-geoloc" style="display: none; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-times"></i> Effacer
-                        </button>
-                        <div id="geoloc-status" style="display: none; padding: 0.5rem 1rem; background: white; border-radius: 8px; border: 1px solid #ddd; flex: 1; min-width: 200px;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-success);">
-                                <i class="fas fa-check-circle"></i>
-                                <span style="font-size: 0.9rem; font-weight: 500;">Position enregistrée</span>
                             </div>
-                            <div id="geoloc-coords" style="font-size: 0.8rem; color: var(--color-neutral); margin-top: 0.25rem;"></div>
                         </div>
-                    </div>
-                    <input type="hidden" id="latitude" name="latitude">
-                    <input type="hidden" id="longitude" name="longitude">
-                </div>
 
-                <!-- Message optionnel -->
-                <div class="form-group" style="margin-top: 2rem;">
-                    <label for="message"><i class="fas fa-comment"></i> Message ou commentaires (optionnel)</label>
-                    <textarea id="message" name="message" rows="3" 
-                              placeholder="Informations complémentaires, délais souhaités, conditions particulières..."></textarea>
-                </div>
-
-                <!-- Upload de fichiers -->
-                <div class="form-group" style="margin-top: 2rem; background: var(--color-background-light); padding: 1.5rem; border-radius: 12px; border: 2px dashed var(--color-primary);">
-                    <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: var(--color-primary); font-weight: 600;">
-                        <i class="fas fa-paperclip"></i> 
-                        <span>Fichiers joints (optionnel)</span>
-                    </label>
-                    <p style="color: var(--color-neutral); font-size: 0.9rem; margin-bottom: 1rem;">
-                        <i class="fas fa-info-circle"></i> 
-                        Vous pouvez joindre des fichiers PDF, Excel ou des images pour faciliter notre compréhension de vos besoins.
-                        Formats acceptés : PDF, Excel (.xlsx, .xls), Images (JPG, PNG, GIF, WebP)
-                    </p>
-                    <div id="file-upload-area" style="position: relative;">
-                        <input type="file" id="fichiers" name="fichiers" multiple 
-                               accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.webp"
-                               style="display: none;"
-                               onchange="handleFileSelect(event)">
-                        <div id="file-drop-zone" 
-                             style="border: 2px dashed var(--color-primary); border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s; background: white;"
-                             ondrop="handleFileDrop(event)" 
-                             ondragover="handleDragOver(event)" 
-                             ondragleave="handleDragLeave(event)"
-                             onclick="document.getElementById('fichiers').click()">
-                            <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: var(--color-primary); margin-bottom: 1rem;"></i>
-                            <p style="color: var(--color-neutral); margin: 0.5rem 0; font-weight: 500;">
-                                Cliquez ici ou glissez-déposez vos fichiers
-                            </p>
-                            <p style="color: var(--color-neutral); font-size: 0.85rem; margin: 0;">
-                                Taille maximale : 10 MB par fichier
+                        <!-- Footer Actions -->
+                        <div class="pt-2 border-t border-gray-200">
+                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-base font-bold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-all transform hover:-translate-y-0.5">
+                                <i class="fas fa-paper-plane mr-2"></i>
+                                Envoyer la demande
+                            </button>
+                            <p class="mt-3 text-center text-xs text-slate-400">
+                                <i class="fas fa-lock mr-1"></i> Vos données sont sécurisées et ne seront pas partagées.
                             </p>
                         </div>
-                        <div id="file-list" style="margin-top: 1rem; display: none;">
-                            <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--color-neutral);">
-                                <i class="fas fa-list"></i> Fichiers sélectionnés :
-                            </h4>
-                            <div id="file-items" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
-                        </div>
-                    </div>
+                    </form>
                 </div>
-
-                <button type="submit" class="btn-primary-large" style="width: 100%; margin-top: 1.5rem;">
-                    <i class="fas fa-paper-plane"></i>
-                    Envoyer la demande de devis
-                </button>
-            </form>
+            </div>
         </div>
     </div>
 
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // Fonction de déconnexion
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = 'index.html';
-        }
-
-        // Vérifier si l'utilisateur est connecté et mettre à jour le menu
-        document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('token');
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const authLink = document.getElementById('auth-link');
-            const authLinkMobile = document.getElementById('auth-link-mobile');
-            const authText = document.getElementById('auth-text');
-            
-            if (token && (user.role === 'admin' || user.role === 'superviseur')) {
-                // L'utilisateur est connecté (admin ou superviseur)
-                if (authLink && authText) {
-                    authLink.href = 'dashboard.html';
-                    authLink.innerHTML = '<i class="fas fa-tachometer-alt"></i><span>Dashboard</span>';
-                    authText.textContent = 'Dashboard';
-                }
-                if (authLinkMobile) {
-                    authLinkMobile.href = 'dashboard.html';
-                    authLinkMobile.innerHTML = '<i class="fas fa-tachometer-alt mr-2"></i><span>Dashboard</span>';
-                }
-            } else {
-                // L'utilisateur n'est pas connecté ou n'est pas admin/superviseur
-                if (authLink) {
-                    authLink.href = 'index.html';
-                    authLink.onclick = null;
-                }
-                if (authLinkMobile) {
-                    authLinkMobile.href = 'index.html';
-                }
-            }
-        });
-
-        // Compteur pour les lignes d'articles
-        let articleLigneCount = 0;
-
-        // Ouvrir le modal de demande de devis
-        function openDevisModal() {
-            const modal = document.getElementById('devisModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            // Réinitialiser le formulaire et ajouter une première ligne
-            document.getElementById('devisForm').reset();
-            document.getElementById('articles-container').innerHTML = '';
-            articleLigneCount = 0;
-            selectedFiles = [];
-            displayFileList();
-            clearGeolocation();
-            addArticleLigne(); // Ajouter une première ligne par défaut
-        }
-
-        // Fermer le modal
-        function closeDevisModal() {
-            const modal = document.getElementById('devisModal');
-            modal.classList.remove('active');
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
-            // Réinitialiser le formulaire
-            document.getElementById('devisForm').reset();
-            document.getElementById('articles-container').innerHTML = '';
-            articleLigneCount = 0;
-            selectedFiles = [];
-            displayFileList();
-            clearGeolocation();
-        }
-
-        // Géolocalisation
-        function getCurrentLocation() {
-            const btn = document.getElementById('btn-geoloc');
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Récupération...';
-
-            if (!navigator.geolocation) {
-                alert('❌ La géolocalisation n\'est pas supportée par votre navigateur.');
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    
-                    document.getElementById('latitude').value = lat;
-                    document.getElementById('longitude').value = lng;
-                    
-                    // Afficher le statut
-                    document.getElementById('geoloc-status').style.display = 'block';
-                    document.getElementById('geoloc-coords').textContent = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
-                    document.getElementById('btn-clear-geoloc').style.display = 'flex';
-                    
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                    
-                    // Afficher un message de succès (si Toast est disponible)
-                    if (typeof Toast !== 'undefined' && Toast.success) {
-                        Toast.success('Position GPS enregistrée avec succès');
-                    }
-                },
-                (error) => {
-                    let errorMsg = 'Impossible de récupérer votre position';
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorMsg = 'Permission de géolocalisation refusée';
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            errorMsg = 'Position indisponible';
-                            break;
-                        case error.TIMEOUT:
-                            errorMsg = 'Délai d\'attente dépassé';
-                            break;
-                    }
-                    
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                    
-                    if (typeof Toast !== 'undefined' && Toast.error) {
-                        Toast.error(errorMsg);
-                    } else {
-                        alert('❌ ' + errorMsg);
-                    }
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }
-            );
-        }
-
-        function clearGeolocation() {
-            document.getElementById('latitude').value = '';
-            document.getElementById('longitude').value = '';
-            document.getElementById('geoloc-status').style.display = 'none';
-            document.getElementById('btn-clear-geoloc').style.display = 'none';
-        }
-
-        // Ajouter une ligne d'article
-        function addArticleLigne() {
-            articleLigneCount++;
-            const container = document.getElementById('articles-container');
-            const ligneDiv = document.createElement('div');
-            ligneDiv.className = 'article-ligne';
-            ligneDiv.id = `article-ligne-${articleLigneCount}`;
-            
-            ligneDiv.innerHTML = `
-                <div class="article-ligne-header">
-                    <span class="article-ligne-number">Article #${articleLigneCount}</span>
-                    ${articleLigneCount > 1 ? `<button type="button" class="btn-remove-ligne" onclick="removeArticleLigne(${articleLigneCount})">
-                        <i class="fas fa-trash"></i> Supprimer
-                    </button>` : ''}
-                </div>
-                <div class="article-ligne-fields">
-                    <div class="form-group">
-                        <label>Description de l'article *</label>
-                        <input type="text" name="article-description[]" required 
-                               placeholder="Ex: Ordinateur portable, Riz, Produit chimique...">
-                    </div>
-                    <div class="form-group">
-                        <label>Secteur/Catégorie *</label>
-                        <select name="article-secteur[]" required>
-                            <option value="">Sélectionner un secteur</option>
-                            <option value="alimentation">Alimentation</option>
-                            <option value="electronique">Électronique</option>
-                            <option value="chimique">Chimique</option>
-                            <option value="informatique">Informatique</option>
-                            <option value="bureau">Fournitures de bureau</option>
-                            <option value="construction">Construction</option>
-                            <option value="textile">Textile</option>
-                            <option value="pharmaceutique">Pharmaceutique</option>
-                            <option value="automobile">Automobile</option>
-                            <option value="agriculture">Agriculture</option>
-                            <option value="autre">Autre</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Quantité *</label>
-                        <input type="number" name="article-quantite[]" required min="0.01" step="0.01" 
-                               placeholder="1" value="1">
-                    </div>
-                    <div class="form-group">
-                        <label>Unité</label>
-                        <select name="article-unite[]">
-                            <option value="unité">Unité</option>
-                            <option value="kg">Kilogramme (kg)</option>
-                            <option value="g">Gramme (g)</option>
-                            <option value="L">Litre (L)</option>
-                            <option value="mL">Millilitre (mL)</option>
-                            <option value="m">Mètre (m)</option>
-                            <option value="m²">Mètre carré (m²)</option>
-                            <option value="m³">Mètre cube (m³)</option>
-                            <option value="paquet">Paquet</option>
-                            <option value="carton">Carton</option>
-                            <option value="palette">Palette</option>
-                            <option value="lot">Lot</option>
-                        </select>
-                    </div>
-                </div>
-            `;
-            
-            container.appendChild(ligneDiv);
-        }
-
-        // Supprimer une ligne d'article
-        function removeArticleLigne(id) {
-            const ligne = document.getElementById(`article-ligne-${id}`);
-            if (ligne) {
-                ligne.remove();
-                // Renuméroter les lignes restantes
-                updateArticleLigneNumbers();
-            }
-        }
-
-        // Renuméroter les lignes d'articles
-        function updateArticleLigneNumbers() {
-            const lignes = document.querySelectorAll('.article-ligne');
-            lignes.forEach((ligne, index) => {
-                const number = index + 1;
-                const header = ligne.querySelector('.article-ligne-header');
-                if (header) {
-                    const numberSpan = header.querySelector('.article-ligne-number');
-                    if (numberSpan) {
-                        numberSpan.textContent = `Article #${number}`;
-                    }
-                    // Afficher le bouton supprimer si plus d'une ligne
-                    const removeBtn = header.querySelector('.btn-remove-ligne');
-                    if (number > 1) {
-                        if (!removeBtn) {
-                            const btn = document.createElement('button');
-                            btn.type = 'button';
-                            btn.className = 'btn-remove-ligne';
-                            btn.onclick = () => removeArticleLigne(number);
-                            btn.innerHTML = '<i class="fas fa-trash"></i> Supprimer';
-                            header.appendChild(btn);
-                        } else {
-                            removeBtn.onclick = () => removeArticleLigne(number);
-                        }
-                    } else if (removeBtn) {
-                        removeBtn.remove();
-                    }
-                }
-            });
-        }
-
-        // Fermer en cliquant sur l'overlay
-        function closeModalOnOverlay(event) {
-            if (event.target.classList.contains('modal-overlay') || event.target.id === 'devisModal') {
-                closeDevisModal();
-            }
-        }
-
-        // Gestion des fichiers uploadés
-        let selectedFiles = [];
-
-        function handleFileSelect(event) {
-            const files = Array.from(event.target.files);
-            addFiles(files);
-        }
-
-        function handleFileDrop(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            const dropZone = document.getElementById('file-drop-zone');
-            dropZone.style.borderColor = 'var(--color-primary)';
-            dropZone.style.background = 'white';
-            
-            const files = Array.from(event.dataTransfer.files);
-            addFiles(files);
-        }
-
-        function handleDragOver(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            const dropZone = document.getElementById('file-drop-zone');
-            dropZone.style.borderColor = 'var(--color-accent)';
-            dropZone.style.background = 'var(--color-background-light)';
-        }
-
-        function handleDragLeave(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            const dropZone = document.getElementById('file-drop-zone');
-            dropZone.style.borderColor = 'var(--color-primary)';
-            dropZone.style.background = 'white';
-        }
-
-        function addFiles(files) {
-            const maxSize = 10 * 1024 * 1024; // 10 MB
-            const allowedTypes = [
-                'application/pdf',
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'application/vnd.ms-excel',
-                'image/jpeg',
-                'image/jpg',
-                'image/png',
-                'image/gif',
-                'image/webp'
-            ];
-
-            files.forEach(file => {
-                // Vérifier la taille
-                if (file.size > maxSize) {
-                    alert(`❌ Le fichier "${file.name}" dépasse la taille maximale de 10 MB.`);
-                    return;
-                }
-
-                // Vérifier le type
-                if (!allowedTypes.includes(file.type)) {
-                    alert(`❌ Le fichier "${file.name}" n'est pas dans un format accepté. Formats acceptés : PDF, Excel, Images.`);
-                    return;
-                }
-
-                // Vérifier si le fichier n'est pas déjà sélectionné
-                if (selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
-                    return;
-                }
-
-                selectedFiles.push(file);
-            });
-
-            displayFileList();
-        }
-
-        function displayFileList() {
-            const fileList = document.getElementById('file-list');
-            const fileItems = document.getElementById('file-items');
-
-            if (selectedFiles.length === 0) {
-                fileList.style.display = 'none';
-                return;
-            }
-
-            fileList.style.display = 'block';
-            fileItems.innerHTML = selectedFiles.map((file, index) => {
-                const fileIcon = getFileIcon(file.type);
-                const fileSize = formatFileSize(file.size);
-                return `
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: white; border-radius: 8px; border: 1px solid #ddd;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
-                            <i class="${fileIcon}" style="font-size: 1.5rem; color: var(--color-primary);"></i>
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="font-weight: 500; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                    ${file.name}
-                                </div>
-                                <div style="font-size: 0.85rem; color: var(--color-neutral);">
-                                    ${fileSize}
-                                </div>
-                            </div>
-                        </div>
-                        <button type="button" onclick="removeFile(${index})" 
-                                style="background: none; border: none; color: var(--color-danger); cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;"
-                                onmouseover="this.style.background='#fee2e2'" 
-                                onmouseout="this.style.background='none'">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function getFileIcon(mimeType) {
-            if (mimeType === 'application/pdf') return 'fas fa-file-pdf';
-            if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fas fa-file-excel';
-            if (mimeType.includes('image')) return 'fas fa-file-image';
-            return 'fas fa-file';
-        }
-
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-        }
-
-        function removeFile(index) {
-            selectedFiles.splice(index, 1);
-            displayFileList();
-            // Réinitialiser l'input file
-            document.getElementById('fichiers').value = '';
-        }
-
-        // Soumettre le formulaire de demande de devis
-        async function submitDevisRequest(event) {
-            event.preventDefault();
-            
-            const form = event.target;
-            const formData = new FormData(form);
-            
-            // Collecter les lignes d'articles
-            const articles = [];
-            const descriptions = formData.getAll('article-description[]');
-            const secteurs = formData.getAll('article-secteur[]');
-            const quantites = formData.getAll('article-quantite[]');
-            const unites = formData.getAll('article-unite[]');
-            
-            for (let i = 0; i < descriptions.length; i++) {
-                if (descriptions[i] && descriptions[i].trim()) {
-                    articles.push({
-                        description: descriptions[i].trim(),
-                        secteur: secteurs[i] || null,
-                        quantite: parseFloat(quantites[i]) || 1,
-                        unite: unites[i] || 'unité',
-                        ordre: i + 1
-                    });
-                }
-            }
-            
-            // Vérifier qu'au moins un article est présent
-            if (articles.length === 0) {
-                alert('❌ Veuillez ajouter au moins un article à votre demande.');
-                return;
-            }
-            
-            const submitButton = form.querySelector('button[type="submit"]');
-            const originalText = submitButton.innerHTML;
-            
-            // Désactiver le bouton et afficher le chargement
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
-            
-            try {
-                // Créer un FormData pour envoyer les fichiers
-                const uploadFormData = new FormData();
-                uploadFormData.append('nom', formData.get('nom'));
-                uploadFormData.append('email', formData.get('email'));
-                uploadFormData.append('telephone', formData.get('telephone'));
-                uploadFormData.append('entreprise', formData.get('entreprise') || '');
-                uploadFormData.append('message', formData.get('message') || '');
-                uploadFormData.append('adresse_livraison', formData.get('adresse_livraison'));
-                uploadFormData.append('ville_livraison', formData.get('ville_livraison'));
-                uploadFormData.append('pays_livraison', formData.get('pays_livraison'));
-                uploadFormData.append('mode_notification', formData.get('mode_notification') || 'email');
-                
-                // Ajouter géolocalisation si disponible
-                const latitude = document.getElementById('latitude').value;
-                const longitude = document.getElementById('longitude').value;
-                if (latitude && longitude) {
-                    uploadFormData.append('latitude', latitude);
-                    uploadFormData.append('longitude', longitude);
-                }
-                
-                uploadFormData.append('articles', JSON.stringify(articles));
-                
-                // Ajouter les fichiers
-                selectedFiles.forEach((file, index) => {
-                    uploadFormData.append(`fichiers`, file);
-                });
-
-                // Envoyer les données à l'API backend
-                const response = await fetch('/api/contact/devis-request', {
-                    method: 'POST',
-                    body: uploadFormData
-                });
-
-                const result = await response.json();
-                
-                if (response.ok) {
-                    // Afficher un message de succès avec la référence
-                    const message = result.reference 
-                        ? `✅ ${result.message}\n\nRéférence: ${result.reference}\n\nVous pouvez suivre votre demande en utilisant cette référence et le code que vous recevrez.`
-                        : result.message;
-                    
-                    alert(message);
-                    
-                    // Si une URL de suivi est fournie, proposer d'y aller
-                    if (result.trackingUrl) {
-                        if (confirm('Voulez-vous accéder à la page de suivi maintenant ?')) {
-                            window.open(result.trackingUrl, '_blank');
-                        }
-                    }
-                    
-                    // Réinitialiser le formulaire
-                    form.reset();
-                    selectedFiles = [];
-                    displayFileList();
-                    closeDevisModal();
-                } else {
-                    alert('❌ ' + (result.error || 'Une erreur est survenue lors de l\'envoi. Veuillez réessayer.'));
-                }
-                
-            } catch (error) {
-                console.error('Erreur:', error);
-                alert('❌ Une erreur est survenue lors de l\'envoi. Veuillez réessayer ou nous contacter directement.');
-            } finally {
-                submitButton.disabled = false;
-                submitButton.innerHTML = originalText;
-            }
-        }
-
-        // Fonction pour suivre une demande depuis la page d'accueil
-        function trackFromHome(event) {
-            event.preventDefault();
-            
-            const reference = document.getElementById('ref-home').value.trim().toUpperCase();
-            const token = document.getElementById('token-home').value.trim();
-            const errorDiv = document.getElementById('trackingErrorHome');
-
-            if (!reference || !token) {
-                errorDiv.textContent = 'Veuillez remplir tous les champs';
-                errorDiv.classList.remove('hidden');
-                return;
-            }
-
-            // Masquer l'erreur précédente
-            errorDiv.classList.add('hidden');
-
-            // Rediriger vers la page de suivi avec les paramètres
-            window.location.href = `/suivi?ref=${encodeURIComponent(reference)}&token=${encodeURIComponent(token)}`;
-        }
-
-        // Navbar scroll effect
+        // --- UX Interactions ---
+        
+        // Navbar Scroll Effect
         window.addEventListener('scroll', () => {
-            const navbar = document.getElementById('navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 20) {
+                nav.classList.add('shadow-md');
+                nav.classList.remove('bg-white/90');
+                nav.classList.add('bg-white/95');
             } else {
-                navbar.classList.remove('scrolled');
+                nav.classList.remove('shadow-md');
+                nav.classList.add('bg-white/90');
+                nav.classList.remove('bg-white/95');
             }
         });
 
-        // Smooth scroll pour les liens d'ancrage
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    const offset = 80; // Offset pour la navbar fixe
-                    const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
-                    window.scrollTo({
-                        top: targetPosition,
-                        behavior: 'smooth'
-                    });
-                }
-            });
-        });
-
-        // Scroll Reveal Animation
+        // Scroll Reveal
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('active');
                 }
             });
-        }, {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
         });
-
-        // Observer tous les éléments avec la classe reveal
         document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-        
-        // Forcer l'animation fade-in-up au chargement de la page
-        document.addEventListener('DOMContentLoaded', () => {
-            // Déclencher l'animation pour tous les éléments fade-in-up
-            const fadeElements = document.querySelectorAll('.fade-in-up');
-            fadeElements.forEach((el, index) => {
-                // Forcer le reflow pour déclencher l'animation
-                void el.offsetHeight;
-                // Ajouter un petit délai pour chaque élément
-                setTimeout(() => {
-                    el.style.opacity = '1';
-                    el.style.transform = 'translateY(0)';
-                }, index * 50);
+
+        // Mobile Menu
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Smooth scroll to tracking section
+        function scrollToTracking() {
+            const trackingElement = document.getElementById('tracking');
+            if (trackingElement) {
+                const heroSection = trackingElement.closest('section');
+                if (heroSection) {
+                    // Calculer la position du widget dans la section hero
+                    const trackingRect = trackingElement.getBoundingClientRect();
+                    const scrollPosition = window.scrollY + trackingRect.top - 100; // 100px offset pour la navbar
+                    
+                    window.scrollTo({
+                        top: scrollPosition,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Mettre en évidence le widget (appliquer l'animation au conteneur interne)
+                    const trackingCard = trackingElement.querySelector('.bg-white');
+                    if (trackingCard) {
+                        trackingCard.style.animation = 'pulse 2s ease-in-out';
+                        setTimeout(() => {
+                            trackingCard.style.animation = '';
+                        }, 2000);
+                    }
+                }
+            }
+        }
+
+        // Smooth scroll to contact section
+        function scrollToContact() {
+            const contactSection = document.getElementById('contact');
+            if (contactSection) {
+                const scrollPosition = contactSection.getBoundingClientRect().top + window.scrollY - 100; // 100px offset pour la navbar
+                window.scrollTo({
+                    top: scrollPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // Gérer les liens #tracking
+        document.querySelectorAll('a[href="#tracking"]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                scrollToTracking();
+                // Fermer le menu mobile si ouvert
+                const mobileMenu = document.getElementById('mobile-menu');
+                if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
+                }
             });
         });
 
-        // Fonction pour soumettre le formulaire de contact
-        async function submitContactForm(event) {
-            event.preventDefault();
+        // Gérer les liens #contact
+        document.querySelectorAll('a[href="#contact"]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                scrollToContact();
+                // Fermer le menu mobile si ouvert
+                const mobileMenu = document.getElementById('mobile-menu');
+                if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+
+        // Fermer le menu mobile lors du clic sur les autres liens de navigation
+        document.querySelectorAll('#mobile-menu a[href^="#"]').forEach(link => {
+            link.addEventListener('click', () => {
+                const mobileMenu = document.getElementById('mobile-menu');
+                if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+
+        // Gérer le hash #tracking au chargement de la page
+        if (window.location.hash === '#tracking') {
+            setTimeout(() => {
+                scrollToTracking();
+            }, 500);
+        }
+
+        // Gérer les changements de hash (navigation)
+        window.addEventListener('hashchange', () => {
+            if (window.location.hash === '#tracking') {
+                setTimeout(() => {
+                    scrollToTracking();
+                }, 100);
+            } else if (window.location.hash === '#contact') {
+                setTimeout(() => {
+                    scrollToContact();
+                }, 100);
+            }
+        });
+
+        // --- Modal Logic ---
+
+        const modal = document.getElementById('devisModal');
+        const backdrop = document.getElementById('modalBackdrop');
+        const panel = document.getElementById('modalPanel');
+
+        function openDevisModal() {
+            modal.classList.remove('hidden');
+            // Réinitialiser le formulaire et définir la date minimale
+            const form = document.getElementById('devis-form');
+            if (form) {
+                form.reset();
+                setMinDateForDelivery();
+            }
+            // Small delay for CSS transition
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                panel.classList.remove('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+                panel.classList.add('opacity-100', 'translate-y-0', 'sm:scale-100');
+            }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDevisModal() {
+            backdrop.classList.add('opacity-0');
+            panel.classList.add('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+            panel.classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
             
-            const form = event.target;
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }, 300);
+        }
+
+        // --- Form Logic ---
+
+        function addArticleRow() {
+            const container = document.getElementById('articles-container');
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 items-start article-row mt-2';
+            div.innerHTML = `
+                <input type="text" name="articles[]" placeholder="Désignation" class="flex-grow rounded-md border-gray-300 text-sm focus:ring-brand-500 focus:border-brand-500 py-2 px-3 border" required>
+                <input type="number" name="quantites[]" placeholder="Qté" class="w-20 rounded-md border-gray-300 text-sm focus:ring-brand-500 focus:border-brand-500 py-2 px-3 border" min="1" value="1" required>
+                <button type="button" onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 p-2"><i class="fas fa-trash"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        // Utiliser la position actuelle pour le formulaire de devis
+        function useCurrentLocationForDevis(event) {
+            if (navigator.geolocation) {
+                const btn = event ? event.target.closest('button') : document.querySelector('button[onclick*="useCurrentLocationForDevis"]');
+                const originalHTML = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Localisation...';
+
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        document.getElementById('devis-latitude').value = position.coords.latitude.toFixed(8);
+                        document.getElementById('devis-longitude').value = position.coords.longitude.toFixed(8);
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                        showNotification('Position actuelle récupérée avec succès', 'success');
+                    },
+                    error => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                        showNotification('Impossible d\'obtenir votre position: ' + error.message, 'error');
+                    }
+                );
+            } else {
+                showNotification('Géolocalisation non supportée par votre navigateur', 'error');
+            }
+        }
+
+        // Fonction de notification simple
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white ${
+                type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Définir la date minimale pour la date de livraison (aujourd'hui)
+        function setMinDateForDelivery() {
+            const dateInput = document.getElementById('devis-date-livraison');
+            if (dateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.min = today;
+            }
+        }
+
+        async function submitDevisRequest(e) {
+            e.preventDefault();
+            const form = e.target;
+            const btn = form.querySelector('button[type="submit"]');
+            const originalHTML = btn.innerHTML;
+            
+            // Collecter toutes les données du formulaire
             const formData = new FormData(form);
-            const messageDiv = document.getElementById('contact-form-message');
-            const submitButton = form.querySelector('button[type="submit"]');
-            const originalButtonText = submitButton.innerHTML;
+            const articles = [];
+            const articleInputs = form.querySelectorAll('input[name="articles[]"]');
+            const quantiteInputs = form.querySelectorAll('input[name="quantites[]"]');
             
-            // Désactiver le bouton et afficher le chargement
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
-            messageDiv.style.display = 'none';
-            
-            try {
-                // Préparer les données
-                const data = {
-                    nom: formData.get('nom'),
+            for (let i = 0; i < articleInputs.length; i++) {
+                if (articleInputs[i].value.trim()) {
+                    articles.push({
+                        designation: articleInputs[i].value.trim(),
+                        quantite: parseInt(quantiteInputs[i].value) || 1
+                    });
+                }
+            }
+
+            const devisData = {
+                contact: {
+                    nom: formData.get('name'),
+                    entreprise: formData.get('company'),
                     email: formData.get('email'),
-                    telephone: formData.get('telephone') || null,
-                    sujet: formData.get('sujet'),
-                    message: formData.get('message')
-                };
-                
-                // Envoyer la requête à l'API
-                const response = await fetch('/api/contact/message', {
+                    telephone: formData.get('phone')
+                },
+                adresse: {
+                    ligne1: formData.get('adresse_ligne1'),
+                    ligne2: formData.get('adresse_ligne2'),
+                    ville: formData.get('ville'),
+                    code_postal: formData.get('code_postal'),
+                    pays: formData.get('pays'),
+                    latitude: formData.get('latitude') || null,
+                    longitude: formData.get('longitude') || null
+                },
+                articles: articles,
+                informations: {
+                    date_livraison: formData.get('date_livraison') || null,
+                    budget: formData.get('budget') ? parseFloat(formData.get('budget')) : null,
+                    type_livraison: formData.get('type_livraison') || null,
+                    notes: formData.get('notes') || null
+                }
+            };
+
+            // Loading state
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Envoi en cours...';
+
+            try {
+                // Appel API réel (à adapter selon votre endpoint)
+                const response = await fetch('/api/rfq/create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(devisData)
                 });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    // Success state
+                    btn.classList.remove('bg-brand-600', 'hover:bg-brand-700');
+                    btn.classList.add('bg-green-500', 'hover:bg-green-600');
+                    btn.innerHTML = '<i class="fas fa-check mr-2"></i> Demande envoyée !';
+
+                    setTimeout(() => {
+                        showNotification(`Votre demande (Réf: ${result.reference || 'RFQ-TEMP-001'}) a bien été reçue. Vous recevrez une confirmation par email.`, 'success');
+                        closeDevisModal();
+                        form.reset();
+                        setMinDateForDelivery();
+                        
+                        // Reset button
+                        btn.disabled = false;
+                        btn.classList.add('bg-brand-600', 'hover:bg-brand-700');
+                        btn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                        btn.innerHTML = originalHTML;
+                    }, 500);
+                } else {
+                    throw new Error('Erreur lors de l\'envoi');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification('Erreur lors de l\'envoi de la demande. Veuillez réessayer.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        }
+
+        function trackOrder(e) {
+            e.preventDefault();
+            const ref = document.getElementById('track-ref').value;
+            const token = document.getElementById('track-token').value;
+            
+            if(ref && token) {
+                // Simulation
+                alert(`🔍 Recherche de la commande ${ref}...\n\nStatut: En cours de traitement par l'équipe achats.`);
+            }
+        }
+
+        // --- Load Partners/Suppliers Logos ---
+        async function loadPartnersLogos() {
+            const container = document.getElementById('partners-logos');
+            if (!container) return;
+
+            try {
+                // Appel API pour récupérer les fournisseurs partenaires
+                // Note: Ajustez l'URL selon votre configuration API
+                const apiUrl = '/api/entreprises?type=fournisseur&actif=true&limit=8';
+                const response = await fetch(apiUrl);
                 
                 if (!response.ok) {
-                    throw new Error('Erreur lors de l\'envoi du message');
+                    // Si l'API n'est pas disponible, on cache la section
+                    container.closest('section').style.display = 'none';
+                    return;
                 }
-                
-                const result = await response.json();
-                
-                // Afficher le message de succès
-                messageDiv.style.display = 'block';
-                messageDiv.style.background = '#d1fae5';
-                messageDiv.style.border = '2px solid #22c55e';
-                messageDiv.style.color = '#065f46';
-                messageDiv.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <i class="fas fa-check-circle" style="font-size: 1.25rem;"></i>
-                        <div>
-                            <strong>Message envoyé avec succès !</strong>
-                            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Nous vous répondrons dans les plus brefs délais.</p>
-                        </div>
-                    </div>
-                `;
-                
-                // Réinitialiser le formulaire
-                form.reset();
-                
-                // Scroll vers le message
-                messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                
-            } catch (error) {
-                console.error('Erreur envoi message:', error);
-                
-                // Afficher le message d'erreur
-                messageDiv.style.display = 'block';
-                messageDiv.style.background = '#fee2e2';
-                messageDiv.style.border = '2px solid #ef4444';
-                messageDiv.style.color = '#991b1b';
-                messageDiv.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <i class="fas fa-exclamation-circle" style="font-size: 1.25rem;"></i>
-                        <div>
-                            <strong>Erreur lors de l'envoi</strong>
-                            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Veuillez réessayer ou nous contacter directement par email ou téléphone.</p>
-                        </div>
-                    </div>
-                `;
-                
-                messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } finally {
-                // Réactiver le bouton
-                submitButton.disabled = false;
-                submitButton.innerHTML = originalButtonText;
-            }
-        }
-        
-        // Menu mobile
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobile-menu');
-            const button = document.getElementById('mobile-menu-button');
-            if (menu && button) {
-                const isHidden = menu.classList.contains('hidden');
-                menu.classList.toggle('hidden');
-                button.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
-                const icon = button.querySelector('i');
-                if (icon) {
-                    if (isHidden) {
-                        icon.classList.remove('fa-bars');
-                        icon.classList.add('fa-times');
-                    } else {
-                        icon.classList.remove('fa-times');
-                        icon.classList.add('fa-bars');
-                    }
-                }
-            }
-        }
-        window.toggleMobileMenu = toggleMobileMenu;
 
-        // Mettre à jour les liens d'authentification
-        document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('token');
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const authLink = document.getElementById('auth-link');
-            const authLinkMobile = document.getElementById('auth-link-mobile');
-            const authLinkTablet = document.getElementById('auth-link-tablet');
-            const authText = document.getElementById('auth-text');
+                const data = await response.json();
+                const partners = data.entreprises || data || [];
+
+                if (partners.length === 0) {
+                    // Afficher un message si aucun partenaire
+                    container.innerHTML = '<p class="text-slate-400 text-sm italic">Aucun partenaire à afficher pour le moment</p>';
+                    return;
+                }
+
+                // Générer les logos
+                container.innerHTML = partners.map(partner => {
+                    const logoUrl = partner.logo_url || partner.logo || partner.logo_path || '';
+                    const nom = partner.nom || partner.raison_sociale || 'Partenaire';
+                    const hasLogo = logoUrl && logoUrl.trim() !== '';
+                    
+                    return `
+                        <div class="partner-logo-item h-16 flex items-center justify-center px-4 group cursor-pointer" title="${nom}">
+                            ${hasLogo ? 
+                                `<img src="${logoUrl}" alt="${nom}" class="max-h-12 max-w-32 object-contain transition-opacity group-hover:opacity-100" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                                ''
+                            }
+                            <div style="display: ${hasLogo ? 'none' : 'flex'}; align-items: center; justify-content: center; height: 48px; min-width: 128px; max-width: 200px;" class="text-slate-400 group-hover:text-slate-600 transition-colors">
+                                <span class="text-sm font-semibold text-center">${nom}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Erreur lors du chargement des logos partenaires:', error);
+                // En cas d'erreur, masquer la section ou afficher un message discret
+                container.innerHTML = '<p class="text-slate-400 text-sm italic">Chargement des partenaires...</p>';
+            }
+        }
+
+        // --- Contact Form Logic ---
+        async function submitContactForm(e) {
+            e.preventDefault();
+            const form = e.target;
+            const btn = form.querySelector('button[type="submit"]');
+            const originalHTML = btn.innerHTML;
             
-            if (token && (user.role === 'admin' || user.role === 'superviseur' || user.role === 'comptable')) {
-                // Desktop
-                if (authLink && authText) {
-                    authLink.href = 'dashboard.html';
-                    authLink.innerHTML = '<i class="fas fa-tachometer-alt mr-1.5 text-sm"></i><span>Dashboard</span>';
-                    authText.textContent = 'Dashboard';
+            const formData = new FormData(form);
+            const contactData = {
+                nom: formData.get('name'),
+                email: formData.get('email'),
+                telephone: formData.get('phone') || null,
+                sujet: formData.get('subject'),
+                message: formData.get('message')
+            };
+
+            // Loading state
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Envoi en cours...';
+
+            try {
+                // Appel API pour envoyer le message de contact
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(contactData)
+                });
+
+                if (response.ok) {
+                    // Success state
+                    btn.classList.remove('bg-brand-600', 'hover:bg-brand-700');
+                    btn.classList.add('bg-green-500', 'hover:bg-green-600');
+                    btn.innerHTML = '<i class="fas fa-check mr-2"></i> Message envoyé !';
+
+                    showNotification('Votre message a bien été envoyé. Nous vous répondrons dans les plus brefs délais.', 'success');
+                    form.reset();
+                    
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.classList.add('bg-brand-600', 'hover:bg-brand-700');
+                        btn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                        btn.innerHTML = originalHTML;
+                    }, 2000);
+                } else {
+                    throw new Error('Erreur lors de l\'envoi');
                 }
-                // Tablet
-                if (authLinkTablet) {
-                    authLinkTablet.href = 'dashboard.html';
-                    authLinkTablet.title = 'Dashboard';
-                }
-                // Mobile
-                if (authLinkMobile) {
-                    authLinkMobile.href = 'dashboard.html';
-                    authLinkMobile.innerHTML = '<i class="fas fa-tachometer-alt mr-2"></i><span>Dashboard</span>';
-                }
-            } else {
-                // Si non connecté, s'assurer que les liens pointent vers la page de connexion
-                if (authLink) {
-                    authLink.href = 'index.html';
-                    if (authText) {
-                        authText.textContent = 'Connexion';
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification('Erreur lors de l\'envoi du message. Veuillez réessayer.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        }
+
+        // Charger les logos au chargement de la page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPartnersLogos();
+            setMinDateForDelivery();
+            
+            // Scroll vers la section contact si hash présent
+            if (window.location.hash === '#contact') {
+                setTimeout(() => {
+                    const contactSection = document.getElementById('contact');
+                    if (contactSection) {
+                        const scrollPosition = contactSection.getBoundingClientRect().top + window.scrollY - 100;
+                        window.scrollTo({
+                            top: scrollPosition,
+                            behavior: 'smooth'
+                        });
                     }
-                }
-                if (authLinkTablet) {
-                    authLinkTablet.href = 'index.html';
-                    authLinkTablet.title = 'Connexion';
-                }
-                if (authLinkMobile) {
-                    authLinkMobile.href = 'index.html';
-                }
+                }, 500);
             }
         });
     </script>
 </body>
 </html>
-

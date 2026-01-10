@@ -107,6 +107,19 @@
         .fade-in-up {
             animation: fadeInUp 0.6s ease-out forwards;
         }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(59, 130, 246, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(255, 255, 255, 0.5), 0 0 60px rgba(59, 130, 246, 0.4);
+            }
+        }
+
+        .badge-glow {
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900 flex items-center justify-center p-4 relative overflow-hidden">
@@ -123,12 +136,17 @@
         <!-- Header / Logo -->
         <div class="text-center mb-8">
             <a href="home.html" class="inline-flex items-center gap-3 group transition-transform hover:scale-105">
-                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-primary-600 font-bold text-2xl shadow-lg">
-                    <i class="fas fa-shopping-cart"></i>
+                <div class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-primary-500/30 transition transform group-hover:scale-105">
+                    <i class="fas fa-cube text-lg"></i>
                 </div>
                 <span class="text-3xl font-bold text-white tracking-tight">Sily<span class="text-primary-300">Procure</span></span>
             </a>
-            <p class="text-sm text-primary-200 mt-2">Plateforme de gestion d'achats</p>
+            <p class="text-lg md:text-xl font-bold text-white mt-4 tracking-wide">
+                <span class="inline-block bg-gradient-to-r from-white/30 via-white/40 to-white/30 backdrop-blur-md px-6 py-2.5 rounded-full border-2 border-white/50 badge-glow shadow-xl">
+                    Plateforme de gestion d'achats professionnels
+                </span>
+            </p>
+            <p class="text-sm md:text-base text-white/95 mt-3 font-semibold tracking-wide">Centralisation d'achats B2B en Guinée</p>
         </div>
 
         <!-- Login Card -->
