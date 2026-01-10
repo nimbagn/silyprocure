@@ -497,36 +497,47 @@
                     <span class="text-xl font-bold text-gray-900 tracking-tight">Sily<span class="text-primary-600">Procure</span></span>
                 </div>
 
-                <!-- Menu de Navigation Centré -->
-                <nav class="flex items-center justify-center flex-1 mx-8" aria-label="Menu de navigation">
-                    <div class="flex items-center space-x-1 bg-gray-50 rounded-lg p-1 border border-gray-200">
-                        <a href="dashboard.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-semibold min-h-[36px] transition-all bg-primary-600 text-white shadow-sm" aria-current="page">
-                            <i class="fas fa-chart-line mr-2 text-xs" aria-hidden="true"></i>
-                            <span>Dashboard</span>
+                <!-- Menu de Navigation Centré - Style Optimisé -->
+                <nav class="flex items-center justify-center flex-1 mx-4 xl:mx-8" aria-label="Menu de navigation">
+                    <div class="flex items-center space-x-0.5 bg-white rounded-xl p-1.5 border border-gray-200 shadow-sm">
+                        <!-- Groupe 1: Vue d'ensemble -->
+                        <a href="dashboard.html" class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold min-h-[40px] transition-all bg-primary-600 text-white shadow-sm hover:bg-primary-700" aria-current="page" title="Tableau de bord">
+                            <i class="fas fa-chart-line mr-2 text-sm" aria-hidden="true"></i>
+                            <span class="hidden sm:inline">Dashboard</span>
                         </a>
-                        <a href="rfq.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
-                            <i class="fas fa-file-contract mr-2 text-xs" aria-hidden="true"></i>
-                            <span>RFQ</span>
+                        
+                        <!-- Séparateur visuel -->
+                        <div class="w-px h-6 bg-gray-300 mx-1"></div>
+                        
+                        <!-- Groupe 2: Processus d'achat -->
+                        <a href="rfq.html" class="inline-flex items-center px-3 sm:px-4 py-2 rounded-lg text-sm font-medium min-h-[40px] transition-all text-neutral-700 hover:text-primary-700 hover:bg-primary-50" title="Demandes de devis (RFQ)">
+                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-sm" aria-hidden="true"></i>
+                            <span class="hidden sm:inline">RFQ</span>
                         </a>
-                        <a href="devis.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
-                            <i class="fas fa-file-invoice-dollar mr-2 text-xs" aria-hidden="true"></i>
-                            <span>Devis</span>
+                        <a href="devis.html" class="inline-flex items-center px-3 sm:px-4 py-2 rounded-lg text-sm font-medium min-h-[40px] transition-all text-neutral-700 hover:text-primary-700 hover:bg-primary-50" title="Devis">
+                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-sm" aria-hidden="true"></i>
+                            <span class="hidden sm:inline">Devis</span>
                         </a>
-                        <a href="commandes.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
-                            <i class="fas fa-shopping-cart mr-2 text-xs" aria-hidden="true"></i>
-                            <span>Commandes</span>
+                        <a href="commandes.html" class="inline-flex items-center px-3 sm:px-4 py-2 rounded-lg text-sm font-medium min-h-[40px] transition-all text-neutral-700 hover:text-primary-700 hover:bg-primary-50" title="Commandes">
+                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-sm" aria-hidden="true"></i>
+                            <span class="hidden sm:inline">Commandes</span>
                         </a>
-                        <a href="entreprises.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
-                            <i class="fas fa-building mr-2 text-xs" aria-hidden="true"></i>
-                            <span>Entreprises</span>
+                        
+                        <!-- Séparateur visuel -->
+                        <div class="w-px h-6 bg-gray-300 mx-1"></div>
+                        
+                        <!-- Groupe 3: Gestion -->
+                        <a href="entreprises.html" class="inline-flex items-center px-3 sm:px-4 py-2 rounded-lg text-sm font-medium min-h-[40px] transition-all text-neutral-700 hover:text-primary-700 hover:bg-primary-50" title="Entreprises et fournisseurs">
+                            <i class="fas fa-building mr-1.5 sm:mr-2 text-sm" aria-hidden="true"></i>
+                            <span class="hidden sm:inline">Entreprises</span>
                         </a>
-                        <a href="factures.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
-                            <i class="fas fa-money-bill-wave mr-2 text-xs" aria-hidden="true"></i>
-                            <span>Factures</span>
+                        <a href="factures.html" class="inline-flex items-center px-3 sm:px-4 py-2 rounded-lg text-sm font-medium min-h-[40px] transition-all text-neutral-700 hover:text-primary-700 hover:bg-primary-50" title="Factures">
+                            <i class="fas fa-money-bill-wave mr-1.5 sm:mr-2 text-sm" aria-hidden="true"></i>
+                            <span class="hidden sm:inline">Factures</span>
                         </a>
-                        <a href="carte.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
-                            <i class="fas fa-map-marked-alt mr-2 text-xs" aria-hidden="true"></i>
-                            <span>Carte</span>
+                        <a href="carte.html" class="inline-flex items-center px-3 sm:px-4 py-2 rounded-lg text-sm font-medium min-h-[40px] transition-all text-neutral-700 hover:text-primary-700 hover:bg-primary-50" title="Carte interactive">
+                            <i class="fas fa-map-marked-alt mr-1.5 sm:mr-2 text-sm" aria-hidden="true"></i>
+                            <span class="hidden sm:inline">Carte</span>
                         </a>
                     </div>
                 </nav>
