@@ -14,7 +14,14 @@ function initSidebar() {
         sidebar.setAttribute('aria-label', 'Navigation principale');
         sidebar.innerHTML = `
             <div class="sidebar-header">
-                <div class="sidebar-logo">SilyProcure</div>
+                <a href="dashboard.html" class="sidebar-logo" style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);">
+                        <i class="fas fa-cube" style="font-size: 1.25rem; color: white;"></i>
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 1.5rem; font-weight: 700; color: white; line-height: 1.2;">Sily<span style="color: #60A5FA;">Procure</span></span>
+                    </div>
+                </a>
                 <button class="sidebar-close" onclick="closeSidebar()" aria-label="Fermer le menu" title="Fermer le menu">
                     <i class="fas fa-times"></i>
                 </button>

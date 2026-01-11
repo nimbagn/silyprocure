@@ -50,6 +50,9 @@
     <link rel="stylesheet" href="css/dashboard-theme.css">
 </head>
 <body class="h-full flex flex-col">
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
     <script>window.DISABLE_SIDEBAR = true;</script>
     <script src="js/sidebar.js"></script>
     <script src="js/mobile-menu.js"></script>
@@ -532,7 +535,7 @@
             }
         }
 
-        async function validateWhatsAppDemande(demandeId) {
+        window.validateWhatsAppDemande = async function validateWhatsAppDemande(demandeId) {
             // Ouvrir le modal de validation avec les détails de la demande
             try {
                 const response = await apiCall(`/api/contact/demandes/${demandeId}`);
@@ -613,7 +616,11 @@
                         </form>
                     </div>
                 `;
-                document.body.appendChild(modal);
+                // Créer un modal-overlay pour la modale
+                const modalOverlay = document.createElement('div');
+                modalOverlay.className = 'modal-overlay';
+                modalOverlay.appendChild(modal);
+                document.body.appendChild(modalOverlay);
             }
 
             // Remplir le formulaire
@@ -654,20 +661,40 @@
                 </div>
             `).join('');
 
-            modal.classList.add('active');
+            const modalOverlay = modal.closest('.modal-overlay') || modal.parentElement;
+            
+            if (modal) {
+                modal.classList.add('active');
+            }
+            
+            if (modalOverlay && modalOverlay.classList.contains('modal-overlay')) {
+                modalOverlay.classList.add('active');
+                modalOverlay.style.display = 'flex';
+            }
+            
             document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
             modal.dataset.demandeId = demande.id;
         }
 
-        function closeValidateWhatsAppModal() {
+        window.closeValidateWhatsAppModal = function closeValidateWhatsAppModal() {
             const modal = document.getElementById('validateWhatsAppModal');
+            const modalOverlay = modal?.closest('.modal-overlay') || modal?.parentElement;
+            
             if (modal) {
                 modal.classList.remove('active');
-                document.body.classList.remove('modal-open');
             }
+            
+            if (modalOverlay && modalOverlay.classList.contains('modal-overlay')) {
+                modalOverlay.classList.remove('active');
+                modalOverlay.style.display = 'none';
+            }
+            
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
         }
 
-        function addValidateArticle() {
+        window.addValidateArticle = function addValidateArticle() {
             const articlesList = document.getElementById('validate-articles-list');
             const index = articlesList.children.length;
             const articleHtml = `
@@ -698,11 +725,11 @@
             articlesList.insertAdjacentHTML('beforeend', articleHtml);
         }
 
-        function removeValidateArticle(button) {
+        window.removeValidateArticle = function removeValidateArticle(button) {
             button.closest('.validate-article-item').remove();
         }
 
-        async function submitValidateWhatsApp(event) {
+        window.submitValidateWhatsApp = async function submitValidateWhatsApp(event) {
             event.preventDefault();
             
             const modal = document.getElementById('validateWhatsAppModal');
@@ -900,7 +927,7 @@
             return badges[statut] || statut;
         }
 
-        async function viewDemande(id) {
+        window.viewDemande = async function viewDemande(id) {
             try {
                 const response = await apiCall(`/api/contact/demandes/${id}`);
                 if (!response.ok) {
@@ -1072,8 +1099,20 @@
                     </div>
                 `;
 
-                document.getElementById('detailModal').classList.add('active');
+                const detailModal = document.getElementById('detailModal');
+                const modalOverlay = detailModal?.closest('.modal-overlay');
+                
+                if (detailModal) {
+                    detailModal.classList.add('active');
+                }
+                
+                if (modalOverlay) {
+                    modalOverlay.classList.add('active');
+                    modalOverlay.style.display = 'flex';
+                }
+                
                 document.body.classList.add('modal-open');
+                document.body.style.overflow = 'hidden';
                 
                 // Charger les fichiers joints
                 loadFichiersDemande(demande.id);
@@ -1175,7 +1214,7 @@
             return false;
         }
 
-        function previewFile(fichierId, nomFichier, typeMime) {
+        window.previewFile = function previewFile(fichierId, nomFichier, typeMime) {
             const previewModal = document.getElementById('previewModal');
             const previewContent = document.getElementById('preview-content');
             const previewTitle = document.getElementById('preview-title');
@@ -1187,8 +1226,20 @@
 
             previewTitle.textContent = nomFichier;
             previewContent.innerHTML = '<div class="loading">Chargement de la prévisualisation...</div>';
-            previewModal.classList.add('active');
+            
+            const modalOverlay = previewModal?.closest('.modal-overlay');
+            
+            if (previewModal) {
+                previewModal.classList.add('active');
+            }
+            
+            if (modalOverlay) {
+                modalOverlay.classList.add('active');
+                modalOverlay.style.display = 'flex';
+            }
+            
             document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
 
             const fileUrl = `/api/fichiers/download/${fichierId}`;
             
@@ -1239,12 +1290,21 @@
             return div.innerHTML;
         }
 
-        function closePreviewModal() {
+        window.closePreviewModal = function closePreviewModal() {
             const previewModal = document.getElementById('previewModal');
+            const modalOverlay = previewModal?.closest('.modal-overlay');
+            
             if (previewModal) {
                 previewModal.classList.remove('active');
-                document.body.classList.remove('modal-open');
             }
+            
+            if (modalOverlay) {
+                modalOverlay.classList.remove('active');
+                modalOverlay.style.display = 'none';
+            }
+            
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
         }
 
         function formatFileSize(bytes) {
@@ -1284,12 +1344,12 @@
             mapContainer.innerHTML = mapHtml;
         }
 
-        function closeDetailModal() {
+        window.closeDetailModal = function closeDetailModal() {
             document.getElementById('detailModal').classList.remove('active');
             document.body.classList.remove('modal-open');
         }
 
-        async function editDemande(id) {
+        window.editDemande = async function editDemande(id) {
             try {
                 const response = await apiCall(`/api/contact/demandes/${id}`);
                 if (!response.ok) {
@@ -1301,20 +1361,45 @@
                 document.getElementById('edit-statut').value = demande.statut;
                 document.getElementById('edit-notes').value = demande.notes_internes || '';
 
-                document.getElementById('editModal').classList.add('active');
+                const editModal = document.getElementById('editModal');
+                const modalOverlay = editModal?.closest('.modal-overlay');
+                
+                if (editModal) {
+                    editModal.classList.add('active');
+                }
+                
+                if (modalOverlay) {
+                    modalOverlay.classList.add('active');
+                    modalOverlay.style.display = 'flex';
+                }
+                
                 document.body.classList.add('modal-open');
+                document.body.style.overflow = 'hidden';
             } catch (error) {
                 console.error('Erreur:', error);
                 Toast.error('Erreur lors du chargement');
             }
         }
 
-        function closeEditModal() {
-            document.getElementById('editModal').classList.remove('active');
+        window.closeEditModal = function closeEditModal() {
+            const editModal = document.getElementById('editModal');
+            const modalOverlay = editModal?.closest('.modal-overlay');
+            
+            if (editModal) {
+                editModal.classList.remove('active');
+            }
+            
+            if (modalOverlay) {
+                modalOverlay.classList.remove('active');
+                modalOverlay.style.display = 'none';
+            }
+            
             document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
         }
 
-        async function handleUpdateStatut(event) {
+        // Rendre handleUpdateStatut accessible globalement
+        window.handleUpdateStatut = async function(event) {
             event.preventDefault();
             const id = document.getElementById('edit-id').value;
             const statut = document.getElementById('edit-statut').value;
@@ -1342,7 +1427,7 @@
             }
         }
 
-        function filterDemandes() {
+        window.filterDemandes = function filterDemandes() {
             const search = document.getElementById('search-input')?.value.toLowerCase() || '';
             const statut = document.getElementById('statut-filter')?.value || '';
             
@@ -1365,19 +1450,19 @@
             }
         });
 
-        function refreshDemandes() {
+        window.refreshDemandes = function refreshDemandes() {
             loadDemandes();
             loadStats();
         }
 
         let currentDemandeId = null;
 
-        async function openCreateRFQModal(demandeId) {
+        window.openCreateRFQModal = async function openCreateRFQModal(demandeId) {
             currentDemandeId = demandeId;
             
             // Charger les fournisseurs
             try {
-                const response = await apiCall('/api/entreprises?type=fournisseur');
+                const response = await apiCall('/api/entreprises?type_entreprise=fournisseur&limit=1000');
                 if (!response.ok) {
                     throw new Error('Erreur lors du chargement des fournisseurs');
                 }
@@ -1402,22 +1487,50 @@
                     `).join('');
                 }
 
-                document.getElementById('createRFQModal').classList.add('active');
+                const createRFQModal = document.getElementById('createRFQModal');
+                const modalOverlay = createRFQModal?.closest('.modal-overlay');
+                
+                if (createRFQModal) {
+                    createRFQModal.classList.add('active');
+                }
+                
+                if (modalOverlay) {
+                    modalOverlay.classList.add('active');
+                    modalOverlay.style.display = 'flex';
+                }
+                
                 document.body.classList.add('modal-open');
+                document.body.style.overflow = 'hidden';
             } catch (error) {
                 console.error('Erreur:', error);
                 Toast.error('Erreur lors du chargement des fournisseurs');
             }
         }
 
-        function closeCreateRFQModal() {
-            document.getElementById('createRFQModal').classList.remove('active');
+        window.closeCreateRFQModal = function closeCreateRFQModal() {
+            const createRFQModal = document.getElementById('createRFQModal');
+            const modalOverlay = createRFQModal?.closest('.modal-overlay');
+            
+            if (createRFQModal) {
+                createRFQModal.classList.remove('active');
+            }
+            
+            if (modalOverlay) {
+                modalOverlay.classList.remove('active');
+                modalOverlay.style.display = 'none';
+            }
+            
             document.body.classList.remove('modal-open');
-            document.getElementById('createRFQForm').reset();
+            document.body.style.overflow = '';
+            
+            const form = document.getElementById('createRFQForm');
+            if (form) {
+                form.reset();
+            }
             currentDemandeId = null;
         }
 
-        async function submitCreateRFQ(event) {
+        window.submitCreateRFQ = async function submitCreateRFQ(event) {
             event.preventDefault();
             
             if (!currentDemandeId) {
@@ -1497,18 +1610,34 @@
             }
         });
 
-        document.getElementById('createRFQModal')?.addEventListener('click', (e) => {
-            if (e.target.id === 'createRFQModal' || e.target.classList.contains('modal')) {
-                closeCreateRFQModal();
-            }
-        });
+        // Fermer la modale createRFQModal en cliquant sur le fond (modal-overlay)
+        const createRFQModalOverlay = document.querySelector('#createRFQModal')?.closest('.modal-overlay');
+        if (createRFQModalOverlay) {
+            createRFQModalOverlay.addEventListener('click', (e) => {
+                if (e.target === createRFQModalOverlay || e.target.classList.contains('modal-overlay')) {
+                    closeCreateRFQModal();
+                }
+            });
+        }
+        
+        // Empêcher la fermeture en cliquant sur le contenu de la modale
+        const createRFQModalContent = document.querySelector('#createRFQModal .modal-content');
+        if (createRFQModalContent) {
+            createRFQModalContent.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
 
-        document.getElementById('editModal')?.addEventListener('click', (e) => {
-            if (e.target.id === 'editModal' || e.target.classList.contains('modal')) {
-                closeEditModal();
-            }
-        });
-
+        // Fermer la modale editModal en cliquant sur le fond (modal-overlay)
+        const editModalOverlay = document.querySelector('#editModal')?.closest('.modal-overlay');
+        if (editModalOverlay) {
+            editModalOverlay.addEventListener('click', (e) => {
+                if (e.target === editModalOverlay || e.target.classList.contains('modal-overlay')) {
+                    closeEditModal();
+                }
+            });
+        }
+        
         // Empêcher la propagation du clic sur le contenu du modal
         document.querySelectorAll('.modal-content').forEach(content => {
             content.addEventListener('click', (e) => {

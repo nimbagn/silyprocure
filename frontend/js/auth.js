@@ -1,6 +1,7 @@
 // Gestion de l'authentification
 
-function checkAuth() {
+// Attacher les fonctions à window pour qu'elles soient accessibles depuis les attributs HTML inline
+window.checkAuth = function checkAuth() {
     const token = localStorage.getItem('token');
     if (!token) {
         window.location.href = 'index.html';
@@ -9,14 +10,14 @@ function checkAuth() {
     return true;
 }
 
-function logout() {
+window.logout = function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = 'index.html';
 }
 
 // Fonction pour les appels API avec authentification
-async function apiCall(url, options = {}) {
+window.apiCall = async function apiCall(url, options = {}) {
     const token = localStorage.getItem('token');
     
     const defaultOptions = {
