@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Menu - Toutes les Pages</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .page-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .page-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .page-item:hover {
+            background: #f0f0f0;
+            border-color: #3b82f6;
+        }
+        .page-item.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        .issue {
+            color: #dc2626;
+            margin: 5px 0;
+        }
+        .success {
+            color: #10b981;
+            margin: 5px 0;
+        }
+        .info {
+            color: #3b82f6;
+            margin: 5px 0;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .summary-item {
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .summary-item strong {
+            display: block;
+            font-size: 24px;
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test du Menu - Toutes les Pages</h1>
+        <p>Ce test vérifie la disposition et le fonctionnement du menu sur toutes les pages HTML.</p>
+        
+        <div>
+            <button onclick="testAllPages()">Tester toutes les pages</button>
+            <button onclick="testCurrentPage()">Tester la page courante</button>
+            <button onclick="clearResults()">Effacer les résultats</button>
+        </div>
+
+        <div class="page-list" id="pageList"></div>
+
+        <div class="results" id="results" style="display: none;">
+            <h2>Résultats des tests</h2>
+            <div class="summary" id="summary"></div>
+            <div id="details"></div>
+        </div>
+
+        <iframe id="testFrame" style="display: none;"></iframe>
+    </div>
+
+    <script src="test-menu-all-pages.js"></script>
+    <script>
+        const HTML_PAGES = [
+            'dashboard.html',
+            'home.html',
+            'rfq.html',
+            'devis.html',
+            'commandes.html',
+            'entreprises.html',
+            'factures.html',
+            'carte.html',
+            'clients.html',
+            'demandes-devis.html',
+            'produits.html',
+            'catalogue-fournisseur.html',
+            'notifications.html',
+            'utilisateurs.html',
+            'parametres-messagepro.html',
+            'rfq-create.html',
+            'rfq-detail.html',
+            'devis-create.html',
+            'devis-detail.html',
+            'devis-compare.html',
+            'commandes-detail.html',
+            'entreprises-detail.html',
+            'factures-detail.html',
+            'produits-fournisseur.html',
+            'fournisseur-rfq.html',
+            'bons-livraison-detail.html'
+        ];
+
+        function createPageList() {
+            const pageList = document.getElementById('pageList');
+            pageList.innerHTML = '';
+            HTML_PAGES.forEach(page => {
+                const item = document.createElement('div');
+                item.className = 'page-item';
+                item.textContent = page;
+                item.onclick = () => testPage(page);
+                pageList.appendChild(item);
+            });
+        }
+
+        function testCurrentPage() {
+            if (window.runMenuTests) {
+                const results = window.runMenuTests();
+                displayResults(results);
+            } else {
+                alert('Le script de test n\'est pas chargé. Assurez-vous que test-menu-all-pages.js est inclus.');
+            }
+        }
+
+        function testPage(pageName) {
+            const iframe = document.getElementById('testFrame');
+            iframe.style.display = 'block';
+            iframe.src = pageName;
+            
+            iframe.onload = function() {
+                setTimeout(() => {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        const script = iframeDoc.createElement('script');
+                        script.src = 'test-menu-all-pages.js';
+                        iframeDoc.body.appendChild(script);
+                        
+                        script.onload = function() {
+                            if (iframe.contentWindow.runMenuTests) {
+                                const results = iframe.contentWindow.runMenuTests();
+                                displayResults(results);
+                            }
+                        };
+                    } catch (e) {
+                        console.error('Erreur lors du test:', e);
+                        alert('Impossible de tester cette page (problème CORS ou page non accessible)');
+                    }
+                }, 1000);
+            };
+        }
+
+        function testAllPages() {
+            alert('Le test de toutes les pages nécessite de naviguer entre les pages. Utilisez "Tester la page courante" sur chaque page.');
+        }
+
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            const summaryDiv = document.getElementById('summary');
+            const detailsDiv = document.getElementById('details');
+            
+            resultsDiv.style.display = 'block';
+            
+            // Résumé
+            summaryDiv.innerHTML = `
+                <div class="summary-item">
+                    <strong>${results.summary.totalPages}</strong>
+                    <span>Pages testées</span>
+                </div>
+                <div class="summary-item">
+                    <strong>${results.summary.pagesWithNavbar}</strong>
+                    <span>Avec Navbar</span>
+                </div>
+                <div class="summary-item">
+                    <strong>${results.summary.pagesWithSidebar}</strong>
+                    <span>Avec Sidebar</span>
+                </div>
+                <div class="summary-item">
+                    <strong>${results.summary.pagesWithBoth}</strong>
+                    <span>Avec les deux</span>
+                </div>
+                <div class="summary-item">
+                    <strong>${results.summary.pagesWithNone}</strong>
+                    <span>Sans menu</span>
+                </div>
+                <div class="summary-item">
+                    <strong>${results.summary.pagesWithMobileMenu}</strong>
+                    <span>Avec menu mobile</span>
+                </div>
+                <div class="summary-item">
+                    <strong>${results.summary.pagesWithActivePage}</strong>
+                    <span>Page active marquée</span>
+                </div>
+                <div class="summary-item">
+                    <strong>${results.summary.pagesWithBrokenLinks}</strong>
+                    <span>Liens cassés</span>
+                </div>
+            `;
+            
+            // Détails
+            detailsDiv.innerHTML = '';
+            results.pages.forEach(pageResult => {
+                const pageDiv = document.createElement('div');
+                pageDiv.style.marginTop = '20px';
+                pageDiv.style.padding = '15px';
+                pageDiv.style.border = '1px solid #ddd';
+                pageDiv.style.borderRadius = '4px';
+                
+                let html = `<h3>${pageResult.page}</h3>`;
+                
+                if (pageResult.hasNavbar) {
+                    html += '<div class="success">✓ Navbar présente</div>';
+                }
+                if (pageResult.hasSidebar) {
+                    html += '<div class="success">✓ Sidebar présente</div>';
+                }
+                if (pageResult.hasMobileMenu) {
+                    html += '<div class="success">✓ Menu mobile présent</div>';
+                }
+                if (pageResult.hasActivePage) {
+                    html += '<div class="success">✓ Page active marquée</div>';
+                }
+                
+                if (pageResult.issues.length > 0) {
+                    html += '<div><strong>Problèmes:</strong></div>';
+                    pageResult.issues.forEach(issue => {
+                        html += `<div class="issue">⚠ ${issue}</div>`;
+                    });
+                }
+                
+                if (pageResult.brokenLinks.length > 0) {
+                    html += '<div><strong>Liens cassés:</strong></div>';
+                    pageResult.brokenLinks.forEach(link => {
+                        html += `<div class="issue">⚠ ${link.href} (${link.text})</div>`;
+                    });
+                }
+                
+                if (pageResult.mobileFunctionality) {
+                    html += '<div><strong>Fonctionnalité mobile:</strong></div>';
+                    html += `<div class="info">toggleMobileMenu: ${pageResult.mobileFunctionality.toggleMobileMenuExists ? '✓' : '✗'}</div>`;
+                    html += `<div class="info">toggleSidebar: ${pageResult.mobileFunctionality.toggleSidebarExists ? '✓' : '✗'}</div>`;
+                    html += `<div class="info">Peut basculer: ${pageResult.mobileFunctionality.canToggle ? '✓' : '✗'}</div>`;
+                }
+                
+                if (pageResult.responsive) {
+                    html += '<div><strong>Responsive:</strong></div>';
+                    html += `<div class="info">Largeur: ${pageResult.responsive.currentWidth}px</div>`;
+                    html += `<div class="info">Type: ${pageResult.responsive.isMobile ? 'Mobile' : pageResult.responsive.isTablet ? 'Tablette' : 'Desktop'}</div>`;
+                }
+                
+                pageDiv.innerHTML = html;
+                detailsDiv.appendChild(pageDiv);
+            });
+        }
+
+        function clearResults() {
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('testFrame').style.display = 'none';
+        }
+
+        // Initialiser la liste des pages
+        createPageList();
+    </script>
+</body>
+</html>
+

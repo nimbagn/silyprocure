@@ -343,36 +343,29 @@
             border-bottom: 1px solid #e5e7eb !important;
         }
         
-        /* Menu de navigation - Visible par défaut, caché seulement sur mobile */
         nav[aria-label="Menu de navigation"] {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            position: relative !important;
-            z-index: 10 !important;
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
         
-        /* Cacher le menu desktop sur les très petits écrans (< 640px) */
+        nav[aria-label="Menu de navigation"]::-webkit-scrollbar {
+            display: none;
+        }
+        
+        nav[aria-label="Menu de navigation"] a {
+            position: relative;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
         @media (max-width: 639px) {
             nav[aria-label="Menu de navigation"] {
                 display: none !important;
             }
-        }
-        
-        /* Assurer que le menu desktop est visible sur les écrans >= 640px */
-        @media (min-width: 640px) {
-            nav[aria-label="Menu de navigation"] {
-                display: flex !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-            }
-        }
-        
-        /* S'assurer que le conteneur du menu n'a pas d'overflow qui cache le menu */
-        nav[aria-label="Menu de navigation"] > div {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
         }
     </style>
 </head>
@@ -387,71 +380,52 @@
     <!-- Navbar Moderne selon charte Pro Confiance -->
     <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo -->
-                <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
-                    <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-primary-500/30 mr-2">S</div>
-                    <span class="text-xl font-bold text-gray-900 tracking-tight">Sily<span class="text-primary-600">Procure</span></span>
-                </div>
-
-                <!-- Menu de Navigation Centré -->
-                <nav class="flex items-center justify-center flex-1 mx-8" aria-label="Menu de navigation">
-                    <div class="flex items-center space-x-1 bg-gray-50 rounded-lg p-1 border border-gray-200">
-                        <a href="dashboard.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
-                            <i class="fas fa-chart-line mr-2 text-xs" aria-hidden="true"></i>
+            <div class="flex justify-between h-16">
+                <!-- Logo & Nav Links -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='dashboard.html'">
+                        <span class="text-2xl font-bold text-primary-600">Sily<span class="text-gray-900">Procure</span></span>
+                    </div>
+                    <nav class="hidden sm:flex sm:ml-6 sm:space-x-1 md:ml-8" aria-label="Menu de navigation">
+                        <a href="dashboard.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-chart-line mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
                             <span>Dashboard</span>
                         </a>
-                        <a href="rfq.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-semibold min-h-[36px] transition-all bg-primary-600 text-white shadow-sm" aria-current="page">
-                            <i class="fas fa-file-contract mr-2 text-xs" aria-hidden="true"></i>
+                        <a href="rfq.html" class="border-primary-500 text-primary-900 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-semibold min-h-[44px] transition-colors whitespace-nowrap" aria-current="page">
+                            <i class="fas fa-file-contract mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
                             <span>RFQ</span>
                         </a>
-                        <a href="devis.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
-                            <i class="fas fa-file-invoice-dollar mr-2 text-xs" aria-hidden="true"></i>
+                        <a href="devis.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-file-invoice-dollar mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
                             <span>Devis</span>
                         </a>
-                        <a href="commandes.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
-                            <i class="fas fa-shopping-cart mr-2 text-xs" aria-hidden="true"></i>
+                        <a href="commandes.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-shopping-cart mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
                             <span>Commandes</span>
                         </a>
-                        <a href="entreprises.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
-                            <i class="fas fa-building mr-2 text-xs" aria-hidden="true"></i>
+                        <a href="entreprises.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-building mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
                             <span>Entreprises</span>
                         </a>
-                        <a href="factures.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
-                            <i class="fas fa-money-bill-wave mr-2 text-xs" aria-hidden="true"></i>
+                        <a href="factures.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-money-bill-wave mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
                             <span>Factures</span>
                         </a>
-                        <a href="carte.html" class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium min-h-[36px] transition-all text-neutral-600 hover:text-primary-700 hover:bg-white">
-                            <i class="fas fa-map-marked-alt mr-2 text-xs" aria-hidden="true"></i>
+                        <a href="carte.html" class="border-transparent text-neutral-500 hover:border-primary-300 hover:text-primary-700 inline-flex items-center px-3 sm:px-4 py-2 border-b-2 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap">
+                            <i class="fas fa-map-marked-alt mr-1.5 sm:mr-2 text-xs sm:text-sm" aria-hidden="true"></i>
                             <span>Carte</span>
                         </a>
-                    </div>
-                </nav>
+                    </nav>
+                </div>
 
-                <!-- Search Bar & Profile -->
+                <!-- Profile & Mobile Menu -->
                 <div class="flex items-center gap-4">
-                    <!-- Global Search -->
-                    <div class="hidden lg:block relative text-neutral-500 focus-within:text-primary-600" role="search">
-                        <label for="global-search" class="sr-only">Rechercher dans l'application</label>
-                        <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                            <i class="fas fa-search" aria-hidden="true"></i>
-                        </div>
-                        <input id="global-search" class="block w-64 bg-blue-50 py-2.5 pl-10 pr-4 border border-blue-200 rounded-full leading-5 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition duration-150 ease-in-out min-h-[44px]" placeholder="Rechercher..." type="search" aria-label="Rechercher">
-                    </div>
-
-                    <!-- Notifications -->
-                    <button class="relative p-2.5 text-neutral-500 hover:text-primary-600 transition-colors rounded-lg hover:bg-blue-50 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Notifications" title="Notifications">
-                        <i class="far fa-bell text-xl" aria-hidden="true"></i>
-                        <span class="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true"></span>
-                    </button>
-
-                    <!-- Profile Dropdown -->
                     <div class="relative flex items-center gap-3">
-                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm" aria-label="Profil utilisateur">
+                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border-2 border-primary-200 shadow-sm">
                             <span id="user-initials">U</span>
                         </div>
                         <span id="user-name" class="hidden md:block text-sm font-semibold text-neutral-700 min-w-[120px]">Chargement...</span>
-                        <button onclick="logout()" class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5" aria-label="Déconnexion" title="Déconnexion">
+                        <button onclick="logout()" class="ml-1 text-xs text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition min-h-[44px] flex items-center gap-1.5">
                             <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                             <span class="hidden lg:inline">Déconnexion</span>
                         </button>
@@ -459,7 +433,7 @@
                     
                     <!-- Menu mobile -->
                     <div class="sm:hidden ml-2">
-                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]" aria-expanded="false" aria-label="Menu principal" aria-controls="mobile-menu">
+                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2.5 rounded-lg text-neutral-500 hover:text-primary-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 min-w-[44px] min-h-[44px]">
                             <i class="fas fa-bars text-xl"></i>
                         </button>
                     </div>
