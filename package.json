@@ -17,6 +17,8 @@
     "render:add-clients-columns": "node backend/scripts/add-clients-columns.js",
     "render:add-entreprises-columns": "node backend/scripts/add-entreprises-columns.js",
     "render:fix-admin": "node fix_admin_render.js",
+    "build:css": "tailwindcss -i ./frontend/css/tailwind-input.css -o ./frontend/css/tailwind.css --minify",
+    "build:css:watch": "tailwindcss -i ./frontend/css/tailwind-input.css -o ./frontend/css/tailwind.css --watch",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
