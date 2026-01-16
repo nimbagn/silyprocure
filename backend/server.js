@@ -139,8 +139,10 @@ const aiRoutes = require('./routes/ai');
 const messageProRoutes = require('./routes/messagepro');
 const whatsappRoutes = require('./routes/whatsapp');
 const settingsRoutes = require('./routes/settings');
+const publicRoutes = require('./routes/public');
 
 // API Routes
+app.use('/api/public', publicRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/utilisateurs', utilisateursRoutes);
 app.use('/api/entreprises', entreprisesRoutes);

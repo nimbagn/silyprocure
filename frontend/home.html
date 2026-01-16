@@ -283,22 +283,14 @@
             <p class="text-center text-sm font-semibold text-slate-400 uppercase tracking-widest">Ils nous font confiance pour leur approvisionnement</p>
                             </div>
         <div class="relative flex overflow-x-hidden group">
-            <div class="animate-scroll whitespace-nowrap flex items-center gap-16 px-8 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-                <i class="fab fa-aws text-4xl"></i>
-                <i class="fab fa-google text-4xl"></i>
-                <i class="fab fa-microsoft text-4xl"></i>
-                <i class="fab fa-airbnb text-4xl"></i>
-                <i class="fab fa-uber text-4xl"></i>
-                <i class="fab fa-spotify text-4xl"></i>
-                <i class="fab fa-apple text-4xl"></i>
-                <i class="fab fa-aws text-4xl"></i>
-                <i class="fab fa-google text-4xl"></i>
-                <i class="fab fa-microsoft text-4xl"></i>
-                <i class="fab fa-airbnb text-4xl"></i>
-                <i class="fab fa-uber text-4xl"></i>
-                <i class="fab fa-spotify text-4xl"></i>
-                <i class="fab fa-apple text-4xl"></i>
-                            </div>
+            <!-- Track dynamique (chargé via /api/public/entreprises?type=client&actif=true) -->
+            <div id="client-logos-track" class="animate-scroll whitespace-nowrap flex items-center gap-10 px-8 opacity-70 hover:opacity-100 transition-all duration-500">
+                <!-- fallback minimal si JS/API indisponible -->
+                <div class="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div class="w-9 h-9 rounded-xl bg-brand-600 text-white font-black flex items-center justify-center">SP</div>
+                    <div class="text-sm font-bold text-slate-700">SilyProcure</div>
+                </div>
+            </div>
                         </div>
                             </div>
 
@@ -673,6 +665,77 @@
                 alert("Système de démo : Commande localisée au Port Autonome de Conakry.");
             }, 1500);
         }
+
+        // --- Clients Logos (public) ---
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function initialsFromName(name) {
+            const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+            const a = (parts[0] || '').slice(0, 1);
+            const b = (parts[1] || parts[0] || '').slice(0, 1);
+            return (a + b).toUpperCase() || 'CL';
+        }
+
+        function renderClientLogoItem(ent) {
+            const nom = ent?.nom || ent?.raison_sociale || 'Client';
+            const initials = initialsFromName(nom);
+            // Support futur si vous ajoutez logo_url/logo_path dans la table
+            const logoUrl = ent?.logo_url || ent?.logo || ent?.logo_path || '';
+            const website = ent?.site_web || '';
+
+            const label = escapeHtml(nom);
+            const href = website && /^https?:\/\//i.test(website) ? website : (website ? `https://${website}` : '');
+
+            const content = logoUrl
+                ? `<img src="${escapeHtml(logoUrl)}" alt="${label}" class="h-10 max-w-[160px] object-contain" loading="lazy" onerror="this.remove(); this.parentElement.querySelector('[data-fallback]').classList.remove('hidden');">`
+                : '';
+
+            const fallback = `
+                <div data-fallback class="${logoUrl ? 'hidden' : ''} inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-800 font-black flex items-center justify-center">${escapeHtml(initials)}</div>
+                    <div class="text-sm font-bold text-slate-700">${label}</div>
+                </div>
+            `;
+
+            const inner = `
+                <div class="inline-flex items-center justify-center px-2 py-2">
+                    <div class="inline-flex items-center justify-center rounded-2xl bg-white border border-slate-100 shadow-sm px-6 py-4 hover:border-brand-100 hover:shadow-md transition-all">
+                        ${content}
+                        ${fallback}
+                    </div>
+                </div>
+            `;
+
+            return href ? `<a class="inline-block align-middle" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" title="${label}">${inner}</a>` : inner;
+        }
+
+        async function loadActiveClientLogos() {
+            const track = document.getElementById('client-logos-track');
+            if (!track) return;
+
+            try {
+                const res = await fetch('/api/public/entreprises?type=client&limit=20', { credentials: 'omit' });
+                if (!res.ok) return;
+                const entreprises = await res.json();
+                if (!Array.isArray(entreprises) || entreprises.length === 0) return;
+
+                // Build one sequence and duplicate it for a seamless marquee
+                const items = entreprises.map(renderClientLogoItem).join('');
+                track.innerHTML = items + items;
+            } catch (e) {
+                // Silent fallback (keep default)
+            }
+        }
+
+        // Charger dès que possible (sans dépendre des animations)
+        loadActiveClientLogos();
     </script>
 </body>
 </html>
