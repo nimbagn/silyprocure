@@ -20,37 +20,8 @@
     <!-- Dashboard Theme CSS -->
     <link rel="stylesheet" href="css/dashboard-theme.css">
 
-    <!-- UX ciblée pour Demandes de Devis -->
-    <style>
-        /* Barre filtres: sticky sous la navbar */
-        .dd-sticky-filters {
-            position: sticky;
-            top: 4rem; /* navbar h-16 */
-            z-index: 40;
-        }
-
-        /* Modales: tailles adaptatives */
-        #detailModal .modal-content,
-        #editModal .modal-content,
-        #createRFQModal .modal-content,
-        #previewModal .modal-content {
-            width: min(1000px, 95vw);
-            max-width: 95vw;
-            max-height: 85vh;
-        }
-        #detailModal .modal-content { height: min(720px, 85vh); }
-        #previewModal .modal-content { height: min(85vh, 900px); }
-
-        /* Padding modales sur mobile */
-        @media (max-width: 640px) {
-            #createRFQModal .modal-body,
-            #editModal .modal-body,
-            #previewModal .modal-body,
-            #detailModal .modal-body {
-                padding: 1rem !important;
-            }
-        }
-    </style>
+    <!-- Page styles (Master-Detail) -->
+    <link rel="stylesheet" href="css/pages/demandes-devis.css">
 </head>
 <body class="h-full flex flex-col">
     <script src="js/auth.js"></script>
@@ -215,7 +186,6 @@
                         <input type="text" 
                                id="search-input" 
                                placeholder="Rechercher (nom, email, entreprise)..." 
-                               onkeyup="filterDemandes()"
                                class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm lg:text-base">
                     </div>
                     <div class="lg:w-64">
@@ -246,44 +216,61 @@
                 </div>
             </div>
 
-            <!-- Liste des demandes -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-list text-primary-600"></i>
-                        Liste des demandes
-                    </h2>
-                </div>
-                <div class="overflow-x-auto">
-                    <!-- Tableau desktop -->
-                    <div id="demandes-table-container" class="min-w-full">
-                        <div class="loading text-center py-12">Chargement des demandes...</div>
-                    </div>
-                    <!-- Cards mobile -->
-                    <div id="demandes-cards-mobile" class="p-4 hidden">
-                        <!-- Les cards mobiles seront générées ici -->
-                    </div>
-                </div>
-                <!-- Pagination -->
-                <div id="demandes-pagination" class="hidden px-4 sm:px-6 py-4 border-t border-gray-200 bg-white">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                        <div class="text-sm text-gray-600" id="demandes-pagination-text">—</div>
-                        <div class="flex items-center gap-2 justify-end">
-                            <button type="button" id="btn-prev-page"
-                                    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-                                    onclick="goToPrevPage()">
-                                <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                                <span>Précédent</span>
-                            </button>
-                            <button type="button" id="btn-next-page"
-                                    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-                                    onclick="goToNextPage()">
-                                <span>Suivant</span>
-                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                            </button>
+            <!-- Modèle Master-Detail -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Liste (gauche) -->
+                <section class="lg:col-span-5">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                            <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <i class="fas fa-list text-primary-600"></i>
+                                Liste des demandes
+                            </h2>
+                            <span class="text-xs text-gray-500">Cliquez pour afficher le détail</span>
+                        </div>
+                        <div class="p-4">
+                            <div id="demandes-list">
+                                <div class="loading text-center py-10">Chargement des demandes...</div>
+                            </div>
+                        </div>
+                        <!-- Pagination -->
+                        <div id="demandes-pagination" class="hidden px-4 sm:px-6 py-4 border-t border-gray-200 bg-white">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div class="text-sm text-gray-600" id="demandes-pagination-text">—</div>
+                                <div class="flex items-center gap-2 justify-end">
+                                    <button type="button" id="btn-prev-page"
+                                            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                                            onclick="goToPrevPage()">
+                                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                                        <span>Précédent</span>
+                                    </button>
+                                    <button type="button" id="btn-next-page"
+                                            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                                            onclick="goToNextPage()">
+                                        <span>Suivant</span>
+                                        <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </section>
+
+                <!-- Détail (droite) -->
+                <aside class="lg:col-span-7">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                            <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <i class="fas fa-info-circle text-primary-600"></i>
+                                Détails
+                            </h2>
+                            <span class="text-xs text-gray-500 hidden lg:inline">Desktop: panneau • Mobile: modal</span>
+                        </div>
+                        <div class="p-4" id="detail-panel-body">
+                            <!-- Injecté par JS -->
+                        </div>
+                    </div>
+                </aside>
             </div>
         </div>
     </main>
@@ -422,7 +409,7 @@
         </div>
     </div></div>
 
-    <script>
+    <script type="text/plain" data-disabled="true">
         let allDemandes = [];
         let paginationState = null;
         let currentPage = 1;
@@ -1776,6 +1763,9 @@
             });
         });
     </script>
+
+    <!-- Refactor: logique de page externalisée -->
+    <script src="js/pages/demandes-devis.js?v=20260116"></script>
 </body>
 </html>
 

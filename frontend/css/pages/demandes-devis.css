@@ -1,0 +1,47 @@
+/* Page-specific styles for Demandes de Devis (Master-Detail model) */
+
+/* Barre filtres sticky sous la navbar */
+.dd-sticky-filters {
+  position: sticky;
+  top: 4rem; /* navbar h-16 */
+  z-index: 40;
+}
+
+/* Liste: élément sélectionné */
+.dd-item[aria-selected="true"] {
+  outline: 2px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 2px;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.08), rgba(255, 255, 255, 0));
+}
+
+/* Détail: placeholder */
+.dd-detail-empty {
+  border: 2px dashed rgba(148, 163, 184, 0.5);
+}
+
+/* Modales: tailles adaptatives */
+#detailModal .modal-content,
+#editModal .modal-content,
+#createRFQModal .modal-content,
+#previewModal .modal-content {
+  width: min(1000px, 95vw);
+  max-width: 95vw;
+  max-height: 85vh;
+}
+#detailModal .modal-content {
+  height: min(720px, 85vh);
+}
+#previewModal .modal-content {
+  height: min(85vh, 900px);
+}
+
+@media (max-width: 640px) {
+  #createRFQModal .modal-body,
+  #editModal .modal-body,
+  #previewModal .modal-body,
+  #detailModal .modal-body {
+    padding: 1rem !important;
+  }
+}
+
+
