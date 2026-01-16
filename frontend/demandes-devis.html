@@ -19,6 +19,38 @@
     
     <!-- Dashboard Theme CSS -->
     <link rel="stylesheet" href="css/dashboard-theme.css">
+
+    <!-- UX ciblée pour Demandes de Devis -->
+    <style>
+        /* Barre filtres: sticky sous la navbar */
+        .dd-sticky-filters {
+            position: sticky;
+            top: 4rem; /* navbar h-16 */
+            z-index: 40;
+        }
+
+        /* Modales: tailles adaptatives */
+        #detailModal .modal-content,
+        #editModal .modal-content,
+        #createRFQModal .modal-content,
+        #previewModal .modal-content {
+            width: min(1000px, 95vw);
+            max-width: 95vw;
+            max-height: 85vh;
+        }
+        #detailModal .modal-content { height: min(720px, 85vh); }
+        #previewModal .modal-content { height: min(85vh, 900px); }
+
+        /* Padding modales sur mobile */
+        @media (max-width: 640px) {
+            #createRFQModal .modal-body,
+            #editModal .modal-body,
+            #previewModal .modal-body,
+            #detailModal .modal-body {
+                padding: 1rem !important;
+            }
+        }
+    </style>
 </head>
 <body class="h-full flex flex-col">
     <script src="js/auth.js"></script>
@@ -174,7 +206,7 @@
             </div>
 
             <!-- Barre de recherche et filtres -->
-            <div class="mb-6 bg-white rounded-xl shadow-sm p-4 lg:p-6">
+            <div class="mb-6 bg-white rounded-xl shadow-sm p-4 lg:p-6 dd-sticky-filters">
                 <div class="flex flex-col lg:flex-row gap-4">
                     <div class="flex-1 relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -188,7 +220,7 @@
                     </div>
                     <div class="lg:w-64">
                         <select id="statut-filter" 
-                                onchange="filterDemandes()"
+                                onchange="onStatutFilterChange()"
                                 class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm lg:text-base">
                             <option value="">Tous les statuts</option>
                             <option value="nouvelle">Nouvelle</option>
@@ -196,6 +228,20 @@
                             <option value="traitee">Traitée</option>
                             <option value="annulee">Annulée</option>
                         </select>
+                    </div>
+                </div>
+                <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-gray-600">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-filter text-gray-400" aria-hidden="true"></i>
+                        <span id="demandes-results-count">—</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button"
+                                class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 min-h-[44px]"
+                                onclick="clearFilters()">
+                            <i class="fas fa-eraser text-gray-400" aria-hidden="true"></i>
+                            <span>Effacer les filtres</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -218,18 +264,38 @@
                         <!-- Les cards mobiles seront générées ici -->
                     </div>
                 </div>
+                <!-- Pagination -->
+                <div id="demandes-pagination" class="hidden px-4 sm:px-6 py-4 border-t border-gray-200 bg-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="text-sm text-gray-600" id="demandes-pagination-text">—</div>
+                        <div class="flex items-center gap-2 justify-end">
+                            <button type="button" id="btn-prev-page"
+                                    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                                    onclick="goToPrevPage()">
+                                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                                <span>Précédent</span>
+                            </button>
+                            <button type="button" id="btn-next-page"
+                                    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                                    onclick="goToNextPage()">
+                                <span>Suivant</span>
+                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
 
     <!-- Modal de détails -->
     <div class="modal-overlay"><div id="detailModal" class="modal">
-        <div class="modal-content" style="width: 794px; height: 562px; max-width: 794px; max-height: 562px; margin: auto; display: flex; flex-direction: column;">
+        <div class="modal-content" style="margin: auto; display: flex; flex-direction: column;">
             <div class="modal-header" style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%); color: white; padding: 1rem 1.5rem; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; margin-bottom: 0; flex-shrink: 0;">
                 <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-info-circle"></i> Détails de la demande
                 </h2>
-                <button class="modal-close" onclick="closeDetailModal()" style="background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; font-size: 1rem; flex-shrink: 0;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                <button class="modal-close" onclick="closeDetailModal()" style="background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; font-size: 1rem; flex-shrink: 0;" aria-label="Fermer">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -241,12 +307,12 @@
 
     <!-- Modal de prévisualisation de fichier -->
     <div class="modal-overlay"><div id="previewModal" class="modal">
-        <div class="modal-content" style="max-width: 90vw; max-height: 90vh; width: auto; height: auto;">
+        <div class="modal-content" style="width: auto; height: auto;">
             <div class="modal-header" style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%); color: white; padding: 1rem 1.5rem; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; margin-bottom: 0; flex-shrink: 0;">
                 <h2 id="preview-title" style="margin: 0; font-size: 1.125rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-eye"></i> Prévisualisation
                 </h2>
-                <button class="modal-close" onclick="closePreviewModal()" style="background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; font-size: 1rem; flex-shrink: 0;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                <button class="modal-close" onclick="closePreviewModal()" style="background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; font-size: 1rem; flex-shrink: 0;" aria-label="Fermer">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -265,7 +331,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body" style="padding: 2rem;">
+            <div class="modal-body">
                 <form id="createRFQForm" onsubmit="submitCreateRFQ(event)">
                     <div class="form-group">
                         <label><i class="fas fa-building"></i> Sélectionner les fournisseurs *</label>
@@ -310,7 +376,7 @@
                                placeholder="Ex: 30% à la commande, 70% à la livraison">
                     </div>
 
-                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; flex-wrap: wrap;">
                         <button type="button" class="btn btn-secondary" onclick="closeCreateRFQModal()">Annuler</button>
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-check"></i> Créer les RFQ
@@ -330,7 +396,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body" style="padding: 2rem;">
+            <div class="modal-body">
                 <form id="edit-form" onsubmit="handleUpdateStatut(event)">
                     <input type="hidden" id="edit-id">
                     <div class="form-group">
@@ -358,6 +424,7 @@
 
     <script>
         let allDemandes = [];
+        let paginationState = null;
         let currentPage = 1;
         const limit = 50;
 
@@ -380,6 +447,11 @@
                 const statut = document.getElementById('statut-filter')?.value || '';
                 const url = `/api/contact/demandes?page=${currentPage}&limit=${limit}${statut ? '&statut=' + statut : ''}`;
                 
+                const tableContainer = document.getElementById('demandes-table-container');
+                if (tableContainer) {
+                    tableContainer.innerHTML = '<div class="loading text-center py-12">Chargement des demandes...</div>';
+                }
+
                 const response = await apiCall(url);
                 if (!response.ok) {
                     throw new Error('Erreur lors du chargement des demandes');
@@ -387,7 +459,9 @@
 
                 const data = await response.json();
                 allDemandes = data.demandes || [];
-                displayDemandes(allDemandes);
+                paginationState = data.pagination || null;
+                applySearchFilter();
+                updatePaginationUI();
             } catch (error) {
                 console.error('Erreur:', error);
                 Toast.error('Erreur lors du chargement des demandes');
@@ -849,6 +923,7 @@
             `;
 
             container.innerHTML = table;
+            updateResultsCount(demandes.length);
 
             // Cards mobile
             if (mobileContainer && window.innerWidth <= 768) {
@@ -946,11 +1021,7 @@
 
                 const demande = await response.json();
                 const body = document.getElementById('detail-modal-body');
-                
-                // Debug: vérifier les articles
-                console.log('Demande reçue:', demande);
-                console.log('Articles:', demande.articles);
-                
+
                 // Construire le HTML des articles
                 let articlesHtml = '';
                 if (demande.articles && Array.isArray(demande.articles) && demande.articles.length > 0) {
@@ -1438,31 +1509,81 @@
         }
 
         window.filterDemandes = function filterDemandes() {
-            const search = document.getElementById('search-input')?.value.toLowerCase() || '';
-            const statut = document.getElementById('statut-filter')?.value || '';
-            
-            let filtered = allDemandes.filter(d => {
-                const matchSearch = !search || 
-                    (d.nom && d.nom.toLowerCase().includes(search)) ||
-                    (d.email && d.email.toLowerCase().includes(search)) ||
-                    (d.entreprise && d.entreprise.toLowerCase().includes(search));
-                const matchStatut = !statut || d.statut === statut;
-                return matchSearch && matchStatut;
-            });
-
-            displayDemandes(filtered);
+            applySearchFilter();
         }
 
         // Gérer le responsive au redimensionnement
         window.addEventListener('resize', () => {
             if (allDemandes.length > 0) {
-                displayDemandes(allDemandes);
+                applySearchFilter();
             }
         });
 
         window.refreshDemandes = function refreshDemandes() {
             loadDemandes();
             loadStats();
+        }
+
+        function applySearchFilter() {
+            const search = document.getElementById('search-input')?.value.toLowerCase().trim() || '';
+            const filtered = !search ? allDemandes : allDemandes.filter(d => {
+                return (d.nom && d.nom.toLowerCase().includes(search)) ||
+                    (d.email && d.email.toLowerCase().includes(search)) ||
+                    (d.entreprise && d.entreprise.toLowerCase().includes(search));
+            });
+            displayDemandes(filtered);
+        }
+
+        function updateResultsCount(currentCount) {
+            const el = document.getElementById('demandes-results-count');
+            if (!el) return;
+            if (paginationState && Number.isFinite(paginationState.total)) {
+                el.textContent = `${currentCount} affichée(s) (page ${paginationState.page}/${paginationState.totalPages}) — total ${paginationState.total}`;
+            } else {
+                el.textContent = `${currentCount} affichée(s)`;
+            }
+        }
+
+        function updatePaginationUI() {
+            const wrapper = document.getElementById('demandes-pagination');
+            const text = document.getElementById('demandes-pagination-text');
+            const prevBtn = document.getElementById('btn-prev-page');
+            const nextBtn = document.getElementById('btn-next-page');
+            if (!wrapper || !text || !prevBtn || !nextBtn) return;
+
+            if (!paginationState || !paginationState.totalPages || paginationState.totalPages <= 1) {
+                wrapper.classList.add('hidden');
+                return;
+            }
+            wrapper.classList.remove('hidden');
+            text.textContent = `Page ${paginationState.page} sur ${paginationState.totalPages} (limite ${paginationState.limit})`;
+            prevBtn.disabled = paginationState.page <= 1;
+            nextBtn.disabled = paginationState.page >= paginationState.totalPages;
+        }
+
+        window.goToPrevPage = function goToPrevPage() {
+            if (!paginationState || paginationState.page <= 1) return;
+            currentPage = paginationState.page - 1;
+            loadDemandes();
+        }
+        window.goToNextPage = function goToNextPage() {
+            if (!paginationState || paginationState.page >= paginationState.totalPages) return;
+            currentPage = paginationState.page + 1;
+            loadDemandes();
+        }
+
+        window.onStatutFilterChange = function onStatutFilterChange() {
+            currentPage = 1;
+            loadDemandes();
+        }
+
+        window.clearFilters = function clearFilters() {
+            const searchEl = document.getElementById('search-input');
+            const statutEl = document.getElementById('statut-filter');
+            if (searchEl) searchEl.value = '';
+            if (statutEl) statutEl.value = '';
+            currentPage = 1;
+            loadDemandes();
         }
 
         let currentDemandeId = null;
