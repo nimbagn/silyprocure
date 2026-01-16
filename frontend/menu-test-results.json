@@ -2,15 +2,15 @@
   "pages": [
     {
       "page": "dashboard.html",
-      "hasNavbar": true,
-      "hasSidebar": false,
+      "hasNavbar": false,
+      "hasSidebar": true,
       "sidebarDisabled": false,
       "hasMobileMenu": true,
       "hasToggleFunction": true,
       "hasActivePage": true,
       "brokenLinks": [],
       "issues": [],
-      "navbarType": "inline"
+      "navbarType": null
     },
     {
       "page": "home.html",
@@ -316,8 +316,8 @@
   "issues": [],
   "summary": {
     "totalPages": 26,
-    "pagesWithNavbar": 26,
-    "pagesWithSidebar": 0,
+    "pagesWithNavbar": 25,
+    "pagesWithSidebar": 1,
     "pagesWithBoth": 0,
     "pagesWithNone": 0,
     "pagesWithMobileMenu": 26,

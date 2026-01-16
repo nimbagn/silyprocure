@@ -466,12 +466,11 @@
                 const demandes = await response.json();
                 
                 if (demandes.length === 0) {
-                    document.getElementById('whatsapp-pending-section').style.display = 'none';
+                    document.getElementById('whatsapp-pending-section').classList.add('hidden');
                     return;
                 }
 
                 document.getElementById('whatsapp-pending-section').classList.remove('hidden');
-                document.getElementById('whatsapp-pending-section').style.display = 'block';
                 document.getElementById('whatsapp-pending-count').textContent = demandes.length;
 
                 // Afficher les demandes
