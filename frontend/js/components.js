@@ -1,4 +1,12 @@
 // Composants réutilisables
+// NOTE: certaines pages incluaient `components.js` plusieurs fois, ce qui provoquait:
+// "Identifier 'Toast' has already been declared".
+// On encapsule donc les déclarations dans une IIFE pour éviter toute redéclaration globale.
+
+(() => {
+    if (window.Toast && window.Modal && window.confirmAction && window.showLoading && window.hideLoading) {
+        return;
+    }
 
 // Système de notifications Toast
 class Toast {
@@ -221,3 +229,4 @@ window.confirmAction = confirmAction;
 window.showLoading = showLoading;
 window.hideLoading = hideLoading;
 
+})();
