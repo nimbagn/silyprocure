@@ -716,18 +716,39 @@
             return href ? `<a class="inline-block align-middle" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" title="${label}">${inner}</a>` : inner;
         }
 
+        function typeBadge(type) {
+            const t = String(type || '').toLowerCase();
+            if (t === 'fournisseur') return { label: 'Fournisseur', cls: 'bg-amber-50 text-amber-700 border-amber-200' };
+            if (t === 'client') return { label: 'Client', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+            return { label: type || 'Entreprise', cls: 'bg-slate-50 text-slate-700 border-slate-200' };
+        }
+
         async function loadActiveClientLogos() {
             const track = document.getElementById('client-logos-track');
             if (!track) return;
 
             try {
-                const res = await fetch('/api/public/entreprises?type=client&limit=20', { credentials: 'omit' });
+                const res = await fetch('/api/public/entreprises?types=client,fournisseur&limit=30', { credentials: 'omit' });
                 if (!res.ok) return;
                 const entreprises = await res.json();
                 if (!Array.isArray(entreprises) || entreprises.length === 0) return;
 
                 // Build one sequence and duplicate it for a seamless marquee
-                const items = entreprises.map(renderClientLogoItem).join('');
+                const items = entreprises.map((ent) => {
+                    const badge = typeBadge(ent?.type_entreprise);
+                    const base = renderClientLogoItem(ent);
+                    // inject a small badge (wrap)
+                    return `
+                        <div class="inline-block align-middle">
+                            <div class="relative">
+                                <div class="absolute -top-2 left-4 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full border ${badge.cls}">
+                                    ${escapeHtml(badge.label)}
+                                </div>
+                                ${base}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
                 track.innerHTML = items + items;
             } catch (e) {
                 // Silent fallback (keep default)
