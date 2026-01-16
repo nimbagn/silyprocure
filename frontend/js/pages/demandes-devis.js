@@ -39,10 +39,10 @@
 
   function statutBadge(statut) {
     const map = {
-      nouvelle: 'bg-red-100 text-red-800',
-      en_cours: 'bg-yellow-100 text-yellow-800',
-      traitee: 'bg-green-100 text-green-800',
-      annulee: 'bg-slate-100 text-slate-800',
+      nouvelle: 'bg-rose-50 text-red-600 border border-rose-100',
+      en_cours: 'bg-amber-50 text-amber-600 border border-amber-100',
+      traitee: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
+      annulee: 'bg-slate-50 text-slate-600 border border-slate-100',
     };
     const label = {
       nouvelle: 'Nouvelle',
@@ -50,72 +50,40 @@
       traitee: 'Traitée',
       annulee: 'Annulée',
     };
-    const cls = map[statut] || 'bg-slate-100 text-slate-800';
+    const cls = map[statut] || 'bg-slate-50 text-slate-600 border border-slate-100';
     const txt = label[statut] || statut || '-';
-    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${cls}">${escapeHtml(txt)}</span>`;
+    return `<span class="badge-pill ${cls}">${escapeHtml(txt)}</span>`;
   }
 
-  function openOverlayModal(modalId) {
-    const modal = $(modalId);
-    const overlay = modal?.closest('.modal-overlay');
-    if (!modal || !overlay) return;
-    modal.classList.add('active');
-    overlay.classList.add('active');
-    overlay.style.display = 'flex';
-    document.body.classList.add('modal-open');
-    document.body.style.overflow = 'hidden';
+  function renderSkeletons() {
+    const container = $('demandes-list');
+    if (!container) return;
+    const skeletons = Array(6).fill(0).map(() => `
+      <div class="dd-item p-4 mb-3 bg-white border border-slate-100 rounded-xl">
+        <div class="flex gap-3">
+          <div class="w-10 h-10 rounded-lg skeleton flex-shrink-0"></div>
+          <div class="flex-1 space-y-2">
+            <div class="h-4 w-3/4 skeleton rounded"></div>
+            <div class="h-3 w-1/2 skeleton rounded"></div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    container.innerHTML = skeletons;
   }
 
-  function closeOverlayModal(modalId) {
-    const modal = $(modalId);
-    const overlay = modal?.closest('.modal-overlay');
-    if (modal) modal.classList.remove('active');
-    if (overlay) {
-      overlay.classList.remove('active');
-      overlay.style.display = 'none';
-    }
-    document.body.classList.remove('modal-open');
-    document.body.style.overflow = '';
-  }
-
-  function updateResultsCount(currentCount) {
-    const el = $('demandes-results-count');
-    if (!el) return;
-    if (state.pagination && Number.isFinite(state.pagination.total)) {
-      el.textContent = `${currentCount} affichée(s) (page ${state.pagination.page}/${state.pagination.totalPages}) — total ${state.pagination.total}`;
-    } else {
-      el.textContent = `${currentCount} affichée(s)`;
-    }
-  }
-
-  function updatePaginationUI() {
-    const wrapper = $('demandes-pagination');
-    const text = $('demandes-pagination-text');
-    const prevBtn = $('btn-prev-page');
-    const nextBtn = $('btn-next-page');
-    if (!wrapper || !text || !prevBtn || !nextBtn) return;
-
-    const p = state.pagination;
-    if (!p || !p.totalPages || p.totalPages <= 1) {
-      wrapper.classList.add('hidden');
-      return;
-    }
-    wrapper.classList.remove('hidden');
-    text.textContent = `Page ${p.page} sur ${p.totalPages} (limite ${p.limit})`;
-    prevBtn.disabled = p.page <= 1;
-    nextBtn.disabled = p.page >= p.totalPages;
-  }
-
-  function getFilteredDemandes() {
-    const search = (state.search || '').toLowerCase().trim();
-    if (!search) return state.demandes;
-    return state.demandes.filter((d) => {
-      return (
-        (d.nom && d.nom.toLowerCase().includes(search)) ||
-        (d.email && d.email.toLowerCase().includes(search)) ||
-        (d.entreprise && d.entreprise.toLowerCase().includes(search))
-      );
-    });
+  function renderDetailPlaceholder() {
+    const panel = $('detail-panel-body');
+    if (!panel) return;
+    panel.innerHTML = `
+      <div class="h-full flex flex-col items-center justify-center text-center p-8">
+        <div class="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
+          <i class="fas fa-mouse-pointer text-slate-300 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900">Sélectionnez une demande</h3>
+        <p class="text-slate-500 mt-2 max-w-sm">Choisissez une demande dans la liste à gauche pour voir ses détails et lancer le processus de RFQ.</p>
+      </div>
+    `;
   }
 
   function renderList() {
@@ -125,10 +93,12 @@
 
     if (list.length === 0) {
       container.innerHTML = `
-        <div class="text-center py-10">
-          <i class="fas fa-inbox text-gray-300 text-5xl mb-4"></i>
-          <p class="text-gray-700 font-semibold">Aucune demande</p>
-          <p class="text-gray-500 text-sm mt-1">Ajustez la recherche ou le filtre.</p>
+        <div class="text-center py-16 px-4">
+          <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-inbox text-slate-300 text-2xl"></i>
+          </div>
+          <h3 class="text-slate-900 font-semibold">Aucune demande</h3>
+          <p class="text-slate-500 text-sm mt-1 max-w-[200px] mx-auto">Essayez de modifier vos filtres ou de lancer une nouvelle recherche.</p>
         </div>
       `;
       updateResultsCount(0);
@@ -140,33 +110,28 @@
         const selected = String(d.id) === String(state.selectedId);
         return `
           <button type="button"
-                  class="dd-item w-full text-left p-4 rounded-xl border border-gray-200 bg-white hover:bg-blue-50/30 transition flex items-start gap-3"
+                  class="dd-item w-full text-left p-4 flex items-start gap-3"
                   data-demande-id="${d.id}"
                   aria-selected="${selected ? 'true' : 'false'}">
-            <div class="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700 flex-shrink-0">
-              <i class="fas fa-user" aria-hidden="true"></i>
+            <div class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0">
+              <i class="fas fa-file-invoice" aria-hidden="true"></i>
             </div>
             <div class="min-w-0 flex-1">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
-                  <div class="font-semibold text-gray-900 truncate">${escapeHtml(d.nom || 'Sans nom')}</div>
-                  <div class="text-sm text-gray-600 truncate">${escapeHtml(d.entreprise || '-')}</div>
+                  <div class="font-bold text-slate-900 truncate text-sm">${escapeHtml(d.nom || 'Sans nom')}</div>
+                  <div class="text-xs text-slate-500 truncate mt-0.5 font-medium">${escapeHtml(d.entreprise || '-')}</div>
                 </div>
-                <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
                   ${statutBadge(d.statut)}
-                  <div class="text-xs text-gray-500">${escapeHtml(formatDate(d.date_creation))}</div>
                 </div>
               </div>
-              <div class="mt-2 flex items-center gap-2 text-xs text-gray-600">
-                <span class="inline-flex items-center gap-1">
-                  <i class="fas fa-envelope text-gray-400" aria-hidden="true"></i>
-                  <span class="truncate">${escapeHtml(d.email || '-')}</span>
-                </span>
-                <span class="mx-1 text-gray-300">•</span>
-                <span class="inline-flex items-center gap-1">
-                  <i class="fas fa-box text-gray-400" aria-hidden="true"></i>
-                  <span>${escapeHtml(String(d.nb_articles || 0))} article(s)</span>
-                </span>
+              <div class="mt-3 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                <div class="flex items-center gap-2">
+                   <i class="fas fa-box text-[10px]"></i>
+                   <span>${escapeHtml(String(d.nb_articles || 0))} ARTICLES</span>
+                </div>
+                <span>${escapeHtml(formatDate(d.date_creation).split(' à ')[0])}</span>
               </div>
             </div>
           </button>
@@ -174,100 +139,150 @@
       })
       .join('');
 
-    container.innerHTML = `<div class="space-y-3">${items}</div>`;
+    container.innerHTML = items;
     updateResultsCount(list.length);
   }
 
-  function renderDetailPlaceholder() {
-    const panel = $('detail-panel-body');
-    if (!panel) return;
-    panel.innerHTML = `
-      <div class="dd-detail-empty rounded-2xl p-8 text-center bg-white">
-        <i class="fas fa-hand-pointer text-slate-300 text-4xl mb-3" aria-hidden="true"></i>
-        <div class="text-gray-900 font-semibold">Sélectionnez une demande</div>
-        <div class="text-gray-500 text-sm mt-1">Le détail s’affichera ici.</div>
+  function renderDetail(demande) {
+    // Rendu des articles si présents
+    let articlesRows = '<p class="text-slate-400 italic text-sm">Aucun article.</p>';
+    if (demande.articles && demande.articles.length > 0) {
+      articlesRows = `
+        <div class="overflow-hidden border border-slate-200 rounded-xl">
+          <table class="w-full text-sm text-left">
+            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] tracking-widest">
+              <tr>
+                <th class="px-4 py-3">Description</th>
+                <th class="px-4 py-3 text-center">Quantité</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              ${demande.articles.map(art => `
+                <tr>
+                  <td class="px-4 py-3 font-medium text-slate-700">${escapeHtml(art.description)}</td>
+                  <td class="px-4 py-3 text-center text-slate-500">${escapeHtml(String(art.quantite))} ${escapeHtml(art.unite || 'unité')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    const html = `
+      <div class="animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <!-- Header Profil -->
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 mb-8">
+          <div class="flex gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-xl shadow-inner">
+              <i class="fas fa-user-tie"></i>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">${escapeHtml(demande.nom || 'Sans nom')}</h2>
+              <div class="flex items-center gap-3 mt-1.5 text-slate-500 font-medium text-sm">
+                <a href="mailto:${demande.email}" class="hover:text-primary transition-colors flex items-center gap-1.5">
+                  <i class="fas fa-envelope text-xs"></i> ${escapeHtml(demande.email || '-')}
+                </a>
+                <span>•</span>
+                <span class="flex items-center gap-1.5"><i class="fas fa-building text-xs"></i> ${escapeHtml(demande.entreprise || '-')}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            ${statutBadge(demande.statut)}
+            <div class="flex items-center gap-2 ml-2">
+              <button onclick="editDemande(${demande.id})" class="btn-primary !py-2 !px-4 !rounded-xl !text-sm">
+                Modifier Statut
+              </button>
+              <button onclick="openCreateRFQModal(${demande.id})" class="btn-secondary !py-2 !px-4 !rounded-xl !text-sm !border-slate-200">
+                Lancer RFQ
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Onglets -->
+        <div class="dd-tabs">
+          <button class="dd-tab-btn active" onclick="switchTab('overview')">Informations</button>
+          <button class="dd-tab-btn" onclick="switchTab('articles')">Articles (${demande.nb_articles || 0})</button>
+          <button class="dd-tab-btn" onclick="switchTab('files')">Fichiers</button>
+        </div>
+
+        <!-- Contenu Onglets -->
+        <div id="tab-content-overview" class="tab-pane space-y-6">
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Message du client</h4>
+                <p class="text-slate-700 leading-relaxed">${escapeHtml(demande.message || 'Aucun message particulier.')}</p>
+              </div>
+              <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Localisation</h4>
+                ${demande.latitude ? `<div id="map-container-${demande.id}" class="h-32 rounded-xl overflow-hidden shadow-sm"></div>` : '<p class="text-slate-400 italic text-sm">Non renseignée</p>'}
+              </div>
+           </div>
+           ${demande.notes_internes ? `
+             <div class="p-5 rounded-2xl bg-amber-50 border border-amber-100">
+                <h4 class="text-xs font-bold text-amber-600 uppercase tracking-widest mb-3">Notes Internes</h4>
+                <p class="text-amber-900/80 text-sm leading-relaxed">${escapeHtml(demande.notes_internes)}</p>
+             </div>
+           ` : ''}
+        </div>
+
+        <div id="tab-content-articles" class="tab-pane hidden">
+           ${articlesRows}
+        </div>
+
+        <div id="tab-content-files" class="tab-pane hidden">
+           <div id="fichiers-joints-${demande.id}">Chargement...</div>
+        </div>
       </div>
     `;
+
+    const target = isMobile() ? $('detail-modal-body') : $('detail-panel-body');
+    if (target) {
+      target.innerHTML = html;
+      // Charger le reste dynamiquement
+      loadFichiersDemande(demande.id);
+      if (demande.latitude) {
+        setTimeout(() => loadMapForDemande(demande.id, demande.latitude, demande.longitude), 100);
+      }
+    }
   }
 
-  function renderDetail(demande) {
-    const html = `
-      <div class="space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-          <div class="min-w-0">
-            <div class="text-xl font-bold text-gray-900 truncate">${escapeHtml(demande.nom || 'Sans nom')}</div>
-            <div class="mt-1 text-sm text-gray-600">
-              <span class="inline-flex items-center gap-2"><i class="fas fa-envelope text-gray-400" aria-hidden="true"></i>${escapeHtml(demande.email || '-')}</span>
-              <span class="mx-2 text-gray-300">•</span>
-              <span class="inline-flex items-center gap-2"><i class="fas fa-building text-gray-400" aria-hidden="true"></i>${escapeHtml(demande.entreprise || '-')}</span>
-            </div>
-            <div class="mt-2 text-xs text-gray-500">
-              Créée le ${escapeHtml(formatDate(demande.date_creation))}
-            </div>
-          </div>
-          <div class="flex items-center gap-2 flex-wrap">
-            ${statutBadge(demande.statut)}
-            <button type="button" class="btn btn-secondary" onclick="editDemande(${demande.id})">
-              <i class="fas fa-edit"></i> Statut
-            </button>
-            <button type="button" class="btn btn-primary" onclick="openCreateRFQModal(${demande.id})">
-              <i class="fas fa-file-alt"></i> Créer RFQ
-            </button>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl border border-gray-200 p-4">
-          <div class="flex items-center justify-between">
-            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
-              <i class="fas fa-paperclip text-gray-400" aria-hidden="true"></i>
-              Fichiers joints
-            </h3>
-          </div>
-          <div id="fichiers-joints-${demande.id}" class="mt-3">
-            <div class="text-sm text-gray-500">Chargement...</div>
-          </div>
-        </div>
-
-        ${demande.latitude && demande.longitude ? `
-        <div class="bg-white rounded-xl border border-gray-200 p-4">
-          <h3 class="font-semibold text-gray-900 flex items-center gap-2">
-            <i class="fas fa-map-marker-alt text-gray-400" aria-hidden="true"></i>
-            Localisation
-          </h3>
-          <div id="map-container-${demande.id}" class="mt-3 rounded-xl overflow-hidden border border-gray-200" style="height: 280px;">
-            <div class="text-sm text-gray-500 p-3">Chargement de la carte...</div>
-          </div>
-        </div>
-        ` : ''}
-      </div>
-    `;
-
-    if (isMobile()) {
-      const modalBody = $('detail-modal-body');
-      if (modalBody) modalBody.innerHTML = html;
-    } else {
-      const panel = $('detail-panel-body');
-      if (panel) panel.innerHTML = html;
-    }
+  window.switchTab = function(tabName) {
+    document.querySelectorAll('.dd-tab-btn').forEach(btn => {
+      const isMatch = (tabName === 'overview' && btn.textContent.toLowerCase().includes('info')) ||
+                      (tabName === 'articles' && btn.textContent.toLowerCase().includes('article')) ||
+                      (tabName === 'files' && btn.textContent.toLowerCase().includes('fichier'));
+      btn.classList.toggle('active', isMatch);
+    });
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+      pane.classList.toggle('hidden', !pane.id.endsWith(tabName));
+    });
   }
 
   async function loadDemandes() {
     const statut = $('statut-filter')?.value || '';
     const url = `/api/contact/demandes?page=${state.page}&limit=${state.limit}${statut ? '&statut=' + statut : ''}`;
-    const listContainer = $('demandes-list');
-    if (listContainer) listContainer.innerHTML = '<div class="loading text-center py-10">Chargement des demandes...</div>';
+    
+    renderSkeletons();
 
-    const response = await apiCall(url);
-    if (!response || !response.ok) throw new Error('Erreur chargement demandes');
-    const data = await response.json();
-    state.demandes = data.demandes || [];
-    state.pagination = data.pagination || null;
-    renderList();
-    updatePaginationUI();
+    try {
+      const response = await apiCall(url);
+      if (!response || !response.ok) throw new Error('Erreur chargement demandes');
+      const data = await response.json();
+      state.demandes = data.demandes || [];
+      state.pagination = data.pagination || null;
+      renderList();
+      updatePaginationUI();
 
-    // Auto-select first item on desktop
-    if (!isMobile() && !state.selectedId && state.demandes[0]?.id) {
-      selectDemande(state.demandes[0].id, { openModal: false });
+      // Auto-select first item on desktop
+      if (!isMobile() && !state.selectedId && state.demandes[0]?.id) {
+        selectDemande(state.demandes[0].id, { openModal: false });
+      }
+    } catch (e) {
+      console.error(e);
+      if (window.Toast) Toast.error('Impossible de charger les demandes');
     }
   }
 
@@ -283,33 +298,16 @@
         en_cours: demandes.filter((d) => d.statut === 'en_cours').length,
         traitee: demandes.filter((d) => d.statut === 'traitee').length,
       };
-      const html = `
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-600 hover:shadow-md transition-shadow">
-          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-2"><i class="fas fa-inbox text-blue-600 text-xl"></i></div>
-          <div class="text-3xl font-bold text-gray-900 mb-1">${stats.totale}</div>
-          <div class="text-sm text-gray-600 font-medium">Total</div>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-500 hover:shadow-md transition-shadow">
-          <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-2"><i class="fas fa-exclamation-circle text-orange-600 text-xl"></i></div>
-          <div class="text-3xl font-bold text-gray-900 mb-1">${stats.nouvelle}</div>
-          <div class="text-sm text-gray-600 font-medium">Nouvelles</div>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500 hover:shadow-md transition-shadow">
-          <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-2"><i class="fas fa-clock text-yellow-600 text-xl"></i></div>
-          <div class="text-3xl font-bold text-gray-900 mb-1">${stats.en_cours}</div>
-          <div class="text-sm text-gray-600 font-medium">En cours</div>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500 hover:shadow-md transition-shadow">
-          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-2"><i class="fas fa-check-circle text-green-600 text-xl"></i></div>
-          <div class="text-3xl font-bold text-gray-900 mb-1">${stats.traitee}</div>
-          <div class="text-sm text-gray-600 font-medium">Traitées</div>
-        </div>
-      `;
-      const el = $('stats-demandes');
-      if (el) el.innerHTML = html;
-    } catch (e) {
-      // ignore
-    }
+      
+      const el = $('stats-demandes-mini');
+      if (el) {
+        el.innerHTML = `
+          <span class="px-2 py-1 bg-slate-100 rounded-lg text-[11px] font-bold text-slate-600">${stats.totale} TOTAL</span>
+          <span class="px-2 py-1 bg-rose-50 rounded-lg text-[11px] font-bold text-rose-600">${stats.nouvelle} NOUVELLES</span>
+          <span class="px-2 py-1 bg-amber-50 rounded-lg text-[11px] font-bold text-amber-600">${stats.en_cours} EN COURS</span>
+        `;
+      }
+    } catch (e) {}
   }
 
   async function selectDemande(id, opts = { openModal: true }) {
@@ -932,5 +930,6 @@
 
   document.addEventListener('DOMContentLoaded', init);
 })();
+
 
 

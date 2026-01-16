@@ -129,149 +129,82 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="flex-1 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-            <!-- En-tête de page -->
-            <div class="mb-6 lg:mb-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-3">
-                            <i class="fas fa-inbox text-primary-600"></i>
-                            Demandes de Devis
-                        </h1>
-                        <p class="mt-2 text-sm lg:text-base text-gray-600">
-                            Gérez les demandes de devis de vos clients et créez des RFQ pour vos fournisseurs
-                        </p>
+    <!-- Main Content App Style -->
+    <main class="flex-1 bg-white dd-app-container">
+        <!-- Top Action Bar -->
+        <div class="dd-list-header flex items-center justify-between px-6">
+            <div class="flex items-center gap-4">
+                <h1 class="text-xl font-bold text-slate-900 flex items-center gap-3">
+                    <i class="fas fa-inbox text-primary"></i>
+                    Demandes de Devis
+                </h1>
+                <div id="stats-demandes-mini" class="flex items-center gap-3 text-sm">
+                    <!-- Mini stats here -->
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="refreshDemandes()" class="p-2 text-slate-500 hover:text-primary transition-colors" title="Actualiser">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <div class="h-6 w-px bg-slate-200 mx-2"></div>
+                <button onclick="clearFilters()" class="text-sm font-medium text-slate-600 hover:text-primary transition-colors">
+                    Effacer les filtres
+                </button>
+            </div>
+        </div>
+
+        <div class="dd-main-grid">
+            <!-- Left Pane: List -->
+            <section class="dd-list-pane">
+                <!-- Search & Filters -->
+                <div class="p-4 border-b border-slate-100 space-y-3">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="search-input" placeholder="Rechercher..." 
+                               class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none">
                     </div>
-                    <button onclick="refreshDemandes()" class="btn btn-primary inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all hover:shadow-md">
-                        <i class="fas fa-sync-alt"></i>
-                        <span>Actualiser</span>
+                    <select id="statut-filter" onchange="onStatutFilterChange()"
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none">
+                        <option value="">Tous les statuts</option>
+                        <option value="nouvelle">Nouvelles</option>
+                        <option value="en_cours">En cours</option>
+                        <option value="traitee">Traitées</option>
+                        <option value="annulee">Annulées</option>
+                    </select>
+                </div>
+
+                <!-- WhatsApp Pending (Sticky Alert) -->
+                <div id="whatsapp-pending-section" class="hidden mx-4 my-2 p-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between gap-3 animate-pulse">
+                    <div class="flex items-center gap-2 text-emerald-700 text-sm font-semibold">
+                        <i class="fab fa-whatsapp"></i>
+                        <span id="whatsapp-pending-count">0</span> demandes WhatsApp
+                    </div>
+                    <button onclick="scrollToWhatsApp()" class="text-xs text-emerald-600 font-bold hover:underline">Voir</button>
+                </div>
+
+                <!-- List Content -->
+                <div id="demandes-list" class="dd-list-scroll">
+                    <!-- Skeletons will be here -->
+                </div>
+
+                <!-- Pagination -->
+                <div id="demandes-pagination" class="hidden p-4 border-t border-slate-100 flex items-center justify-between gap-4">
+                    <button onclick="goToPrevPage()" id="btn-prev-page" class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="demandes-pagination-text" class="text-xs font-medium text-slate-500 uppercase tracking-wider"></span>
+                    <button onclick="goToNextPage()" id="btn-next-page" class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30">
+                        <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
-            </div>
+            </section>
 
-            <!-- Statistiques rapides -->
-            <div class="mb-6">
-                <div id="stats-demandes" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="loading text-center py-8">Chargement des statistiques...</div>
+            <!-- Right Pane: Detail -->
+            <section class="dd-detail-pane hidden lg:flex">
+                <div id="detail-panel-body" class="dd-detail-scroll">
+                    <!-- Empty state by default -->
                 </div>
-            </div>
-
-            <!-- Section Demandes WhatsApp en attente -->
-            <div id="whatsapp-pending-section" class="mb-6 hidden">
-                <div class="bg-white rounded-xl shadow-sm border-l-4 border-green-500 overflow-hidden">
-                    <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
-                        <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                                <i class="fab fa-whatsapp"></i>
-                                Demandes WhatsApp en attente de validation
-                            </h2>
-                            <span id="whatsapp-pending-count" class="bg-white/20 text-white px-3 py-1 rounded-full text-sm font-semibold">0</span>
-                        </div>
-                    </div>
-                    <div class="p-6">
-                        <div id="whatsapp-pending-list" class="loading">Chargement des demandes WhatsApp...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Barre de recherche et filtres -->
-            <div class="mb-6 bg-white rounded-xl shadow-sm p-4 lg:p-6 dd-sticky-filters">
-                <div class="flex flex-col lg:flex-row gap-4">
-                    <div class="flex-1 relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-search text-gray-400"></i>
-                        </div>
-                        <input type="text" 
-                               id="search-input" 
-                               placeholder="Rechercher (nom, email, entreprise)..." 
-                               class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm lg:text-base">
-                    </div>
-                    <div class="lg:w-64">
-                        <select id="statut-filter" 
-                                onchange="onStatutFilterChange()"
-                                class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm lg:text-base">
-                            <option value="">Tous les statuts</option>
-                            <option value="nouvelle">Nouvelle</option>
-                            <option value="en_cours">En cours</option>
-                            <option value="traitee">Traitée</option>
-                            <option value="annulee">Annulée</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-gray-600">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-filter text-gray-400" aria-hidden="true"></i>
-                        <span id="demandes-results-count">—</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button type="button"
-                                class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 min-h-[44px]"
-                                onclick="clearFilters()">
-                            <i class="fas fa-eraser text-gray-400" aria-hidden="true"></i>
-                            <span>Effacer les filtres</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modèle Master-Detail -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- Liste (gauche) -->
-                <section class="lg:col-span-5">
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                <i class="fas fa-list text-primary-600"></i>
-                                Liste des demandes
-                            </h2>
-                            <span class="text-xs text-gray-500">Cliquez pour afficher le détail</span>
-                        </div>
-                        <div class="p-4">
-                            <div id="demandes-list">
-                                <div class="loading text-center py-10">Chargement des demandes...</div>
-                            </div>
-                        </div>
-                        <!-- Pagination -->
-                        <div id="demandes-pagination" class="hidden px-4 sm:px-6 py-4 border-t border-gray-200 bg-white">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                <div class="text-sm text-gray-600" id="demandes-pagination-text">—</div>
-                                <div class="flex items-center gap-2 justify-end">
-                                    <button type="button" id="btn-prev-page"
-                                            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-                                            onclick="goToPrevPage()">
-                                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                                        <span>Précédent</span>
-                                    </button>
-                                    <button type="button" id="btn-next-page"
-                                            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-                                            onclick="goToNextPage()">
-                                        <span>Suivant</span>
-                                        <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Détail (droite) -->
-                <aside class="lg:col-span-7">
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                <i class="fas fa-info-circle text-primary-600"></i>
-                                Détails
-                            </h2>
-                            <span class="text-xs text-gray-500 hidden lg:inline">Desktop: panneau • Mobile: modal</span>
-                        </div>
-                        <div class="p-4" id="detail-panel-body">
-                            <!-- Injecté par JS -->
-                        </div>
-                    </div>
-                </aside>
-            </div>
+            </section>
         </div>
     </main>
 

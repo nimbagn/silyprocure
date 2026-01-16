@@ -7,17 +7,32 @@
    VARIABLES CSS - Charte Pro Confiance
    ========================================== */
 :root {
-    --color-primary-dark: #1E3A8A;
-    --color-primary: #3B82F6;
-    --color-primary-light: #60A5FA;
-    --color-success: #10B981;
-    --color-neutral: #64748B;
-    --color-neutral-dark: #475569;
+    /* Couleurs SaaS Premium */
+    --color-primary-dark: #0F172A;   /* Slate 900 */
+    --color-primary: #2563EB;        /* Blue 600 */
+    --color-primary-light: #60A5FA;  /* Blue 400 */
+    --color-success: #10B981;        /* Emerald 500 */
+    --color-warning: #F59E0B;        /* Amber 500 */
+    --color-danger: #EF4444;         /* Red 500 */
+    
+    --color-slate-50: #F8FAFC;
+    --color-slate-100: #F1F5F9;
+    --color-slate-200: #E2E8F0;
+    --color-slate-300: #CBD5E1;
+    --color-slate-400: #94A3B8;
+    --color-slate-500: #64748B;
+    --color-slate-600: #475569;
+    --color-slate-700: #334155;
+    --color-slate-800: #1E293B;
+    --color-slate-900: #0F172A;
+
+    --color-neutral: var(--color-slate-500);
+    --color-neutral-dark: var(--color-slate-700);
     --color-background: #FFFFFF;
     --color-background-light: #F8FAFC;
-    --color-background-blue: #E0E7FF;
+    --color-background-blue: #EFF6FF;
     
-    /* Espacements selon charte */
+    /* Espacements - Système 4px */
     --spacing-xs: 0.25rem;   /* 4px */
     --spacing-sm: 0.5rem;    /* 8px */
     --spacing-md: 1rem;      /* 16px */
@@ -25,14 +40,33 @@
     --spacing-xl: 2rem;      /* 32px */
     --spacing-xxl: 3rem;     /* 48px */
     
-    /* Ombres */
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
-    --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+    /* Ombres SaaS (plus diffuses) */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
     
     /* Transitions */
-    --transition-fast: 0.2s ease-in-out;
-    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Radius */
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-2xl: 1.5rem;
+}
+
+/* Skeletons animés */
+@keyframes skeleton-loading {
+    0% { background-color: #f1f5f9; }
+    50% { background-color: #e2e8f0; }
+    100% { background-color: #f1f5f9; }
+}
+.skeleton {
+    animation: skeleton-loading 1.5s infinite ease-in-out;
+    border-radius: 4px;
 }
 
 /* ==========================================

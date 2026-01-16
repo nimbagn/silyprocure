@@ -1,47 +1,130 @@
-/* Page-specific styles for Demandes de Devis (Master-Detail model) */
-
-/* Barre filtres sticky sous la navbar */
-.dd-sticky-filters {
-  position: sticky;
-  top: 4rem; /* navbar h-16 */
-  z-index: 40;
+/* Master-Detail App Layout */
+.dd-app-container {
+    height: calc(100vh - 4rem); /* full height minus navbar */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Liste: élément sélectionné */
+.dd-main-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+    .dd-main-grid {
+        grid-template-columns: 400px 1fr;
+    }
+}
+
+/* Sidebar List */
+.dd-list-pane {
+    border-right: 1px solid var(--color-slate-200);
+    background: white;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.dd-list-header {
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--color-slate-100);
+    background: white;
+}
+
+.dd-list-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+    background: var(--color-slate-50);
+}
+
+/* Detail Pane */
+.dd-detail-pane {
+    background: white;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.dd-detail-header {
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--color-slate-200);
+    background: white;
+}
+
+.dd-detail-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-xl);
+}
+
+/* List Items refined */
+.dd-item {
+    transition: var(--transition-normal);
+    border: 1px solid transparent;
+    margin-bottom: var(--spacing-sm);
+    position: relative;
+    background: white;
+    border-radius: var(--radius-lg);
+}
+
+.dd-item:hover {
+    background: white;
+    border-color: var(--color-primary-light);
+    box-shadow: var(--shadow-md);
+}
+
 .dd-item[aria-selected="true"] {
-  outline: 2px solid rgba(59, 130, 246, 0.35);
-  outline-offset: 2px;
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0.08), rgba(255, 255, 255, 0));
+    background: white;
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-lg);
 }
 
-/* Détail: placeholder */
-.dd-detail-empty {
-  border: 2px dashed rgba(148, 163, 184, 0.5);
+.dd-item[aria-selected="true"]::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 1rem;
+    bottom: 1rem;
+    width: 4px;
+    background: var(--color-primary);
+    border-radius: 0 4px 4px 0;
 }
 
-/* Modales: tailles adaptatives */
-#detailModal .modal-content,
-#editModal .modal-content,
-#createRFQModal .modal-content,
-#previewModal .modal-content {
-  width: min(1000px, 95vw);
-  max-width: 95vw;
-  max-height: 85vh;
-}
-#detailModal .modal-content {
-  height: min(720px, 85vh);
-}
-#previewModal .modal-content {
-  height: min(85vh, 900px);
+/* Tab System */
+.dd-tabs {
+    display: flex;
+    gap: 2rem;
+    border-bottom: 1px solid var(--color-slate-200);
+    margin-bottom: 2rem;
 }
 
-@media (max-width: 640px) {
-  #createRFQModal .modal-body,
-  #editModal .modal-body,
-  #previewModal .modal-body,
-  #detailModal .modal-body {
-    padding: 1rem !important;
-  }
+.dd-tab-btn {
+    padding: 1rem 0;
+    font-weight: 500;
+    color: var(--color-slate-500);
+    border-bottom: 2px solid transparent;
+    transition: var(--transition-fast);
+}
+
+.dd-tab-btn:hover {
+    color: var(--color-primary);
+}
+
+.dd-tab-btn.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+/* Utility classes */
+.badge-pill {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
 
