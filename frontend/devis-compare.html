@@ -182,28 +182,48 @@
         const userInitialsEl = document.getElementById('user-initials');
         if (userNameEl) {
             userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+        }
+        if (userInitialsEl) {
+            const initials = ((user.prenom || '').charAt(0) + (user.nom ? user.nom.charAt(0) : '')).toUpperCase();
+            userInitialsEl.textContent = initials || (user.email ? user.email.charAt(0).toUpperCase() : 'U');
+        }
 
         const urlParams = new URLSearchParams(window.location.search);
-        const devisIds = urlParams.get('ids').split(',').map(id => parseInt(id));
+        // Supporte 2 modes:
+        // - devis-compare.html?ids=1,2,3
+        // - devis-compare.html?rfq=12 (utilisé depuis rfq-detail)
+        const idsParam = urlParams.get('ids');
+        const rfqParam = urlParams.get('rfq');
+        const devisIds = idsParam ? idsParam.split(',').map(id => parseInt(id)).filter(n => Number.isFinite(n)) : [];
         let rfqId = null;
         let aiAnalysis = null;
 
         async function loadDevisForComparison() {
             try {
                 showLoading('Chargement des devis...');
-                const devisPromises = devisIds.map(id => apiCall(`/api/devis/${id}`));
-                const responses = await Promise.all(devisPromises);
-                
                 const devis = [];
-                for (const response of responses) {
-                    if (response && response.ok) {
-                        const devisData = await response.json();
-                        devis.push(devisData);
-                        // Récupérer le RFQ ID depuis le premier devis
-                        if (!rfqId && devisData.rfq_id) {
-                            rfqId = devisData.rfq_id;
+
+                if (devisIds.length > 0) {
+                    const devisPromises = devisIds.map(id => apiCall(`/api/devis/${id}`));
+                    const responses = await Promise.all(devisPromises);
+                    for (const response of responses) {
+                        if (response && response.ok) {
+                            const devisData = await response.json();
+                            devis.push(devisData);
+                            if (!rfqId && devisData.rfq_id) rfqId = devisData.rfq_id;
                         }
                     }
+                } else if (rfqParam) {
+                    rfqId = parseInt(rfqParam);
+                    const response = await apiCall(`/api/devis?rfq_id=${rfqId}`);
+                    if (response && response.ok) {
+                        const list = await response.json();
+                        if (Array.isArray(list)) {
+                            devis.push(...list);
+                        }
+                    }
+                } else {
+                    Toast.error('Paramètre manquant: ids ou rfq');
                 }
 
                 hideLoading();
