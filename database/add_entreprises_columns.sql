@@ -63,3 +63,15 @@ BEGIN
     END IF;
 END $$;
 
+-- Ajouter la colonne logo_url si elle n'existe pas
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'entreprises' AND column_name = 'logo_url'
+    ) THEN
+        ALTER TABLE entreprises ADD COLUMN logo_url VARCHAR(512);
+        RAISE NOTICE 'Colonne logo_url ajoutée à la table entreprises';
+    END IF;
+END $$;
+

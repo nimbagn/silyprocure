@@ -764,6 +764,35 @@ async function editEntrepriseForm(id) {
         const entreprise = await response.json();
         hideLoading();
 
+        const currentLogo = entreprise.logo_url ? String(entreprise.logo_url) : '';
+        const logoBlock = `
+            <div style="margin: 1.5rem 0 1rem 0; border-top: 2px solid var(--color-background-blue, #dbeafe); padding-top: 1rem;">
+                <h3 style="margin: 0 0 0.75rem 0; color: var(--color-primary, #2563eb);">🖼️ Logo entreprise</h3>
+                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                    <div style="width:72px; height:72px; border-radius:16px; background:#f8fafc; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                        ${currentLogo
+                            ? `<img src="${currentLogo}" alt="Logo" style="max-width:100%; max-height:100%; object-fit:contain;" onerror="this.remove();">`
+                            : `<span style="font-weight:800; color:#0f172a;">${(entreprise.nom || 'CL').trim().slice(0,2).toUpperCase()}</span>`
+                        }
+                    </div>
+                    <div style="flex:1; min-width:240px;">
+                        <input type="file" id="ent-edit-logo-file" accept="image/png,image/jpeg,image/webp" />
+                        <div style="font-size:12px; color:#64748b; margin-top:6px;">Formats: PNG/JPG/WEBP — max 2MB</div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="btn btn-primary" onclick="handleUploadEntrepriseLogo(${id})">
+                            <i class="fas fa-upload"></i> Uploader
+                        </button>
+                        ${currentLogo ? `
+                            <button type="button" class="btn btn-secondary" onclick="handleDeleteEntrepriseLogo(${id})">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+
         const content = `
             <form id="entreprise-edit-form" onsubmit="handleUpdateEntreprise(event, ${id})">
                 <div class="form-row">
@@ -838,6 +867,7 @@ async function editEntrepriseForm(id) {
                     <label for="ent-edit-notes">Notes</label>
                     <textarea id="ent-edit-notes" name="notes" rows="3">${entreprise.notes || ''}</textarea>
                 </div>
+                ${logoBlock}
             </form>
         `;
         
@@ -853,6 +883,63 @@ async function editEntrepriseForm(id) {
         Toast.error('Erreur lors du chargement');
         console.error('Erreur:', error);
     }
+}
+
+async function handleUploadEntrepriseLogo(id) {
+    const input = document.getElementById('ent-edit-logo-file');
+    const file = input && input.files ? input.files[0] : null;
+    if (!file) {
+        Toast.error('Sélectionnez un fichier logo');
+        return;
+    }
+
+    const form = new FormData();
+    form.append('logo', file);
+
+    showLoading('Upload du logo...');
+    try {
+        const response = await apiCall(`/api/entreprises/${id}/logo`, {
+            method: 'POST',
+            body: form
+        });
+
+        if (response && response.ok) {
+            Toast.success('Logo mis à jour');
+            Modal.hide('edit-entreprise');
+            if (typeof loadEntreprises === 'function') loadEntreprises();
+        } else {
+            const err = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+            Toast.error(err.error || 'Erreur upload logo');
+        }
+    } catch (e) {
+        Toast.error('Erreur upload logo');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function handleDeleteEntrepriseLogo(id) {
+    confirmAction(
+        'Supprimer le logo de cette entreprise ?',
+        async () => {
+            showLoading('Suppression du logo...');
+            try {
+                const response = await apiCall(`/api/entreprises/${id}/logo`, { method: 'DELETE' });
+                if (response && response.ok) {
+                    Toast.success('Logo supprimé');
+                    Modal.hide('edit-entreprise');
+                    if (typeof loadEntreprises === 'function') loadEntreprises();
+                } else {
+                    const err = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    Toast.error(err.error || 'Erreur suppression logo');
+                }
+            } catch (e) {
+                Toast.error('Erreur suppression logo');
+            } finally {
+                hideLoading();
+            }
+        }
+    );
 }
 
 async function handleUpdateEntreprise(event, id) {
@@ -980,6 +1067,8 @@ window.createEntrepriseForm = createEntrepriseForm;
 window.handleCreateEntreprise = handleCreateEntreprise;
 window.editEntrepriseForm = editEntrepriseForm;
 window.handleUpdateEntreprise = handleUpdateEntreprise;
+window.handleUploadEntrepriseLogo = handleUploadEntrepriseLogo;
+window.handleDeleteEntrepriseLogo = handleDeleteEntrepriseLogo;
 window.toggleGeocodeEntreprise = toggleGeocodeEntreprise;
 window.geocodeEntrepriseAddress = geocodeEntrepriseAddress;
 window.useCurrentLocation = useCurrentLocation;

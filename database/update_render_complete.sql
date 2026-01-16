@@ -86,6 +86,18 @@ CREATE TABLE IF NOT EXISTS demandes_devis (
     CONSTRAINT fk_demandes_devis_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL
 );
 
+-- =====================================================
+-- AJOUT COLONNES : entreprises (logos)
+-- =====================================================
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'entreprises') THEN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'entreprises' AND column_name = 'logo_url') THEN
+            ALTER TABLE entreprises ADD COLUMN logo_url VARCHAR(512);
+        END IF;
+    END IF;
+END $$;
+
 -- Index pour demandes_devis
 CREATE INDEX IF NOT EXISTS idx_demandes_devis_statut ON demandes_devis(statut);
 CREATE INDEX IF NOT EXISTS idx_demandes_devis_date_creation ON demandes_devis(date_creation);

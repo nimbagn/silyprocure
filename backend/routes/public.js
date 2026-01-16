@@ -17,7 +17,7 @@ router.get('/entreprises', async (req, res) => {
 
     // Champs minimaux pour affichage (logos/noms)
     const [rows] = await pool.execute(
-      `SELECT id, nom, raison_sociale, type_entreprise, site_web, actif
+      `SELECT id, nom, raison_sociale, type_entreprise, site_web, actif, logo_url
        FROM entreprises
        WHERE actif = ? AND type_entreprise = ?
        ORDER BY nom

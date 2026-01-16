@@ -96,6 +96,7 @@ CREATE TABLE IF NOT EXISTS entreprises (
     email VARCHAR(255),
     telephone VARCHAR(20),
     site_web VARCHAR(255),
+    logo_url VARCHAR(512),
     actif BOOLEAN DEFAULT TRUE,
     notes TEXT,
     date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

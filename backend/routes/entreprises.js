@@ -1,11 +1,100 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
 const pool = require('../config/database');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, requireRole } = require('../middleware/auth');
 const { validateEntreprise, validateId } = require('../middleware/validation');
 const messageProService = require('../services/messagepro');
 const router = express.Router();
 
 router.use(authenticate);
+
+// =====================================================
+// Upload logo entreprise (admin/superviseur)
+// Stockage: /uploads/entreprises/:id/logo.(png|jpg|webp)
+// =====================================================
+const ALLOWED_MIME = new Map([
+  ['image/png', '.png'],
+  ['image/jpeg', '.jpg'],
+  ['image/webp', '.webp'],
+]);
+
+const uploadEntrepriseLogo = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const { id } = req.params;
+      const dir = path.join(__dirname, '../../uploads/entreprises', String(id));
+      fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+      const ext = ALLOWED_MIME.get(file.mimetype) || path.extname(file.originalname).toLowerCase() || '.png';
+      cb(null, `logo${ext}`);
+    },
+  }),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_MIME.has(file.mimetype)) {
+      return cb(new Error('Format non supporté. Utilisez PNG, JPG ou WEBP.'));
+    }
+    cb(null, true);
+  },
+});
+
+router.post(
+  '/:id/logo',
+  requireRole('admin', 'superviseur'),
+  validateId,
+  uploadEntrepriseLogo.single('logo'),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!req.file) {
+        return res.status(400).json({ error: 'Fichier logo manquant (champ "logo")' });
+      }
+
+      // URL publique (express.static sur /uploads)
+      const logoUrl = `/uploads/entreprises/${id}/${req.file.filename}`;
+
+      await pool.execute('UPDATE entreprises SET logo_url = ? WHERE id = ?', [logoUrl, id]);
+      res.json({ message: 'Logo mis à jour', logo_url: logoUrl });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+router.delete(
+  '/:id/logo',
+  requireRole('admin', 'superviseur'),
+  validateId,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const [rows] = await pool.execute('SELECT logo_url FROM entreprises WHERE id = ?', [id]);
+      const current = rows && rows[0] ? rows[0].logo_url : null;
+
+      await pool.execute('UPDATE entreprises SET logo_url = ? WHERE id = ?', [null, id]);
+
+      // Nettoyer le fichier si stocké localement
+      if (current && typeof current === 'string' && current.startsWith(`/uploads/entreprises/${id}/`)) {
+        const rel = current.replace(/^\/uploads\//, '');
+        const filePath = path.join(__dirname, '../../uploads', rel);
+        try {
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        } catch (_) {
+          // ignore
+        }
+      }
+
+      res.json({ message: 'Logo supprimé' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
 
 // Liste des entreprises
 router.get('/', async (req, res) => {
