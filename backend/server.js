@@ -78,11 +78,13 @@ app.use('/api/', (req, res, next) => {
 
 // Route principale - servir la page d'accueil publique (AVANT express.static pour éviter index.html)
 app.get('/', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.sendFile(path.join(__dirname, '../frontend/home.html'));
 });
 
 // Route pour la page de suivi publique
 app.get('/suivi', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.sendFile(path.join(__dirname, '../frontend/suivi.html'));
 });
 
@@ -92,7 +94,16 @@ const staticOptions = {
     index: false,
     maxAge: process.env.NODE_ENV === 'production' ? '1d' : '0',
     etag: true,
-    lastModified: true
+    lastModified: true,
+    setHeaders: (res, filePath) => {
+        // Ne jamais mettre en cache les pages HTML (évite les "anciennes versions" sur Render/CDN)
+        if (filePath.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+            res.setHeader('Surrogate-Control', 'no-store');
+        }
+    }
 };
 app.use(express.static(path.join(__dirname, '../frontend'), staticOptions));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -169,6 +180,7 @@ app.get('*.html', (req, res, next) => {
         return next();
     }
     const filePath = path.join(__dirname, '../frontend', req.path);
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.sendFile(filePath, (err) => {
         if (err) {
             res.status(404).send('Page non trouvée');
