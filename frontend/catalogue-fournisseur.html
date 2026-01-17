@@ -46,6 +46,17 @@
             transform: translateY(-4px) !important;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
         }
+        
+        /* Masquer les menus en doublon (remplacés par modern-menu) */
+        nav.nav,
+        nav.bg-white.border-b-2 {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
     </style>
 </head>
 <body class="h-full flex flex-col">
@@ -57,7 +68,7 @@
         </div>
     </div>
 
-    <nav class="nav">
+    <nav class="nav" style="display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important;">
         <a href="dashboard.html">Dashboard</a>
         <a href="rfq.html">RFQ</a>
         <a href="devis.html">Devis</a>
@@ -151,8 +162,8 @@
         </div>
     </div>
 
-        <!-- Navbar Moderne selon charte Pro Confiance -->
-    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
+        <!-- Navbar Moderne selon charte Pro Confiance (masquée car remplacée par modern-menu) -->
+    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale" style="display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important;">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo & Nav Links -->
@@ -256,32 +267,134 @@
     <script src="js/sidebar.js"></script>
     <script src="js/mobile-menu.js"></script>
     <script src="js/modern-menu.js"></script>
-<script>
-        checkAuth();
+    <script>
+        // Supprimer agressivement les menus en doublon
+        (function() {
+            function removeDuplicateMenus() {
+                // Supprimer nav.nav
+                const oldNav = document.querySelector('nav.nav');
+                if (oldNav) {
+                    oldNav.style.cssText = 'display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important;';
+                    oldNav.remove();
+                }
+                
+                // Supprimer nav.bg-white.border-b-2
+                const navbar = document.querySelector('nav.bg-white.border-b-2');
+                if (navbar) {
+                    navbar.style.cssText = 'display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important;';
+                    navbar.remove();
+                }
+            }
+            
+            // Supprimer immédiatement
+            removeDuplicateMenus();
+            
+            // Supprimer après chargement du DOM
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', removeDuplicateMenus);
+            }
+            
+            // Supprimer à intervalles pour capturer les menus ajoutés dynamiquement
+            [0, 100, 300, 500, 1000, 2000, 3000].forEach(delay => {
+                setTimeout(removeDuplicateMenus, delay);
+            });
+            
+            // Observer les mutations pour supprimer les menus s'ils sont réajoutés
+            const observer = new MutationObserver(() => {
+                removeDuplicateMenus();
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        })();
+    </script>
+    <script>
+        // #region agent log - Débogage du chargement de la page
+        try {
+            console.log('🔍 catalogue-fournisseur.html: Début du script');
+            // #endregion
+            
+            // Vérifier l'authentification (utiliser window.checkAuth si disponible)
+            // #region agent log - Vérification de l'authentification
+            console.log('🔍 checkAuth disponible:', typeof window.checkAuth);
+            // #endregion
+            
+            if (typeof window.checkAuth === 'function') {
+                window.checkAuth();
+            } else {
+                // Fallback si checkAuth n'est pas disponible
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'index.html';
+                }
+            }
 
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        // Initialisation du nom d'utilisateur et des initiales
-        const userNameEl = document.getElementById('user-name');
-        const userInitialsEl = document.getElementById('user-initials');
-        if (userNameEl) {
-            userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
-        }
-        if (userInitialsEl) {
-            const initial = (user.prenom?.[0] || user.nom?.[0] || 'U').toUpperCase();
-            userInitialsEl.textContent = initial;
-        }
+            // #region agent log - Initialisation de l'utilisateur
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            console.log('🔍 Utilisateur chargé:', !!user.email);
+            // #endregion
+            
+            // Initialisation du nom d'utilisateur et des initiales
+            const userNameEl = document.getElementById('user-name');
+            const userInitialsEl = document.getElementById('user-initials');
+            
+            // #region agent log - Éléments DOM
+            console.log('🔍 userNameEl trouvé:', !!userNameEl);
+            console.log('🔍 userInitialsEl trouvé:', !!userInitialsEl);
+            // #endregion
+            
+            if (userNameEl) {
+                userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+            }
+            if (userInitialsEl) {
+                const initial = (user.prenom?.[0] || user.nom?.[0] || 'U').toUpperCase();
+                userInitialsEl.textContent = initial;
+            }
 
-        let fournisseurId = null;
-        let allProduits = [];
+            let fournisseurId = null;
+            let allProduits = [];
+            
+            // #region agent log - Variables initialisées
+            console.log('🔍 Variables initialisées: fournisseurId =', fournisseurId);
+            // #endregion
+        } catch (error) {
+            // #region agent log - Erreur capturée
+            console.error('❌ Erreur lors de l\'initialisation:', error);
+            console.error('❌ Stack:', error.stack);
+            // #endregion
+            throw error;
+        }
 
         // Charger la liste des fournisseurs
         async function loadFournisseurs() {
+            // #region agent log - Début de loadFournisseurs
+            console.log('🔍 loadFournisseurs appelé');
+            // #endregion
             try {
+                // #region agent log - Appel API
+                console.log('🔍 Appel API /api/entreprises?type=fournisseur');
+                // #endregion
                 const response = await apiCall('/api/entreprises?type=fournisseur');
+                
+                // #region agent log - Réponse API
+                console.log('🔍 Réponse API:', response ? 'OK' : 'NULL', response?.ok);
+                // #endregion
+                
                 if (!response || !response.ok) return;
 
                 const fournisseurs = await response.json();
                 const select = document.getElementById('select-fournisseur');
+                
+                // #region agent log - Élément select
+                console.log('🔍 Élément select trouvé:', !!select);
+                // #endregion
+                
+                if (!select) {
+                    console.error('❌ Élément select-fournisseur non trouvé');
+                    return;
+                }
                 
                 select.innerHTML = '<option value="">-- Sélectionner un fournisseur --</option>';
                 fournisseurs.forEach(f => {
@@ -290,8 +403,15 @@
                     option.textContent = f.nom;
                     select.appendChild(option);
                 });
+                
+                // #region agent log - Fournisseurs chargés
+                console.log('🔍 Fournisseurs chargés:', fournisseurs.length);
+                // #endregion
             } catch (error) {
-                console.error('Erreur:', error);
+                // #region agent log - Erreur dans loadFournisseurs
+                console.error('❌ Erreur loadFournisseurs:', error);
+                console.error('❌ Stack:', error.stack);
+                // #endregion
                 Toast.error('Erreur lors du chargement des fournisseurs');
             }
         }
@@ -311,11 +431,25 @@
             document.getElementById('catalogue-card').style.display = 'block';
 
             try {
+                // #region agent log - Début de loadCatalogueFournisseur
+                console.log('🔍 loadCatalogueFournisseur appelé avec fournisseurId:', fournisseurId);
+                // #endregion
+                
                 showLoading('Chargement du catalogue...');
                 const response = await apiCall(`/api/catalogue/fournisseur/${fournisseurId}`);
+                
+                // #region agent log - Réponse API catalogue
+                console.log('🔍 Réponse API catalogue:', response ? 'OK' : 'NULL', response?.ok, response?.status);
+                if (!response || !response.ok) {
+                    const errorData = await response?.json().catch(() => ({}));
+                    console.error('❌ Erreur API catalogue:', errorData);
+                }
+                // #endregion
+                
                 if (!response || !response.ok) {
                     hideLoading();
-                    Toast.error('Erreur lors du chargement');
+                    const errorData = await response?.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    Toast.error(errorData.error || 'Erreur lors du chargement');
                     return;
                 }
 
@@ -506,7 +640,24 @@
         }
 
         // Initialisation
-        loadFournisseurs();
+        // #region agent log - Début de l'initialisation
+        console.log('🔍 Début de l\'initialisation, appel de loadFournisseurs()');
+        // #endregion
+        
+        // Attendre que le DOM soit prêt
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                // #region agent log - DOM chargé
+                console.log('🔍 DOM chargé, appel de loadFournisseurs()');
+                // #endregion
+                loadFournisseurs();
+            });
+        } else {
+            // #region agent log - DOM déjà prêt
+            console.log('🔍 DOM déjà prêt, appel immédiat de loadFournisseurs()');
+            // #endregion
+            loadFournisseurs();
+        }
     </script>
 </body>
 </html>

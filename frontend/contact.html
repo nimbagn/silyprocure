@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contactez-nous - SilyProcure</title>
+    <meta name="description" content="Contactez l'équipe SilyProcure pour toute question ou demande d'information.">
+
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="css/tailwind.css?v=20260116-home">
+
+    <style>
+        /* Styles Custom & Utilities */
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Glassmorphism avancé */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Animations */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 7s infinite; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.6s ease-out; }
+
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+
+        .reveal-on-scroll {
+            opacity: 1;
+            transform: none;
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+        .reveal-on-scroll.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .form-input {
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3);
+        }
+
+        .contact-card {
+            transition: all 0.4s ease;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .contact-card:hover .contact-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 selection:bg-brand-500 selection:text-white overflow-x-hidden">
+
+    <!-- NAVBAR FLOTTANTE -->
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-300 top-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            <div class="glass-panel rounded-2xl shadow-lg shadow-gray-200/50 flex justify-between items-center h-16 px-6 transition-all duration-300" id="nav-container">
+                
+                <!-- Logo -->
+                <a href="home.html" class="flex items-center gap-2 group">
+                    <div class="relative w-8 h-8 flex items-center justify-center bg-brand-600 rounded-lg text-white overflow-hidden group-hover:rotate-12 transition-transform duration-300">
+                        <i class="fas fa-cube text-sm"></i>
+                        <div class="absolute inset-0 bg-white/20 blur-sm transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight text-slate-900">Sily<span class="text-brand-600">Procure</span></span>
+                </a>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="home.html" class="text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">Accueil</a>
+                    <a href="home.html#avantages" class="text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">Avantages</a>
+                    <a href="home.html#tracking" class="text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">Suivi</a>
+                </div>
+
+                <!-- Auth & CTA -->
+                <div class="hidden md:flex items-center gap-4">
+                    <a href="index.html" class="text-sm font-bold text-slate-700 hover:text-brand-600 transition">Connexion</a>
+                    <a href="home.html#contact" class="group relative px-5 py-2.5 bg-brand-900 rounded-xl text-white text-sm font-bold shadow-lg shadow-brand-900/20 overflow-hidden transition-all hover:shadow-brand-600/40 hover:-translate-y-0.5">
+                        <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                        <span class="relative flex items-center gap-2">
+                            Devis Gratuit <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                        </span>
+                    </a>
+                </div>
+
+                <!-- Mobile Toggle -->
+                <button onclick="toggleMobileMenu()" class="md:hidden text-slate-700 p-2">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden absolute top-24 left-4 right-4 bg-white rounded-2xl shadow-2xl p-6 border border-slate-100 transform origin-top transition-all z-40">
+            <div class="flex flex-col space-y-4">
+                <a href="home.html" class="text-base font-semibold text-slate-700 py-2 border-b border-slate-100">Accueil</a>
+                <a href="home.html#avantages" class="text-base font-semibold text-slate-700 py-2 border-b border-slate-100">Avantages</a>
+                <a href="home.html#tracking" class="text-base font-semibold text-slate-700 py-2 border-b border-slate-100">Suivi</a>
+                <a href="index.html" class="text-base font-semibold text-brand-600 py-2">Connexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-900">
+        <!-- Background Elements -->
+        <div class="absolute inset-0 w-full h-full">
+            <div class="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+            <div class="absolute top-0 -right-4 w-72 h-72 bg-brand-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+            <div class="absolute -bottom-8 left-20 w-72 h-72 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+            <!-- Noise -->
+            <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+            <div class="absolute inset-0" style="background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px); background-size: 40px 40px;"></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center reveal-on-scroll">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-200 text-xs font-bold uppercase tracking-wider mb-6">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Contactez-nous
+                </div>
+                
+                <h1 class="text-5xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 leading-tight">
+                    Nous sommes là <br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-emerald-300">pour vous aider.</span>
+                </h1>
+                
+                <p class="text-lg text-slate-400 mb-8 max-w-2xl mx-auto font-light leading-relaxed">
+                    Une question ? Une demande ? Notre équipe est à votre écoute. Nous vous répondrons dans les plus brefs délais.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT CARDS -->
+    <section class="py-16 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-6 mb-16">
+                <!-- Email -->
+                <div class="contact-card glass-panel rounded-2xl p-8 text-center reveal-on-scroll">
+                    <div class="contact-icon w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-envelope text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-900 mb-2 text-lg">Email</h3>
+                    <p class="text-slate-600 text-sm">contact@silyprocure.com</p>
+                </div>
+
+                <!-- Téléphone -->
+                <div class="contact-card glass-panel rounded-2xl p-8 text-center reveal-on-scroll" style="transition-delay: 0.1s;">
+                    <div class="contact-icon w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-phone text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-900 mb-2 text-lg">Téléphone</h3>
+                    <p class="text-slate-600 text-sm">+224 622 69 24 33</p>
+                </div>
+
+                <!-- Adresse -->
+                <div class="contact-card glass-panel rounded-2xl p-8 text-center reveal-on-scroll" style="transition-delay: 0.2s;">
+                    <div class="contact-icon w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-map-marker-alt text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-900 mb-2 text-lg">Adresse</h3>
+                    <p class="text-slate-600 text-sm">Conakry, Guinée</p>
+                </div>
+            </div>
+
+            <!-- Formulaire de contact -->
+            <div class="max-w-3xl mx-auto">
+                <div class="glass-panel rounded-3xl p-8 md:p-12 shadow-2xl reveal-on-scroll">
+                    <form id="contact-form" class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <!-- Nom -->
+                            <div>
+                                <label for="nom" class="block text-sm font-semibold text-slate-900 mb-2">
+                                    <i class="fas fa-user mr-2 text-brand-600"></i>Nom complet *
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="nom" 
+                                    name="nom" 
+                                    required
+                                    class="form-input w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-brand-500 focus:outline-none transition-all bg-white"
+                                    placeholder="Votre nom"
+                                >
+                            </div>
+
+                            <!-- Email -->
+                            <div>
+                                <label for="email" class="block text-sm font-semibold text-slate-900 mb-2">
+                                    <i class="fas fa-envelope mr-2 text-brand-600"></i>Email *
+                                </label>
+                                <input 
+                                    type="email" 
+                                    id="email" 
+                                    name="email" 
+                                    required
+                                    class="form-input w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-brand-500 focus:outline-none transition-all bg-white"
+                                    placeholder="votre@email.com"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Téléphone -->
+                        <div>
+                            <label for="telephone" class="block text-sm font-semibold text-slate-900 mb-2">
+                                <i class="fas fa-phone mr-2 text-brand-600"></i>Téléphone
+                            </label>
+                            <input 
+                                type="tel" 
+                                id="telephone" 
+                                name="telephone"
+                                class="form-input w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-brand-500 focus:outline-none transition-all bg-white"
+                                placeholder="+224 XXX XXX XXX"
+                            >
+                        </div>
+
+                        <!-- Sujet -->
+                        <div>
+                            <label for="sujet" class="block text-sm font-semibold text-slate-900 mb-2">
+                                <i class="fas fa-tag mr-2 text-brand-600"></i>Sujet *
+                            </label>
+                            <input 
+                                type="text" 
+                                id="sujet" 
+                                name="sujet" 
+                                required
+                                class="form-input w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-brand-500 focus:outline-none transition-all bg-white"
+                                placeholder="Objet de votre message"
+                            >
+                        </div>
+
+                        <!-- Message -->
+                        <div>
+                            <label for="message" class="block text-sm font-semibold text-slate-900 mb-2">
+                                <i class="fas fa-comment-alt mr-2 text-brand-600"></i>Message *
+                            </label>
+                            <textarea 
+                                id="message" 
+                                name="message" 
+                                required
+                                rows="6"
+                                class="form-input w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-brand-500 focus:outline-none transition-all resize-none bg-white"
+                                placeholder="Décrivez votre demande ou votre question..."
+                            ></textarea>
+                        </div>
+
+                        <!-- Bouton Submit -->
+                        <div class="pt-4">
+                            <button 
+                                type="submit" 
+                                class="group relative w-full px-8 py-4 bg-brand-900 rounded-xl text-white font-bold shadow-lg shadow-brand-900/20 overflow-hidden transition-all hover:shadow-brand-600/40 hover:-translate-y-0.5 flex items-center justify-center gap-3"
+                            >
+                                <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                                <span class="relative flex items-center gap-2">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Envoyer le message
+                                    <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Message de confirmation (caché par défaut) -->
+                    <div id="success-message" class="hidden mt-6 p-6 bg-green-50 border-2 border-green-200 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                            <div>
+                                <h3 class="font-bold text-green-900">Message envoyé avec succès !</h3>
+                                <p class="text-green-700 text-sm mt-1">Nous avons bien reçu votre message et vous répondrons dans les plus brefs délais.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message d'erreur (caché par défaut) -->
+                    <div id="error-message" class="hidden mt-6 p-6 bg-red-50 border-2 border-red-200 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-exclamation-circle text-red-600 text-2xl"></i>
+                            <div>
+                                <h3 class="font-bold text-red-900">Erreur lors de l'envoi</h3>
+                                <p id="error-text" class="text-red-700 text-sm mt-1"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 text-slate-400 py-16 border-t border-slate-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                <div class="col-span-1 md:col-span-2">
+                    <span class="text-2xl font-bold text-white tracking-tight">Sily<span class="text-brand-600">Procure</span></span>
+                    <p class="mt-4 text-slate-500 max-w-sm">
+                        La solution digitale de référence pour l'approvisionnement des entreprises en Afrique de l'Ouest.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-6">Liens Rapides</h4>
+                    <ul class="space-y-3">
+                        <li><a href="home.html" class="hover:text-brand-500 transition">Accueil</a></li>
+                        <li><a href="home.html#tracking" class="hover:text-brand-500 transition">Suivi de commande</a></li>
+                        <li><a href="contact.html" class="hover:text-brand-500 transition">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-6">Légal</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="hover:text-brand-500 transition">Mentions légales</a></li>
+                        <li><a href="#" class="hover:text-brand-500 transition">CGV</a></li>
+                        <li><a href="#" class="hover:text-brand-500 transition">Confidentialité</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="pt-8 border-t border-slate-900 text-center text-sm">
+                <p>&copy; 2026 SilyProcure Guinée. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/toast.js"></script>
+    <script>
+        // Gestion du formulaire de contact
+        document.getElementById('contact-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const successMsg = document.getElementById('success-message');
+            const errorMsg = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            
+            // Masquer les messages précédents
+            successMsg.classList.add('hidden');
+            errorMsg.classList.add('hidden');
+            
+            // Désactiver le bouton et afficher le chargement
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="relative"><i class="fas fa-spinner fa-spin"></i> Envoi en cours...</span>';
+            
+            try {
+                // Récupérer les données du formulaire
+                const formData = {
+                    nom: document.getElementById('nom').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    telephone: document.getElementById('telephone').value.trim() || null,
+                    sujet: document.getElementById('sujet').value.trim(),
+                    message: document.getElementById('message').value.trim()
+                };
+                
+                // Validation
+                if (!formData.nom || !formData.email || !formData.sujet || !formData.message) {
+                    throw new Error('Veuillez remplir tous les champs obligatoires');
+                }
+                
+                // Validation email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(formData.email)) {
+                    throw new Error('Format d\'email invalide');
+                }
+                
+                // Envoyer la requête
+                const response = await fetch('/api/contact/message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Erreur lors de l\'envoi du message');
+                }
+                
+                // Succès
+                successMsg.classList.remove('hidden');
+                form.reset();
+                
+                // Scroll vers le message de succès
+                successMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+                // Afficher un toast si disponible
+                if (typeof Toast !== 'undefined') {
+                    Toast.success('Message envoyé avec succès !');
+                }
+                
+            } catch (error) {
+                console.error('Erreur envoi message:', error);
+                errorText.textContent = error.message || 'Une erreur est survenue. Veuillez réessayer plus tard.';
+                errorMsg.classList.remove('hidden');
+                
+                // Afficher un toast si disponible
+                if (typeof Toast !== 'undefined') {
+                    Toast.error(error.message || 'Erreur lors de l\'envoi du message');
+                }
+            } finally {
+                // Réactiver le bouton
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
+        
+        // Menu mobile
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        }
+        window.toggleMobileMenu = toggleMobileMenu;
+
+        // Animation reveal on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-on-scroll').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>

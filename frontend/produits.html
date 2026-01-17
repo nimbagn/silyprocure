@@ -46,6 +46,17 @@
             transform: translateY(-4px) !important;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
         }
+        
+        /* Masquer les menus en doublon (remplacés par modern-menu) */
+        nav.nav,
+        nav.bg-white.border-b-2 {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
     </style>
 </head>
 <body class="h-full flex flex-col">
@@ -57,7 +68,7 @@
         </div>
     </div>
 
-    <nav class="nav">
+    <nav class="nav" style="display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important;">
         <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
         <a href="demandes-devis.html"><i class="fas fa-inbox"></i> Demandes Devis</a>
         <a href="clients.html"><i class="fas fa-users"></i> Clients</a>
@@ -118,8 +129,8 @@
         </div>
     </div>
 
-        <!-- Navbar Moderne selon charte Pro Confiance -->
-    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
+        <!-- Navbar Moderne selon charte Pro Confiance (masquée car remplacée par modern-menu) -->
+    <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale" style="display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important;">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo & Nav Links -->
@@ -226,79 +237,47 @@
     <script src="js/forms.js"></script>
     <script src="js/modern-menu.js"></script>
     <script>
-        // #region agent log - Analyse des systèmes de navigation
+        // Supprimer agressivement les menus en doublon
         (function() {
-            function logNavAnalysis() {
+            function removeDuplicateMenus() {
+                // Supprimer nav.nav
                 const oldNav = document.querySelector('nav.nav');
-                const modernToggle = document.getElementById('modern-menu-toggle');
-                const modernMenu = document.getElementById('modern-menu');
-                const navbar = document.querySelector('nav.bg-white.border-b-2');
-                
-                const analysis = {
-                    oldNav: {
-                        exists: !!oldNav,
-                        visible: oldNav ? window.getComputedStyle(oldNav).display !== 'none' : false,
-                        position: oldNav ? window.getComputedStyle(oldNav).position : null,
-                        zIndex: oldNav ? window.getComputedStyle(oldNav).zIndex : null,
-                        top: oldNav ? window.getComputedStyle(oldNav).top : null,
-                        left: oldNav ? window.getComputedStyle(oldNav).left : null,
-                        width: oldNav ? oldNav.offsetWidth : null,
-                        height: oldNav ? oldNav.offsetHeight : null,
-                        links: oldNav ? oldNav.querySelectorAll('a').length : 0
-                    },
-                    modernToggle: {
-                        exists: !!modernToggle,
-                        visible: modernToggle ? window.getComputedStyle(modernToggle).display !== 'none' : false,
-                        position: modernToggle ? window.getComputedStyle(modernToggle).position : null,
-                        zIndex: modernToggle ? window.getComputedStyle(modernToggle).zIndex : null,
-                        top: modernToggle ? window.getComputedStyle(modernToggle).top : null,
-                        left: modernToggle ? window.getComputedStyle(modernToggle).left : null
-                    },
-                    modernMenu: {
-                        exists: !!modernMenu,
-                        visible: modernMenu ? window.getComputedStyle(modernMenu).display !== 'none' : false,
-                        isOpen: modernMenu ? modernMenu.classList.contains('open') : false
-                    },
-                    navbar: {
-                        exists: !!navbar,
-                        visible: navbar ? window.getComputedStyle(navbar).display !== 'none' : false,
-                        zIndex: navbar ? window.getComputedStyle(navbar).zIndex : null
-                    }
-                };
-                
-                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        location: 'produits.html:nav-analysis',
-                        message: 'Analyse des systèmes de navigation',
-                        data: analysis,
-                        timestamp: Date.now(),
-                        sessionId: 'debug-session',
-                        runId: 'nav-analysis',
-                        hypothesisId: 'A'
-                    })
-                }).catch(() => {});
-            }
-            
-            // Analyser au chargement et après initialisation du menu moderne
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => {
-                    setTimeout(logNavAnalysis, 500);
-                });
-            } else {
-                setTimeout(logNavAnalysis, 500);
-            }
-            
-            // Réanalyser après initialisation du menu moderne
-            const checkModernMenu = setInterval(() => {
-                if (document.getElementById('modern-menu-toggle')) {
-                    clearInterval(checkModernMenu);
-                    setTimeout(logNavAnalysis, 100);
+                if (oldNav) {
+                    oldNav.style.cssText = 'display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important;';
+                    oldNav.remove();
                 }
-            }, 100);
+                
+                // Supprimer nav.bg-white.border-b-2
+                const navbar = document.querySelector('nav.bg-white.border-b-2');
+                if (navbar) {
+                    navbar.style.cssText = 'display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important;';
+                    navbar.remove();
+                }
+            }
+            
+            // Supprimer immédiatement
+            removeDuplicateMenus();
+            
+            // Supprimer après chargement du DOM
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', removeDuplicateMenus);
+            }
+            
+            // Supprimer à intervalles pour capturer les menus ajoutés dynamiquement
+            [0, 100, 300, 500, 1000, 2000, 3000].forEach(delay => {
+                setTimeout(removeDuplicateMenus, delay);
+            });
+            
+            // Observer les mutations pour supprimer les menus s'ils sont réajoutés
+            const observer = new MutationObserver(() => {
+                removeDuplicateMenus();
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
         })();
-        // #endregion
     </script>
     <script>
         // Vérifier l'authentification

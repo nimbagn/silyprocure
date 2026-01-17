@@ -60,17 +60,22 @@ router.get('/entreprises', async (req, res) => {
     // Note: logo_url peut ne pas exister dans toutes les bases de données
     // On le retire de la requête pour éviter l'erreur "Unknown column"
     // Le code frontend gérera l'absence de logo_url en affichant les initiales
+    
+    // Valider et convertir limit en nombre (MySQL ne supporte pas les placeholders pour LIMIT)
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit) || 30));
+    
     const sql = `
       SELECT id, nom, raison_sociale, type_entreprise, site_web, actif
       FROM entreprises
       WHERE actif = ? AND type_entreprise IN (${inPlaceholders})
       ORDER BY type_entreprise, nom
-      LIMIT ?
+      LIMIT ${limitNum}
     `;
     // Ordre des paramètres : actif (1 pour MySQL, true pour PostgreSQL - le wrapper gère la conversion)
-    // Puis chaque type dans typesList, puis limit
-    // Total: 1 (actif) + typesList.length (types) + 1 (limit) = typesList.length + 2
-    const params = [1, ...typesList, limit];
+    // Puis chaque type dans typesList
+    // Total: 1 (actif) + typesList.length (types) = typesList.length + 1
+    // LIMIT est maintenant directement interpolé (pas de placeholder)
+    const params = [1, ...typesList];
     
     // #region agent log
     const questionMarksCount = (sql.match(/\?/g) || []).length;
@@ -81,7 +86,8 @@ router.get('/entreprises', async (req, res) => {
       typesListLength: typesList.length,
       inPlaceholdersCount: (inPlaceholders.match(/\?/g) || []).length,
       questionMarksInSql: questionMarksCount,
-      expectedParams: typesList.length + 2,
+      limitNum: limitNum,
+      expectedParams: typesList.length + 1,
       match: questionMarksCount === params.length ? 'OK' : 'MISMATCH'
     });
     // #endregion

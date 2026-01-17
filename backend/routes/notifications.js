@@ -141,10 +141,10 @@ async function createNotification(userId, typeNotification, titre, message, type
 // Notifier tous les admins et superviseurs
 async function notifyAdminsAndSupervisors(typeNotification, titre, message, typeDocument = null, documentId = null) {
     try {
-        // Récupérer tous les utilisateurs avec rôle admin ou superviseur (syntaxe PostgreSQL)
+        // Récupérer tous les utilisateurs avec rôle admin ou superviseur
+        // Utiliser une syntaxe compatible MySQL et PostgreSQL
         const [users] = await pool.execute(
-            'SELECT id FROM utilisateurs WHERE role IN ($1, $2) AND actif = TRUE',
-            ['admin', 'superviseur']
+            "SELECT id FROM utilisateurs WHERE role IN ('admin', 'superviseur') AND actif = TRUE"
         );
         
         // Créer une notification pour chaque admin/superviseur

@@ -41,9 +41,9 @@ const upload = multer({
 });
 
 // Liste des produits d'un fournisseur
-router.get('/fournisseur/:fournisseurId', validateFournisseurId, async (req, res) => {
+router.get('/fournisseur/:fournisseur_id', validateFournisseurId, async (req, res) => {
     try {
-        const { fournisseurId } = req.params;
+        const { fournisseur_id: fournisseurId } = req.params;
         const { search, disponible, categorie_id } = req.query;
 
         let query = `
@@ -82,9 +82,9 @@ router.get('/fournisseur/:fournisseurId', validateFournisseurId, async (req, res
 });
 
 // Upload et import Excel
-router.post('/fournisseur/:fournisseurId/import-excel', validateFournisseurId, upload.single('file'), async (req, res) => {
+router.post('/fournisseur/:fournisseur_id/import-excel', validateFournisseurId, upload.single('file'), async (req, res) => {
     try {
-        const { fournisseurId } = req.params;
+        const { fournisseur_id: fournisseurId } = req.params;
 
         if (!req.file) {
             return res.status(400).json({ error: 'Aucun fichier fourni' });
@@ -153,9 +153,9 @@ router.post('/fournisseur/:fournisseurId/import-excel', validateFournisseurId, u
 });
 
 // Créer un produit pour un fournisseur
-router.post('/fournisseur/:fournisseurId/produits', validateFournisseurId, validateProduit, async (req, res) => {
+router.post('/fournisseur/:fournisseur_id/produits', validateFournisseurId, validateProduit, async (req, res) => {
     try {
-        const { fournisseurId } = req.params;
+        const { fournisseur_id: fournisseurId } = req.params;
         const {
             reference, reference_fournisseur, libelle, description, categorie_id,
             prix_fournisseur, unite, tva_taux, disponible, delai_livraison_jours, quantite_minimale
@@ -205,9 +205,9 @@ router.post('/fournisseur/:fournisseurId/produits', validateFournisseurId, valid
 });
 
 // Mettre à jour un produit fournisseur
-router.put('/fournisseur/:fournisseurId/produits/:produitId', validateFournisseurId, validateId, validateProduit, async (req, res) => {
+router.put('/fournisseur/:fournisseur_id/produits/:produitId', validateFournisseurId, validateId, validateProduit, async (req, res) => {
     try {
-        const { fournisseurId, produitId } = req.params;
+        const { fournisseur_id: fournisseurId, produitId } = req.params;
         const {
             reference, reference_fournisseur, libelle, description, categorie_id,
             prix_fournisseur, unite, tva_taux, disponible, delai_livraison_jours, quantite_minimale
@@ -246,9 +246,9 @@ router.put('/fournisseur/:fournisseurId/produits/:produitId', validateFournisseu
 });
 
 // Supprimer un produit fournisseur
-router.delete('/fournisseur/:fournisseurId/produits/:produitId', validateFournisseurId, validateId, async (req, res) => {
+router.delete('/fournisseur/:fournisseur_id/produits/:produitId', validateFournisseurId, validateId, async (req, res) => {
     try {
-        const { fournisseurId, produitId } = req.params;
+        const { fournisseur_id: fournisseurId, produitId } = req.params;
 
         // Vérifier que le produit appartient au fournisseur
         const [produits] = await pool.execute(

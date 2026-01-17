@@ -1581,6 +1581,137 @@
             }
         }
 
+        // Stocker les messages en mémoire pour les détails
+        let messagesCache = [];
+
+        async function showMessageDetails(messageId) {
+            // #region agent log - Affichage détails message
+            console.log('🔍 showMessageDetails appelé pour messageId:', messageId);
+            // #endregion
+            
+            try {
+                // Trouver le message dans le cache
+                const message = messagesCache.find(m => m.id === messageId);
+                
+                if (!message) {
+                    Toast.error('Message non trouvé');
+                    return;
+                }
+                
+                // Marquer le message comme lu s'il ne l'est pas déjà
+                if (!message.lu) {
+                    try {
+                        const res = await apiCall(`/api/contact/messages/${messageId}/lu`, {
+                            method: 'PATCH',
+                            body: JSON.stringify({ lu: true })
+                        });
+                        if (res && res.ok) {
+                            message.lu = true;
+                            // Recharger la liste pour mettre à jour l'affichage
+                            loadMessages();
+                        }
+                    } catch (err) {
+                        console.error('Erreur marquage message comme lu:', err);
+                    }
+                }
+                
+                // Formater la date
+                const dateFormatee = new Date(message.date_creation).toLocaleString('fr-FR', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Créer le contenu du modal
+                const content = `
+                    <div class="space-y-6">
+                        <!-- Informations du contact -->
+                        <div class="bg-blue-50 rounded-xl p-6 border-2 border-blue-100">
+                            <h4 class="text-sm font-bold text-blue-900 mb-4 uppercase tracking-wide">
+                                <i class="fas fa-user mr-2"></i>Informations du contact
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-semibold text-blue-700 uppercase">Nom complet</label>
+                                    <p class="text-base font-semibold text-blue-900 mt-1">${message.nom || 'Non renseigné'}</p>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-blue-700 uppercase">Email</label>
+                                    <p class="text-base text-blue-900 mt-1">
+                                        <a href="mailto:${message.email}" class="hover:text-blue-600 transition">
+                                            <i class="fas fa-envelope mr-2"></i>${message.email || 'Non renseigné'}
+                                        </a>
+                                    </p>
+                                </div>
+                                ${message.telephone ? `
+                                <div>
+                                    <label class="text-xs font-semibold text-blue-700 uppercase">Téléphone</label>
+                                    <p class="text-base text-blue-900 mt-1">
+                                        <a href="tel:${message.telephone}" class="hover:text-blue-600 transition">
+                                            <i class="fas fa-phone mr-2"></i>${message.telephone}
+                                        </a>
+                                    </p>
+                                </div>
+                                ` : ''}
+                                <div>
+                                    <label class="text-xs font-semibold text-blue-700 uppercase">Date d'envoi</label>
+                                    <p class="text-base text-blue-900 mt-1">
+                                        <i class="fas fa-calendar mr-2"></i>${dateFormatee}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Sujet -->
+                        <div>
+                            <label class="text-sm font-bold text-slate-900 uppercase tracking-wide mb-2 block">
+                                <i class="fas fa-tag mr-2 text-primary-600"></i>Sujet
+                            </label>
+                            <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                <p class="text-lg font-semibold text-slate-900">${message.sujet || 'Sans sujet'}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Message -->
+                        <div>
+                            <label class="text-sm font-bold text-slate-900 uppercase tracking-wide mb-2 block">
+                                <i class="fas fa-comment-alt mr-2 text-primary-600"></i>Message
+                            </label>
+                            <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 min-h-[150px]">
+                                <p class="text-slate-700 whitespace-pre-wrap leading-relaxed">${message.message || 'Aucun message'}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                const footer = `
+                    <button class="btn btn-secondary" onclick="Modal.hide('message-details')">
+                        <i class="fas fa-times mr-2"></i>Fermer
+                    </button>
+                    ${message.telephone ? `
+                    <a href="tel:${message.telephone}" class="btn btn-primary">
+                        <i class="fas fa-phone mr-2"></i>Appeler
+                    </a>
+                    ` : ''}
+                    <a href="mailto:${message.email}" class="btn btn-primary">
+                        <i class="fas fa-envelope mr-2"></i>Répondre par email
+                    </a>
+                `;
+                
+                // Afficher le modal
+                const modal = new Modal('message-details', 'Détails du message', content, footer);
+                modal.show();
+                
+            } catch (error) {
+                console.error('Erreur showMessageDetails:', error);
+                Toast.error('Erreur lors de l\'affichage des détails du message');
+            }
+        }
+        
+        window.showMessageDetails = showMessageDetails;
+
         async function loadMessages() {
             try {
                 console.log('💬 Chargement des messages...');
@@ -1606,7 +1737,14 @@
                 
                 const data = await res.json();
                 const messages = data.data || data || [];
+                
+                // #region agent log - Messages chargés
                 console.log('💬 Messages reçus:', messages.length);
+                // #endregion
+                
+                // Stocker les messages dans le cache
+                messagesCache = messages;
+                
                 const list = document.getElementById('messages-list');
                 const badge = document.getElementById('unread-count');
                 
@@ -1627,7 +1765,7 @@
                 }
 
                 list.innerHTML = messages.map(m => `
-                    <li class="px-6 py-4 hover:bg-blue-50 transition cursor-pointer border-b border-blue-100 last:border-0 ${!m.lu ? 'bg-blue-50/50' : ''}">
+                    <li class="px-6 py-4 hover:bg-blue-50 transition cursor-pointer border-b border-blue-100 last:border-0 ${!m.lu ? 'bg-blue-50/50' : ''}" onclick="showMessageDetails(${m.id})" data-message-id="${m.id}">
                         <div class="flex items-start space-x-3">
                             <div class="flex-shrink-0">
                                 <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold text-xs">
