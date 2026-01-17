@@ -1008,6 +1008,38 @@
                 </ul>
             </div>
 
+        </div>
+
+        <!-- Demandes de Devis Récentes -->
+        <div class="grid grid-cols-1 lg:grid-cols-1 gap-8 mt-8">
+            <div class="modern-card bg-white overflow-hidden fade-in">
+                <div class="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-50 to-primary-50 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-primary-900 mb-1">Demandes de Devis Récentes</h3>
+                        <p class="text-xs text-neutral-500">5 dernières demandes depuis la page d'accueil</p>
+                    </div>
+                    <a href="demandes-devis.html" class="text-sm font-semibold text-primary-600 hover:text-primary-900 transition-colors flex items-center gap-1">
+                        Tout voir <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+                <div class="table-container">
+                    <table class="table min-w-full divide-y divide-blue-100">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-primary-900 uppercase tracking-wider">Référence</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-primary-900 uppercase tracking-wider">Client</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-primary-900 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-primary-900 uppercase tracking-wider">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-blue-100" id="recent-demandes-tbody">
+                            <tr><td colspan="4" class="px-6 py-8 text-center text-sm text-neutral-500">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         </section>
 
         </main>
@@ -1158,6 +1190,8 @@
                 // Load Lists
                 loadRecentOrders();
                 loadMessages();
+                loadRecentDemandes();
+                loadRecentDemandes();
 
             } catch (error) {
                 Toast.error('Erreur initialisation dashboard: ' + (error.message || 'Erreur inconnue'));
@@ -1711,6 +1745,60 @@
         }
         
         window.showMessageDetails = showMessageDetails;
+
+        async function loadRecentDemandes() {
+            try {
+                const res = await apiCall('/api/contact/demandes?limit=5');
+                
+                if (!res || !res.ok) {
+                    const tbody = document.getElementById('recent-demandes-tbody');
+                    if (tbody) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-sm text-red-500">Erreur de chargement</td></tr>';
+                    }
+                    return;
+                }
+                
+                const data = await res.json();
+                const demandes = data.demandes || [];
+                const tbody = document.getElementById('recent-demandes-tbody');
+                
+                if (!tbody) return;
+                
+                if (demandes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-sm text-neutral-500">Aucune demande récente</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = demandes.map(d => {
+                    const date = new Date(d.date_creation).toLocaleDateString('fr-FR');
+                    const statutClass = {
+                        'nouvelle': 'bg-blue-100 text-blue-800',
+                        'en_cours': 'bg-yellow-100 text-yellow-800',
+                        'traitee': 'bg-green-100 text-green-800',
+                        'annulee': 'bg-red-100 text-red-800'
+                    }[d.statut] || 'bg-gray-100 text-gray-800';
+                    
+                    return `
+                        <tr class="hover:bg-blue-50 transition cursor-pointer" onclick="window.location.href='demandes-devis.html?id=${d.id}'">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-primary-900">${d.reference || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">${d.nom || 'N/A'}${d.entreprise ? ` (${d.entreprise})` : ''}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">${date}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${statutClass}">
+                                    ${d.statut || 'N/A'}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Erreur loadRecentDemandes:', error);
+                const tbody = document.getElementById('recent-demandes-tbody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-sm text-red-500">Erreur de chargement</td></tr>';
+                }
+            }
+        }
 
         async function loadMessages() {
             try {

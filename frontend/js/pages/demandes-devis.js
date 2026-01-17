@@ -86,6 +86,44 @@
     `;
   }
 
+  function getFilteredDemandes() {
+    let list = state.demandes || [];
+    
+    // Filtrer par recherche si un terme de recherche est présent
+    if (state.search && state.search.trim()) {
+      const searchLower = state.search.toLowerCase().trim();
+      list = list.filter(d => {
+        const ref = (d.reference || '').toLowerCase();
+        const nom = (d.nom || '').toLowerCase();
+        const email = (d.email || '').toLowerCase();
+        const entreprise = (d.entreprise || '').toLowerCase();
+        return ref.includes(searchLower) || 
+               nom.includes(searchLower) || 
+               email.includes(searchLower) || 
+               entreprise.includes(searchLower);
+      });
+    }
+    
+    return list;
+  }
+
+  function updateResultsCount(count) {
+    const el = $('demandes-results-count');
+    if (!el) return;
+    if (state.pagination && Number.isFinite(state.pagination.total)) {
+      el.textContent = `${count} affichée(s) (page ${state.pagination.page}/${state.pagination.totalPages}) — total ${state.pagination.total}`;
+    } else {
+      el.textContent = `${count} affichée(s)`;
+    }
+  }
+
+  function updatePaginationUI() {
+    // Cette fonction peut être étendue plus tard pour gérer la pagination UI
+    // Pour l'instant, on met juste à jour le compteur de résultats
+    const list = getFilteredDemandes();
+    updateResultsCount(list.length);
+  }
+
   function renderList() {
     const container = $('demandes-list');
     if (!container) return;
@@ -148,23 +186,36 @@
     let articlesRows = '<p class="text-slate-400 italic text-sm">Aucun article.</p>';
     if (demande.articles && demande.articles.length > 0) {
       articlesRows = `
-        <div class="overflow-hidden border border-slate-200 rounded-xl">
+        <div class="overflow-hidden border border-slate-200 rounded-xl shadow-sm">
           <table class="w-full text-sm text-left">
-            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] tracking-widest">
+            <thead class="bg-gradient-to-r from-slate-50 to-slate-100 text-slate-600 font-bold uppercase text-[10px] tracking-widest">
               <tr>
-                <th class="px-4 py-3">Description</th>
+                <th class="px-4 py-3 text-left">Description</th>
+                <th class="px-4 py-3 text-left">Secteur</th>
                 <th class="px-4 py-3 text-center">Quantité</th>
+                <th class="px-4 py-3 text-center">Unité</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
-              ${demande.articles.map(art => `
-                <tr>
-                  <td class="px-4 py-3 font-medium text-slate-700">${escapeHtml(art.description)}</td>
-                  <td class="px-4 py-3 text-center text-slate-500">${escapeHtml(String(art.quantite))} ${escapeHtml(art.unite || 'unité')}</td>
+            <tbody class="divide-y divide-slate-100 bg-white">
+              ${demande.articles.map((art, index) => `
+                <tr class="hover:bg-slate-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}">
+                  <td class="px-4 py-3 font-medium text-slate-900">${escapeHtml(art.description || '-')}</td>
+                  <td class="px-4 py-3">
+                    ${art.secteur ? `
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200 shadow-sm">
+                        <i class="fas fa-tag mr-1.5 text-[10px]"></i>${escapeHtml(art.secteur)}
+                      </span>
+                    ` : '<span class="text-slate-400 italic text-xs">Non spécifié</span>'}
+                  </td>
+                  <td class="px-4 py-3 text-center text-slate-700 font-semibold">${escapeHtml(String(art.quantite || 0))}</td>
+                  <td class="px-4 py-3 text-center text-slate-500 text-xs uppercase">${escapeHtml(art.unite || 'unité')}</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
+          <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 font-medium">
+            <i class="fas fa-box mr-1.5"></i>Total: ${demande.articles.length} article(s)
+          </div>
         </div>
       `;
     }
@@ -177,25 +228,42 @@
             <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-xl shadow-inner">
               <i class="fas fa-user-tie"></i>
             </div>
-            <div>
-              <h2 class="text-2xl font-bold text-slate-900">${escapeHtml(demande.nom || 'Sans nom')}</h2>
-              <div class="flex items-center gap-3 mt-1.5 text-slate-500 font-medium text-sm">
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2">
+                <h2 class="text-2xl font-bold text-slate-900">${escapeHtml(demande.nom || 'Sans nom')}</h2>
+                ${demande.reference ? `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(demande.reference)}</span>` : ''}
+              </div>
+              <div class="flex flex-wrap items-center gap-3 mt-1.5 text-slate-500 font-medium text-sm">
                 <a href="mailto:${demande.email}" class="hover:text-primary transition-colors flex items-center gap-1.5">
                   <i class="fas fa-envelope text-xs"></i> ${escapeHtml(demande.email || '-')}
                 </a>
-                <span>•</span>
-                <span class="flex items-center gap-1.5"><i class="fas fa-building text-xs"></i> ${escapeHtml(demande.entreprise || '-')}</span>
+                ${demande.telephone ? `
+                  <span>•</span>
+                  <a href="tel:${demande.telephone}" class="hover:text-primary transition-colors flex items-center gap-1.5">
+                    <i class="fas fa-phone text-xs"></i> ${escapeHtml(demande.telephone)}
+                  </a>
+                ` : ''}
+                ${demande.entreprise ? `
+                  <span>•</span>
+                  <span class="flex items-center gap-1.5"><i class="fas fa-building text-xs"></i> ${escapeHtml(demande.entreprise)}</span>
+                ` : ''}
               </div>
+              ${demande.date_creation ? `
+                <div class="mt-2 text-xs text-slate-400 flex items-center gap-1.5">
+                  <i class="fas fa-calendar-alt"></i>
+                  <span>Créée le ${formatDate(demande.date_creation)}</span>
+                </div>
+              ` : ''}
             </div>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             ${statutBadge(demande.statut)}
-            <div class="flex items-center gap-2 ml-2">
+            <div class="flex items-center gap-2">
               <button onclick="editDemande(${demande.id})" class="btn-primary !py-2 !px-4 !rounded-xl !text-sm">
-                Modifier Statut
+                <i class="fas fa-edit mr-1.5"></i> Modifier Statut
               </button>
               <button onclick="openCreateRFQModal(${demande.id})" class="btn-secondary !py-2 !px-4 !rounded-xl !text-sm !border-slate-200">
-                Lancer RFQ
+                <i class="fas fa-file-contract mr-1.5"></i> Lancer RFQ
               </button>
             </div>
           </div>
@@ -210,20 +278,82 @@
 
         <!-- Contenu Onglets -->
         <div id="tab-content-overview" class="tab-pane space-y-6">
+           <!-- Informations de contact -->
            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100">
-                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Message du client</h4>
-                <p class="text-slate-700 leading-relaxed">${escapeHtml(demande.message || 'Aucun message particulier.')}</p>
+              <div class="p-5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
+                <h4 class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <i class="fas fa-user-circle"></i> Informations de contact
+                </h4>
+                <div class="space-y-2 text-sm">
+                  <div class="flex items-center gap-2 text-slate-700">
+                    <i class="fas fa-envelope text-blue-500 w-4"></i>
+                    <a href="mailto:${demande.email}" class="hover:text-blue-600 transition-colors">${escapeHtml(demande.email || '-')}</a>
+                  </div>
+                  ${demande.telephone ? `
+                    <div class="flex items-center gap-2 text-slate-700">
+                      <i class="fas fa-phone text-blue-500 w-4"></i>
+                      <a href="tel:${demande.telephone}" class="hover:text-blue-600 transition-colors">${escapeHtml(demande.telephone)}</a>
+                    </div>
+                  ` : ''}
+                  ${demande.entreprise ? `
+                    <div class="flex items-center gap-2 text-slate-700">
+                      <i class="fas fa-building text-blue-500 w-4"></i>
+                      <span>${escapeHtml(demande.entreprise)}</span>
+                    </div>
+                  ` : ''}
+                </div>
               </div>
-              <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100">
-                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Localisation</h4>
-                ${demande.latitude ? `<div id="map-container-${demande.id}" class="h-32 rounded-xl overflow-hidden shadow-sm"></div>` : '<p class="text-slate-400 italic text-sm">Non renseignée</p>'}
+              
+              <!-- Adresse de livraison -->
+              <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100">
+                <h4 class="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <i class="fas fa-map-marker-alt"></i> Adresse de livraison
+                </h4>
+                ${demande.adresse_livraison || demande.ville_livraison || demande.pays_livraison ? `
+                  <div class="space-y-1 text-sm text-slate-700">
+                    ${demande.adresse_livraison ? `<div><strong>Adresse:</strong> ${escapeHtml(demande.adresse_livraison)}</div>` : ''}
+                    <div class="flex items-center gap-2">
+                      ${demande.ville_livraison ? `<span><i class="fas fa-city text-emerald-500"></i> ${escapeHtml(demande.ville_livraison)}</span>` : ''}
+                      ${demande.pays_livraison ? `<span>${demande.ville_livraison ? ', ' : ''}${escapeHtml(demande.pays_livraison)}</span>` : ''}
+                    </div>
+                    ${demande.latitude && demande.longitude ? `
+                      <div class="mt-3">
+                        <div id="map-container-${demande.id}" class="h-32 rounded-xl overflow-hidden shadow-sm border border-emerald-200"></div>
+                      </div>
+                    ` : ''}
+                  </div>
+                ` : '<p class="text-slate-400 italic text-sm">Non renseignée</p>'}
               </div>
            </div>
+
+           <!-- Message du client -->
+           ${demande.message ? `
+             <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+               <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                 <i class="fas fa-comment-dots"></i> Message du client
+               </h4>
+               <p class="text-slate-700 leading-relaxed whitespace-pre-wrap">${escapeHtml(demande.message)}</p>
+             </div>
+           ` : ''}
+
+           <!-- Traité par -->
+           ${demande.traite_par_nom || demande.traite_par_prenom ? `
+             <div class="p-4 rounded-xl bg-purple-50 border border-purple-100">
+               <div class="flex items-center gap-2 text-sm">
+                 <i class="fas fa-user-check text-purple-600"></i>
+                 <span class="text-purple-700 font-medium">Traité par:</span>
+                 <span class="text-purple-900">${escapeHtml((demande.traite_par_prenom || '') + ' ' + (demande.traite_par_nom || ''))}</span>
+               </div>
+             </div>
+           ` : ''}
+
+           <!-- Notes Internes -->
            ${demande.notes_internes ? `
-             <div class="p-5 rounded-2xl bg-amber-50 border border-amber-100">
-                <h4 class="text-xs font-bold text-amber-600 uppercase tracking-widest mb-3">Notes Internes</h4>
-                <p class="text-amber-900/80 text-sm leading-relaxed">${escapeHtml(demande.notes_internes)}</p>
+             <div class="p-5 rounded-2xl bg-amber-50 border border-amber-200">
+               <h4 class="text-xs font-bold text-amber-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+                 <i class="fas fa-sticky-note"></i> Notes Internes
+               </h4>
+               <p class="text-amber-900/90 text-sm leading-relaxed whitespace-pre-wrap">${escapeHtml(demande.notes_internes)}</p>
              </div>
            ` : ''}
         </div>
@@ -312,6 +442,9 @@
 
   async function selectDemande(id, opts = { openModal: true }) {
     state.selectedId = Number(id);
+    // #region agent log - selectDemande
+    fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:selectDemande',message:'selectDemande appelée',data:{id,idType:typeof id,stateSelectedId:state.selectedId,stateSelectedIdType:typeof state.selectedId},timestamp:Date.now(),sessionId:'debug-session',runId:'select-demande',hypothesisId:'L'})}).catch(()=>{});
+    // #endregion
     renderList();
     renderDetailPlaceholder();
     const resp = await apiCall(`/api/contact/demandes/${id}`);
@@ -441,6 +574,40 @@
     state.page = state.pagination.page + 1;
     loadDemandes().catch(() => {});
   };
+  function openOverlayModal(modalId) {
+    const modal = $(modalId);
+    const modalOverlay = modal?.closest('.modal-overlay');
+    
+    if (modal) {
+      modal.classList.add('active');
+    }
+    
+    if (modalOverlay) {
+      modalOverlay.classList.add('active');
+      modalOverlay.style.display = 'flex';
+    }
+    
+    document.body.classList.add('modal-open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeOverlayModal(modalId) {
+    const modal = $(modalId);
+    const modalOverlay = modal?.closest('.modal-overlay');
+    
+    if (modal) {
+      modal.classList.remove('active');
+    }
+    
+    if (modalOverlay) {
+      modalOverlay.classList.remove('active');
+      modalOverlay.style.display = 'none';
+    }
+    
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+  }
+
   window.closeDetailModal = () => closeOverlayModal('detailModal');
   window.closePreviewModal = () => closeOverlayModal('previewModal');
   window.closeCreateRFQModal = () => closeOverlayModal('createRFQModal');
@@ -609,15 +776,30 @@
   };
 
   window.editDemande = async function editDemande(id) {
+    // #region agent log - editDemande entry
+    fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:editDemande:entry',message:'editDemande appelée',data:{id,idType:typeof id,idString:String(id),stateSelectedId:state.selectedId},timestamp:Date.now(),sessionId:'debug-session',runId:'edit-demande',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     try {
       const response = await apiCall(`/api/contact/demandes/${id}`);
       if (!response || !response.ok) throw new Error('Erreur chargement');
       const demande = await response.json();
-      $('edit-id').value = demande.id;
+      const editIdEl = $('edit-id');
+      // #region agent log - editDemande before setting values
+      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:editDemande:before-set',message:'Avant remplissage des champs',data:{demandeId:demande.id,editIdElExists:!!editIdEl,editIdElValue:editIdEl?.value},timestamp:Date.now(),sessionId:'debug-session',runId:'edit-demande',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+      if (editIdEl) {
+        editIdEl.value = demande.id;
+      }
       $('edit-statut').value = demande.statut;
       $('edit-notes').value = demande.notes_internes || '';
+      // #region agent log - editDemande after setting values
+      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:editDemande:after-set',message:'Après remplissage des champs',data:{editIdValue:editIdEl?.value,demandeId:demande.id},timestamp:Date.now(),sessionId:'debug-session',runId:'edit-demande',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       openOverlayModal('editModal');
     } catch (e) {
+      // #region agent log - editDemande error
+      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:editDemande:error',message:'Erreur dans editDemande',data:{error:e.message,stack:e.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'edit-demande',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       console.error(e);
       if (window.Toast) Toast.error('Erreur lors du chargement');
     }
@@ -625,37 +807,84 @@
 
   window.handleUpdateStatut = async function handleUpdateStatut(event) {
     event.preventDefault();
-    const id = $('edit-id').value;
-    const statut = $('edit-statut').value;
-    const notes = $('edit-notes').value;
+    const editIdEl = $('edit-id');
+    let id = editIdEl?.value;
+    // #region agent log - handleUpdateStatut entry
+    fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:entry',message:'handleUpdateStatut appelée',data:{editIdElExists:!!editIdEl,editIdValue:id,editIdValueType:typeof id,stateSelectedId:state.selectedId,stateSelectedIdType:typeof state.selectedId},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
+    // Fallback: utiliser state.selectedId si edit-id est vide
+    if (!id || id.trim() === '') {
+      id = state.selectedId;
+      // #region agent log - handleUpdateStatut fallback
+      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:fallback',message:'Utilisation du fallback state.selectedId',data:{idAfterFallback:id,stateSelectedId:state.selectedId},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
+    }
+    if (!id) {
+      // #region agent log - handleUpdateStatut no id
+      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:no-id',message:'ID manquant, arrêt',data:{editIdValue:editIdEl?.value,stateSelectedId:state.selectedId},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'G'})}).catch(()=>{});
+      // #endregion
+      if (window.Toast) Toast.error('ID de demande manquant');
+      return;
+    }
+    const statut = $('edit-statut')?.value;
+    const notes = $('edit-notes')?.value || '';
+    const url = `/api/contact/demandes/${id}/statut`;
+    // #region agent log - handleUpdateStatut before api call
+    fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:before-api',message:'Avant appel API',data:{id,url,statut,notesLength:notes.length},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'H'})}).catch(()=>{});
+    // #endregion
     try {
-      const response = await apiCall(`/api/contact/demandes/${id}/statut`, {
+      const response = await apiCall(url, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ statut, notes_internes: notes }),
       });
       if (!response || !response.ok) {
         const error = response ? await response.json() : {};
+        // #region agent log - handleUpdateStatut api error
+        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:api-error',message:'Erreur API',data:{status:response?.status,statusText:response?.statusText,error,url},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'I'})}).catch(()=>{});
+        // #endregion
         throw new Error(error.error || 'Erreur lors de la mise à jour');
       }
+      // #region agent log - handleUpdateStatut success
+      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:success',message:'Mise à jour réussie',data:{id,statut},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'J'})}).catch(()=>{});
+      // #endregion
       if (window.Toast) Toast.success('Statut mis à jour');
       closeOverlayModal('editModal');
       await loadDemandes();
-      loadStats();
+      if (window.loadStats) loadStats();
     } catch (e) {
+      // #region agent log - handleUpdateStatut catch error
+      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:catch-error',message:'Erreur catchée',data:{error:e.message,stack:e.stack?.substring(0,200),url},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'K'})}).catch(()=>{});
+      // #endregion
       console.error(e);
       if (window.Toast) Toast.error(e.message || 'Erreur lors de la mise à jour');
     }
   };
 
   window.openCreateRFQModal = async function openCreateRFQModal(demandeId) {
-    currentDemandeId = demandeId;
+    console.log('🔵 openCreateRFQModal appelée avec demandeId:', demandeId, 'type:', typeof demandeId);
+    if (!demandeId) {
+      console.error('🔴 ERREUR: demandeId est vide ou undefined');
+      if (window.Toast) Toast.error('ID de demande manquant');
+      return;
+    }
+    currentDemandeId = Number(demandeId);
+    console.log('🔵 currentDemandeId défini à:', currentDemandeId);
     const container = $('fournisseurs-list');
+    console.log('🔵 Container fournisseurs-list trouvé:', !!container);
     if (container) container.innerHTML = '<div class="loading">Chargement des fournisseurs...</div>';
+    const url = '/api/entreprises?type=fournisseur';
+    console.log('🔵 Appel API:', url);
     try {
-      const response = await apiCall('/api/entreprises?type_entreprise=fournisseur&limit=1000');
-      if (!response || !response.ok) throw new Error('Erreur chargement fournisseurs');
+      const response = await apiCall(url);
+      console.log('🔵 Réponse API reçue:', { ok: response?.ok, status: response?.status, statusText: response?.statusText });
+      if (!response || !response.ok) {
+        const errorText = response ? await response.text().catch(() => '') : '';
+        console.error('🔴 Erreur API fournisseurs:', { status: response?.status, statusText: response?.statusText, errorText });
+        throw new Error('Erreur chargement fournisseurs');
+      }
       const fournisseurs = await response.json();
+      console.log('🔵 Fournisseurs reçus:', { isArray: Array.isArray(fournisseurs), length: Array.isArray(fournisseurs) ? fournisseurs.length : 0, first: Array.isArray(fournisseurs) && fournisseurs.length > 0 ? fournisseurs[0] : null });
       if (container) {
         container.innerHTML = (Array.isArray(fournisseurs) && fournisseurs.length)
           ? fournisseurs
@@ -673,19 +902,30 @@
               )
               .join('')
           : '<p style="color:#64748b;text-align:center;padding:1rem;">Aucun fournisseur disponible</p>';
+        console.log('🔵 HTML généré, longueur:', container.innerHTML.length);
       }
+      console.log('🔵 Ouverture du modal createRFQModal');
       openOverlayModal('createRFQModal');
     } catch (e) {
-      console.error(e);
+      console.error('🔴 Erreur dans openCreateRFQModal:', e);
       if (window.Toast) Toast.error('Erreur lors du chargement des fournisseurs');
+      if (container) container.innerHTML = '<p style="color:#ef4444;text-align:center;padding:1rem;">Erreur lors du chargement des fournisseurs</p>';
     }
   };
 
   window.submitCreateRFQ = async function submitCreateRFQ(event) {
     event.preventDefault();
+    console.log('🔵 submitCreateRFQ appelée, currentDemandeId:', currentDemandeId);
     if (!currentDemandeId) {
-      if (window.Toast) Toast.error('ID demande manquant');
-      return;
+      console.error('🔴 ERREUR: currentDemandeId est vide');
+      // Fallback: essayer de récupérer depuis state.selectedId
+      if (state.selectedId) {
+        currentDemandeId = state.selectedId;
+        console.log('🔵 Utilisation du fallback state.selectedId:', currentDemandeId);
+      } else {
+        if (window.Toast) Toast.error('ID demande manquant');
+        return;
+      }
     }
     const checkboxes = document.querySelectorAll('input[name="fournisseur_ids"]:checked');
     const fournisseur_ids = Array.from(checkboxes).map((cb) => parseInt(cb.value)).filter((n) => Number.isFinite(n));

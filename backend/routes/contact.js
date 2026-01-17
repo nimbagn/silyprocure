@@ -273,9 +273,15 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
             });
 
             // Récupérer la demande créée avec ses lignes
-            // Utiliser STRING_AGG pour PostgreSQL au lieu de GROUP_CONCAT (MySQL)
-            const [demandes] = await pool.execute(
-                `SELECT d.*, 
+            // Utiliser GROUP_CONCAT pour MySQL, STRING_AGG pour PostgreSQL
+            console.log('🔍🔍🔍 DÉBUT RÉCUPÉRATION DEMANDE - usePostgreSQL:', usePostgreSQL, 'demandeId:', demandeId);
+            
+            let articlesQuery;
+            let queryParams;
+            
+            if (usePostgreSQL) {
+                console.log('🔍🔍🔍 UTILISATION POSTGRESQL - STRING_AGG');
+                articlesQuery = `SELECT d.*, 
                         STRING_AGG(
                             l.description || ' (' || l.quantite || ' ' || l.unite || ' - ' || COALESCE(l.secteur, '') || ')',
                             '; '
@@ -283,9 +289,28 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                  FROM demandes_devis d
                  LEFT JOIN demandes_devis_lignes l ON d.id = l.demande_devis_id
                  WHERE d.id = $1
-                 GROUP BY d.id`,
-                [demandeId]
-            );
+                 GROUP BY d.id`;
+                queryParams = [demandeId];
+            } else {
+                console.log('🔍🔍🔍 UTILISATION MYSQL - GROUP_CONCAT');
+                // MySQL: utiliser GROUP_CONCAT avec CONCAT et IFNULL
+                articlesQuery = `SELECT d.*, 
+                        GROUP_CONCAT(
+                            CONCAT(l.description, ' (', l.quantite, ' ', l.unite, ' - ', IFNULL(l.secteur, ''), ')')
+                            SEPARATOR '; '
+                        ) as articles_resume
+                 FROM demandes_devis d
+                 LEFT JOIN demandes_devis_lignes l ON d.id = l.demande_devis_id
+                 WHERE d.id = ?
+                 GROUP BY d.id`;
+                queryParams = [demandeId];
+            }
+            
+            console.log('🔍🔍🔍 QUERY FINALE:', articlesQuery.substring(0, 200));
+            console.log('🔍🔍🔍 Contient STRING_AGG?', articlesQuery.includes('STRING_AGG'));
+            console.log('🔍🔍🔍 Contient GROUP_CONCAT?', articlesQuery.includes('GROUP_CONCAT'));
+            
+            const [demandes] = await pool.execute(articlesQuery, queryParams);
             const demande = demandes[0];
 
             // Mettre à jour la demande avec la référence
@@ -460,11 +485,17 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
         const limitNum = Math.max(1, Math.min(1000, parseInt(limit) || 50)); // Limiter à 1000 max
         const offset = (pageNum - 1) * limitNum;
 
+        // Détecter le type de base de données
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        const coalesceFunc = usePostgreSQL ? 'COALESCE' : 'IFNULL';
+        const placeholder = usePostgreSQL ? '$1' : '?';
+
+        // COUNT() ne retourne jamais NULL, donc pas besoin de IFNULL/COALESCE
         let query = `
             SELECT d.*, 
                    u.nom as traite_par_nom, 
                    u.prenom as traite_par_prenom,
-                   COALESCE(COUNT(l.id), 0) as nb_articles
+                   COUNT(l.id) as nb_articles
             FROM demandes_devis d
             LEFT JOIN utilisateurs u ON d.traite_par = u.id
             LEFT JOIN demandes_devis_lignes l ON d.id = l.demande_devis_id
@@ -472,7 +503,7 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
         const params = [];
 
         if (statut) {
-            query += ' WHERE d.statut = $1';
+            query += ` WHERE d.statut = ${placeholder}`;
             params.push(statut);
         }
 
@@ -481,6 +512,9 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
         // Note: LIMIT et OFFSET ne peuvent pas être des paramètres préparés dans certaines versions MySQL
         // Utiliser l'interpolation directe après validation
         query += ` ORDER BY d.date_creation DESC LIMIT ${limitNum} OFFSET ${offset}`;
+        
+        console.log('🔍🔍🔍 Route /demandes - Query SQL:', query.substring(0, 300));
+        console.log('🔍🔍🔍 Route /demandes - usePostgreSQL:', usePostgreSQL, 'params:', params);
 
         // #region agent log - Avant exécution SQL
         try {
@@ -496,7 +530,29 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
         } catch (logErr) {}
         // #endregion
 
-        const [demandes] = await pool.execute(query, params);
+        console.log('🔍🔍🔍 Route /demandes - AVANT EXÉCUTION SQL - query:', query.substring(0, 400));
+        console.log('🔍🔍🔍 Route /demandes - AVANT EXÉCUTION SQL - params:', params);
+        console.log('🔍🔍🔍 Route /demandes - AVANT EXÉCUTION SQL - usePostgreSQL:', usePostgreSQL);
+        console.log('🔍🔍🔍 Route /demandes - AVANT EXÉCUTION SQL - placeholder:', placeholder);
+        
+        let demandes;
+        try {
+            console.log('🔍🔍🔍 Route /demandes - APPEL pool.execute...');
+            const result = await pool.execute(query, params);
+            demandes = result[0];
+            console.log('🔍🔍🔍 Route /demandes - SQL EXÉCUTÉ AVEC SUCCÈS - nbDemandes:', demandes?.length || 0);
+            if (demandes && demandes.length > 0) {
+                console.log('🔍🔍🔍 Route /demandes - Première demande ID:', demandes[0].id);
+            } else {
+                console.log('🔍🔍🔍 Route /demandes - AUCUNE DEMANDE TROUVÉE');
+            }
+        } catch (sqlError) {
+            console.error('🔍🔍🔍 Route /demandes - ERREUR SQL:', sqlError.message);
+            console.error('🔍🔍🔍 Route /demandes - ERREUR SQL - code:', sqlError.code);
+            console.error('🔍🔍🔍 Route /demandes - ERREUR SQL - sqlState:', sqlError.sqlState);
+            console.error('🔍🔍🔍 Route /demandes - ERREUR SQL - sql:', sqlError.sql?.substring(0, 500));
+            throw sqlError;
+        }
         
         // #region agent log - Après exécution SQL
         try {
@@ -513,16 +569,24 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
         // #endregion
 
         // Compter le total
+        // Réutiliser usePostgreSQL et placeholder déjà déclarés plus haut
         let countQuery = 'SELECT COUNT(*) as total FROM demandes_devis';
         const countParams = [];
         if (statut) {
-            countQuery += ' WHERE statut = $1';
+            countQuery += ` WHERE statut = ${placeholder}`;
             countParams.push(statut);
         }
+        
+        console.log('🔍🔍🔍 Route /demandes - COUNT QUERY:', countQuery);
+        console.log('🔍🔍🔍 Route /demandes - COUNT PARAMS:', countParams);
+        
         const [countResult] = await pool.execute(countQuery, countParams);
         const total = countResult[0].total;
+        
+        console.log('🔍🔍🔍 Route /demandes - TOTAL:', total);
+        console.log('🔍🔍🔍 Route /demandes - AVANT res.json - demandes.length:', demandes?.length || 0);
 
-        res.json({
+        const responseData = {
             demandes,
             pagination: {
                 page: parseInt(page),
@@ -530,7 +594,10 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
                 total,
                 totalPages: Math.ceil(total / parseInt(limit))
             }
-        });
+        };
+        
+        console.log('🔍🔍🔍 Route /demandes - ENVOI RÉPONSE - pagination:', responseData.pagination);
+        res.json(responseData);
 
     } catch (error) {
         // #region agent log - Erreur catchée
@@ -859,9 +926,12 @@ router.get('/tracking', async (req, res) => {
         }
 
         // Récupérer la demande avec ses lignes
-        // Utiliser STRING_AGG pour PostgreSQL au lieu de GROUP_CONCAT (MySQL)
-        const [demandes] = await pool.execute(
-            `SELECT d.*, 
+        // Utiliser GROUP_CONCAT pour MySQL, STRING_AGG pour PostgreSQL
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        
+        let trackingQuery;
+        if (usePostgreSQL) {
+            trackingQuery = `SELECT d.*, 
                     STRING_AGG(
                         l.description || '|' || COALESCE(l.secteur, '') || '|' || l.quantite || '|' || l.unite,
                         ';;'
@@ -869,9 +939,20 @@ router.get('/tracking', async (req, res) => {
              FROM demandes_devis d
              LEFT JOIN demandes_devis_lignes l ON d.id = l.demande_devis_id
              WHERE d.reference = $1 AND d.token_suivi = $2
-             GROUP BY d.id`,
-            [ref, token]
-        );
+             GROUP BY d.id`;
+        } else {
+            trackingQuery = `SELECT d.*, 
+                    GROUP_CONCAT(
+                        CONCAT(l.description, '|', IFNULL(l.secteur, ''), '|', l.quantite, '|', l.unite)
+                        SEPARATOR ';;'
+                    ) as articles_data
+             FROM demandes_devis d
+             LEFT JOIN demandes_devis_lignes l ON d.id = l.demande_devis_id
+             WHERE d.reference = ? AND d.token_suivi = ?
+             GROUP BY d.id`;
+        }
+        
+        const [demandes] = await pool.execute(trackingQuery, [ref, token]);
 
         if (demandes.length === 0) {
             return res.status(404).json({ error: 'Demande non trouvée ou token invalide' });
@@ -996,6 +1077,104 @@ router.patch('/messages/:id/traite', requireRole('admin', 'superviseur'), valida
     } catch (error) {
         console.error('Erreur mise à jour message:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Route publique pour récupérer la liste des secteurs depuis la base de données
+router.get('/secteurs', async (req, res) => {
+    try {
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        
+        let query;
+        if (usePostgreSQL) {
+            // PostgreSQL: UNION des secteurs depuis demandes_devis_lignes et entreprises
+            query = `
+                SELECT DISTINCT secteur as nom
+                FROM demandes_devis_lignes
+                WHERE secteur IS NOT NULL AND secteur != ''
+                UNION
+                SELECT DISTINCT secteur_activite as nom
+                FROM entreprises
+                WHERE secteur_activite IS NOT NULL AND secteur_activite != ''
+                UNION
+                SELECT DISTINCT secteur_activite as nom
+                FROM clients
+                WHERE secteur_activite IS NOT NULL AND secteur_activite != ''
+                ORDER BY nom ASC
+            `;
+        } else {
+            // MySQL: UNION des secteurs depuis demandes_devis_lignes et entreprises
+            query = `
+                SELECT DISTINCT secteur as nom
+                FROM demandes_devis_lignes
+                WHERE secteur IS NOT NULL AND secteur != ''
+                UNION
+                SELECT DISTINCT secteur_activite as nom
+                FROM entreprises
+                WHERE secteur_activite IS NOT NULL AND secteur_activite != ''
+                UNION
+                SELECT DISTINCT secteur_activite as nom
+                FROM clients
+                WHERE secteur_activite IS NOT NULL AND secteur_activite != ''
+                ORDER BY nom ASC
+            `;
+        }
+        
+        const [rows] = await pool.execute(query);
+        const secteurs = rows.map(row => row.nom).filter(Boolean);
+        
+        // Ajouter des secteurs par défaut s'il n'y en a pas dans la base
+        const secteursParDefaut = [
+            'BTP - Construction',
+            'Commerce - Distribution',
+            'Industrie - Manufacture',
+            'Services - Conseil',
+            'Transport - Logistique',
+            'Informatique - TIC',
+            'Agroalimentaire',
+            'Énergie - Électricité',
+            'Santé - Médical',
+            'Éducation - Formation',
+            'Hôtellerie - Restauration',
+            'Immobilier',
+            'Finance - Banque',
+            'Automobile',
+            'Textile - Mode',
+            'Chimie - Pharmacie',
+            'Métallurgie',
+            'Papier - Imprimerie',
+            'Autre'
+        ];
+        
+        // Fusionner les secteurs de la base avec les secteurs par défaut, en évitant les doublons
+        const tousSecteurs = [...new Set([...secteurs, ...secteursParDefaut])].sort();
+        
+        res.json({ secteurs: tousSecteurs });
+    } catch (error) {
+        console.error('Erreur récupération secteurs:', error);
+        // En cas d'erreur, retourner les secteurs par défaut
+        const secteursParDefaut = [
+            'BTP - Construction',
+            'Commerce - Distribution',
+            'Industrie - Manufacture',
+            'Services - Conseil',
+            'Transport - Logistique',
+            'Informatique - TIC',
+            'Agroalimentaire',
+            'Énergie - Électricité',
+            'Santé - Médical',
+            'Éducation - Formation',
+            'Hôtellerie - Restauration',
+            'Immobilier',
+            'Finance - Banque',
+            'Automobile',
+            'Textile - Mode',
+            'Chimie - Pharmacie',
+            'Métallurgie',
+            'Papier - Imprimerie',
+            'Autre'
+        ];
+        res.json({ secteurs: secteursParDefaut });
     }
 });
 
