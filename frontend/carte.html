@@ -445,16 +445,17 @@
         // ==========================================
         
         // Fonctions d'authentification (utiliser les vraies si disponibles, sinon mock)
-        function checkAuth() {
-            if (typeof window.checkAuth === 'function') {
-                window.checkAuth();
-            } else {
-                const user = localStorage.getItem('user');
-                if (!user) {
-                    // Rediriger vers la page de connexion si pas d'utilisateur
+        // Ne pas créer de fonction locale checkAuth pour éviter la récursion infinie
+        // Utiliser directement window.checkAuth s'il existe, sinon créer une fonction de fallback
+        if (typeof window.checkAuth !== 'function') {
+            window.checkAuth = function() {
+                const token = localStorage.getItem('token');
+                if (!token) {
                     window.location.href = 'index.html';
+                    return false;
                 }
-            }
+                return true;
+            };
         }
         
         function logout() {
@@ -546,7 +547,16 @@
         // INITIALISATION
         // ==========================================
         
-        checkAuth();
+        // Appeler checkAuth depuis window pour éviter la récursion
+        if (typeof window.checkAuth === 'function') {
+            window.checkAuth();
+        } else {
+            // Fallback si checkAuth n'est pas disponible
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'index.html';
+            }
+        }
         
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const userNameEl = document.getElementById('user-name');

@@ -1,7 +1,7 @@
 // Composant d'upload de fichiers joints
 // Protection contre la redéclaration si le fichier est chargé plusieurs fois
 if (typeof FileUploadManager === 'undefined') {
-    class FileUploadManager {
+class FileUploadManager {
     constructor(typeDocument, documentId) {
         this.typeDocument = typeDocument;
         this.documentId = documentId;

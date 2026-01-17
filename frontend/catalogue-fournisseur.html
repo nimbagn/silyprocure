@@ -265,6 +265,11 @@
         const userInitialsEl = document.getElementById('user-initials');
         if (userNameEl) {
             userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+        }
+        if (userInitialsEl) {
+            const initial = (user.prenom?.[0] || user.nom?.[0] || 'U').toUpperCase();
+            userInitialsEl.textContent = initial;
+        }
 
         let fournisseurId = null;
         let allProduits = [];

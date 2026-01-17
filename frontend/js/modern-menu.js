@@ -93,15 +93,15 @@
 
         return `
             <!-- Menu Moderne avec Hamburger -->
-            <button id="modern-menu-toggle" class="fixed top-4 left-4 z-[2000] w-14 h-14 bg-brand-600 hover:bg-brand-700 rounded-2xl shadow-2xl shadow-brand-600/30 flex items-center justify-center text-white transition-all duration-300 hover:scale-110 hover:shadow-brand-600/50 group" aria-label="Ouvrir le menu" title="Menu">
+            <button id="modern-menu-toggle" class="fixed top-4 left-4 z-[9999] w-14 h-14 bg-brand-600 hover:bg-brand-700 rounded-2xl shadow-2xl shadow-brand-600/30 flex items-center justify-center text-white transition-all duration-300 hover:scale-110 hover:shadow-brand-600/50 group" aria-label="Ouvrir le menu" title="Menu" style="z-index: 9999;">
                 <i class="fas fa-bars text-xl group-hover:rotate-90 transition-transform duration-300"></i>
             </button>
 
-            <!-- Overlay sombre -->
-            <div id="modern-menu-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[1998] transition-all duration-300" style="opacity: 0; visibility: hidden; pointer-events: none;" onclick="closeModernMenu()"></div>
+            <!-- Overlay sombre avec floutage -->
+            <div id="modern-menu-overlay" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[9998] transition-all duration-300" style="opacity: 0; visibility: hidden; pointer-events: none; z-index: 9998;" onclick="closeModernMenu()"></div>
 
             <!-- Menu latéral moderne -->
-            <aside id="modern-menu" class="fixed top-0 left-0 h-full w-80 bg-white/95 backdrop-blur-xl shadow-2xl z-[1999] transform -translate-x-full transition-transform duration-300 ease-out overflow-y-auto">
+            <aside id="modern-menu" class="fixed top-0 left-0 h-full w-80 bg-white/95 backdrop-blur-xl shadow-2xl z-[9999] transform -translate-x-full transition-transform duration-300 ease-out overflow-y-auto" style="z-index: 9999;">
                 <!-- Header du menu -->
                 <div class="sticky top-0 bg-gradient-to-r from-brand-600 to-brand-700 p-6 shadow-lg z-10">
                     <div class="flex items-center justify-between mb-6">
@@ -213,8 +213,18 @@
             }
             
             /* Animation du menu */
+            #modern-menu {
+                z-index: 9999 !important;
+            }
+            
             #modern-menu.open {
                 transform: translateX(0) !important;
+                z-index: 9999 !important;
+            }
+            
+            /* Bouton toggle toujours au-dessus */
+            #modern-menu-toggle {
+                z-index: 9999 !important;
             }
             
             /* Overlay - état par défaut (caché) */
@@ -222,12 +232,40 @@
                 opacity: 0 !important;
                 visibility: hidden !important;
                 pointer-events: none !important;
+                backdrop-filter: blur(0px) !important;
+                transition: opacity 0.3s ease, visibility 0.3s ease, backdrop-filter 0.3s ease !important;
+                z-index: 9998 !important;
             }
             
-            /* Overlay - état actif (visible) */
+            /* Overlay - état actif (visible avec floutage) */
             #modern-menu-overlay.active {
                 opacity: 1 !important;
                 visibility: visible !important;
+                pointer-events: auto !important;
+                backdrop-filter: blur(8px) !important;
+                background: rgba(15, 23, 42, 0.75) !important; /* slate-900/75 avec plus d'opacité */
+                z-index: 9998 !important;
+            }
+            
+            /* Flouter le contenu en arrière-plan quand le menu est ouvert */
+            body.menu-open {
+                overflow: hidden !important;
+            }
+            
+            /* Flouter le contenu principal quand le menu est ouvert */
+            body.menu-open main,
+            body.menu-open .main-content,
+            body.menu-open .container,
+            body.menu-open .card,
+            body.menu-open .page-header {
+                filter: blur(3px);
+                transition: filter 0.3s ease;
+                pointer-events: none;
+            }
+            
+            /* S'assurer que le menu reste au-dessus du contenu flouté */
+            #modern-menu {
+                filter: none !important;
                 pointer-events: auto !important;
             }
             
@@ -281,12 +319,20 @@
             // Ajouter les classes
             menu.classList.add('open');
             overlay.classList.add('active');
+            document.body.classList.add('menu-open');
             
-            // Forcer les styles inline pour s'assurer que l'overlay est visible
+            // Forcer les styles inline pour s'assurer que l'overlay est visible avec floutage
             overlay.style.opacity = '1';
             overlay.style.visibility = 'visible';
             overlay.style.pointerEvents = 'auto';
             overlay.style.display = 'block';
+            overlay.style.backdropFilter = 'blur(8px)';
+            overlay.style.backgroundColor = 'rgba(15, 23, 42, 0.75)';
+            overlay.style.zIndex = '9998';
+            menu.style.zIndex = '9999';
+            if (toggle) {
+                toggle.style.zIndex = '9999';
+            }
             document.body.style.overflow = 'hidden';
             
             if (toggle) {
@@ -300,15 +346,16 @@
                 console.log('📊 Styles après ouverture:', {
                     overlayClasses: overlay.className,
                     menuClasses: menu.className,
+                    bodyClasses: document.body.className,
                     overlayOpacity: overlayStyle.opacity,
                     overlayVisibility: overlayStyle.visibility,
                     overlayDisplay: overlayStyle.display,
+                    overlayBackdropFilter: overlayStyle.backdropFilter,
                     overlayZIndex: overlayStyle.zIndex,
                     menuTransform: menuStyle.transform,
                     overlayHasActive: overlay.classList.contains('active'),
                     menuHasOpen: menu.classList.contains('open'),
-                    overlayInlineOpacity: overlay.style.opacity,
-                    overlayInlineVisibility: overlay.style.visibility
+                    bodyHasMenuOpen: document.body.classList.contains('menu-open')
                 });
             }, 100);
         } else {
@@ -321,6 +368,8 @@
     };
 
     window.closeModernMenu = function() {
+        console.log('🔴 closeModernMenu appelé');
+        
         const menu = document.getElementById('modern-menu');
         const overlay = document.getElementById('modern-menu-overlay');
         const toggle = document.getElementById('modern-menu-toggle');
@@ -328,14 +377,22 @@
         if (menu && overlay) {
             menu.classList.remove('open');
             overlay.classList.remove('active');
+            document.body.classList.remove('menu-open');
+            
             // Réinitialiser les styles inline
             overlay.style.opacity = '';
             overlay.style.visibility = '';
             overlay.style.pointerEvents = '';
+            overlay.style.display = '';
+            overlay.style.backdropFilter = '';
+            overlay.style.backgroundColor = '';
             document.body.style.overflow = '';
+            
             if (toggle) {
                 toggle.style.transform = 'rotate(0deg)';
             }
+            
+            console.log('✅ Menu fermé');
         }
     };
 

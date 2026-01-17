@@ -129,10 +129,16 @@ router.get('/commande/:id', validateId, async (req, res) => {
                     e.telephone as fournisseur_telephone,
                     e.email as fournisseur_email,
                     a.adresse_ligne1 as fournisseur_adresse,
-                    a.ville as fournisseur_ville
+                    a.ville as fournisseur_ville,
+                    al.adresse_ligne1 as adresse_livraison,
+                    al.adresse_ligne2 as adresse_livraison_ligne2,
+                    al.ville as ville_livraison,
+                    al.code_postal as code_postal_livraison,
+                    al.pays as pays_livraison
              FROM commandes c
              LEFT JOIN entreprises e ON c.fournisseur_id = e.id
              LEFT JOIN adresses a ON e.id = a.entreprise_id AND a.type_adresse = 'siege'
+             LEFT JOIN adresses al ON c.adresse_livraison_id = al.id
              WHERE c.id = ?`,
             [id]
         );
@@ -142,6 +148,18 @@ router.get('/commande/:id', validateId, async (req, res) => {
         }
 
         const commande = commandes[0];
+
+        // #region agent log
+        console.log('🔍 PDF Commande - Données récupérées:', {
+            id: commande.id,
+            numero: commande.numero,
+            adresse_livraison: commande.adresse_livraison,
+            ville_livraison: commande.ville_livraison,
+            contact_livraison: commande.contact_livraison,
+            telephone_livraison: commande.telephone_livraison,
+            instructions_livraison: commande.instructions_livraison ? 'présent' : 'absent'
+        });
+        // #endregion
 
         // Récupérer les lignes
         const [lignes] = await pool.execute(
@@ -171,14 +189,14 @@ router.get('/commande/:id', validateId, async (req, res) => {
         // #region agent log
         console.log('🔍 PDF Commande - isPreview:', isPreview);
         // #endregion
-        
+
         // Envoyer le PDF
         res.setHeader('Content-Type', 'application/pdf');
         if (isPreview) {
             // Pour la prévisualisation, utiliser 'inline' au lieu de 'attachment'
             res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
         } else {
-            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         }
         
         // #region agent log

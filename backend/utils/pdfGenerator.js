@@ -1228,14 +1228,140 @@ async function generateCommandePDF(commande, outputPath) {
                 currentY += 20; // Espacement après les totaux
             }
             
-            // Séparateur avant les instructions
+            // Section Conditions de livraison
+            currentY += 10;
+            doc.moveTo(MARGIN, currentY)
+               .lineTo(A4_WIDTH - MARGIN, currentY)
+               .strokeColor(COLORS.primary)
+               .opacity(0.3)
+               .lineWidth(1)
+               .stroke();
+                currentY += 15;
+            
+            // Titre de section
+            doc.fontSize(12)
+               .fillColor(COLORS.primary)
+               .font('Helvetica-Bold')
+               .text('CONDITIONS DE LIVRAISON', MARGIN, currentY);
+            currentY += 8;
+            
+            // Ligne de séparation sous le titre
+            doc.moveTo(MARGIN, currentY)
+               .lineTo(MARGIN + 200, currentY)
+               .strokeColor(COLORS.primary)
+               .lineWidth(2)
+               .stroke();
+            currentY += 15;
+            
+            // Encadré pour les conditions de livraison
+            const livraisonBoxHeight = 80;
+            doc.rect(MARGIN, currentY, CONTENT_WIDTH, livraisonBoxHeight)
+               .fillColor(COLORS.gray50)
+               .fill();
+            
+            doc.rect(MARGIN, currentY, CONTENT_WIDTH, livraisonBoxHeight)
+               .strokeColor(COLORS.primary)
+               .lineWidth(1)
+               .stroke();
+            
+            let livraisonY = currentY + 12;
+            
+            // Lieu de livraison (Port Autonome de Conakry par défaut pour démo)
+            let lieuLivraison = 'Port Autonome de Conakry'; // Valeur par défaut pour système de démo
+            // #region agent log
+            console.log('🔍 PDF - Construction lieu de livraison:', {
+                adresse_livraison: commande.adresse_livraison,
+                adresse_livraison_ligne2: commande.adresse_livraison_ligne2,
+                ville_livraison: commande.ville_livraison,
+                code_postal_livraison: commande.code_postal_livraison,
+                pays_livraison: commande.pays_livraison
+            });
+            // #endregion
+            if (commande.adresse_livraison) {
+                lieuLivraison = commande.adresse_livraison;
+                if (commande.adresse_livraison_ligne2) {
+                    lieuLivraison += '\n' + commande.adresse_livraison_ligne2;
+                }
+                if (commande.ville_livraison) {
+                    lieuLivraison += (commande.code_postal_livraison ? `, ${commande.code_postal_livraison}` : '') + 
+                                    ` ${commande.ville_livraison}`;
+                }
+                if (commande.pays_livraison && commande.pays_livraison !== 'Guinée') {
+                    lieuLivraison += `, ${commande.pays_livraison}`;
+                }
+            } else if (commande.ville_livraison) {
+                lieuLivraison = commande.ville_livraison;
+            }
+            // #region agent log
+            console.log('🔍 PDF - Lieu de livraison final:', lieuLivraison);
+            // #endregion
+            
+            doc.fontSize(8)
+               .fillColor(COLORS.textLight)
+               .font('Helvetica-Bold')
+               .text('LIEU DE LIVRAISON:', MARGIN + 10, livraisonY);
+            livraisonY += 12;
+            
+            doc.fontSize(10)
+               .fillColor(COLORS.text)
+               .font('Helvetica-Bold')
+               .text(lieuLivraison, MARGIN + 10, livraisonY, { 
+                   width: CONTENT_WIDTH - 20, 
+                   align: 'left' 
+               });
+            livraisonY += 15;
+            
+            // Informations complémentaires
+            if (commande.contact_livraison || commande.telephone_livraison) {
+                if (commande.contact_livraison) {
+                    doc.fontSize(8)
+                       .fillColor(COLORS.textLight)
+                       .font('Helvetica-Bold')
+                       .text('Contact sur site:', MARGIN + 10, livraisonY);
+                    livraisonY += 10;
+                    doc.fontSize(9)
+                       .fillColor(COLORS.text)
+                       .font('Helvetica')
+                       .text(commande.contact_livraison, MARGIN + 10, livraisonY, { 
+                           width: CONTENT_WIDTH - 20, 
+                           align: 'left' 
+                       });
+                    livraisonY += 12;
+                }
+                if (commande.telephone_livraison) {
+                    doc.fontSize(8)
+                       .fillColor(COLORS.textLight)
+                       .font('Helvetica-Bold')
+                       .text('Téléphone:', MARGIN + 10, livraisonY);
+                    livraisonY += 10;
+                    doc.fontSize(9)
+                       .fillColor(COLORS.text)
+                       .font('Helvetica')
+                       .text(commande.telephone_livraison, MARGIN + 10, livraisonY, { 
+                           width: CONTENT_WIDTH - 20, 
+                           align: 'left' 
+                       });
+                    livraisonY += 12;
+                }
+            }
+            
+            currentY += livraisonBoxHeight + 15;
+            
+            // Instructions de livraison supplémentaires
             if (commande.instructions_livraison) {
                 doc.moveTo(MARGIN, currentY)
                    .lineTo(A4_WIDTH - MARGIN, currentY)
                    .strokeColor(COLORS.border)
+                   .opacity(0.5)
                    .lineWidth(0.5)
                    .stroke();
                 currentY += 15;
+                
+                doc.fontSize(10)
+                   .fillColor(COLORS.primary)
+                   .font('Helvetica-Bold')
+                   .text('INSTRUCTIONS SUPPLÉMENTAIRES', MARGIN, currentY);
+                currentY += 12;
                 
                 currentY = drawFooterInfo(doc, currentY, commande.instructions_livraison, null);
             }
@@ -1378,7 +1504,7 @@ async function generateFacturePDF(facture, outputPath) {
                     totals.push({ separator: true });
                     totals.push({ 
                         label: 'Reste à payer', 
-                        value: formatCurrency(facture.reste_a_payer) 
+                        value: formatCurrency(facture.reste_a_payer)
                     });
                 }
                 
