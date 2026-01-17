@@ -9,6 +9,20 @@ router.use(authenticate);
 // Liste des produits avec pagination
 router.get('/', validatePagination, async (req, res) => {
     try {
+        // #region agent log
+        const fs = require('fs');
+        const path = require('path');
+        const logPath = path.join(__dirname, '../../.cursor/debug.log');
+        const debugLog = (location, message, data) => {
+            try {
+                fs.appendFileSync(logPath, JSON.stringify({ location, message, data, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) + '\n');
+            } catch (e) {
+                console.log(`[DEBUG] ${location}: ${message}`, data);
+            }
+        };
+        debugLog('produits.js:10', 'Endpoint /api/produits appelé', { query: req.query });
+        // #endregion
+        
         const { categorie_id, search, page = 1, limit = 20 } = req.query;
         const pageNum = parseInt(page);
         const limitNum = parseInt(limit);
@@ -40,15 +54,38 @@ router.get('/', validatePagination, async (req, res) => {
             countParams.push(searchTerm, searchTerm);
         }
 
-        // Utiliser LIMIT et OFFSET comme paramètres pour PostgreSQL
-        query += ' ORDER BY p.libelle LIMIT ? OFFSET ?';
-        params.push(limitNum, offset);
+        // LIMIT et OFFSET : MySQL ne supporte pas les placeholders pour LIMIT/OFFSET
+        // Utiliser des valeurs directes sécurisées (déjà parsées en entiers)
+        const safeLimit = Math.max(1, Math.min(parseInt(limitNum) || 20, 100)); // Entre 1 et 100
+        const safeOffset = Math.max(0, parseInt(offset) || 0); // Minimum 0
+        query += ` ORDER BY p.libelle LIMIT ${safeLimit} OFFSET ${safeOffset}`;
+        // Ne pas ajouter limitNum et offset aux params car ils sont maintenant dans la requête directement
+        
+        // #region agent log
+        debugLog('produits.js:45', 'Requête SQL construite', { 
+            query: query.replace(/\s+/g, ' ').trim(), 
+            paramsCount: params.length, 
+            params: params,
+            limitNum,
+            offset,
+            questionMarksCount: (query.match(/\?/g) || []).length
+        });
+        // #endregion
 
         const [produitsRows] = await pool.execute(query, params);
         const produits = produitsRows;
+        
+        // #region agent log
+        debugLog('produits.js:50', 'Requête produits exécutée', { produitsCount: produits?.length || 0 });
+        // #endregion
+        
         const [countRows] = await pool.execute(countQuery, countParams);
         const countResult = countRows;
         const total = countResult[0]?.total || 0;
+        
+        // #region agent log
+        debugLog('produits.js:55', 'Requête count exécutée', { total });
+        // #endregion
 
         res.json({
             data: produits,
@@ -60,6 +97,25 @@ router.get('/', validatePagination, async (req, res) => {
             }
         });
     } catch (error) {
+        // #region agent log
+        const fs = require('fs');
+        const path = require('path');
+        const logPath = path.join(__dirname, '../../.cursor/debug.log');
+        try {
+            fs.appendFileSync(logPath, JSON.stringify({ 
+                location: 'produits.js:65', 
+                message: 'Erreur dans endpoint /produits', 
+                data: { errorMessage: error.message, errorStack: error.stack?.substring(0, 500) }, 
+                timestamp: Date.now(), 
+                sessionId: 'debug-session', 
+                runId: 'run1', 
+                hypothesisId: 'A' 
+            }) + '\n');
+        } catch (e) {
+            console.error('Erreur /api/produits:', error);
+        }
+        // #endregion
+        console.error('❌ Erreur /api/produits:', error);
         res.status(500).json({ error: error.message });
     }
 });

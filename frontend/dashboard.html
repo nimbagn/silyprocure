@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="css/tailwind.css">
     <!-- Dashboard Theme (SaaS Premium) -->
     <link rel="stylesheet" href="css/dashboard-theme.css">
+    <!-- Modern Theme (inspiré de home.html) -->
+    <link rel="stylesheet" href="css/modern-theme.css">
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -24,6 +26,67 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Override pour utiliser le style moderne de home.html */
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+            background: #f8fafc !important;
+        }
+        
+        /* Utiliser brand-600 au lieu de primary-500 */
+        .text-primary-600, .text-primary-500 { color: #2563eb !important; }
+        .bg-primary-600, .bg-primary-500 { background-color: #2563eb !important; }
+        .border-primary-500 { border-color: #2563eb !important; }
+        
+        /* Améliorer les cartes KPI */
+        .kpi-card, .modern-kpi-card {
+            border-radius: 1.5rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .modern-kpi-card:hover {
+            transform: translateY(-6px) !important;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08) !important;
+        }
+        
+        /* Améliorer les graphiques */
+        .chart-container, .modern-card {
+            border-radius: 1.5rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .modern-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        /* Améliorer les boutons */
+        .modern-btn {
+            border-radius: 0.75rem !important;
+            font-weight: 700 !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        .modern-btn:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        /* Améliorer les sections */
+        section {
+            margin-bottom: 3rem !important;
+        }
+        
+        /* Améliorer les titres */
+        h2 {
+            font-weight: 800 !important;
+            letter-spacing: -0.02em !important;
+        }
+    </style>
     
     <style>
         /* Variables CSS selon la charte Pro Confiance */
@@ -46,12 +109,65 @@
             line-height: 1.5;
             display: flex;
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-x: visible !important;
+            position: relative !important;
+        }
+        
+        /* S'assurer que la sidebar est toujours visible sur desktop */
+        aside.sidebar {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* Sur desktop, la sidebar doit être visible par défaut */
+        @media (min-width: 1025px) {
+            .sidebar,
+            aside.sidebar,
+            aside.sidebar:not(.open),
+            aside.sidebar.open {
+                transform: translateX(0) !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                left: 0 !important;
+                position: fixed !important;
+                z-index: 1000 !important;
+            }
+        }
+        
+        /* Forcer la visibilité sur tous les écrans pour le moment - PRIORITÉ MAXIMALE */
+        html body .sidebar,
+        html body aside.sidebar,
+        body .sidebar,
+        body aside.sidebar {
+            transform: translateX(0) !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            left: 0 !important;
+            position: fixed !important;
+            z-index: 1000 !important;
         }
         
         /* Assurer la visibilité des éléments de la sidebar avec couleurs du projet */
-        .sidebar {
+        .sidebar,
+        aside.sidebar {
             background: linear-gradient(180deg, #1E3A8A 0%, #2563EB 100%) !important;
             color: white !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 280px !important;
+            height: 100vh !important;
+            z-index: 1000 !important;
+            transform: translateX(0) !important; /* Visible par défaut */
+            pointer-events: auto !important;
         }
         
         .sidebar-nav-item {
@@ -439,6 +555,102 @@
             max-width: 100%;
         }
         
+        /* Main content sans margin pour le nouveau menu */
+        .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+            transition: margin-left 0.3s ease !important;
+            position: relative !important;
+            z-index: 1 !important;
+        }
+        
+        /* S'assurer que le body n'a pas d'overflow qui cache le menu */
+        body {
+            overflow-x: visible !important;
+        }
+        
+        /* Styles pour le menu moderne */
+        .modern-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.875rem 1rem;
+            border-radius: 0.75rem;
+            color: #475569;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            position: relative;
+        }
+        
+        .modern-menu-item:hover {
+            background: linear-gradient(90deg, #f0f7ff 0%, #e0e7ff 100%);
+            color: #2563eb;
+            transform: translateX(4px);
+        }
+        
+        .modern-menu-item.active {
+            background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #2563eb;
+            font-weight: 600;
+        }
+        
+        .modern-menu-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 60%;
+            background: #2563eb;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .modern-menu-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+        
+        .modern-menu-item:hover .modern-menu-icon {
+            transform: scale(1.1);
+        }
+        
+        /* Animation du menu */
+        #modern-menu.open {
+            transform: translateX(0);
+        }
+        
+        #modern-menu-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Scrollbar personnalisée pour le menu */
+        #modern-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #modern-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        #modern-menu::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 3px;
+        }
+        
+        #modern-menu::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
+        }
+        
         /* Zones visuelles distinctes */
         .section-primary {
             background: linear-gradient(135deg, #FAFBFC 0%, #F8FAFC 100%);
@@ -481,6 +693,42 @@
             padding-top: 2rem;
             border-top: 1px solid rgba(59, 130, 246, 0.1);
         }
+        
+        /* ============================================
+           SIDEBAR VISIBILITY - PRIORITÉ MAXIMALE
+           ============================================ */
+        /* Forcer la sidebar à être visible - Override tous les autres styles */
+        html body .sidebar,
+        html body aside.sidebar,
+        body .sidebar,
+        body aside.sidebar,
+        .sidebar,
+        aside.sidebar {
+            transform: translateX(0) !important;
+            -webkit-transform: translateX(0) !important;
+            -moz-transform: translateX(0) !important;
+            -ms-transform: translateX(0) !important;
+            -o-transform: translateX(0) !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            left: 0 !important;
+            position: fixed !important;
+            z-index: 1000 !important;
+            width: 280px !important;
+            height: 100vh !important;
+            background: linear-gradient(180deg, #1E3A8A 0%, #2563EB 100%) !important;
+            color: white !important;
+        }
+        
+        /* Sur mobile aussi pour debug */
+        @media (max-width: 1024px) {
+            html body .sidebar,
+            html body aside.sidebar {
+                transform: translateX(0) !important;
+                -webkit-transform: translateX(0) !important;
+            }
+        }
     </style>
 </head>
 <body class="h-full flex flex-col">
@@ -488,7 +736,9 @@
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
     <script src="js/components.js?v=20260116"></script>
+    <script>window.DISABLE_SIDEBAR = true;</script>
     <script src="js/sidebar.js"></script>
+    <script src="js/modern-menu.js"></script>
 
     <!-- Main Content - Style Hapag-Lloyd -->
     <div class="main-content">
@@ -508,7 +758,7 @@
                 
                 <!-- Quick Actions Toolbar -->
                 <div class="flex flex-wrap gap-3">
-                    <button onclick="window.location.href='rfq-create.html'" class="inline-flex items-center px-5 py-2.5 border border-transparent shadow-lg text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all transform hover:scale-105 hover:shadow-xl">
+                    <button onclick="window.location.href='rfq-create.html'" class="modern-btn modern-btn-primary inline-flex items-center px-5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500">
                         <i class="fas fa-plus mr-2"></i> Nouvelle RFQ
                     </button>
                     <button onclick="window.location.href='entreprises.html'" class="inline-flex items-center px-5 py-2.5 border-2 border-primary-200 shadow-sm text-sm font-semibold rounded-xl text-primary-700 bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-primary-50 hover:border-primary-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
@@ -530,7 +780,7 @@
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             
             <!-- Commandes -->
-            <div class="kpi-card blue bg-white overflow-hidden rounded-2xl border border-blue-100 cursor-pointer fade-in delay-100" onclick="window.location.href='commandes.html'">
+            <div class="modern-kpi-card blue bg-white overflow-hidden cursor-pointer fade-in delay-100" onclick="window.location.href='commandes.html'">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-5">
                         <div class="flex items-center gap-3">
@@ -551,7 +801,7 @@
             </div>
 
             <!-- Dépenses & Budget -->
-            <div class="kpi-card green bg-white overflow-hidden rounded-2xl border border-blue-100 fade-in delay-200">
+            <div class="modern-kpi-card green bg-white overflow-hidden fade-in delay-200">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
@@ -584,7 +834,7 @@
             </div>
 
             <!-- RFQ -->
-            <div class="kpi-card yellow bg-white overflow-hidden rounded-2xl border border-blue-100 cursor-pointer fade-in delay-300" onclick="window.location.href='rfq.html'">
+            <div class="modern-kpi-card yellow bg-white overflow-hidden cursor-pointer fade-in delay-300" onclick="window.location.href='rfq.html'">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-5">
                         <div class="flex items-center gap-3">
@@ -605,7 +855,7 @@
             </div>
 
             <!-- Entreprises actives -->
-            <div class="kpi-card purple bg-white overflow-hidden rounded-2xl border border-blue-100 cursor-pointer fade-in delay-400" onclick="window.location.href='entreprises.html'">
+            <div class="modern-kpi-card purple bg-white overflow-hidden cursor-pointer fade-in delay-400" onclick="window.location.href='entreprises.html'">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-5">
                         <div class="flex items-center gap-3">
@@ -646,7 +896,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             <!-- Main Chart: Evolution des achats -->
-            <div class="chart-container bg-white rounded-2xl p-8 lg:col-span-2 fade-in">
+            <div class="modern-card bg-white p-8 lg:col-span-2 fade-in">
                 <div class="flex items-center justify-between mb-8">
                     <div>
                         <h3 class="text-xl font-bold text-primary-900 mb-1">Évolution des Achats</h3>
@@ -665,7 +915,7 @@
             </div>
 
             <!-- Doughnut Chart: RFQ Statut -->
-            <div class="chart-container bg-white rounded-2xl p-8 fade-in flex flex-col">
+            <div class="modern-card bg-white p-8 fade-in flex flex-col">
                 <div class="mb-6">
                     <h3 class="text-xl font-bold text-primary-900 mb-1">Statut des RFQ</h3>
                     <p class="text-sm text-neutral-500">Répartition</p>
@@ -685,7 +935,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 fade-in delay-500">
             
             <!-- Bar Chart: Catégories -->
-            <div class="chart-container bg-white rounded-2xl p-8">
+            <div class="modern-card bg-white p-8">
                 <div class="mb-6">
                     <h3 class="text-xl font-bold text-primary-900 mb-1">Catégories les plus demandées</h3>
                     <p class="text-sm text-neutral-500">Top 5</p>
@@ -696,7 +946,7 @@
             </div>
 
             <!-- Polar Area Chart: Secteurs -->
-            <div class="chart-container bg-white rounded-2xl p-8">
+            <div class="modern-card bg-white p-8">
                 <div class="mb-6">
                     <h3 class="text-xl font-bold text-primary-900 mb-1">Secteurs les plus sollicités</h3>
                     <p class="text-sm text-neutral-500">Top 5</p>
@@ -716,7 +966,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
             <!-- Dernières Commandes (Tableau Amélioré) -->
-            <div class="bg-white shadow-lg rounded-2xl overflow-hidden fade-in border border-blue-100">
+            <div class="modern-card bg-white overflow-hidden fade-in">
                 <div class="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-50 to-primary-50 flex justify-between items-center">
                     <div>
                         <h3 class="text-xl font-bold text-primary-900 mb-1">Commandes Récentes</h3>
@@ -745,7 +995,7 @@
             </div>
 
             <!-- Messages -->
-            <div class="bg-white shadow-lg rounded-2xl overflow-hidden fade-in border border-blue-100">
+            <div class="modern-card bg-white overflow-hidden fade-in">
                 <div class="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-50 to-primary-50 flex justify-between items-center">
                     <div>
                         <h3 class="text-xl font-bold text-primary-900 mb-1">Derniers Messages</h3>
@@ -1442,6 +1692,9 @@
             console.log('📄 DOM déjà chargé, initialisation immédiate...');
             initDashboard();
         }
+        
+        // Le menu moderne est maintenant géré par modern-menu.js
+        // Les fonctions openModernMenu() et closeModernMenu() sont exposées globalement par le script
     </script>
 </body>
 </html>

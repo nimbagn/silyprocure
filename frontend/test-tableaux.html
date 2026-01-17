@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Tableaux - SilyProcure</title>
+    
+    <!-- CSS Charte Graphique Pro Confiance -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/tailwind.css">
+    <link rel="stylesheet" href="css/dashboard-theme.css">
+    <link rel="stylesheet" href="css/modern-theme.css">
+    <link rel="stylesheet" href="css/style-hapag.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <style>
+        body {
+            padding: 2rem;
+            background: #f8fafc;
+            font-family: "Plus Jakarta Sans", sans-serif;
+        }
+        
+        .test-section {
+            margin-bottom: 3rem;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .test-section h2 {
+            color: #1e3a8a;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+        
+        .test-info {
+            background: #eff6ff;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #1e3a8a; margin-bottom: 2rem;">Test des Tableaux - Centrage et Visibilité</h1>
+    
+    <!-- Test 1: Tableau avec alignements variés -->
+    <div class="test-section">
+        <h2>Test 1: Tableau avec alignements variés (gauche, centre, droite)</h2>
+        <div class="test-info">
+            <strong>Vérifications :</strong> Les colonnes doivent être bien alignées selon leurs classes (text-left, text-center, text-right). 
+            Le tableau doit être centré dans son conteneur. Les en-têtes doivent être bien visibles avec un fond dégradé.
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="text-left">Référence</th>
+                        <th class="text-center">Description</th>
+                        <th class="text-right">Montant</th>
+                        <th class="text-center">Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-left">RFQ-2026-001</td>
+                        <td class="text-center">Matériaux de construction</td>
+                        <td class="text-right">15 000 000 GNF</td>
+                        <td class="text-center"><span class="badge badge-success">Actif</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">RFQ-2026-002</td>
+                        <td class="text-center">Équipements informatiques</td>
+                        <td class="text-right">8 500 000 GNF</td>
+                        <td class="text-center"><span class="badge badge-warning">En attente</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">RFQ-2026-003</td>
+                        <td class="text-center">Fournitures de bureau</td>
+                        <td class="text-right">3 200 000 GNF</td>
+                        <td class="text-center"><span class="badge badge-info">Envoyé</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Test 2: Tableau avec beaucoup de colonnes -->
+    <div class="test-section">
+        <h2>Test 2: Tableau avec beaucoup de colonnes (scroll horizontal)</h2>
+        <div class="test-info">
+            <strong>Vérifications :</strong> Le tableau doit être scrollable horizontalement. Les en-têtes doivent rester visibles.
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="text-left">ID</th>
+                        <th class="text-left">Nom</th>
+                        <th class="text-left">Email</th>
+                        <th class="text-left">Téléphone</th>
+                        <th class="text-center">Type</th>
+                        <th class="text-right">Montant Total</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-center">Date</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-left">1</td>
+                        <td class="text-left">Entreprise ABC</td>
+                        <td class="text-left">contact@abc.gn</td>
+                        <td class="text-left">+224 624 00 00 01</td>
+                        <td class="text-center">Client</td>
+                        <td class="text-right">25 000 000 GNF</td>
+                        <td class="text-center"><span class="badge badge-success">Actif</span></td>
+                        <td class="text-center">16/01/2026</td>
+                        <td class="text-center"><button class="btn-primary">Voir</button></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">2</td>
+                        <td class="text-left">Fournisseur XYZ</td>
+                        <td class="text-left">info@xyz.gn</td>
+                        <td class="text-left">+224 624 00 00 02</td>
+                        <td class="text-center">Fournisseur</td>
+                        <td class="text-right">18 500 000 GNF</td>
+                        <td class="text-center"><span class="badge badge-warning">En attente</span></td>
+                        <td class="text-center">15/01/2026</td>
+                        <td class="text-center"><button class="btn-primary">Voir</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Test 3: Tableau compact -->
+    <div class="test-section">
+        <h2>Test 3: Tableau compact (peu de données)</h2>
+        <div class="test-info">
+            <strong>Vérifications :</strong> Le tableau doit être bien centré même avec peu de colonnes. Les bordures doivent être visibles.
+        </div>
+        <div class="table-container" style="max-width: 800px; margin: 0 auto;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="text-left">Produit</th>
+                        <th class="text-right">Prix</th>
+                        <th class="text-center">Stock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-left">Ciment CPJ 42.5</td>
+                        <td class="text-right">85 000 GNF</td>
+                        <td class="text-center">150</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">Fer à béton 10mm</td>
+                        <td class="text-right">12 500 GNF</td>
+                        <td class="text-center">80</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Test 4: Tableau avec lignes alternées -->
+    <div class="test-section">
+        <h2>Test 4: Tableau avec lignes alternées (zebra striping)</h2>
+        <div class="test-info">
+            <strong>Vérifications :</strong> Les lignes paires doivent avoir un fond légèrement différent. Le hover doit être visible.
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="text-left">Facture</th>
+                        <th class="text-left">Client</th>
+                        <th class="text-right">Montant TTC</th>
+                        <th class="text-center">Date</th>
+                        <th class="text-center">Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-left">FAC-2026-001</td>
+                        <td class="text-left">Client A</td>
+                        <td class="text-right">5 000 000 GNF</td>
+                        <td class="text-center">16/01/2026</td>
+                        <td class="text-center"><span class="badge badge-success">Payée</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">FAC-2026-002</td>
+                        <td class="text-left">Client B</td>
+                        <td class="text-right">3 500 000 GNF</td>
+                        <td class="text-center">15/01/2026</td>
+                        <td class="text-center"><span class="badge badge-warning">En attente</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">FAC-2026-003</td>
+                        <td class="text-left">Client C</td>
+                        <td class="text-right">7 200 000 GNF</td>
+                        <td class="text-center">14/01/2026</td>
+                        <td class="text-center"><span class="badge badge-info">Partiel</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">FAC-2026-004</td>
+                        <td class="text-left">Client D</td>
+                        <td class="text-right">2 800 000 GNF</td>
+                        <td class="text-center">13/01/2026</td>
+                        <td class="text-center"><span class="badge badge-success">Payée</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: #eff6ff; border-radius: 12px;">
+        <h3 style="color: #1e3a8a; margin-bottom: 1rem;">Résultats des Tests</h3>
+        <p style="color: #475569;">
+            <strong>Vérifiez visuellement :</strong><br>
+            ✓ Les tableaux sont bien centrés dans leurs conteneurs<br>
+            ✓ Les en-têtes sont bien visibles avec un fond dégradé<br>
+            ✓ Les bordures sont nettes et visibles<br>
+            ✓ Les alignements (gauche, centre, droite) sont respectés<br>
+            ✓ Les lignes alternées sont visibles<br>
+            ✓ Le hover fonctionne sur les lignes<br>
+            ✓ Le scroll horizontal fonctionne pour les tableaux larges
+        </p>
+    </div>
+    
+    <script>
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'test-tableaux.html:1',message:'Page de test des tableaux chargée',data:{timestamp:new Date().toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        
+        // Log pour vérifier que les styles sont appliqués
+        window.addEventListener('load', () => {
+            // #region agent log
+            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'test-tableaux.html:load',message:'Page chargée, vérification des tableaux',data:{tableCount:document.querySelectorAll('.table').length,containerCount:document.querySelectorAll('.table-container').length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+            
+            const tables = document.querySelectorAll('.table');
+            const containers = document.querySelectorAll('.table-container');
+            
+            console.log(`✅ ${tables.length} tableaux trouvés`);
+            console.log(`✅ ${containers.length} conteneurs trouvés`);
+            
+            // Vérifier les styles appliqués
+            tables.forEach((table, index) => {
+                const styles = window.getComputedStyle(table);
+                // #region agent log
+                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'test-tableaux.html:check-styles',message:`Vérification styles tableau ${index+1}`,data:{width:styles.width,display:styles.display,margin:styles.margin},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
+            });
+        });
+    </script>
+</body>
+</html>
+

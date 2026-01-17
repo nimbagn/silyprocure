@@ -11,6 +11,9 @@
     
         <!-- Tailwind CSS (optimisé pour production) -->
     <link rel="stylesheet" href="css/tailwind.css">
+    <!-- Modern Theme (inspiré de home.html) -->
+    <link rel="stylesheet" href="css/modern-theme.css">
+
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -164,6 +167,31 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Override pour utiliser le style moderne de home.html */
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+            background: #f8fafc !important;
+        }
+        
+        /* Utiliser brand-600 au lieu de primary-500 */
+        .text-primary-600, .text-primary-500 { color: #2563eb !important; }
+        .bg-primary-600, .bg-primary-500 { background-color: #2563eb !important; }
+        .border-primary-500 { border-color: #2563eb !important; }
+        
+        /* Améliorer les cartes */
+        .card, .stat-card, .facture-card, .filters-card, .kpi-card {
+            border-radius: 1.5rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .card:hover, .facture-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
         }
     </style>
 </head>
@@ -409,6 +437,7 @@
     <script src="js/components.js?v=20260116"></script>
     <script>window.DISABLE_SIDEBAR = true;</script>
     <script src="js/sidebar.js"></script>
+    <script src="js/modern-menu.js"></script>
 
     <script>
         // ==========================================

@@ -1,0 +1,248 @@
+/* SilyProcure - Modern Theme (inspiré de home.html) */
+
+/* Police moderne */
+body {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glassmorphism avancé */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.glass-dark {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar masquée pour certains éléments */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Animations d'apparition */
+.reveal-on-scroll {
+    opacity: 1;
+    transform: none;
+    transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+}
+.reveal-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Bento Grid Hover Effects */
+.bento-card { 
+    transition: all 0.4s ease; 
+}
+.bento-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Utilities manquantes (non-Tailwind) */
+.animation-delay-2000 { animation-delay: 2s; }
+.animation-delay-4000 { animation-delay: 4s; }
+
+@keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+}
+.animate-blob { animation: blob 7s infinite; }
+
+@keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+}
+.animate-scroll { animation: scroll 40s linear infinite; }
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+.animate-float { animation: float 6s ease-in-out infinite; }
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fadeInUp 350ms ease-out both; }
+
+.custom-scrollbar::-webkit-scrollbar { width: 8px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { 
+    background: rgba(148, 163, 184, 0.5); 
+    border-radius: 999px; 
+}
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+
+/* Cartes modernes avec style home.html */
+.modern-card {
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modern-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* KPI Cards modernes */
+.modern-kpi-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    border-left: 4px solid #2563eb;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.modern-kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #2563eb, #60a5fa);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.modern-kpi-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.modern-kpi-card:hover::before {
+    opacity: 1;
+}
+
+.modern-kpi-card.blue { border-left-color: #2563eb; }
+.modern-kpi-card.green { border-left-color: #10b981; }
+.modern-kpi-card.yellow { border-left-color: #f59e0b; }
+.modern-kpi-card.purple { border-left-color: #8b5cf6; }
+
+/* Boutons modernes */
+.modern-btn {
+    border-radius: 0.75rem;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.modern-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+.modern-btn-primary {
+    background: linear-gradient(to right, #2563eb, #1d4ed8);
+    color: white;
+}
+
+.modern-btn-primary:hover {
+    background: linear-gradient(to right, #1d4ed8, #1e40af);
+}
+
+/* Background avec effets blob */
+.modern-bg-blob {
+    position: relative;
+    overflow: hidden;
+}
+
+.modern-bg-blob::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.modern-bg-blob > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Navbar moderne flottante */
+.modern-navbar {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Section moderne */
+.modern-section {
+    position: relative;
+    padding: 3rem 0;
+}
+
+.modern-section-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    margin-bottom: 1rem;
+}
+
+.modern-section-subtitle {
+    font-size: 1.125rem;
+    color: #64748b;
+    font-weight: 400;
+}
+
+/* Tableaux modernes */
+.modern-table {
+    background: white;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.modern-table thead {
+    background: linear-gradient(135deg, #f0f4f8 0%, #e8f0f8 100%);
+}
+
+.modern-table tbody tr {
+    transition: all 0.2s ease-in-out;
+}
+
+.modern-table tbody tr:hover {
+    background: linear-gradient(90deg, #f8fafc 0%, #f0f7ff 100%);
+    transform: scale(1.01);
+}
+
+/* Badges modernes */
+.modern-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+

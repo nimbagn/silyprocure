@@ -19,9 +19,37 @@
     
     <!-- Dashboard Theme CSS -->
     <link rel="stylesheet" href="css/dashboard-theme.css">
+    <!-- Modern Theme (inspiré de home.html) -->
+    <link rel="stylesheet" href="css/modern-theme.css">
+
 
     <!-- Page styles (Master-Detail) -->
     <link rel="stylesheet" href="css/pages/demandes-devis.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Override pour utiliser le style moderne de home.html */
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+            background: #f8fafc !important;
+        }
+        
+        /* Utiliser brand-600 au lieu de primary-500 */
+        .text-primary-600, .text-primary-500 { color: #2563eb !important; }
+        .bg-primary-600, .bg-primary-500 { background-color: #2563eb !important; }
+        .border-primary-500 { border-color: #2563eb !important; }
+        
+        /* Améliorer les cartes */
+        .card, .stat-card, .facture-card, .filters-card, .kpi-card {
+            border-radius: 1.5rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .card:hover, .facture-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+        }
+    </style>
 </head>
 <body class="h-full flex flex-col">
     <script src="js/auth.js"></script>
@@ -30,8 +58,9 @@
     <script>window.DISABLE_SIDEBAR = true;</script>
     <script src="js/sidebar.js"></script>
     <script src="js/mobile-menu.js"></script>
-    
-    <!-- Navbar Moderne selon charte Pro Confiance -->
+    <script src="js/modern-menu.js"></script>
+
+        <!-- Navbar Moderne selon charte Pro Confiance -->
     <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
@@ -162,25 +191,25 @@
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                         <input type="text" id="search-input" placeholder="Rechercher..." 
                                class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none">
-                    </div>
+        </div>
                     <select id="statut-filter" onchange="onStatutFilterChange()"
                             class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none">
-                        <option value="">Tous les statuts</option>
+                    <option value="">Tous les statuts</option>
                         <option value="nouvelle">Nouvelles</option>
-                        <option value="en_cours">En cours</option>
+                    <option value="en_cours">En cours</option>
                         <option value="traitee">Traitées</option>
                         <option value="annulee">Annulées</option>
-                    </select>
-                </div>
+                </select>
+        </div>
 
                 <!-- WhatsApp Pending (Sticky Alert) -->
                 <div id="whatsapp-pending-section" class="hidden mx-4 my-2 p-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between gap-3 animate-pulse">
                     <div class="flex items-center gap-2 text-emerald-700 text-sm font-semibold">
                         <i class="fab fa-whatsapp"></i>
                         <span id="whatsapp-pending-count">0</span> demandes WhatsApp
-                    </div>
+            </div>
                     <button onclick="scrollToWhatsApp()" class="text-xs text-emerald-600 font-bold hover:underline">Voir</button>
-                </div>
+                    </div>
 
                 <!-- List Content -->
                 <div id="demandes-list" class="dd-list-scroll">
@@ -203,7 +232,7 @@
             <section class="dd-detail-pane hidden lg:flex">
                 <div id="detail-panel-body" class="dd-detail-scroll">
                     <!-- Empty state by default -->
-                </div>
+            </div>
             </section>
         </div>
     </main>
@@ -363,28 +392,139 @@
         }
 
         async function loadDemandes() {
+            // #region agent log - Début loadDemandes
+            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    location: 'demandes-devis.html:loadDemandes:start',
+                    message: 'loadDemandes appelé',
+                    data: { currentPage, limit, user: JSON.parse(localStorage.getItem('user') || '{}') },
+                    timestamp: Date.now(),
+                    sessionId: 'debug-session',
+                    runId: 'demandes-load',
+                    hypothesisId: 'A'
+                })
+            }).catch(() => {});
+            // #endregion
+            
             try {
                 const statut = document.getElementById('statut-filter')?.value || '';
                 const url = `/api/contact/demandes?page=${currentPage}&limit=${limit}${statut ? '&statut=' + statut : ''}`;
                 
-                const tableContainer = document.getElementById('demandes-table-container');
+                // #region agent log - Avant appel API
+                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        location: 'demandes-devis.html:loadDemandes:before-api',
+                        message: 'Avant appel API',
+                        data: { url, statut },
+                        timestamp: Date.now(),
+                        sessionId: 'debug-session',
+                        runId: 'demandes-load',
+                        hypothesisId: 'B'
+                    })
+                }).catch(() => {});
+                // #endregion
+                
+                const tableContainer = document.getElementById('demandes-list');
                 if (tableContainer) {
                     tableContainer.innerHTML = '<div class="loading text-center py-12">Chargement des demandes...</div>';
                 }
-
+                
                 const response = await apiCall(url);
+                
+                // #region agent log - Réponse API reçue
+                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        location: 'demandes-devis.html:loadDemandes:response',
+                        message: 'Réponse API reçue',
+                        data: { 
+                            ok: response?.ok, 
+                            status: response?.status, 
+                            statusText: response?.statusText,
+                            url: response?.url 
+                        },
+                        timestamp: Date.now(),
+                        sessionId: 'debug-session',
+                        runId: 'demandes-load',
+                        hypothesisId: 'C'
+                    })
+                }).catch(() => {});
+                // #endregion
+                
                 if (!response.ok) {
-                    throw new Error('Erreur lors du chargement des demandes');
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    
+                    // #region agent log - Erreur API
+                    fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            location: 'demandes-devis.html:loadDemandes:error',
+                            message: 'Erreur API',
+                            data: { status: response.status, error: errorData },
+                            timestamp: Date.now(),
+                            sessionId: 'debug-session',
+                            runId: 'demandes-load',
+                            hypothesisId: 'D'
+                        })
+                    }).catch(() => {});
+                    // #endregion
+                    
+                    throw new Error(errorData.error || 'Erreur lors du chargement des demandes');
                 }
 
                 const data = await response.json();
+                
+                // #region agent log - Données reçues
+                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        location: 'demandes-devis.html:loadDemandes:success',
+                        message: 'Données chargées avec succès',
+                        data: { 
+                            nbDemandes: data.demandes?.length || 0,
+                            pagination: data.pagination 
+                        },
+                        timestamp: Date.now(),
+                        sessionId: 'debug-session',
+                        runId: 'demandes-load',
+                        hypothesisId: 'E'
+                    })
+                }).catch(() => {});
+                // #endregion
+                
                 allDemandes = data.demandes || [];
                 paginationState = data.pagination || null;
                 applySearchFilter();
                 updatePaginationUI();
             } catch (error) {
+                // #region agent log - Exception catchée
+                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        location: 'demandes-devis.html:loadDemandes:catch',
+                        message: 'Exception catchée',
+                        data: { 
+                            error: error.message,
+                            stack: error.stack?.substring(0, 200)
+                        },
+                        timestamp: Date.now(),
+                        sessionId: 'debug-session',
+                        runId: 'demandes-load',
+                        hypothesisId: 'F'
+                    })
+                }).catch(() => {});
+                // #endregion
+                
                 console.error('Erreur:', error);
-                Toast.error('Erreur lors du chargement des demandes');
+                Toast.error('Erreur lors du chargement des demandes: ' + error.message);
             }
         }
 
@@ -408,16 +548,16 @@
                         <div class="flex items-center justify-between mb-2">
                             <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-inbox text-blue-600 text-xl"></i>
-                            </div>
                         </div>
+                    </div>
                         <div class="text-3xl font-bold text-gray-900 mb-1">${stats.totale}</div>
                         <div class="text-sm text-gray-600 font-medium">Total</div>
-                    </div>
+                        </div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-500 hover:shadow-md transition-shadow">
                         <div class="flex items-center justify-between mb-2">
                             <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-exclamation-circle text-orange-600 text-xl"></i>
-                            </div>
+                    </div>
                         </div>
                         <div class="text-3xl font-bold text-gray-900 mb-1">${stats.nouvelle}</div>
                         <div class="text-sm text-gray-600 font-medium">Nouvelles</div>
@@ -426,7 +566,7 @@
                         <div class="flex items-center justify-between mb-2">
                             <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-clock text-yellow-600 text-xl"></i>
-                            </div>
+                        </div>
                         </div>
                         <div class="text-3xl font-bold text-gray-900 mb-1">${stats.en_cours}</div>
                         <div class="text-sm text-gray-600 font-medium">En cours</div>
@@ -641,7 +781,7 @@
             const modalOverlay = modal.closest('.modal-overlay') || modal.parentElement;
             
             if (modal) {
-                modal.classList.add('active');
+            modal.classList.add('active');
             }
             
             if (modalOverlay && modalOverlay.classList.contains('modal-overlay')) {
@@ -667,7 +807,7 @@
                 modalOverlay.style.display = 'none';
             }
             
-            document.body.classList.remove('modal-open');
+                document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
         }
 
@@ -777,8 +917,43 @@
         }
 
         function displayDemandes(demandes) {
-            const container = document.getElementById('demandes-table-container');
+            // #region agent log - Début displayDemandes
+            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    location: 'demandes-devis.html:displayDemandes:start',
+                    message: 'displayDemandes appelé',
+                    data: { nbDemandes: demandes?.length || 0 },
+                    timestamp: Date.now(),
+                    sessionId: 'debug-session',
+                    runId: 'demandes-load',
+                    hypothesisId: 'G'
+                })
+            }).catch(() => {});
+            // #endregion
+            
+            const container = document.getElementById('demandes-list');
             const mobileContainer = document.getElementById('demandes-cards-mobile');
+            
+            // #region agent log - Conteneurs trouvés
+            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    location: 'demandes-devis.html:displayDemandes:containers',
+                    message: 'Conteneurs vérifiés',
+                    data: { 
+                        containerExists: !!container,
+                        mobileContainerExists: !!mobileContainer
+                    },
+                    timestamp: Date.now(),
+                    sessionId: 'debug-session',
+                    runId: 'demandes-load',
+                    hypothesisId: 'H'
+                })
+            }).catch(() => {});
+            // #endregion
             
             if (demandes.length === 0) {
                 container.innerHTML = `
@@ -861,7 +1036,7 @@
                                     <div class="flex items-center gap-2">
                                         <i class="fas fa-building text-gray-400"></i>
                                         <span>${d.entreprise}</span>
-                                    </div>
+                                </div>
                                     ` : ''}
                                     <div class="flex items-center gap-4 mt-2">
                                         <span class="flex items-center gap-1 text-xs text-gray-500">
@@ -871,7 +1046,7 @@
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                             ${d.nb_articles || 0} article(s)
                                         </span>
-                                    </div>
+                            </div>
                                 </div>
                             </div>
                             <div class="ml-4">
@@ -941,7 +1116,7 @@
 
                 const demande = await response.json();
                 const body = document.getElementById('detail-modal-body');
-
+                
                 // Construire le HTML des articles
                 let articlesHtml = '';
                 if (demande.articles && Array.isArray(demande.articles) && demande.articles.length > 0) {
@@ -1231,7 +1406,7 @@
             const modalOverlay = previewModal?.closest('.modal-overlay');
             
             if (previewModal) {
-                previewModal.classList.add('active');
+            previewModal.classList.add('active');
             }
             
             if (modalOverlay) {
@@ -1304,7 +1479,7 @@
                 modalOverlay.style.display = 'none';
             }
             
-            document.body.classList.remove('modal-open');
+                document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
         }
 
@@ -1666,9 +1841,9 @@
         if (createRFQModalOverlay) {
             createRFQModalOverlay.addEventListener('click', (e) => {
                 if (e.target === createRFQModalOverlay || e.target.classList.contains('modal-overlay')) {
-                    closeCreateRFQModal();
-                }
-            });
+                closeCreateRFQModal();
+            }
+        });
         }
         
         // Empêcher la fermeture en cliquant sur le contenu de la modale
@@ -1684,11 +1859,11 @@
         if (editModalOverlay) {
             editModalOverlay.addEventListener('click', (e) => {
                 if (e.target === editModalOverlay || e.target.classList.contains('modal-overlay')) {
-                    closeEditModal();
-                }
-            });
+                closeEditModal();
+            }
+        });
         }
-        
+
         // Empêcher la propagation du clic sur le contenu du modal
         document.querySelectorAll('.modal-content').forEach(content => {
             content.addEventListener('click', (e) => {

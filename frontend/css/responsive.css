@@ -228,39 +228,93 @@ h5, h6 { font-size: var(--font-size-sm); }
   width: 100%;
   margin: var(--spacing-md) 0;
   position: relative;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background: white;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  /* Centrer le contenu */
+  display: block;
 }
 
 .table {
   width: 100%;
   min-width: 600px;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: var(--font-size-sm);
   background: white;
+  margin: 0 auto;
+  /* Centrer le tableau */
+  display: table;
 }
 
 .table th,
 .table td {
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: 1rem 1.25rem;
   text-align: left;
-  border-bottom: 1px solid var(--color-neutral-light);
-  white-space: nowrap;
+  border-bottom: 2px solid rgba(15, 23, 42, 0.08);
+  vertical-align: middle;
+}
+
+/* Respecter les classes d'alignement Tailwind */
+.table th.text-center,
+.table td.text-center {
+  text-align: center !important;
+}
+
+.table th.text-right,
+.table td.text-right {
+  text-align: right !important;
+}
+
+.table th.text-left,
+.table td.text-left {
+  text-align: left !important;
 }
 
 .table th {
-  font-weight: 600;
-  background-color: var(--color-background-light);
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12) 0%, rgba(16, 185, 129, 0.1) 100%);
   position: sticky;
   top: 0;
   z-index: 10;
   font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  color: var(--color-primary-dark);
+  border-bottom: 3px solid var(--color-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Padding amélioré pour première et dernière colonne */
+.table th:first-child,
+.table td:first-child {
+  padding-left: 2rem;
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 2rem;
 }
 
 .table td {
   font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-neutral-dark);
+}
+
+.table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.table tbody tr:nth-child(even) {
+  background: rgba(248, 250, 252, 0.5);
+}
+
+.table tbody tr:hover {
+  background: linear-gradient(90deg, #F0F7FF 0%, #E0E7FF 100%);
+  transform: scale(1.005);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
 }
 
 /* Sur mobile, rendre les tableaux plus compacts */

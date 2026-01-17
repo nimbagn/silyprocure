@@ -19,6 +19,471 @@
     
     <!-- Dashboard Theme CSS -->
     <link rel="stylesheet" href="css/dashboard-theme.css">
+    <!-- Modern Theme (inspiré de home.html) -->
+    <link rel="stylesheet" href="css/modern-theme.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Override pour utiliser le style moderne de home.html */
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+            background: #f8fafc !important;
+        }
+        
+        /* Utiliser brand-600 au lieu de primary-500 */
+        .text-primary-600, .text-primary-500 { color: #2563eb !important; }
+        .bg-primary-600, .bg-primary-500 { background-color: #2563eb !important; }
+        .border-primary-500 { border-color: #2563eb !important; }
+        
+        /* Améliorer les cartes */
+        .card, .stat-card, .facture-card, .filters-card, .kpi-card {
+            border-radius: 1.5rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .card:hover, .facture-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        /* Responsive pour utilisateurs.html */
+        .page-header {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: flex-start;
+        }
+        
+        .page-header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: nowrap;
+            font-weight: 700;
+        }
+        
+        .page-header h1 i {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            color: var(--color-primary);
+        }
+        
+        .page-header h1 span {
+            white-space: nowrap;
+        }
+        
+        .page-header .btn {
+            width: 100%;
+            justify-content: center;
+            align-self: stretch;
+        }
+        
+        #users-table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            margin: 0;
+            position: relative;
+        }
+        
+        .data-table {
+            width: 100%;
+            min-width: 800px;
+            border-collapse: collapse;
+        }
+        
+        .data-table thead {
+            background: linear-gradient(to right, rgba(37, 99, 235, 0.1), rgba(16, 185, 129, 0.1));
+        }
+        
+        .data-table th {
+            padding: 1rem 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-neutral-dark);
+            border-bottom: 2px solid var(--color-background-blue);
+            white-space: nowrap;
+        }
+        
+        .data-table td {
+            padding: 1rem 0.75rem;
+            border-bottom: 1px solid #F3F4F6;
+            font-size: 0.875rem;
+        }
+        
+        .data-table tbody tr:hover {
+            background: linear-gradient(90deg, #E0E7FF 0%, #F0F7FF 100%);
+        }
+        
+        .data-table .btn {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+            min-width: auto;
+        }
+        
+        /* Mobile: transformer en cartes */
+        @media (max-width: 767px) {
+            .page-header {
+                padding: 0;
+                margin-bottom: 1rem;
+            }
+            
+            .page-header h1 {
+                font-size: 1.25rem;
+                line-height: 1.3;
+                width: 100%;
+            }
+            
+            .page-header h1 i {
+                font-size: 1.25rem;
+            }
+            
+            .card {
+                margin: 0.5rem;
+                border-radius: 0.75rem;
+            }
+            
+            .card-header {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+                align-items: stretch;
+            }
+            
+            .card-title {
+                width: 100%;
+                font-size: 1.125rem;
+            }
+            
+            .card-actions {
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .search-input {
+                width: 100%;
+                min-width: 100%;
+                max-width: 100%;
+            }
+            
+            .search-input input {
+                width: 100%;
+                padding: 0.875rem 1rem 0.875rem 2.75rem;
+                font-size: 1rem;
+                border-width: 2px;
+            }
+        
+        /* Amélioration de la visibilité du champ de recherche */
+        .card-header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .card-title {
+            flex: 1;
+            min-width: 0;
+            margin: 0;
+        }
+        
+        .card-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .search-input {
+            position: relative;
+            min-width: 250px;
+            max-width: 400px;
+        }
+        
+        .search-input input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            border: 2px solid #E5E7EB;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            background: white;
+            color: #1F2937;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .search-input input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .search-input input::placeholder {
+            color: #9CA3AF;
+        }
+        
+        .search-input::before {
+            content: '\f002';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            left: 0.875rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6B7280;
+            pointer-events: none;
+            font-size: 0.875rem;
+        }
+            
+            .data-table {
+                display: block;
+                min-width: 100%;
+            }
+            
+            .data-table thead {
+                display: none;
+            }
+            
+            .data-table tbody,
+            .data-table tr,
+            .data-table td {
+                display: block;
+                width: 100%;
+            }
+            
+            .data-table tr {
+                margin-bottom: 1rem;
+                border: 1px solid #E5E7EB;
+                border-radius: 0.75rem;
+                padding: 1rem;
+                background: white;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+            
+            .data-table td {
+                border: none;
+                padding: 0.5rem 0;
+                text-align: left;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .data-table td:before {
+                content: attr(data-label) ": ";
+                font-weight: 600;
+                color: var(--color-primary);
+                margin-right: 0.5rem;
+                flex-shrink: 0;
+            }
+            
+            .data-table td:last-child {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .data-table td:last-child:before {
+                content: "Actions: ";
+            }
+            
+            .data-table .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        /* Tablette */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .page-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 1rem;
+            }
+            
+            .page-header h1 {
+                font-size: 1.375rem;
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .page-header .btn {
+                width: auto;
+                flex-shrink: 0;
+            }
+            
+            .card-header {
+                flex-wrap: nowrap;
+            }
+            
+            .search-input {
+                min-width: 200px;
+                max-width: 300px;
+            }
+            
+            .data-table {
+                min-width: 700px;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 0.875rem 0.5rem;
+                font-size: 0.8125rem;
+            }
+        }
+        
+        /* Desktop */
+        @media (min-width: 1024px) {
+            .page-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+            }
+            
+            .page-header h1 {
+                font-size: 1.75rem;
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .page-header h1 i {
+                font-size: 1.75rem;
+            }
+            
+            .page-header .btn {
+                width: auto;
+                flex-shrink: 0;
+            }
+            
+            .main-content {
+                padding: 2rem;
+            }
+            
+            .data-table {
+                min-width: 100%;
+            }
+        }
+        
+        /* Amélioration des modales sur mobile */
+        @media (max-width: 767px) {
+            .modal {
+                width: 95vw;
+                max-width: 95vw;
+                margin: 1rem;
+                padding: 1rem;
+            }
+            
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .form-group {
+                width: 100%;
+            }
+        }
+        
+        /* Masquer le menu nav classique (doublon avec la navbar moderne) */
+        nav.nav {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    </style>
+    <script>
+        // Supprimer définitivement le menu nav (doublon avec la navbar moderne)
+        (function() {
+            function removeNavMenu() {
+                const navMenus = document.querySelectorAll('nav.nav');
+                navMenus.forEach(function(navMenu) {
+                    if (navMenu) {
+                        navMenu.remove();
+                        console.log('✅ Menu nav.nav supprimé (doublon avec navbar moderne)');
+                    }
+                });
+            }
+            
+            // Exécuter immédiatement
+            removeNavMenu();
+            
+            // Exécuter plusieurs fois avec des délais pour capturer les ajouts tardifs
+            [0, 100, 300, 500, 1000, 2000, 3000].forEach(function(delay) {
+                setTimeout(removeNavMenu, delay);
+            });
+            
+            // Exécuter après le chargement du DOM
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    removeNavMenu();
+                    // Continuer à vérifier après DOMContentLoaded
+                    setTimeout(removeNavMenu, 100);
+                    setTimeout(removeNavMenu, 500);
+                });
+            }
+            
+            // Exécuter après le chargement complet
+            window.addEventListener('load', function() {
+                removeNavMenu();
+                setTimeout(removeNavMenu, 100);
+                setTimeout(removeNavMenu, 500);
+            });
+            
+            // Observer les changements du DOM en continu
+            const observer = new MutationObserver(function(mutations) {
+                let shouldRemove = false;
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) { // Element node
+                            if (node.classList && node.classList.contains('nav') && node.tagName === 'NAV') {
+                                shouldRemove = true;
+                            }
+                            // Vérifier aussi les enfants
+                            if (node.querySelector) {
+                                const navMenu = node.querySelector('nav.nav');
+                                if (navMenu) {
+                                    shouldRemove = true;
+                                }
+                            }
+                        }
+                    });
+                });
+                if (shouldRemove) {
+                    removeNavMenu();
+                }
+            });
+            
+            // Observer en continu (pas de limite de temps)
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            
+            // Vérification périodique toutes les secondes pendant 10 secondes
+            let checkCount = 0;
+            const intervalId = setInterval(function() {
+                removeNavMenu();
+                checkCount++;
+                if (checkCount >= 10) {
+                    clearInterval(intervalId);
+                }
+            }, 1000);
+        })();
+    </script>
 </head>
 <body class="h-full flex flex-col">
         <!-- Navbar Moderne selon charte Pro Confiance -->
@@ -125,11 +590,16 @@
     <script>window.DISABLE_SIDEBAR = true;</script>
     <script src="js/sidebar.js"></script>
     <script src="js/mobile-menu.js"></script>
-    <div class="main-content">
+    <script src="js/modern-menu.js"></script>
+    <div class="main-content" style="padding: 1rem; max-width: 100%; box-sizing: border-box;">
         <div class="page-header">
-            <h1><i class="fas fa-users-cog"></i> Gestion des Utilisateurs</h1>
+            <h1>
+                <i class="fas fa-users-cog"></i>
+                <span>Gestion des Utilisateurs</span>
+            </h1>
             <button class="btn btn-primary" onclick="showCreateUserModal()">
-                <i class="fas fa-plus"></i> Créer un utilisateur
+                <i class="fas fa-plus"></i>
+                <span class="hide-mobile">Créer un </span>utilisateur
             </button>
         </div>
 
@@ -144,7 +614,7 @@
                 <div id="loading-indicator" class="loading" style="display: none;">
                     <i class="fas fa-spinner fa-spin"></i> Chargement...
                 </div>
-                <div id="users-table-container">
+                <div id="users-table-container" class="table-container">
                     <table class="data-table">
                         <thead>
                             <tr>

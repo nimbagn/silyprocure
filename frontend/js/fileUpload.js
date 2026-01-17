@@ -1,5 +1,7 @@
 // Composant d'upload de fichiers joints
-class FileUploadManager {
+// Protection contre la redéclaration si le fichier est chargé plusieurs fois
+if (typeof FileUploadManager === 'undefined') {
+    class FileUploadManager {
     constructor(typeDocument, documentId) {
         this.typeDocument = typeDocument;
         this.documentId = documentId;
@@ -227,10 +229,17 @@ class FileUploadManager {
         if (mimeType && mimeType.startsWith('text/')) return icons['text'];
         return icons[mimeType] || '<i class="fas fa-file"></i>';
     }
+    
+    // Exposer la classe globalement
+    window.FileUploadManager = FileUploadManager;
 }
 
 // Fonction helper pour initialiser le gestionnaire de fichiers
 function initFileUpload(typeDocument, documentId, containerId) {
+    if (typeof FileUploadManager === 'undefined') {
+        console.error('FileUploadManager n\'est pas défini');
+        return null;
+    }
     window.fileUploadManager = new FileUploadManager(typeDocument, documentId);
     window.fileUploadManager.render(containerId);
     return window.fileUploadManager;

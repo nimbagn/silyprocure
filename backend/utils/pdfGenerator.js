@@ -167,110 +167,164 @@ function drawCompanyHeader(doc, startY) {
 }
 
 /**
- * Fonction pour dessiner l'en-tête de document (titre + infos)
+ * Fonction pour dessiner l'en-tête de document (titre + infos) - Version professionnelle améliorée
  */
 function drawDocumentHeader(doc, title, subtitle, documentInfo, startY) {
-    const rightX = A4_WIDTH - MARGIN - 220;
-    const infoBoxWidth = 220;
+    const leftX = MARGIN;
+    const rightX = A4_WIDTH - MARGIN - 240;
+    const infoBoxWidth = 240;
     let currentY = startY;
     
-    // Encadré pour les informations du document
-    const infoBoxHeight = 80 + (documentInfo.dateEcheance ? 12 : 0) + (documentInfo.dateValidite ? 12 : 0);
-    doc.rect(rightX, currentY, infoBoxWidth, infoBoxHeight)
+    // ===== TITRE DU DOCUMENT (à gauche, plus visible) =====
+    // Encadré pour le titre du document (fond primaire, plus grand)
+    const titleBoxWidth = CONTENT_WIDTH - infoBoxWidth - 20;
+    const titleBoxHeight = 55; // Hauteur augmentée pour meilleure visibilité
+    
+    doc.rect(leftX, currentY, titleBoxWidth, titleBoxHeight)
        .fillColor(COLORS.primary)
        .fill();
     
-    doc.rect(rightX, currentY, infoBoxWidth, infoBoxHeight)
+    doc.rect(leftX, currentY, titleBoxWidth, titleBoxHeight)
        .strokeColor(COLORS.primaryDark)
-       .lineWidth(1)
+       .lineWidth(2)
        .stroke();
     
-    currentY += 10;
+    // Titre principal (plus grand et centré, sur une seule ligne)
+    // Ajuster la taille dynamiquement selon la longueur du titre pour éviter le retour à la ligne
+    let titleFontSize = 28;
+    if (title.length > 20) {
+        titleFontSize = 20;
+    } else if (title.length > 15) {
+        titleFontSize = 24;
+    }
     
-    // Titre du document (dans l'encadré)
-    doc.fontSize(20)
+    // Calculer la position Y pour centrer verticalement le titre
+    const titleY = currentY + (titleBoxHeight / 2) - (titleFontSize / 2) - 2;
+    
+    doc.fontSize(titleFontSize)
        .fillColor(COLORS.white)
        .font('Helvetica-Bold')
-       .text(title, rightX + 10, currentY, { width: infoBoxWidth - 20, align: 'left' });
-    currentY += 18;
+       .text(title, leftX + 15, titleY, { 
+           width: titleBoxWidth - 30, 
+           align: 'center',
+           lineGap: 0,
+           ellipsis: false
+       });
     
-    // Sous-titre
+    // Sous-titre (en dessous du titre, plus visible)
     doc.fontSize(9)
        .fillColor(COLORS.white)
        .font('Helvetica')
        .opacity(0.9)
-       .text(subtitle, rightX + 10, currentY, { width: infoBoxWidth - 20, align: 'left' });
-    currentY += 15;
+       .text(subtitle, leftX + 15, currentY + titleBoxHeight - 18, { 
+           width: titleBoxWidth - 30, 
+           align: 'center' 
+       });
+    
+    // ===== INFORMATIONS DU DOCUMENT (à droite, bien organisées) =====
+    // Encadré pour les informations du document
+    const infoBoxHeight = 50 + (documentInfo.numero ? 30 : 0) + (documentInfo.date ? 25 : 0) + 
+                         (documentInfo.dateEcheance ? 25 : 0) + (documentInfo.dateValidite ? 25 : 0);
+    
+    doc.rect(rightX, currentY, infoBoxWidth, infoBoxHeight)
+       .fillColor(COLORS.gray50)
+       .fill();
+    
+    doc.rect(rightX, currentY, infoBoxWidth, infoBoxHeight)
+       .strokeColor(COLORS.primary)
+       .lineWidth(1.5)
+       .stroke();
+    
+    let infoY = currentY + 12;
+    
+    // Label "INFORMATIONS" en haut
+    doc.fontSize(8)
+       .fillColor(COLORS.primary)
+       .font('Helvetica-Bold')
+       .text('INFORMATIONS', rightX + 12, infoY, { width: infoBoxWidth - 24, align: 'center' });
+    infoY += 15;
     
     // Ligne de séparation
-    doc.moveTo(rightX + 10, currentY)
-       .lineTo(rightX + infoBoxWidth - 10, currentY)
-       .strokeColor(COLORS.white)
+    doc.moveTo(rightX + 12, infoY)
+       .lineTo(rightX + infoBoxWidth - 12, infoY)
+       .strokeColor(COLORS.primary)
        .opacity(0.3)
        .lineWidth(0.5)
        .stroke();
-    currentY += 10;
+    infoY += 10;
     
-    // Informations du document (en blanc pour contraste)
+    // Référence/Numéro (plus visible et bien formaté)
     if (documentInfo.numero) {
         doc.fontSize(7)
-           .fillColor(COLORS.white)
-           .font('Helvetica')
-           .opacity(0.8)
-           .text('Numéro', rightX + 10, currentY);
-        doc.fontSize(10)
-           .fillColor(COLORS.white)
+           .fillColor(COLORS.textLight)
            .font('Helvetica-Bold')
-           .opacity(1)
-           .text(documentInfo.numero, rightX + 10, currentY + 10, { width: infoBoxWidth - 20, align: 'left' });
-        currentY += 25;
+           .text('RÉFÉRENCE', rightX + 12, infoY);
+        infoY += 10;
+        doc.fontSize(14)
+           .fillColor(COLORS.primary)
+           .font('Helvetica-Bold')
+           .text(documentInfo.numero, rightX + 12, infoY, { 
+               width: infoBoxWidth - 24, 
+               align: 'left' 
+           });
+        infoY += 20;
     }
     
+    // Date
     if (documentInfo.date) {
         doc.fontSize(7)
-           .fillColor(COLORS.white)
-           .font('Helvetica')
-           .opacity(0.8)
-           .text('Date', rightX + 10, currentY);
-        doc.fontSize(9)
-           .fillColor(COLORS.white)
+           .fillColor(COLORS.textLight)
            .font('Helvetica-Bold')
-           .opacity(1)
-           .text(documentInfo.date, rightX + 10, currentY + 10, { width: infoBoxWidth - 20, align: 'left' });
-        currentY += 25;
+           .text('DATE', rightX + 12, infoY);
+        infoY += 10;
+        doc.fontSize(10)
+           .fillColor(COLORS.text)
+           .font('Helvetica-Bold')
+           .text(documentInfo.date, rightX + 12, infoY, { 
+               width: infoBoxWidth - 24, 
+               align: 'left' 
+           });
+        infoY += 18;
     }
     
+    // Date d'échéance
     if (documentInfo.dateEcheance) {
         doc.fontSize(7)
-           .fillColor(COLORS.white)
-           .font('Helvetica')
-           .opacity(0.8)
-           .text('Échéance', rightX + 10, currentY);
-        doc.fontSize(9)
-           .fillColor(COLORS.white)
+           .fillColor(COLORS.textLight)
            .font('Helvetica-Bold')
-           .opacity(1)
-           .text(documentInfo.dateEcheance, rightX + 10, currentY + 10, { width: infoBoxWidth - 20, align: 'left' });
-        currentY += 25;
+           .text('ÉCHÉANCE', rightX + 12, infoY);
+        infoY += 10;
+        doc.fontSize(10)
+           .fillColor(COLORS.danger)
+           .font('Helvetica-Bold')
+           .text(documentInfo.dateEcheance, rightX + 12, infoY, { 
+               width: infoBoxWidth - 24, 
+               align: 'left' 
+           });
+        infoY += 18;
     }
     
+    // Date de validité
     if (documentInfo.dateValidite) {
         doc.fontSize(7)
-           .fillColor(COLORS.white)
-           .font('Helvetica')
-           .opacity(0.8)
-           .text('Validité', rightX + 10, currentY);
-        doc.fontSize(9)
-           .fillColor(COLORS.white)
+           .fillColor(COLORS.textLight)
            .font('Helvetica-Bold')
-           .opacity(1)
-           .text(documentInfo.dateValidite, rightX + 10, currentY + 10, { width: infoBoxWidth - 20, align: 'left' });
-        currentY += 25;
+           .text('VALIDITÉ', rightX + 12, infoY);
+        infoY += 10;
+        doc.fontSize(10)
+           .fillColor(COLORS.success)
+           .font('Helvetica-Bold')
+           .text(documentInfo.dateValidite, rightX + 12, infoY, { 
+               width: infoBoxWidth - 24, 
+               align: 'left' 
+           });
+        infoY += 18;
     }
     
     doc.opacity(1); // Réinitialiser l'opacité
     
-    return startY + infoBoxHeight + 15;
+    // Retourner la position Y la plus basse
+    return Math.max(startY + titleBoxHeight, startY + infoBoxHeight) + 20;
 }
 
 /**
@@ -281,37 +335,37 @@ function drawRecipient(doc, recipientInfo, startY) {
     const recipientWidth = 250;
     let currentY = startY;
     
-    // Encadré pour le destinataire
-    let boxHeight = 50; // Hauteur de base
-    if (recipientInfo.contact) boxHeight += 12;
-    if (recipientInfo.adresse) boxHeight += 12;
-    if (recipientInfo.ville) boxHeight += 12;
-    if (recipientInfo.nif) boxHeight += 12;
+    // Encadré pour le destinataire (plus professionnel)
+    let boxHeight = 55; // Hauteur de base augmentée
+    if (recipientInfo.contact) boxHeight += 13;
+    if (recipientInfo.adresse) boxHeight += 13;
+    if (recipientInfo.ville) boxHeight += 13;
+    if (recipientInfo.nif) boxHeight += 13;
     
     doc.rect(rightX, currentY, recipientWidth, boxHeight)
        .fillColor(COLORS.gray50)
        .fill();
     
     doc.rect(rightX, currentY, recipientWidth, boxHeight)
-       .strokeColor(COLORS.border)
-       .lineWidth(0.5)
+       .strokeColor(COLORS.primary)
+       .lineWidth(1)
        .stroke();
     
-    currentY += 8;
+    currentY += 10;
     
-    // Label
-    doc.fontSize(7)
-       .fillColor(COLORS.textLighter)
+    // Label (plus visible)
+    doc.fontSize(8)
+       .fillColor(COLORS.primary)
        .font('Helvetica-Bold')
-       .text('DESTINATAIRE', rightX + 8, currentY);
-    currentY += 12;
+       .text('DESTINATAIRE', rightX + 10, currentY);
+    currentY += 14;
     
-    // Nom (plus visible)
-    doc.fontSize(13)
+    // Nom (plus visible et mieux formaté)
+    doc.fontSize(14)
        .fillColor(COLORS.text)
        .font('Helvetica-Bold')
-       .text(recipientInfo.nom || '-', rightX + 8, currentY, { width: recipientWidth - 16, align: 'left' });
-    currentY += 15;
+       .text(recipientInfo.nom || '-', rightX + 10, currentY, { width: recipientWidth - 20, align: 'left' });
+    currentY += 18;
     
     // Détails
     if (recipientInfo.contact) {
@@ -499,61 +553,79 @@ function drawTable(doc, startY, columns, rows, options = {}) {
 }
 
 /**
- * Fonction pour dessiner les totaux
+ * Fonction pour dessiner les totaux - Version professionnelle améliorée
  */
 function drawTotals(doc, startY, totals, rightAlign = true) {
-    const totalsX = rightAlign ? A4_WIDTH - MARGIN - 250 : MARGIN;
-    const totalsWidth = 250;
+    const totalsX = rightAlign ? A4_WIDTH - MARGIN - 280 : MARGIN;
+    const totalsWidth = 280;
     let currentY = startY;
     
-    // Encadré pour les totaux
-    let boxHeight = totals.length * 18;
+    // Espacement avant les totaux
+    currentY += 10;
+    
+    // Encadré pour les totaux (plus professionnel)
+    let boxHeight = 20; // Padding top/bottom
     totals.forEach(total => {
-        if (total.separator) boxHeight += 8;
-        else if (total.label === 'Net à Payer' || total.label === 'Reste à payer') boxHeight += 5;
+        if (total.separator) {
+            boxHeight += 12;
+        } else if (total.label === 'Net à Payer' || total.label === 'Reste à payer') {
+            boxHeight += 25; // Plus d'espace pour le total final
+        } else {
+            boxHeight += 20;
+        }
     });
     
+    // Fond avec bordure plus visible
     doc.rect(totalsX, currentY, totalsWidth, boxHeight)
        .fillColor(COLORS.gray50)
        .fill();
     
     doc.rect(totalsX, currentY, totalsWidth, boxHeight)
-       .strokeColor(COLORS.border)
-       .lineWidth(0.5)
+       .strokeColor(COLORS.primary)
+       .lineWidth(1.5)
        .stroke();
     
-    currentY += 8;
+    currentY += 12;
     
     totals.forEach((total, index) => {
         const isLast = index === totals.length - 1;
-        const isTotal = total.label === 'Net à Payer' || total.label === 'Reste à payer';
+        const isTotal = total.label === 'Net à Payer' || total.label === 'Reste à payer' || 
+                       total.label === 'Total TTC' || total.label === 'Montant Total' ||
+                       total.label === 'Total TTC (Net à Payer)';
         
         if (total.separator) {
-            // Ligne de séparation
-            doc.moveTo(totalsX + 10, currentY)
-               .lineTo(totalsX + totalsWidth - 10, currentY)
-               .strokeColor(COLORS.border)
-               .lineWidth(0.5)
+            // Ligne de séparation plus visible
+            doc.moveTo(totalsX + 12, currentY)
+               .lineTo(totalsX + totalsWidth - 12, currentY)
+               .strokeColor(COLORS.primary)
+               .opacity(0.4)
+               .lineWidth(1)
                .stroke();
-            currentY += 10;
+            currentY += 12;
         } else {
-            // Label
-            doc.fontSize(isTotal ? 10 : 9)
+            // Label (plus visible)
+            doc.fontSize(isTotal ? 11 : 9)
                .fillColor(isTotal ? COLORS.primary : COLORS.text)
                .font(isTotal ? 'Helvetica-Bold' : 'Helvetica')
-               .text(total.label, totalsX + 10, currentY, { width: totalsWidth - 150, align: 'left' });
+               .text(total.label, totalsX + 12, currentY, { 
+                   width: totalsWidth - 160, 
+                   align: 'left' 
+               });
             
-            // Valeur
-            doc.fontSize(isTotal ? 14 : 10)
+            // Valeur (plus grande et mieux alignée)
+            doc.fontSize(isTotal ? 16 : 11)
                .fillColor(isTotal ? COLORS.primary : COLORS.text)
                .font('Helvetica-Bold')
-               .text(total.value, totalsX + totalsWidth - 140, currentY, { width: 130, align: 'right' });
+               .text(total.value, totalsX + totalsWidth - 148, currentY, { 
+                   width: 136, 
+                   align: 'right' 
+               });
             
-            currentY += isTotal ? 18 : 15;
+            currentY += isTotal ? 25 : 20;
         }
     });
     
-    return startY + boxHeight + 10;
+    return startY + boxHeight + 20;
 }
 
 /**
@@ -759,15 +831,16 @@ async function generateRFQPDF(rfq, outputPath) {
                 dateEcheance: dateLimite
             }, currentY);
             
-            currentY += 15;
+            currentY += 20; // Espacement après l'en-tête
             
-            // Séparateur visuel
+            // Séparateur visuel (plus visible)
             doc.moveTo(MARGIN, currentY)
                .lineTo(A4_WIDTH - MARGIN, currentY)
-               .strokeColor(COLORS.border)
-               .lineWidth(0.5)
+               .strokeColor(COLORS.primary)
+               .opacity(0.3)
+               .lineWidth(1)
                .stroke();
-            currentY += 15;
+            currentY += 20; // Espacement après le séparateur
             
             // Destinataire
             if (rfq.destinataire_nom) {
@@ -804,12 +877,22 @@ async function generateRFQPDF(rfq, outputPath) {
                 currentY += descHeight + 15;
             }
             
-            // Titre de section pour le tableau
-            doc.fontSize(10)
+            currentY += 10; // Espacement supplémentaire avant le tableau
+            
+            // Titre de section pour le tableau (plus visible et professionnel)
+            doc.fontSize(12)
                .fillColor(COLORS.primary)
                .font('Helvetica-Bold')
                .text('ARTICLES DEMANDÉS', MARGIN, currentY);
-            currentY += 12;
+            currentY += 8;
+            
+            // Ligne de séparation sous le titre
+            doc.moveTo(MARGIN, currentY)
+               .lineTo(MARGIN + 200, currentY)
+               .strokeColor(COLORS.primary)
+               .lineWidth(2)
+               .stroke();
+            currentY += 15;
             
             // Tableau des articles
             if (rfq.lignes && rfq.lignes.length > 0) {
@@ -898,15 +981,16 @@ async function generateDevisPDF(devis, outputPath) {
                 dateValidite: dateValidite
             }, currentY);
             
-            currentY += 15;
+            currentY += 20; // Espacement après l'en-tête
             
-            // Séparateur visuel
+            // Séparateur visuel (plus visible)
             doc.moveTo(MARGIN, currentY)
                .lineTo(A4_WIDTH - MARGIN, currentY)
-               .strokeColor(COLORS.border)
-               .lineWidth(0.5)
+               .strokeColor(COLORS.primary)
+               .opacity(0.3)
+               .lineWidth(1)
                .stroke();
-            currentY += 15;
+            currentY += 20; // Espacement après le séparateur
             
             // Destinataire (client ou fournisseur selon le contexte)
             // Pour un devis, le destinataire est généralement le client
@@ -920,12 +1004,22 @@ async function generateDevisPDF(devis, outputPath) {
                 }, currentY);
             }
             
-            // Titre de section pour le tableau
-            doc.fontSize(10)
+            currentY += 10; // Espacement supplémentaire avant le tableau
+            
+            // Titre de section pour le tableau (plus visible et professionnel)
+            doc.fontSize(12)
                .fillColor(COLORS.primary)
                .font('Helvetica-Bold')
                .text('DÉTAIL DES ARTICLES', MARGIN, currentY);
-            currentY += 12;
+            currentY += 8;
+            
+            // Ligne de séparation sous le titre
+            doc.moveTo(MARGIN, currentY)
+               .lineTo(MARGIN + 200, currentY)
+               .strokeColor(COLORS.primary)
+               .lineWidth(2)
+               .stroke();
+            currentY += 15;
             
             // Tableau des lignes
             if (devis.lignes && devis.lignes.length > 0) {
@@ -955,9 +1049,9 @@ async function generateDevisPDF(devis, outputPath) {
                 });
                 
                 currentY = drawTable(doc, currentY, columns, rows);
-                currentY += 20;
+                currentY += 25; // Espacement avant les totaux
                 
-                // Totaux
+                // Totaux (mise en forme professionnelle)
                 const tvaTaux = parseFloat(devis.tva_taux || 20);
                 const tva = totalHT * tvaTaux / 100;
                 const totalTTC = totalHT + tva;
@@ -970,7 +1064,7 @@ async function generateDevisPDF(devis, outputPath) {
                 ];
                 
                 currentY = drawTotals(doc, currentY, totals);
-                currentY += 15;
+                currentY += 20; // Espacement après les totaux
             }
             
             // Séparateur avant les conditions
@@ -1054,15 +1148,16 @@ async function generateCommandePDF(commande, outputPath) {
                 dateEcheance: dateLivraison
             }, currentY);
             
-            currentY += 15;
+            currentY += 20; // Espacement après l'en-tête
             
-            // Séparateur visuel
+            // Séparateur visuel (plus visible)
             doc.moveTo(MARGIN, currentY)
                .lineTo(A4_WIDTH - MARGIN, currentY)
-               .strokeColor(COLORS.border)
-               .lineWidth(0.5)
+               .strokeColor(COLORS.primary)
+               .opacity(0.3)
+               .lineWidth(1)
                .stroke();
-            currentY += 15;
+            currentY += 20; // Espacement après le séparateur
             
             // Destinataire (fournisseur)
             if (commande.fournisseur_nom) {
@@ -1075,12 +1170,22 @@ async function generateCommandePDF(commande, outputPath) {
                 }, currentY);
             }
             
-            // Titre de section pour le tableau
-            doc.fontSize(10)
+            currentY += 10; // Espacement supplémentaire avant le tableau
+            
+            // Titre de section pour le tableau (plus visible et professionnel)
+            doc.fontSize(12)
                .fillColor(COLORS.primary)
                .font('Helvetica-Bold')
                .text('ARTICLES COMMANDÉS', MARGIN, currentY);
-            currentY += 12;
+            currentY += 8;
+            
+            // Ligne de séparation sous le titre
+            doc.moveTo(MARGIN, currentY)
+               .lineTo(MARGIN + 200, currentY)
+               .strokeColor(COLORS.primary)
+               .lineWidth(2)
+               .stroke();
+            currentY += 15;
             
             // Tableau des lignes
             if (commande.lignes && commande.lignes.length > 0) {
@@ -1108,9 +1213,9 @@ async function generateCommandePDF(commande, outputPath) {
                 });
                 
                 currentY = drawTable(doc, currentY, columns, rows);
-                currentY += 20;
+                currentY += 25; // Espacement avant les totaux
                 
-                // Totaux
+                // Totaux (mise en forme professionnelle)
                 const tvaTaux = parseFloat(commande.lignes[0]?.tva_taux || 20);
                 const totals = [
                     { label: 'Total HT', value: formatCurrency(commande.total_ht || 0) },
@@ -1120,7 +1225,7 @@ async function generateCommandePDF(commande, outputPath) {
                 ];
                 
                 currentY = drawTotals(doc, currentY, totals);
-                currentY += 15;
+                currentY += 20; // Espacement après les totaux
             }
             
             // Séparateur avant les instructions
@@ -1191,15 +1296,16 @@ async function generateFacturePDF(facture, outputPath) {
                 dateEcheance: dateEcheance
             }, currentY);
             
-            currentY += 15;
+            currentY += 20; // Espacement après l'en-tête
             
-            // Séparateur visuel
+            // Séparateur visuel (plus visible)
             doc.moveTo(MARGIN, currentY)
                .lineTo(A4_WIDTH - MARGIN, currentY)
-               .strokeColor(COLORS.border)
-               .lineWidth(0.5)
+               .strokeColor(COLORS.primary)
+               .opacity(0.3)
+               .lineWidth(1)
                .stroke();
-            currentY += 15;
+            currentY += 20; // Espacement après le séparateur
             
             // Destinataire (client)
             if (facture.client_nom) {
@@ -1212,12 +1318,22 @@ async function generateFacturePDF(facture, outputPath) {
                 }, currentY);
             }
             
-            // Titre de section pour le tableau
-            doc.fontSize(10)
+            currentY += 10; // Espacement supplémentaire avant le tableau
+            
+            // Titre de section pour le tableau (plus visible et professionnel)
+            doc.fontSize(12)
                .fillColor(COLORS.primary)
                .font('Helvetica-Bold')
                .text('DÉTAIL DE LA FACTURATION', MARGIN, currentY);
-            currentY += 12;
+            currentY += 8;
+            
+            // Ligne de séparation sous le titre
+            doc.moveTo(MARGIN, currentY)
+               .lineTo(MARGIN + 200, currentY)
+               .strokeColor(COLORS.primary)
+               .lineWidth(2)
+               .stroke();
+            currentY += 15;
             
             // Tableau des lignes
             if (facture.lignes && facture.lignes.length > 0) {
@@ -1248,9 +1364,9 @@ async function generateFacturePDF(facture, outputPath) {
                 });
                 
                 currentY = drawTable(doc, currentY, columns, rows);
-                currentY += 20;
+                currentY += 25; // Espacement avant les totaux
                 
-                // Totaux
+                // Totaux (mise en forme professionnelle)
                 const totals = [
                     { label: 'Total HT', value: formatCurrency(facture.total_ht || 0) },
                     { label: 'TVA', value: formatCurrency(facture.total_tva || 0) },
@@ -1262,12 +1378,12 @@ async function generateFacturePDF(facture, outputPath) {
                     totals.push({ separator: true });
                     totals.push({ 
                         label: 'Reste à payer', 
-                        value: formatCurrency(facture.reste_a_payer)
+                        value: formatCurrency(facture.reste_a_payer) 
                     });
                 }
                 
                 currentY = drawTotals(doc, currentY, totals);
-                currentY += 15;
+                currentY += 20; // Espacement après les totaux
             }
             
             // Séparateur avant les notes

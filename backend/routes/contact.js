@@ -439,6 +439,22 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
     try {
         const { statut, page = 1, limit = 50 } = req.query;
         
+        // #region agent log - Début route /demandes
+        const fs = require('fs');
+        const logPath = '/Users/dantawi/Documents/SilyProcure/.cursor/debug.log';
+        try {
+            fs.appendFileSync(logPath, JSON.stringify({
+                location: 'backend/routes/contact.js:/demandes:start',
+                message: 'Route /demandes appelée',
+                data: { statut, page, limit, user: req.user?.email },
+                timestamp: Date.now(),
+                sessionId: 'debug-session',
+                runId: 'demandes-backend',
+                hypothesisId: 'A'
+            }) + '\n');
+        } catch (logErr) {}
+        // #endregion
+        
         // S'assurer que page et limit sont des nombres entiers valides
         const pageNum = Math.max(1, parseInt(page) || 1);
         const limitNum = Math.max(1, Math.min(1000, parseInt(limit) || 50)); // Limiter à 1000 max
@@ -466,7 +482,35 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
         // Utiliser l'interpolation directe après validation
         query += ` ORDER BY d.date_creation DESC LIMIT ${limitNum} OFFSET ${offset}`;
 
+        // #region agent log - Avant exécution SQL
+        try {
+            fs.appendFileSync(logPath, JSON.stringify({
+                location: 'backend/routes/contact.js:/demandes:before-sql',
+                message: 'Avant exécution SQL',
+                data: { query: query.substring(0, 200), params, limitNum, offset },
+                timestamp: Date.now(),
+                sessionId: 'debug-session',
+                runId: 'demandes-backend',
+                hypothesisId: 'B'
+            }) + '\n');
+        } catch (logErr) {}
+        // #endregion
+
         const [demandes] = await pool.execute(query, params);
+        
+        // #region agent log - Après exécution SQL
+        try {
+            fs.appendFileSync(logPath, JSON.stringify({
+                location: 'backend/routes/contact.js:/demandes:after-sql',
+                message: 'SQL exécuté avec succès',
+                data: { nbDemandes: demandes?.length || 0 },
+                timestamp: Date.now(),
+                sessionId: 'debug-session',
+                runId: 'demandes-backend',
+                hypothesisId: 'C'
+            }) + '\n');
+        } catch (logErr) {}
+        // #endregion
 
         // Compter le total
         let countQuery = 'SELECT COUNT(*) as total FROM demandes_devis';
@@ -489,6 +533,27 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
         });
 
     } catch (error) {
+        // #region agent log - Erreur catchée
+        const fs = require('fs');
+        const logPath = '/Users/dantawi/Documents/SilyProcure/.cursor/debug.log';
+        try {
+            fs.appendFileSync(logPath, JSON.stringify({
+                location: 'backend/routes/contact.js:/demandes:error',
+                message: 'Erreur catchée',
+                data: { 
+                    error: error.message,
+                    stack: error.stack?.substring(0, 300),
+                    code: error.code,
+                    sqlState: error.sqlState
+                },
+                timestamp: Date.now(),
+                sessionId: 'debug-session',
+                runId: 'demandes-backend',
+                hypothesisId: 'D'
+            }) + '\n');
+        } catch (logErr) {}
+        // #endregion
+        
         console.error('Erreur récupération demandes:', error);
         res.status(500).json({ error: error.message });
     }

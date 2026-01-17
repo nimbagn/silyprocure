@@ -133,7 +133,7 @@ router.get('/commande/:id', validateId, async (req, res) => {
              FROM commandes c
              LEFT JOIN entreprises e ON c.fournisseur_id = e.id
              LEFT JOIN adresses a ON e.id = a.entreprise_id AND a.type_adresse = 'siege'
-             WHERE c.id = $1`,
+             WHERE c.id = ?`,
             [id]
         );
 
@@ -145,7 +145,7 @@ router.get('/commande/:id', validateId, async (req, res) => {
 
         // Récupérer les lignes
         const [lignes] = await pool.execute(
-            'SELECT * FROM commande_lignes WHERE commande_id = $1 ORDER BY ordre',
+            'SELECT * FROM commande_lignes WHERE commande_id = ? ORDER BY ordre',
             [id]
         );
         commande.lignes = lignes;
@@ -156,9 +156,35 @@ router.get('/commande/:id', validateId, async (req, res) => {
         
         await generateCommandePDF(commande, outputPath);
 
+        // #region agent log
+        console.log('🔍 PDF Commande - Requête reçue:', {
+            id,
+            query: req.query,
+            accept: req.headers.accept,
+            authorization: req.headers.authorization ? 'présent' : 'absent'
+        });
+        // #endregion
+        
+        // Déterminer si c'est une prévisualisation ou un téléchargement
+        const isPreview = req.query.preview === 'true' || req.headers.accept?.includes('text/html');
+        
+        // #region agent log
+        console.log('🔍 PDF Commande - isPreview:', isPreview);
+        // #endregion
+        
         // Envoyer le PDF
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        if (isPreview) {
+            // Pour la prévisualisation, utiliser 'inline' au lieu de 'attachment'
+            res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+        } else {
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        }
+        
+        // #region agent log
+        console.log('🔍 PDF Commande - Envoi du fichier:', outputPath);
+        // #endregion
+        
         res.sendFile(outputPath);
     } catch (error) {
         console.error('Erreur génération PDF Commande:', error);

@@ -19,6 +19,34 @@
     
     <!-- Dashboard Theme CSS -->
     <link rel="stylesheet" href="css/dashboard-theme.css">
+    <!-- Modern Theme (inspiré de home.html) -->
+    <link rel="stylesheet" href="css/modern-theme.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Override pour utiliser le style moderne de home.html */
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+            background: #f8fafc !important;
+        }
+        
+        /* Utiliser brand-600 au lieu de primary-500 */
+        .text-primary-600, .text-primary-500 { color: #2563eb !important; }
+        .bg-primary-600, .bg-primary-500 { background-color: #2563eb !important; }
+        .border-primary-500 { border-color: #2563eb !important; }
+        
+        /* Améliorer les cartes */
+        .card, .stat-card, .facture-card, .filters-card, .kpi-card {
+            border-radius: 1.5rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .card:hover, .facture-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+        }
+    </style>
 </head>
 <body class="h-full flex flex-col">
     <div class="header">
@@ -196,6 +224,82 @@
     <script src="js/mobile-menu.js"></script>
     <script src="js/forms-products.js"></script>
     <script src="js/forms.js"></script>
+    <script src="js/modern-menu.js"></script>
+    <script>
+        // #region agent log - Analyse des systèmes de navigation
+        (function() {
+            function logNavAnalysis() {
+                const oldNav = document.querySelector('nav.nav');
+                const modernToggle = document.getElementById('modern-menu-toggle');
+                const modernMenu = document.getElementById('modern-menu');
+                const navbar = document.querySelector('nav.bg-white.border-b-2');
+                
+                const analysis = {
+                    oldNav: {
+                        exists: !!oldNav,
+                        visible: oldNav ? window.getComputedStyle(oldNav).display !== 'none' : false,
+                        position: oldNav ? window.getComputedStyle(oldNav).position : null,
+                        zIndex: oldNav ? window.getComputedStyle(oldNav).zIndex : null,
+                        top: oldNav ? window.getComputedStyle(oldNav).top : null,
+                        left: oldNav ? window.getComputedStyle(oldNav).left : null,
+                        width: oldNav ? oldNav.offsetWidth : null,
+                        height: oldNav ? oldNav.offsetHeight : null,
+                        links: oldNav ? oldNav.querySelectorAll('a').length : 0
+                    },
+                    modernToggle: {
+                        exists: !!modernToggle,
+                        visible: modernToggle ? window.getComputedStyle(modernToggle).display !== 'none' : false,
+                        position: modernToggle ? window.getComputedStyle(modernToggle).position : null,
+                        zIndex: modernToggle ? window.getComputedStyle(modernToggle).zIndex : null,
+                        top: modernToggle ? window.getComputedStyle(modernToggle).top : null,
+                        left: modernToggle ? window.getComputedStyle(modernToggle).left : null
+                    },
+                    modernMenu: {
+                        exists: !!modernMenu,
+                        visible: modernMenu ? window.getComputedStyle(modernMenu).display !== 'none' : false,
+                        isOpen: modernMenu ? modernMenu.classList.contains('open') : false
+                    },
+                    navbar: {
+                        exists: !!navbar,
+                        visible: navbar ? window.getComputedStyle(navbar).display !== 'none' : false,
+                        zIndex: navbar ? window.getComputedStyle(navbar).zIndex : null
+                    }
+                };
+                
+                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        location: 'produits.html:nav-analysis',
+                        message: 'Analyse des systèmes de navigation',
+                        data: analysis,
+                        timestamp: Date.now(),
+                        sessionId: 'debug-session',
+                        runId: 'nav-analysis',
+                        hypothesisId: 'A'
+                    })
+                }).catch(() => {});
+            }
+            
+            // Analyser au chargement et après initialisation du menu moderne
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    setTimeout(logNavAnalysis, 500);
+                });
+            } else {
+                setTimeout(logNavAnalysis, 500);
+            }
+            
+            // Réanalyser après initialisation du menu moderne
+            const checkModernMenu = setInterval(() => {
+                if (document.getElementById('modern-menu-toggle')) {
+                    clearInterval(checkModernMenu);
+                    setTimeout(logNavAnalysis, 100);
+                }
+            }, 100);
+        })();
+        // #endregion
+    </script>
     <script>
         // Vérifier l'authentification
         if (!checkAuth()) {
@@ -209,6 +313,10 @@
         const userInitialsEl = document.getElementById('user-initials');
         if (userNameEl) {
             userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+        }
+        if (userInitialsEl) {
+            userInitialsEl.textContent = (user.prenom?.[0] || user.nom?.[0] || 'U').toUpperCase();
+        }
 
         let allProduits = [];
 

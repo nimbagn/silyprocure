@@ -21,6 +21,8 @@
     <!-- Dashboard Theme CSS -->
     <link rel="stylesheet" href="css/dashboard-theme.css">
     <link rel="stylesheet" href="css/animations.css">
+    <!-- Modern Theme (inspiré de home.html) -->
+    <link rel="stylesheet" href="css/modern-theme.css">
     
     <style>
         .fade-in {
@@ -376,6 +378,32 @@
     <!-- Font Awesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Override pour utiliser le style moderne de home.html */
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+            background: #f8fafc !important;
+        }
+        
+        /* Utiliser brand-600 au lieu de primary-500 */
+        .text-primary-600, .text-primary-500 { color: #2563eb !important; }
+        .bg-primary-600, .bg-primary-500 { background-color: #2563eb !important; }
+        .border-primary-500 { border-color: #2563eb !important; }
+        
+        /* Améliorer les cartes */
+        .stat-card, .facture-card, .filters-card {
+            border-radius: 1.5rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .facture-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+        }
+    </style>
 </head>
 <body class="h-full flex flex-col">
     <script src="js/auth.js"></script>
@@ -383,6 +411,7 @@
     <script src="js/components.js?v=20260116"></script>
     <script>window.DISABLE_SIDEBAR = true;</script>
     <script src="js/sidebar.js"></script>
+    <script src="js/modern-menu.js"></script>
 
     <!-- Navbar Moderne selon charte Pro Confiance -->
     <nav class="bg-white border-b-2 border-blue-100 sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Navigation principale">
@@ -511,7 +540,7 @@
 
         <!-- Stats Cards -->
         <div class="stats-grid">
-            <div class="stat-card fade-in delay-100">
+            <div class="modern-kpi-card blue stat-card fade-in delay-100">
                 <i class="fas fa-file-invoice stat-icon"></i>
                 <div class="stat-content">
                     <div class="stat-label">Total Factures</div>
@@ -519,7 +548,7 @@
                 </div>
             </div>
 
-            <div class="stat-card yellow fade-in delay-200">
+            <div class="modern-kpi-card yellow stat-card fade-in delay-200">
                 <i class="fas fa-clock stat-icon"></i>
                 <div class="stat-content">
                     <div class="stat-label">En attente paiement</div>
@@ -527,7 +556,7 @@
                 </div>
             </div>
 
-            <div class="stat-card green fade-in delay-300">
+            <div class="modern-kpi-card green stat-card fade-in delay-300">
                 <i class="fas fa-check-circle stat-icon"></i>
                 <div class="stat-content">
                     <div class="stat-label">Payées</div>
@@ -535,7 +564,7 @@
                 </div>
             </div>
 
-            <div class="stat-card purple fade-in delay-300">
+            <div class="modern-kpi-card purple stat-card fade-in delay-300">
                 <i class="fas fa-coins stat-icon"></i>
                 <div class="stat-content">
                     <div class="stat-label">Montant Total TTC</div>

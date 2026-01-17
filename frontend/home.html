@@ -238,7 +238,7 @@
                                     <label class="text-xs text-slate-400 ml-1">Code Secret</label>
                                     <div class="relative">
                                         <i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                                        <input type="password" id="track-token" placeholder="••••••" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all">
+                                        <input type="password" id="track-token" placeholder="••••••" autocomplete="off" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all">
             </div>
         </div>
                                 <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2 group">
@@ -438,7 +438,7 @@
                             </div>
                             <div>
                         <div class="text-xs text-slate-400 uppercase font-bold">WhatsApp Business</div>
-                        <div class="text-lg font-bold text-white">+224 624 00 00 00</div>
+                        <div class="text-lg font-bold text-white">+224 622 69 24 33</div>
                             </div>
                             </div>
                 <div class="bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-2xl flex items-center gap-4 text-left hover:bg-white/10 transition cursor-pointer">
@@ -447,7 +447,7 @@
                             </div>
                             <div>
                         <div class="text-xs text-slate-400 uppercase font-bold">Appel Direct</div>
-                        <div class="text-lg font-bold text-white">+224 624 00 00 00</div>
+                        <div class="text-lg font-bold text-white">+224 622 69 24 33</div>
                             </div>
                     </div>
                 </div>
@@ -729,7 +729,11 @@
 
             try {
                 const res = await fetch('/api/public/entreprises?types=client,fournisseur&limit=30', { credentials: 'omit' });
-                if (!res.ok) return;
+                if (!res.ok) {
+                    // Ne pas afficher d'erreur si l'API n'est pas disponible (page publique)
+                    console.debug('API entreprises non disponible (normal pour page publique)');
+                    return;
+                }
                 const entreprises = await res.json();
                 if (!Array.isArray(entreprises) || entreprises.length === 0) return;
 
@@ -751,7 +755,8 @@
                 }).join('');
                 track.innerHTML = items + items;
             } catch (e) {
-                // Silent fallback (keep default)
+                // Silent fallback (keep default) - erreur réseau ou autre
+                console.debug('Erreur chargement logos clients:', e.message);
             }
         }
 
