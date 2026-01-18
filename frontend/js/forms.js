@@ -155,7 +155,9 @@ function createEntrepriseForm() {
                 </div>
                 <div class="form-group">
                     <label for="ent-secteur">Secteur d'activité</label>
-                    <input type="text" id="ent-secteur" name="secteur_activite" placeholder="Ex: Commerce, Services, Industrie">
+                    <select id="ent-secteur" name="secteur_activite">
+                        <option value="">Sélectionner un secteur...</option>
+                    </select>
                 </div>
             </div>
             <div class="form-row">
@@ -255,6 +257,9 @@ function createEntrepriseForm() {
     
     const modal = new Modal('create-entreprise', 'Nouvelle Entreprise', content, footer);
     modal.show();
+    
+    // Charger les secteurs après l'ouverture du modal
+    loadSecteursForForm('ent-secteur');
 }
 
 function toggleGeocodeEntreprise() {
@@ -614,7 +619,7 @@ async function editRFQForm(id) {
                                     </div>
                                     <div class="form-group" style="flex: 1;">
                                         <label>Produit (optionnel)</label>
-                                        <select name="ligne-produit[]" class="produit-select-edit">
+                                        <select name="ligne-produit[]" class="produit-select-edit" data-selected-produit="${ligne.produit_id || ''}">
                                             <option value="">Sélectionner</option>
                                         </select>
                                     </div>
@@ -656,10 +661,126 @@ async function editRFQForm(id) {
         // Charger les données
         await loadFournisseurs('rfq-edit-destinataire', rfq.destinataire_id);
         await loadCategories('rfq-edit-categorie', rfq.categorie_id);
+        
+        // Charger les produits pour tous les selects existants
+        await loadProduitsForRFQEdit();
     } catch (error) {
         hideLoading();
         Toast.error('Erreur lors du chargement');
         console.error('Erreur:', error);
+    }
+}
+
+// Fonction pour charger les produits dans les selects d'édition RFQ
+async function loadProduitsForRFQEdit() {
+    try {
+        const response = await apiCall('/api/produits');
+        if (response && response.ok) {
+            const produits = await response.json();
+            const allProduits = Array.isArray(produits) ? produits : (produits.produits || []);
+            
+            // Charger les produits dans tous les selects existants
+            const selects = document.querySelectorAll('#rfq-edit-lignes .produit-select-edit');
+            selects.forEach(select => {
+                if (select.options.length <= 1) { // Seulement si pas encore chargé
+                    const selectedProduitId = select.getAttribute('data-selected-produit');
+                    select.innerHTML = '<option value="">Sélectionner</option>';
+                    allProduits.forEach(prod => {
+                        const option = document.createElement('option');
+                        option.value = prod.id;
+                        option.textContent = `${prod.reference || ''} - ${prod.libelle || ''}${prod.prix_unitaire_ht ? ` (${typeof formatCurrency === 'function' ? formatCurrency(prod.prix_unitaire_ht) : prod.prix_unitaire_ht + ' GNF'})` : ''}`;
+                        if (selectedProduitId && prod.id == selectedProduitId) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Erreur chargement produits pour édition RFQ:', error);
+    }
+}
+
+// Fonction pour ajouter une ligne dans le formulaire d'édition RFQ
+function addLigneRFQEdit() {
+    const container = document.getElementById('rfq-edit-lignes');
+    if (!container) return;
+    
+    // Supprimer le message "Aucune ligne" s'il existe
+    const emptyState = container.querySelector('.empty-state');
+    if (emptyState) {
+        emptyState.remove();
+    }
+    
+    const ligneIndex = container.querySelectorAll('.card[data-ligne-index]').length;
+    const ligne = document.createElement('div');
+    ligne.className = 'card';
+    ligne.style.marginBottom = '1rem';
+    ligne.style.padding = '1rem';
+    ligne.setAttribute('data-ligne-index', ligneIndex);
+    
+    ligne.innerHTML = `
+        <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+                <label>Description *</label>
+                <input type="text" name="ligne-description[]" required placeholder="Description du produit/service">
+            </div>
+            <div class="form-group">
+                <label>Quantité *</label>
+                <input type="number" name="ligne-quantite[]" required min="0.01" step="0.01" placeholder="1">
+            </div>
+            <div class="form-group">
+                <label>Unité</label>
+                <input type="text" name="ligne-unite[]" value="unité" placeholder="unité">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>Produit (optionnel)</label>
+                <select name="ligne-produit[]" class="produit-select-edit">
+                    <option value="">Sélectionner</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeLigneRFQEdit(this)" style="margin-top: 1.75rem;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Référence</label>
+            <input type="text" name="ligne-reference[]" placeholder="Référence produit">
+        </div>
+        <div class="form-group">
+            <label>Spécifications techniques</label>
+            <textarea name="ligne-specifications[]" rows="2" placeholder="Spécifications détaillées..."></textarea>
+        </div>
+        <input type="hidden" name="ligne-id[]" value="">
+    `;
+    
+    container.appendChild(ligne);
+    
+    // Charger les produits pour le nouveau select
+    loadProduitsForRFQEdit();
+}
+
+// Fonction pour supprimer une ligne dans le formulaire d'édition RFQ
+function removeLigneRFQEdit(button) {
+    const ligneCard = button.closest('.card[data-ligne-index]');
+    if (!ligneCard) return;
+    
+    if (confirm('Voulez-vous supprimer cette ligne ?')) {
+        ligneCard.remove();
+        
+        // Si plus aucune ligne, afficher le message vide
+        const container = document.getElementById('rfq-edit-lignes');
+        if (container && container.querySelectorAll('.card[data-ligne-index]').length === 0) {
+            container.innerHTML = `
+                <div class="empty-state" style="padding: 1rem; text-align: center; color: #666;">
+                    <i class="fas fa-box" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                    <p>Aucune ligne. Cliquez sur "Ajouter une ligne" pour commencer.</p>
+                </div>
+            `;
+        }
     }
 }
 
@@ -846,7 +967,9 @@ async function editEntrepriseForm(id) {
                     </div>
                     <div class="form-group">
                         <label for="ent-edit-secteur">Secteur d'activité</label>
-                        <input type="text" id="ent-edit-secteur" name="secteur_activite" value="${entreprise.secteur_activite || ''}">
+                        <select id="ent-edit-secteur" name="secteur_activite">
+                            <option value="">Sélectionner un secteur...</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-row">
@@ -878,6 +1001,9 @@ async function editEntrepriseForm(id) {
         
         const modal = new Modal('edit-entreprise', 'Modifier Entreprise', content, footer);
         modal.show();
+        
+        // Charger les secteurs après l'ouverture du modal et pré-sélectionner le secteur existant
+        loadSecteursForForm('ent-edit-secteur', entreprise.secteur_activite);
     } catch (error) {
         hideLoading();
         Toast.error('Erreur lors du chargement');
@@ -1063,6 +1189,8 @@ window.createRFQForm = createRFQForm;
 window.handleCreateRFQ = handleCreateRFQ;
 window.editRFQForm = editRFQForm;
 window.handleUpdateRFQ = handleUpdateRFQ;
+window.addLigneRFQEdit = addLigneRFQEdit;
+window.removeLigneRFQEdit = removeLigneRFQEdit;
 window.createEntrepriseForm = createEntrepriseForm;
 window.handleCreateEntreprise = handleCreateEntreprise;
 window.editEntrepriseForm = editEntrepriseForm;
@@ -1345,4 +1473,87 @@ async function handleUpdateDevis(event, id) {
 window.editDevisForm = editDevisForm;
 window.handleUpdateDevis = handleUpdateDevis;
 window.calculateDevisTotals = calculateDevisTotals;
+
+// Fonction pour charger les secteurs depuis la base de données dans un select
+async function loadSecteursForForm(selectId, selectedValue = null) {
+    try {
+        const response = await fetch('/api/contact/secteurs');
+        if (!response.ok) throw new Error('Erreur chargement secteurs');
+        const data = await response.json();
+        const secteurs = data.secteurs || [];
+        
+        const select = document.getElementById(selectId);
+        if (!select) {
+            console.warn(`Select ${selectId} non trouvé`);
+            return;
+        }
+        
+        // Garder l'option par défaut
+        const defaultOption = select.querySelector('option[value=""]') || document.createElement('option');
+        if (!defaultOption.value) {
+            defaultOption.value = '';
+            defaultOption.textContent = 'Sélectionner un secteur...';
+            select.innerHTML = '';
+            select.appendChild(defaultOption);
+        } else {
+            select.innerHTML = defaultOption.outerHTML;
+        }
+        
+        // Ajouter les secteurs
+        secteurs.forEach(secteur => {
+            const option = document.createElement('option');
+            option.value = secteur;
+            option.textContent = secteur;
+            if (selectedValue && secteur === selectedValue) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        
+        // Si un secteur est sélectionné mais n'est pas dans la liste, l'ajouter
+        if (selectedValue && !secteurs.includes(selectedValue)) {
+            const option = document.createElement('option');
+            option.value = selectedValue;
+            option.textContent = selectedValue;
+            option.selected = true;
+            select.insertBefore(option, select.firstChild.nextSibling);
+        }
+    } catch (error) {
+        console.error('Erreur chargement secteurs:', error);
+        // En cas d'erreur, utiliser des secteurs par défaut
+        const secteursParDefaut = [
+            'BTP - Construction',
+            'Commerce - Distribution',
+            'Industrie - Manufacture',
+            'Services - Conseil',
+            'Transport - Logistique',
+            'Informatique - TIC',
+            'Agroalimentaire',
+            'Énergie - Électricité',
+            'Santé - Médical',
+            'Éducation - Formation',
+            'Hôtellerie - Restauration',
+            'Immobilier',
+            'Finance - Banque',
+            'Automobile',
+            'Textile - Mode',
+            'Chimie - Pharmacie',
+            'Métallurgie',
+            'Papier - Imprimerie',
+            'Autre'
+        ];
+        const select = document.getElementById(selectId);
+        if (select) {
+            secteursParDefaut.forEach(secteur => {
+                const option = document.createElement('option');
+                option.value = secteur;
+                option.textContent = secteur;
+                if (selectedValue && secteur === selectedValue) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
+    }
+}
 

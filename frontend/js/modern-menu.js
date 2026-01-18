@@ -368,7 +368,6 @@
     };
 
     window.closeModernMenu = function() {
-        console.log('🔴 closeModernMenu appelé');
         
         const menu = document.getElementById('modern-menu');
         const overlay = document.getElementById('modern-menu-overlay');

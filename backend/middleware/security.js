@@ -2,17 +2,20 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 
 // Rate limiting pour l'authentification (plus strict)
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // 5 tentatives par IP
-    message: 'Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes.',
-    standardHeaders: true,
-    legacyHeaders: false,
-    // Désactiver la validation trust proxy pour éviter les warnings (géré dans server.js)
-    validate: {
-        trustProxy: false
-    }
-});
+// Désactivé en mode test pour permettre les tests automatisés
+const authLimiter = process.env.NODE_ENV === 'test' 
+    ? (req, res, next) => next() // Pas de rate limiting en mode test
+    : rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 5, // 5 tentatives par IP
+        message: 'Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes.',
+        standardHeaders: true,
+        legacyHeaders: false,
+        // Désactiver la validation trust proxy pour éviter les warnings (géré dans server.js)
+        validate: {
+            trustProxy: false
+        }
+    });
 
 // Rate limiting général pour les routes API (POST, PUT, DELETE, etc.)
 const apiLimiter = rateLimit({

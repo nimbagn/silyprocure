@@ -530,12 +530,33 @@
                 </div>
             `;
             
-            // Ajouter la section fichiers joints
-            container.innerHTML += '<div id="fichiers-joints-container"></div>';
+            // Ajouter la section fichiers joints dans une carte
+            container.innerHTML += `
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-paperclip" style="margin-right: 0.5rem;"></i>
+                            Fichiers joints
+                        </h2>
+                    </div>
+                    <div class="card-body" id="fichiers-joints-container" style="min-height: 100px;">
+                        <!-- Rempli par initFileUpload -->
+                    </div>
+                </div>
+            `;
             
-            // Initialiser le gestionnaire de fichiers
+            // Initialiser le gestionnaire de fichiers après le rendu
             if (factureId) {
-                initFileUpload('facture', factureId, 'fichiers-joints-container');
+                setTimeout(() => {
+                    try {
+                        const fichiersContainer = document.getElementById('fichiers-joints-container');
+                        if (fichiersContainer && typeof initFileUpload === 'function') {
+                            initFileUpload('facture', factureId, 'fichiers-joints-container');
+                        }
+                    } catch (error) {
+                        console.error('Erreur initFileUpload:', error);
+                    }
+                }, 200);
             }
         }
 

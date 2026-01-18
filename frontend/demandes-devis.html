@@ -1267,7 +1267,7 @@
                         </div>
                         ${demande.statut === 'nouvelle' || demande.statut === 'en_cours' ? `
                             <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--color-primary);">
-                                <button class="btn btn-primary" onclick="openCreateRFQModal(${demande.id})" style="width: 100%;">
+                                <button class="btn btn-primary" onclick="if(typeof window.openCreateRFQModal==='function'){window.openCreateRFQModal(${demande.id});}else{console.error('🔴 [RFQ] openCreateRFQModal non disponible');alert('Erreur: fonction non disponible');}" style="width: 100%;">
                                     <i class="fas fa-file-alt"></i> Créer des RFQ depuis cette demande
                                 </button>
                             </div>
@@ -1681,153 +1681,9 @@
             loadDemandes();
         }
 
-        let currentDemandeId = null;
-
-        window.openCreateRFQModal = async function openCreateRFQModal(demandeId) {
-            currentDemandeId = demandeId;
-            
-            // Charger les fournisseurs
-            try {
-                const response = await apiCall('/api/entreprises?type_entreprise=fournisseur&limit=1000');
-                if (!response.ok) {
-                    throw new Error('Erreur lors du chargement des fournisseurs');
-                }
-
-                const fournisseurs = await response.json();
-                const container = document.getElementById('fournisseurs-list');
-                
-                if (fournisseurs.length === 0) {
-                    container.innerHTML = '<p style="color: var(--color-neutral); text-align: center; padding: 2rem;">Aucun fournisseur disponible</p>';
-                } else {
-                    container.innerHTML = fournisseurs.map(f => `
-                        <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.3s;" 
-                               onmouseover="this.style.background='var(--color-background-light)'" 
-                               onmouseout="this.style.background='white'">
-                            <input type="checkbox" name="fournisseur_ids" value="${f.id}" style="cursor: pointer;">
-                            <div style="flex: 1;">
-                                <strong>${f.nom || '-'}</strong>
-                                ${f.secteur_activite ? `<div style="font-size: 0.9rem; color: var(--color-neutral);">${f.secteur_activite}</div>` : ''}
-                                ${f.email ? `<div style="font-size: 0.85rem; color: var(--color-neutral);"><i class="fas fa-envelope"></i> ${f.email}</div>` : ''}
-                            </div>
-                        </label>
-                    `).join('');
-                }
-
-                const createRFQModal = document.getElementById('createRFQModal');
-                const modalOverlay = createRFQModal?.closest('.modal-overlay');
-                
-                if (createRFQModal) {
-                    createRFQModal.classList.add('active');
-                }
-                
-                if (modalOverlay) {
-                    modalOverlay.classList.add('active');
-                    modalOverlay.style.display = 'flex';
-                }
-                
-                document.body.classList.add('modal-open');
-                document.body.style.overflow = 'hidden';
-            } catch (error) {
-                console.error('Erreur:', error);
-                Toast.error('Erreur lors du chargement des fournisseurs');
-            }
-        }
-
-        window.closeCreateRFQModal = function closeCreateRFQModal() {
-            const createRFQModal = document.getElementById('createRFQModal');
-            const modalOverlay = createRFQModal?.closest('.modal-overlay');
-            
-            if (createRFQModal) {
-                createRFQModal.classList.remove('active');
-            }
-            
-            if (modalOverlay) {
-                modalOverlay.classList.remove('active');
-                modalOverlay.style.display = 'none';
-            }
-            
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            
-            const form = document.getElementById('createRFQForm');
-            if (form) {
-                form.reset();
-            }
-            currentDemandeId = null;
-        }
-
-        window.submitCreateRFQ = async function submitCreateRFQ(event) {
-            event.preventDefault();
-            
-            if (!currentDemandeId) {
-                Toast.error('ID demande manquant');
-                return;
-            }
-
-            // Récupérer les fournisseurs sélectionnés
-            const checkboxes = document.querySelectorAll('input[name="fournisseur_ids"]:checked');
-            const fournisseur_ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
-
-            if (fournisseur_ids.length === 0) {
-                Toast.error('Veuillez sélectionner au moins un fournisseur');
-                return;
-            }
-
-            const formData = {
-                fournisseur_ids: fournisseur_ids,
-                date_limite_reponse: document.getElementById('date_limite_reponse').value || null,
-                date_livraison_souhaitee: document.getElementById('date_livraison_souhaitee').value || null,
-                incoterms: document.getElementById('incoterms').value || null,
-                conditions_paiement: document.getElementById('conditions_paiement').value || null
-            };
-
-            try {
-                const submitButton = event.target.querySelector('button[type="submit"]');
-                const originalText = submitButton.innerHTML;
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création en cours...';
-
-                const response = await apiCall(`/api/contact/demandes/${currentDemandeId}/create-rfq`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Erreur lors de la création des RFQ');
-                }
-
-                const result = await response.json();
-                
-                Toast.success(result.message || `${result.rfqs.length} RFQ créée(s) avec succès`);
-                closeCreateRFQModal();
-                closeDetailModal();
-                loadDemandes();
-                loadStats();
-
-                // Afficher les RFQ créées
-                if (result.rfqs && result.rfqs.length > 0) {
-                    const rfqsList = result.rfqs.map(rfq => 
-                        `${rfq.numero} (${rfq.fournisseur_nom})`
-                    ).join(', ');
-                    
-                    setTimeout(() => {
-                        Toast.info(`RFQ créées : ${rfqsList}. Cliquez pour voir les détails.`, 5000);
-                    }, 500);
-                }
-
-            } catch (error) {
-                console.error('Erreur:', error);
-                Toast.error(error.message || 'Erreur lors de la création des RFQ');
-            } finally {
-                const submitButton = event.target.querySelector('button[type="submit"]');
-                if (submitButton) {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = '<i class="fas fa-check"></i> Créer les RFQ';
-                }
-            }
-        }
+        // Les fonctions openCreateRFQModal, closeCreateRFQModal et submitCreateRFQ 
+        // sont définies dans frontend/js/pages/demandes-devis.js
+        // Ne pas les redéfinir ici pour éviter les conflits
 
         // Fermer les modals en cliquant en dehors (sur le fond)
         document.getElementById('detailModal')?.addEventListener('click', (e) => {

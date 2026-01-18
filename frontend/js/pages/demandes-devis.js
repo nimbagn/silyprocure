@@ -230,7 +230,7 @@
             </div>
             <div class="flex-1">
               <div class="flex items-center gap-3 mb-2">
-                <h2 class="text-2xl font-bold text-slate-900">${escapeHtml(demande.nom || 'Sans nom')}</h2>
+              <h2 class="text-2xl font-bold text-slate-900">${escapeHtml(demande.nom || 'Sans nom')}</h2>
                 ${demande.reference ? `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(demande.reference)}</span>` : ''}
               </div>
               <div class="flex flex-wrap items-center gap-3 mt-1.5 text-slate-500 font-medium text-sm">
@@ -238,7 +238,7 @@
                   <i class="fas fa-envelope text-xs"></i> ${escapeHtml(demande.email || '-')}
                 </a>
                 ${demande.telephone ? `
-                  <span>•</span>
+                <span>•</span>
                   <a href="tel:${demande.telephone}" class="hover:text-primary transition-colors flex items-center gap-1.5">
                     <i class="fas fa-phone text-xs"></i> ${escapeHtml(demande.telephone)}
                   </a>
@@ -252,9 +252,9 @@
                 <div class="mt-2 text-xs text-slate-400 flex items-center gap-1.5">
                   <i class="fas fa-calendar-alt"></i>
                   <span>Créée le ${formatDate(demande.date_creation)}</span>
-                </div>
-              ` : ''}
             </div>
+              ` : ''}
+          </div>
           </div>
           <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             ${statutBadge(demande.statut)}
@@ -262,7 +262,7 @@
               <button onclick="editDemande(${demande.id})" class="btn-primary !py-2 !px-4 !rounded-xl !text-sm">
                 <i class="fas fa-edit mr-1.5"></i> Modifier Statut
               </button>
-              <button onclick="openCreateRFQModal(${demande.id})" class="btn-secondary !py-2 !px-4 !rounded-xl !text-sm !border-slate-200">
+              <button onclick="if(typeof window.openCreateRFQModal==='function'){window.openCreateRFQModal(${demande.id});}else{console.error('🔴 [RFQ] openCreateRFQModal non disponible');alert('Erreur: fonction non disponible');}" class="btn-secondary !py-2 !px-4 !rounded-xl !text-sm !border-slate-200">
                 <i class="fas fa-file-contract mr-1.5"></i> Lancer RFQ
               </button>
             </div>
@@ -288,7 +288,7 @@
                   <div class="flex items-center gap-2 text-slate-700">
                     <i class="fas fa-envelope text-blue-500 w-4"></i>
                     <a href="mailto:${demande.email}" class="hover:text-blue-600 transition-colors">${escapeHtml(demande.email || '-')}</a>
-                  </div>
+              </div>
                   ${demande.telephone ? `
                     <div class="flex items-center gap-2 text-slate-700">
                       <i class="fas fa-phone text-blue-500 w-4"></i>
@@ -328,12 +328,12 @@
 
            <!-- Message du client -->
            ${demande.message ? `
-             <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+              <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100">
                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                  <i class="fas fa-comment-dots"></i> Message du client
                </h4>
                <p class="text-slate-700 leading-relaxed whitespace-pre-wrap">${escapeHtml(demande.message)}</p>
-             </div>
+              </div>
            ` : ''}
 
            <!-- Traité par -->
@@ -343,7 +343,7 @@
                  <i class="fas fa-user-check text-purple-600"></i>
                  <span class="text-purple-700 font-medium">Traité par:</span>
                  <span class="text-purple-900">${escapeHtml((demande.traite_par_prenom || '') + ' ' + (demande.traite_par_nom || ''))}</span>
-               </div>
+           </div>
              </div>
            ` : ''}
 
@@ -862,69 +862,99 @@
   };
 
   window.openCreateRFQModal = async function openCreateRFQModal(demandeId) {
-    console.log('🔵 openCreateRFQModal appelée avec demandeId:', demandeId, 'type:', typeof demandeId);
     if (!demandeId) {
-      console.error('🔴 ERREUR: demandeId est vide ou undefined');
       if (window.Toast) Toast.error('ID de demande manquant');
       return;
     }
     currentDemandeId = Number(demandeId);
-    console.log('🔵 currentDemandeId défini à:', currentDemandeId);
+    
+    // Ouvrir le modal d'abord pour que le container existe
+    openOverlayModal('createRFQModal');
+    
+    // Attendre un peu pour que le DOM soit mis à jour
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
     const container = $('fournisseurs-list');
-    console.log('🔵 Container fournisseurs-list trouvé:', !!container);
-    if (container) container.innerHTML = '<div class="loading">Chargement des fournisseurs...</div>';
-    const url = '/api/entreprises?type=fournisseur';
-    console.log('🔵 Appel API:', url);
+    if (!container) {
+      if (window.Toast) Toast.error('Erreur: container fournisseurs non trouvé');
+      return;
+    }
+    
+    container.innerHTML = '<div class="loading">Chargement des fournisseurs...</div>';
+    const url = '/api/entreprises?type=fournisseur&limit=1000';
+    
     try {
       const response = await apiCall(url);
-      console.log('🔵 Réponse API reçue:', { ok: response?.ok, status: response?.status, statusText: response?.statusText });
-      if (!response || !response.ok) {
-        const errorText = response ? await response.text().catch(() => '') : '';
-        console.error('🔴 Erreur API fournisseurs:', { status: response?.status, statusText: response?.statusText, errorText });
-        throw new Error('Erreur chargement fournisseurs');
+      
+      if (!response) {
+        throw new Error('Aucune réponse de l\'API');
       }
-      const fournisseurs = await response.json();
-      console.log('🔵 Fournisseurs reçus:', { isArray: Array.isArray(fournisseurs), length: Array.isArray(fournisseurs) ? fournisseurs.length : 0, first: Array.isArray(fournisseurs) && fournisseurs.length > 0 ? fournisseurs[0] : null });
-      if (container) {
-        container.innerHTML = (Array.isArray(fournisseurs) && fournisseurs.length)
+      
+      if (!response.ok) {
+        throw new Error(`Erreur ${response.status}: ${response.statusText || 'Erreur inconnue'}`);
+      }
+      
+      let fournisseurs;
+      try {
+        fournisseurs = await response.json();
+      } catch (jsonError) {
+        throw new Error('Erreur lors du parsing de la réponse JSON');
+      }
+      
+      // Vérifier à nouveau que le container existe
+      const containerCheck = $('fournisseurs-list');
+      if (!containerCheck) {
+        return;
+      }
+      
+      if (!Array.isArray(fournisseurs)) {
+        containerCheck.innerHTML = '<p style="color:#ef4444;text-align:center;padding:1rem;">Erreur: format de réponse invalide</p>';
+        return;
+      }
+      
+      const htmlContent = fournisseurs.length > 0
           ? fournisseurs
               .map(
-                (f) => `
-                <label style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:0.5rem;cursor:pointer;">
-                  <input type="checkbox" name="fournisseur_ids" value="${f.id}">
+              (f) => {
+                if (!f || !f.id) {
+                  return '';
+                }
+                return `
+              <label style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:0.5rem;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='white'">
+                <input type="checkbox" name="fournisseur_ids" value="${f.id}" style="cursor:pointer;">
                   <div style="flex:1;">
                     <strong>${escapeHtml(f.nom || '-')}</strong>
-                    ${f.secteur_activite ? `<div style="font-size:0.9rem;color:#64748b;">${escapeHtml(f.secteur_activite)}</div>` : ''}
-                    ${f.email ? `<div style="font-size:0.85rem;color:#64748b;"><i class="fas fa-envelope"></i> ${escapeHtml(f.email)}</div>` : ''}
+                  ${f.secteur_activite ? `<div style="font-size:0.9rem;color:#64748b;margin-top:0.25rem;">${escapeHtml(f.secteur_activite)}</div>` : ''}
+                  ${f.email ? `<div style="font-size:0.85rem;color:#64748b;margin-top:0.25rem;"><i class="fas fa-envelope"></i> ${escapeHtml(f.email)}</div>` : ''}
                   </div>
                 </label>
-              `
+            `;
+              }
               )
+            .filter(html => html !== '')
               .join('')
-          : '<p style="color:#64748b;text-align:center;padding:1rem;">Aucun fournisseur disponible</p>';
-        console.log('🔵 HTML généré, longueur:', container.innerHTML.length);
-      }
-      console.log('🔵 Ouverture du modal createRFQModal');
-      openOverlayModal('createRFQModal');
+        : '<p style="color:#64748b;text-align:center;padding:2rem;">Aucun fournisseur disponible</p>';
+      
+      containerCheck.innerHTML = htmlContent;
     } catch (e) {
-      console.error('🔴 Erreur dans openCreateRFQModal:', e);
-      if (window.Toast) Toast.error('Erreur lors du chargement des fournisseurs');
-      if (container) container.innerHTML = '<p style="color:#ef4444;text-align:center;padding:1rem;">Erreur lors du chargement des fournisseurs</p>';
+      console.error('Erreur lors du chargement des fournisseurs:', e);
+      if (window.Toast) Toast.error('Erreur lors du chargement des fournisseurs: ' + (e.message || 'Erreur inconnue'));
+      const containerError = $('fournisseurs-list');
+      if (containerError) {
+        containerError.innerHTML = `<p style="color:#ef4444;text-align:center;padding:1rem;">Erreur lors du chargement des fournisseurs<br><small>${escapeHtml(e.message || 'Erreur inconnue')}</small></p>`;
+      }
     }
   };
 
   window.submitCreateRFQ = async function submitCreateRFQ(event) {
     event.preventDefault();
-    console.log('🔵 submitCreateRFQ appelée, currentDemandeId:', currentDemandeId);
     if (!currentDemandeId) {
-      console.error('🔴 ERREUR: currentDemandeId est vide');
       // Fallback: essayer de récupérer depuis state.selectedId
       if (state.selectedId) {
         currentDemandeId = state.selectedId;
-        console.log('🔵 Utilisation du fallback state.selectedId:', currentDemandeId);
       } else {
-        if (window.Toast) Toast.error('ID demande manquant');
-        return;
+      if (window.Toast) Toast.error('ID demande manquant');
+      return;
       }
     }
     const checkboxes = document.querySelectorAll('input[name="fournisseur_ids"]:checked');

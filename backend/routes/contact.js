@@ -512,7 +512,7 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
         // Note: LIMIT et OFFSET ne peuvent pas être des paramètres préparés dans certaines versions MySQL
         // Utiliser l'interpolation directe après validation
         query += ` ORDER BY d.date_creation DESC LIMIT ${limitNum} OFFSET ${offset}`;
-        
+
         console.log('🔍🔍🔍 Route /demandes - Query SQL:', query.substring(0, 300));
         console.log('🔍🔍🔍 Route /demandes - usePostgreSQL:', usePostgreSQL, 'params:', params);
 
@@ -582,7 +582,7 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
         
         const [countResult] = await pool.execute(countQuery, countParams);
         const total = countResult[0].total;
-        
+
         console.log('🔍🔍🔍 Route /demandes - TOTAL:', total);
         console.log('🔍🔍🔍 Route /demandes - AVANT res.json - demandes.length:', demandes?.length || 0);
 

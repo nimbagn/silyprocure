@@ -16,17 +16,17 @@
 ## 🔄 Améliorations optionnelles (non bloquantes)
 
 ### 1. Intégration upload de fichiers dans autres pages
-- [ ] Ajouter l'upload de fichiers dans `devis-detail.html`
-- [ ] Ajouter l'upload de fichiers dans `commandes-detail.html`
-- [ ] Ajouter l'upload de fichiers dans `factures-detail.html`
+- [x] Ajouter l'upload de fichiers dans `devis-detail.html` ✅
+- [x] Ajouter l'upload de fichiers dans `commandes-detail.html` ✅
+- [x] Ajouter l'upload de fichiers dans `factures-detail.html` ✅
 
-**Note** : L'upload est déjà fonctionnel dans `rfq-detail.html`. Il suffit d'ajouter le même code dans les autres pages.
+**Note** : L'upload est maintenant fonctionnel dans toutes les pages de détails (RFQ, Devis, Commandes, Factures).
 
 ### 2. Édition des lignes RFQ
-- [ ] Permettre l'édition des lignes dans le formulaire d'édition RFQ
-- [ ] Ajouter/supprimer des lignes lors de l'édition
+- [x] Permettre l'édition des lignes dans le formulaire d'édition RFQ ✅
+- [x] Ajouter/supprimer des lignes lors de l'édition ✅
 
-**Note** : L'édition des informations générales de la RFQ fonctionne déjà.
+**Note** : L'édition complète des lignes RFQ est maintenant fonctionnelle. Les utilisateurs peuvent ajouter, modifier et supprimer des lignes lors de l'édition d'une RFQ.
 
 ### 3. Relances automatiques de paiement
 - [ ] Système de relances automatiques pour factures impayées
@@ -46,19 +46,19 @@
 5. ✅ Gestion des paiements
 6. ✅ Édition complète
 
-### Todos optionnels : **3** (non bloquants)
+### Todos optionnels : **1** restant (non bloquant)
 
 ---
 
 ## 🎯 Recommandations
 
 ### Priorité Haute (si besoin)
-1. **Intégrer l'upload de fichiers** dans les autres pages de détails
+1. ~~**Intégrer l'upload de fichiers** dans les autres pages de détails~~ ✅ **COMPLÉTÉ**
    - Temps estimé : 30 minutes
    - Impact : Cohérence de l'interface
 
 ### Priorité Moyenne
-2. **Édition des lignes RFQ**
+2. ~~**Édition des lignes RFQ**~~ ✅ **COMPLÉTÉ**
    - Temps estimé : 2-3 heures
    - Impact : Fonctionnalité d'édition complète
 

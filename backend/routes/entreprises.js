@@ -6,6 +6,7 @@ const pool = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { validateEntreprise, validateId } = require('../middleware/validation');
 const messageProService = require('../services/messagepro');
+const { notifyInscriptionEntreprise } = require('../utils/whatsappNotifications');
 const router = express.Router();
 
 router.use(authenticate);
@@ -99,7 +100,7 @@ router.delete(
 // Liste des entreprises
 router.get('/', async (req, res) => {
     try {
-        const { type, search } = req.query;
+        const { type, search, limit } = req.query;
         let query = 'SELECT * FROM entreprises WHERE 1=1';
         const params = [];
 
@@ -119,9 +120,22 @@ router.get('/', async (req, res) => {
 
         query += ' ORDER BY nom';
 
+        if (limit) {
+            const limitNum = parseInt(limit, 10);
+            if (!isNaN(limitNum) && limitNum > 0) {
+                query += ` LIMIT ${limitNum}`;
+            }
+        }
+
+        try {
         const [entreprises] = await pool.execute(query, params);
         res.json(entreprises);
+        } catch (sqlError) {
+            console.error('Erreur SQL lors de la récupération des entreprises:', sqlError.message);
+            res.status(500).json({ error: 'Erreur lors de la récupération des entreprises', details: sqlError.message });
+        }
     } catch (error) {
+        console.error('Erreur GET /api/entreprises:', error);
         res.status(500).json({ error: error.message });
     }
 });

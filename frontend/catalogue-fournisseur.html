@@ -267,7 +267,7 @@
     <script src="js/sidebar.js"></script>
     <script src="js/mobile-menu.js"></script>
     <script src="js/modern-menu.js"></script>
-    <script>
+<script>
         // Supprimer agressivement les menus en doublon
         (function() {
             function removeDuplicateMenus() {
@@ -332,29 +332,29 @@
             }
 
             // #region agent log - Initialisation de l'utilisateur
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
             console.log('🔍 Utilisateur chargé:', !!user.email);
             // #endregion
             
-            // Initialisation du nom d'utilisateur et des initiales
-            const userNameEl = document.getElementById('user-name');
-            const userInitialsEl = document.getElementById('user-initials');
+        // Initialisation du nom d'utilisateur et des initiales
+        const userNameEl = document.getElementById('user-name');
+        const userInitialsEl = document.getElementById('user-initials');
             
             // #region agent log - Éléments DOM
             console.log('🔍 userNameEl trouvé:', !!userNameEl);
             console.log('🔍 userInitialsEl trouvé:', !!userInitialsEl);
             // #endregion
             
-            if (userNameEl) {
-                userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
+        if (userNameEl) {
+            userNameEl.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email;
             }
             if (userInitialsEl) {
                 const initial = (user.prenom?.[0] || user.nom?.[0] || 'U').toUpperCase();
                 userInitialsEl.textContent = initial;
             }
 
-            let fournisseurId = null;
-            let allProduits = [];
+        let fournisseurId = null;
+        let allProduits = [];
             
             // #region agent log - Variables initialisées
             console.log('🔍 Variables initialisées: fournisseurId =', fournisseurId);
@@ -656,7 +656,7 @@
             // #region agent log - DOM déjà prêt
             console.log('🔍 DOM déjà prêt, appel immédiat de loadFournisseurs()');
             // #endregion
-            loadFournisseurs();
+        loadFournisseurs();
         }
     </script>
 </body>
