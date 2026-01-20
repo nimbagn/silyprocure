@@ -100,14 +100,32 @@ router.delete(
 // Liste des entreprises
 router.get('/', async (req, res) => {
     try {
-        const { type, search, limit } = req.query;
+        const { type, type_entreprise, search, limit, actif } = req.query;
+        // Accepter 'type' ou 'type_entreprise' pour compatibilité
+        const typeFilter = type || type_entreprise;
+        
         let query = 'SELECT * FROM entreprises WHERE 1=1';
         const params = [];
 
         let paramIndex = 1;
-        if (type) {
+        
+        // Filtrer par type d'entreprise
+        if (typeFilter) {
             query += ` AND type_entreprise = $${paramIndex}`;
-            params.push(type);
+            params.push(typeFilter);
+            paramIndex++;
+        }
+        
+        // Filtrer par statut actif (par défaut, ne retourner que les actifs)
+        if (actif !== undefined && actif !== '') {
+            const actifValue = actif === 'true' || actif === '1' || actif === 1;
+            query += ` AND actif = $${paramIndex}`;
+            params.push(actifValue);
+            paramIndex++;
+        } else {
+            // Par défaut, ne retourner que les entreprises actives
+            query += ` AND actif = $${paramIndex}`;
+            params.push(true);
             paramIndex++;
         }
 

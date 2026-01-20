@@ -96,9 +96,8 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
         const reference = generateReference();
         const trackingToken = generateTrackingToken();
 
-        // #region agent log
-        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'contact.js:96',message:'POST /devis-request - Entry',data:{email,nom,articlesCount:articlesParsed?.length,filesCount:req.files?.length,reference},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
+        // Log de la demande (sans télémétrie externe)
+        console.log('📥 Nouvelle demande de devis:', { email, nom, articlesCount: articlesParsed?.length, filesCount: req.files?.length, reference });
 
         // Démarrer une transaction
         const connection = await pool.getConnection();
@@ -183,9 +182,7 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
 
             const demandeId = demandeResult.rows && demandeResult.rows[0] ? demandeResult.rows[0].id : (demandeResult.insertId || demandeResult[0]?.id);
 
-            // #region agent log
-            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'contact.js:180',message:'Demande créée avec succès',data:{demandeId,clientId,reference,articlesCount:articlesParsed.length},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
+            console.log('✅ Demande créée avec succès:', { demandeId, clientId, reference, articlesCount: articlesParsed.length });
 
             // Enregistrer les fichiers joints s'il y en a
             if (req.files && req.files.length > 0) {
@@ -214,9 +211,7 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                         );
                         
                         console.log(`✅ Fichier ${nomFichier} enregistré avec succès`);
-                        // #region agent log
-                        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'contact.js:208',message:'Fichier joint enregistré',data:{demandeId,nomFichier,tailleFichier,typeMime},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                        // #endregion
+                        console.log('📎 Fichier joint enregistré:', { demandeId, nomFichier, tailleFichier, typeMime });
                     } catch (fileError) {
                         console.error('❌ Erreur lors de l\'enregistrement du fichier:', file.originalname, fileError);
                         console.error('❌ Détails erreur:', {
@@ -250,9 +245,7 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
 
             // Commit de la transaction AVANT d'enregistrer l'historique
             await connection.commit();
-            // #region agent log
-            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'contact.js:241',message:'Transaction commitée',data:{demandeId,clientId,reference},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
+            console.log('✅ Transaction commitée:', { demandeId, clientId, reference });
             
             // Enregistrer l'interaction dans l'historique du client (après le commit pour éviter les deadlocks)
             // On le fait de manière asynchrone pour ne pas bloquer la réponse

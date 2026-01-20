@@ -517,6 +517,20 @@
     bindEvents();
     renderDetailPlaceholder();
     wireModalOverlayClose();
+    
+    // Vérifier si un ID est présent dans l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const demandeIdFromUrl = urlParams.get('id');
+    if (demandeIdFromUrl) {
+      const id = Number(demandeIdFromUrl);
+      if (!isNaN(id) && id > 0) {
+        console.log('📋 ID de demande trouvé dans l\'URL:', id);
+        state.selectedId = id;
+        // Charger la demande et ouvrir le modal RFQ si nécessaire
+        await selectDemande(id, { openModal: false });
+      }
+    }
+    
     await Promise.allSettled([loadDemandes(), loadStats(), loadWhatsAppPending()]);
   }
 
@@ -841,80 +855,129 @@
   };
 
   window.openCreateRFQModal = async function openCreateRFQModal(demandeId) {
+    // Si pas d'ID fourni, essayer de récupérer depuis l'URL ou state
     if (!demandeId) {
-      if (window.Toast) Toast.error('ID de demande manquant');
-      return;
+      // Essayer depuis l'URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const idFromUrl = urlParams.get('id');
+      if (idFromUrl) {
+        demandeId = idFromUrl;
+      } else if (state.selectedId) {
+        demandeId = state.selectedId;
+      } else {
+        if (window.Toast) Toast.error('ID de demande manquant. Veuillez sélectionner une demande.');
+        console.error('❌ ID de demande manquant pour openCreateRFQModal');
+        return;
+      }
     }
+    
     currentDemandeId = Number(demandeId);
+    console.log('📋 Ouverture modal RFQ pour demande:', currentDemandeId);
+    
+    // Réinitialiser le formulaire
+    const form = document.getElementById('createRFQForm');
+    if (form) {
+      form.reset();
+    }
     
     // Ouvrir le modal d'abord pour que le container existe
     openOverlayModal('createRFQModal');
     
     // Attendre un peu pour que le DOM soit mis à jour
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     const container = $('fournisseurs-list');
     if (!container) {
+      console.error('❌ Container fournisseurs-list non trouvé');
       if (window.Toast) Toast.error('Erreur: container fournisseurs non trouvé');
+      closeOverlayModal('createRFQModal');
       return;
     }
     
-    container.innerHTML = '<div class="loading">Chargement des fournisseurs...</div>';
+    container.innerHTML = '<div class="loading" style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i> Chargement des fournisseurs...</div>';
+    
+    // Utiliser le paramètre 'type' qui est mappé à 'type_entreprise' dans le backend
     const url = '/api/entreprises?type=fournisseur&limit=1000';
     
     try {
       const response = await apiCall(url);
       
       if (!response) {
-        throw new Error('Aucune réponse de l\'API');
+        throw new Error('Aucune réponse de l\'API. Vérifiez votre connexion.');
       }
       
       if (!response.ok) {
-        throw new Error(`Erreur ${response.status}: ${response.statusText || 'Erreur inconnue'}`);
+        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+        throw new Error(errorData.error || `Erreur ${response.status}: ${response.statusText || 'Erreur inconnue'}`);
       }
       
       let fournisseurs;
       try {
         fournisseurs = await response.json();
       } catch (jsonError) {
+        console.error('Erreur parsing JSON:', jsonError);
         throw new Error('Erreur lors du parsing de la réponse JSON');
       }
       
       // Vérifier à nouveau que le container existe
       const containerCheck = $('fournisseurs-list');
       if (!containerCheck) {
+        console.error('Container fournisseurs-list non trouvé après chargement');
+        if (window.Toast) Toast.error('Erreur: container fournisseurs non trouvé');
         return;
       }
       
       if (!Array.isArray(fournisseurs)) {
-        containerCheck.innerHTML = '<p style="color:#ef4444;text-align:center;padding:1rem;">Erreur: format de réponse invalide</p>';
+        console.error('Réponse non-array:', fournisseurs);
+        containerCheck.innerHTML = '<p style="color:#ef4444;text-align:center;padding:1rem;">Erreur: format de réponse invalide (attendu: tableau)</p>';
         return;
       }
       
-      const htmlContent = fournisseurs.length > 0
-          ? fournisseurs
-              .map(
-              (f) => {
-                if (!f || !f.id) {
-                  return '';
-                }
-                return `
-              <label style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:0.5rem;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='white'">
-                <input type="checkbox" name="fournisseur_ids" value="${f.id}" style="cursor:pointer;">
-                  <div style="flex:1;">
-                    <strong>${escapeHtml(f.nom || '-')}</strong>
-                  ${f.secteur_activite ? `<div style="font-size:0.9rem;color:#64748b;margin-top:0.25rem;">${escapeHtml(f.secteur_activite)}</div>` : ''}
-                  ${f.email ? `<div style="font-size:0.85rem;color:#64748b;margin-top:0.25rem;"><i class="fas fa-envelope"></i> ${escapeHtml(f.email)}</div>` : ''}
-                  </div>
-                </label>
-            `;
-              }
-              )
-            .filter(html => html !== '')
-              .join('')
-        : '<p style="color:#64748b;text-align:center;padding:2rem;">Aucun fournisseur disponible</p>';
+      // Filtrer uniquement les fournisseurs actifs
+      const fournisseursActifs = fournisseurs.filter(f => f.actif !== false && f.actif !== 0);
       
-      containerCheck.innerHTML = htmlContent;
+      if (fournisseursActifs.length === 0) {
+        containerCheck.innerHTML = '<p style="color:#64748b;text-align:center;padding:2rem;"><i class="fas fa-info-circle"></i> Aucun fournisseur actif disponible</p>';
+        return;
+      }
+      
+      fournisseurs = fournisseursActifs;
+      
+      const htmlContent = fournisseurs
+        .map((f) => {
+          if (!f || !f.id) {
+            return '';
+          }
+          const nom = escapeHtml(f.nom || f.raison_sociale || '-');
+          const secteur = f.secteur_activite ? escapeHtml(f.secteur_activite) : null;
+          const email = f.email ? escapeHtml(f.email) : null;
+          const telephone = f.telephone ? escapeHtml(f.telephone) : null;
+          
+          return `
+            <label style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;border:2px solid #e5e7eb;border-radius:12px;margin-bottom:0.5rem;cursor:pointer;transition:all 0.2s;background:white;" 
+                   onmouseover="this.style.background='#f9fafb';this.style.borderColor='#2563eb'" 
+                   onmouseout="this.style.background='white';this.style.borderColor='#e5e7eb'"
+                   onclick="this.querySelector('input[type=checkbox]').checked = !this.querySelector('input[type=checkbox]').checked">
+              <input type="checkbox" name="fournisseur_ids" value="${f.id}" style="cursor:pointer;width:18px;height:18px;accent-color:#2563eb;" 
+                     onchange="this.closest('label').style.borderColor = this.checked ? '#2563eb' : '#e5e7eb'; this.closest('label').style.background = this.checked ? '#eff6ff' : 'white'">
+              <div style="flex:1;">
+                <strong style="color:#1e293b;font-size:1rem;">${nom}</strong>
+                ${secteur ? `<div style="font-size:0.875rem;color:#64748b;margin-top:0.25rem;"><i class="fas fa-industry" style="color:#94a3b8;"></i> ${secteur}</div>` : ''}
+                <div style="display:flex;gap:1rem;margin-top:0.5rem;font-size:0.85rem;color:#64748b;">
+                  ${email ? `<span><i class="fas fa-envelope" style="color:#94a3b8;"></i> ${email}</span>` : ''}
+                  ${telephone ? `<span><i class="fas fa-phone" style="color:#94a3b8;"></i> ${telephone}</span>` : ''}
+                </div>
+              </div>
+            </label>
+          `;
+        })
+        .filter(html => html !== '')
+        .join('');
+      
+      containerCheck.innerHTML = htmlContent || '<p style="color:#64748b;text-align:center;padding:2rem;">Aucun fournisseur disponible</p>';
+      
+      // Afficher un message de succès
+      console.log(`✅ ${fournisseurs.length} fournisseur(s) chargé(s)`);
     } catch (e) {
       console.error('Erreur lors du chargement des fournisseurs:', e);
       if (window.Toast) Toast.error('Erreur lors du chargement des fournisseurs: ' + (e.message || 'Erreur inconnue'));
