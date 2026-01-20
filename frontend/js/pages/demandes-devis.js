@@ -539,6 +539,21 @@
     }
   }
 
+  // Fonction pour faire défiler vers la section WhatsApp
+  window.scrollToWhatsApp = function scrollToWhatsApp() {
+    const section = document.getElementById('whatsapp-pending-section');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Mettre en surbrillance temporairement
+      section.style.transition = 'background-color 0.3s';
+      const originalBg = section.style.backgroundColor;
+      section.style.backgroundColor = '#d1fae5';
+      setTimeout(() => {
+        section.style.backgroundColor = originalBg || '';
+      }, 2000);
+    }
+  };
+
   // Expose minimal API used by HTML buttons
   window.refreshDemandes = function refreshDemandes() {
     loadDemandes().catch((e) => {

@@ -98,6 +98,7 @@ const helmetConfig = helmet({
                 "https://cdnjs.cloudflare.com"
             ],
             connectSrc: ["'self'", "https://cdn.jsdelivr.net"], // Pour les requêtes API et source maps
+            frameSrc: ["'self'", "https://www.openstreetmap.org"], // Pour les iframes OpenStreetMap
         },
     },
     crossOriginEmbedderPolicy: false, // Désactivé pour compatibilité
