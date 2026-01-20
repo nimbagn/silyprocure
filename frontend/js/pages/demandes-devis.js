@@ -442,9 +442,6 @@
 
   async function selectDemande(id, opts = { openModal: true }) {
     state.selectedId = Number(id);
-    // #region agent log - selectDemande
-    fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:selectDemande',message:'selectDemande appelée',data:{id,idType:typeof id,stateSelectedId:state.selectedId,stateSelectedIdType:typeof state.selectedId},timestamp:Date.now(),sessionId:'debug-session',runId:'select-demande',hypothesisId:'L'})}).catch(()=>{});
-    // #endregion
     renderList();
     renderDetailPlaceholder();
     const resp = await apiCall(`/api/contact/demandes/${id}`);
@@ -776,30 +773,18 @@
   };
 
   window.editDemande = async function editDemande(id) {
-    // #region agent log - editDemande entry
-    fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:editDemande:entry',message:'editDemande appelée',data:{id,idType:typeof id,idString:String(id),stateSelectedId:state.selectedId},timestamp:Date.now(),sessionId:'debug-session',runId:'edit-demande',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     try {
       const response = await apiCall(`/api/contact/demandes/${id}`);
       if (!response || !response.ok) throw new Error('Erreur chargement');
       const demande = await response.json();
       const editIdEl = $('edit-id');
-      // #region agent log - editDemande before setting values
-      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:editDemande:before-set',message:'Avant remplissage des champs',data:{demandeId:demande.id,editIdElExists:!!editIdEl,editIdElValue:editIdEl?.value},timestamp:Date.now(),sessionId:'debug-session',runId:'edit-demande',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       if (editIdEl) {
         editIdEl.value = demande.id;
       }
       $('edit-statut').value = demande.statut;
       $('edit-notes').value = demande.notes_internes || '';
-      // #region agent log - editDemande after setting values
-      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:editDemande:after-set',message:'Après remplissage des champs',data:{editIdValue:editIdEl?.value,demandeId:demande.id},timestamp:Date.now(),sessionId:'debug-session',runId:'edit-demande',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       openOverlayModal('editModal');
     } catch (e) {
-      // #region agent log - editDemande error
-      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:editDemande:error',message:'Erreur dans editDemande',data:{error:e.message,stack:e.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'edit-demande',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
       console.error(e);
       if (window.Toast) Toast.error('Erreur lors du chargement');
     }
@@ -809,29 +794,17 @@
     event.preventDefault();
     const editIdEl = $('edit-id');
     let id = editIdEl?.value;
-    // #region agent log - handleUpdateStatut entry
-    fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:entry',message:'handleUpdateStatut appelée',data:{editIdElExists:!!editIdEl,editIdValue:id,editIdValueType:typeof id,stateSelectedId:state.selectedId,stateSelectedIdType:typeof state.selectedId},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     // Fallback: utiliser state.selectedId si edit-id est vide
     if (!id || id.trim() === '') {
       id = state.selectedId;
-      // #region agent log - handleUpdateStatut fallback
-      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:fallback',message:'Utilisation du fallback state.selectedId',data:{idAfterFallback:id,stateSelectedId:state.selectedId},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'F'})}).catch(()=>{});
-      // #endregion
     }
     if (!id) {
-      // #region agent log - handleUpdateStatut no id
-      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:no-id',message:'ID manquant, arrêt',data:{editIdValue:editIdEl?.value,stateSelectedId:state.selectedId},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'G'})}).catch(()=>{});
-      // #endregion
       if (window.Toast) Toast.error('ID de demande manquant');
       return;
     }
     const statut = $('edit-statut')?.value;
     const notes = $('edit-notes')?.value || '';
     const url = `/api/contact/demandes/${id}/statut`;
-    // #region agent log - handleUpdateStatut before api call
-    fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:before-api',message:'Avant appel API',data:{id,url,statut,notesLength:notes.length},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'H'})}).catch(()=>{});
-    // #endregion
     try {
       const response = await apiCall(url, {
         method: 'PATCH',
@@ -840,22 +813,13 @@
       });
       if (!response || !response.ok) {
         const error = response ? await response.json() : {};
-        // #region agent log - handleUpdateStatut api error
-        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:api-error',message:'Erreur API',data:{status:response?.status,statusText:response?.statusText,error,url},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'I'})}).catch(()=>{});
-        // #endregion
         throw new Error(error.error || 'Erreur lors de la mise à jour');
       }
-      // #region agent log - handleUpdateStatut success
-      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:success',message:'Mise à jour réussie',data:{id,statut},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'J'})}).catch(()=>{});
-      // #endregion
       if (window.Toast) Toast.success('Statut mis à jour');
       closeOverlayModal('editModal');
       await loadDemandes();
       if (window.loadStats) loadStats();
     } catch (e) {
-      // #region agent log - handleUpdateStatut catch error
-      fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'demandes-devis.js:handleUpdateStatut:catch-error',message:'Erreur catchée',data:{error:e.message,stack:e.stack?.substring(0,200),url},timestamp:Date.now(),sessionId:'debug-session',runId:'update-statut',hypothesisId:'K'})}).catch(()=>{});
-      // #endregion
       console.error(e);
       if (window.Toast) Toast.error(e.message || 'Erreur lors de la mise à jour');
     }

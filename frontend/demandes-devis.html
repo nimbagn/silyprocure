@@ -392,41 +392,9 @@
         }
 
         async function loadDemandes() {
-            // #region agent log - Début loadDemandes
-            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    location: 'demandes-devis.html:loadDemandes:start',
-                    message: 'loadDemandes appelé',
-                    data: { currentPage, limit, user: JSON.parse(localStorage.getItem('user') || '{}') },
-                    timestamp: Date.now(),
-                    sessionId: 'debug-session',
-                    runId: 'demandes-load',
-                    hypothesisId: 'A'
-                })
-            }).catch(() => {});
-            // #endregion
-            
             try {
                 const statut = document.getElementById('statut-filter')?.value || '';
                 const url = `/api/contact/demandes?page=${currentPage}&limit=${limit}${statut ? '&statut=' + statut : ''}`;
-                
-                // #region agent log - Avant appel API
-                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        location: 'demandes-devis.html:loadDemandes:before-api',
-                        message: 'Avant appel API',
-                        data: { url, statut },
-                        timestamp: Date.now(),
-                        sessionId: 'debug-session',
-                        runId: 'demandes-load',
-                        hypothesisId: 'B'
-                    })
-                }).catch(() => {});
-                // #endregion
                 
                 const tableContainer = document.getElementById('demandes-list');
                 if (tableContainer) {
@@ -435,94 +403,18 @@
                 
                 const response = await apiCall(url);
                 
-                // #region agent log - Réponse API reçue
-                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        location: 'demandes-devis.html:loadDemandes:response',
-                        message: 'Réponse API reçue',
-                        data: { 
-                            ok: response?.ok, 
-                            status: response?.status, 
-                            statusText: response?.statusText,
-                            url: response?.url 
-                        },
-                        timestamp: Date.now(),
-                        sessionId: 'debug-session',
-                        runId: 'demandes-load',
-                        hypothesisId: 'C'
-                    })
-                }).catch(() => {});
-                // #endregion
-                
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
-                    
-                    // #region agent log - Erreur API
-                    fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({
-                            location: 'demandes-devis.html:loadDemandes:error',
-                            message: 'Erreur API',
-                            data: { status: response.status, error: errorData },
-                            timestamp: Date.now(),
-                            sessionId: 'debug-session',
-                            runId: 'demandes-load',
-                            hypothesisId: 'D'
-                        })
-                    }).catch(() => {});
-                    // #endregion
-                    
                     throw new Error(errorData.error || 'Erreur lors du chargement des demandes');
                 }
 
                 const data = await response.json();
-                
-                // #region agent log - Données reçues
-                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        location: 'demandes-devis.html:loadDemandes:success',
-                        message: 'Données chargées avec succès',
-                        data: { 
-                            nbDemandes: data.demandes?.length || 0,
-                            pagination: data.pagination 
-                        },
-                        timestamp: Date.now(),
-                        sessionId: 'debug-session',
-                        runId: 'demandes-load',
-                        hypothesisId: 'E'
-                    })
-                }).catch(() => {});
-                // #endregion
                 
                 allDemandes = data.demandes || [];
                 paginationState = data.pagination || null;
                 applySearchFilter();
                 updatePaginationUI();
             } catch (error) {
-                // #region agent log - Exception catchée
-                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        location: 'demandes-devis.html:loadDemandes:catch',
-                        message: 'Exception catchée',
-                        data: { 
-                            error: error.message,
-                            stack: error.stack?.substring(0, 200)
-                        },
-                        timestamp: Date.now(),
-                        sessionId: 'debug-session',
-                        runId: 'demandes-load',
-                        hypothesisId: 'F'
-                    })
-                }).catch(() => {});
-                // #endregion
-                
                 console.error('Erreur:', error);
                 Toast.error('Erreur lors du chargement des demandes: ' + error.message);
             }
@@ -917,43 +809,8 @@
         }
 
         function displayDemandes(demandes) {
-            // #region agent log - Début displayDemandes
-            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    location: 'demandes-devis.html:displayDemandes:start',
-                    message: 'displayDemandes appelé',
-                    data: { nbDemandes: demandes?.length || 0 },
-                    timestamp: Date.now(),
-                    sessionId: 'debug-session',
-                    runId: 'demandes-load',
-                    hypothesisId: 'G'
-                })
-            }).catch(() => {});
-            // #endregion
-            
             const container = document.getElementById('demandes-list');
             const mobileContainer = document.getElementById('demandes-cards-mobile');
-            
-            // #region agent log - Conteneurs trouvés
-            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    location: 'demandes-devis.html:displayDemandes:containers',
-                    message: 'Conteneurs vérifiés',
-                    data: { 
-                        containerExists: !!container,
-                        mobileContainerExists: !!mobileContainer
-                    },
-                    timestamp: Date.now(),
-                    sessionId: 'debug-session',
-                    runId: 'demandes-load',
-                    hypothesisId: 'H'
-                })
-            }).catch(() => {});
-            // #endregion
             
             if (demandes.length === 0) {
                 container.innerHTML = `
