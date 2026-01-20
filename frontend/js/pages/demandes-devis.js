@@ -956,7 +956,9 @@
     // #endregion
     
     try {
+      console.log('[DEBUG] openCreateRFQModal:api-call-start', {url,timestamp:Date.now()});
       const response = await apiCall(url);
+      console.log('[DEBUG] openCreateRFQModal:api-call-complete', {responseExists:!!response,timestamp:Date.now()});
       
       // #region agent log - API response received
       console.log('[DEBUG] openCreateRFQModal:api-response', {responseExists:!!response,responseOk:response?.ok,responseStatus:response?.status,responseStatusText:response?.statusText,responseType:response?.type});
@@ -971,9 +973,16 @@
       
       if (!response.ok) {
         // #region agent log - Response not OK
-        console.log('[DEBUG] openCreateRFQModal:response-not-ok', {status:response.status,statusText:response.statusText});
+        console.error('[DEBUG] openCreateRFQModal:response-not-ok', {status:response.status,statusText:response.statusText,url});
         // #endregion
-        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+        let errorData;
+        try {
+          const responseText = await response.text();
+          console.error('[DEBUG] openCreateRFQModal:response-body', {responseText:responseText.substring(0,500)});
+          errorData = JSON.parse(responseText);
+        } catch (parseError) {
+          errorData = { error: `Erreur ${response.status}: ${response.statusText || 'Erreur inconnue'}` };
+        }
         throw new Error(errorData.error || `Erreur ${response.status}: ${response.statusText || 'Erreur inconnue'}`);
       }
       
@@ -1076,17 +1085,33 @@
       console.log(`✅ ${fournisseurs.length} fournisseur(s) chargé(s)`);
     } catch (e) {
       // #region agent log - Catch error
-      console.log('[DEBUG] openCreateRFQModal:catch-error', {error:e.message,stack:e.stack?.substring(0,300),name:e.name});
+      console.error('[DEBUG] openCreateRFQModal:catch-error', {error:e.message,stack:e.stack?.substring(0,500),name:e.name,errorString:String(e)});
       // #endregion
-      console.error('Erreur lors du chargement des fournisseurs:', e);
-      if (window.Toast) Toast.error('Erreur lors du chargement des fournisseurs: ' + (e.message || 'Erreur inconnue'));
+      console.error('❌ Erreur lors du chargement des fournisseurs:', e);
+      
       const containerError = $('fournisseurs-list');
+      const errorMessage = e.message || 'Erreur inconnue';
+      
       if (containerError) {
-        containerError.innerHTML = `<p style="color:#ef4444;text-align:center;padding:1rem;">Erreur lors du chargement des fournisseurs<br><small>${escapeHtml(e.message || 'Erreur inconnue')}</small></p>`;
+        containerError.innerHTML = `
+          <div style="color:#ef4444;text-align:center;padding:2rem;border:2px solid #ef4444;border-radius:8px;background:#fef2f2;">
+            <i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:1rem;"></i>
+            <p style="font-weight:bold;margin-bottom:0.5rem;">Erreur lors du chargement des fournisseurs</p>
+            <p style="font-size:0.9rem;color:#991b1b;"><small>${escapeHtml(errorMessage)}</small></p>
+            <button onclick="window.openCreateRFQModal(${currentDemandeId || state.selectedId || ''})" 
+                    style="margin-top:1rem;padding:0.5rem 1rem;background:#ef4444;color:white;border:none;border-radius:4px;cursor:pointer;">
+              <i class="fas fa-redo"></i> Réessayer
+            </button>
+          </div>
+        `;
       } else {
         // #region agent log - Container missing in error
-        console.log('[DEBUG] openCreateRFQModal:container-missing-error', {error:e.message});
+        console.error('[DEBUG] openCreateRFQModal:container-missing-error', {error:e.message,currentDemandeId,stateSelectedId:state.selectedId});
         // #endregion
+      }
+      
+      if (window.Toast) {
+        Toast.error('Erreur lors du chargement des fournisseurs: ' + errorMessage);
       }
     }
   };
