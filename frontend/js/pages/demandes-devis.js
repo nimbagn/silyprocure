@@ -441,6 +441,9 @@
   }
 
   async function selectDemande(id, opts = { openModal: true }) {
+    // #region agent log - selectDemande entry
+    console.log('[DEBUG] selectDemande:entry', {id,idType:typeof id,opts,stateSelectedId:state.selectedId});
+    // #endregion
     state.selectedId = Number(id);
     renderList();
     renderDetailPlaceholder();
@@ -521,14 +524,43 @@
     // Vérifier si un ID est présent dans l'URL
     const urlParams = new URLSearchParams(window.location.search);
     const demandeIdFromUrl = urlParams.get('id');
+    // #region agent log - URL parsing
+    console.log('[DEBUG] init:url-parsing', {windowLocationSearch:window.location.search,urlParamsEntries:Array.from(urlParams.entries()),demandeIdFromUrl,demandeIdType:typeof demandeIdFromUrl});
+    // #endregion
     if (demandeIdFromUrl) {
       const id = Number(demandeIdFromUrl);
       if (!isNaN(id) && id > 0) {
+        // #region agent log - ID found in URL
+        console.log('[DEBUG] init:id-found', {id,stateSelectedId:state.selectedId});
+        // #endregion
         console.log('📋 ID de demande trouvé dans l\'URL:', id);
         state.selectedId = id;
-        // Charger la demande et ouvrir le modal RFQ si nécessaire
+        // Charger la demande
         await selectDemande(id, { openModal: false });
+        
+        // Ouvrir automatiquement le modal RFQ si l'ID est dans l'URL
+        // Attendre que la demande soit chargée avant d'ouvrir le modal
+        setTimeout(() => {
+          console.log('[DEBUG] init:auto-opening-rfq-modal', {id,stateSelectedDemande:state.selectedDemande?.id});
+          if (state.selectedDemande && (state.selectedDemande.statut === 'nouvelle' || state.selectedDemande.statut === 'en_cours')) {
+            if (typeof window.openCreateRFQModal === 'function') {
+              window.openCreateRFQModal(id);
+            } else {
+              console.error('[DEBUG] init:openCreateRFQModal-not-available');
+            }
+          } else {
+            console.log('[DEBUG] init:demande-not-eligible', {statut:state.selectedDemande?.statut});
+          }
+        }, 500);
+      } else {
+        // #region agent log - Invalid ID
+        console.log('[DEBUG] init:invalid-id', {demandeIdFromUrl,parsedId:id,isNaN:isNaN(id)});
+        // #endregion
       }
+    } else {
+      // #region agent log - No ID in URL
+      console.log('[DEBUG] init:no-id', {windowLocationSearch:window.location.search});
+      // #endregion
     }
     
     await Promise.allSettled([loadDemandes(), loadStats(), loadWhatsAppPending()]);
@@ -855,16 +887,28 @@
   };
 
   window.openCreateRFQModal = async function openCreateRFQModal(demandeId) {
+    // #region agent log - Entry
+    const urlParamsEntry = new URLSearchParams(window.location.search);
+    const urlIdEntry = urlParamsEntry.get('id');
+    console.log('[DEBUG] openCreateRFQModal:entry', {demandeId,demandeIdType:typeof demandeId,stateSelectedId:state.selectedId,urlId:urlIdEntry,urlIdType:typeof urlIdEntry,windowLocationSearch:window.location.search,windowLocationHref:window.location.href});
+    // #endregion
+    
     // Si pas d'ID fourni, essayer de récupérer depuis l'URL ou state
     if (!demandeId) {
       // Essayer depuis l'URL
       const urlParams = new URLSearchParams(window.location.search);
       const idFromUrl = urlParams.get('id');
+      // #region agent log - URL fallback
+      console.log('[DEBUG] openCreateRFQModal:url-fallback', {idFromUrl,idFromUrlType:typeof idFromUrl,stateSelectedId:state.selectedId,urlParamsEntries:Array.from(urlParams.entries())});
+      // #endregion
       if (idFromUrl) {
         demandeId = idFromUrl;
       } else if (state.selectedId) {
         demandeId = state.selectedId;
       } else {
+        // #region agent log - Missing ID
+        console.log('[DEBUG] openCreateRFQModal:missing-id', {windowLocationSearch:window.location.search});
+        // #endregion
         if (window.Toast) Toast.error('ID de demande manquant. Veuillez sélectionner une demande.');
         console.error('❌ ID de demande manquant pour openCreateRFQModal');
         return;
@@ -887,7 +931,14 @@
     await new Promise(resolve => setTimeout(resolve, 300));
     
     const container = $('fournisseurs-list');
+    // #region agent log - Container check
+    console.log('[DEBUG] openCreateRFQModal:container-check', {containerExists:!!container,containerId:container?.id,containerInnerHTML:container?.innerHTML?.substring(0,100)});
+    // #endregion
+    
     if (!container) {
+      // #region agent log - Container missing
+      console.log('[DEBUG] openCreateRFQModal:container-missing');
+      // #endregion
       console.error('❌ Container fournisseurs-list non trouvé');
       if (window.Toast) Toast.error('Erreur: container fournisseurs non trouvé');
       closeOverlayModal('createRFQModal');
@@ -899,14 +950,29 @@
     // Utiliser le paramètre 'type' qui est mappé à 'type_entreprise' dans le backend
     const url = '/api/entreprises?type=fournisseur&limit=1000';
     
+    // #region agent log - Before API call
+    const token = localStorage.getItem('token');
+    console.log('[DEBUG] openCreateRFQModal:before-api', {url,hasApiCall:typeof apiCall === 'function',hasToken:!!token,tokenLength:token?.length});
+    // #endregion
+    
     try {
       const response = await apiCall(url);
       
+      // #region agent log - API response received
+      console.log('[DEBUG] openCreateRFQModal:api-response', {responseExists:!!response,responseOk:response?.ok,responseStatus:response?.status,responseStatusText:response?.statusText,responseType:response?.type});
+      // #endregion
+      
       if (!response) {
+        // #region agent log - No response
+        console.log('[DEBUG] openCreateRFQModal:no-response');
+        // #endregion
         throw new Error('Aucune réponse de l\'API. Vérifiez votre connexion.');
       }
       
       if (!response.ok) {
+        // #region agent log - Response not OK
+        console.log('[DEBUG] openCreateRFQModal:response-not-ok', {status:response.status,statusText:response.statusText});
+        // #endregion
         const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
         throw new Error(errorData.error || `Erreur ${response.status}: ${response.statusText || 'Erreur inconnue'}`);
       }
@@ -914,20 +980,36 @@
       let fournisseurs;
       try {
         fournisseurs = await response.json();
+        // #region agent log - JSON parsed
+        console.log('[DEBUG] openCreateRFQModal:json-parsed', {isArray:Array.isArray(fournisseurs),length:Array.isArray(fournisseurs)?fournisseurs.length:'N/A',type:typeof fournisseurs,firstItem:Array.isArray(fournisseurs)&&fournisseurs.length>0?{id:fournisseurs[0].id,nom:fournisseurs[0].nom}:null});
+        // #endregion
       } catch (jsonError) {
+        // #region agent log - JSON parse error
+        console.log('[DEBUG] openCreateRFQModal:json-error', {error:jsonError.message,stack:jsonError.stack?.substring(0,200)});
+        // #endregion
         console.error('Erreur parsing JSON:', jsonError);
         throw new Error('Erreur lors du parsing de la réponse JSON');
       }
       
       // Vérifier à nouveau que le container existe
       const containerCheck = $('fournisseurs-list');
+      // #region agent log - Container check after parse
+      console.log('[DEBUG] openCreateRFQModal:container-after-parse', {containerExists:!!containerCheck,isArray:Array.isArray(fournisseurs),fournisseursLength:Array.isArray(fournisseurs)?fournisseurs.length:0});
+      // #endregion
+      
       if (!containerCheck) {
+        // #region agent log - Container missing after parse
+        console.log('[DEBUG] openCreateRFQModal:container-missing-after');
+        // #endregion
         console.error('Container fournisseurs-list non trouvé après chargement');
         if (window.Toast) Toast.error('Erreur: container fournisseurs non trouvé');
         return;
       }
       
       if (!Array.isArray(fournisseurs)) {
+        // #region agent log - Not array
+        console.log('[DEBUG] openCreateRFQModal:not-array', {type:typeof fournisseurs,value:JSON.stringify(fournisseurs).substring(0,200)});
+        // #endregion
         console.error('Réponse non-array:', fournisseurs);
         containerCheck.innerHTML = '<p style="color:#ef4444;text-align:center;padding:1rem;">Erreur: format de réponse invalide (attendu: tableau)</p>';
         return;
@@ -935,8 +1017,14 @@
       
       // Filtrer uniquement les fournisseurs actifs
       const fournisseursActifs = fournisseurs.filter(f => f.actif !== false && f.actif !== 0);
+      // #region agent log - After filter
+      console.log('[DEBUG] openCreateRFQModal:after-filter', {total:fournisseurs.length,actifs:fournisseursActifs.length});
+      // #endregion
       
       if (fournisseursActifs.length === 0) {
+        // #region agent log - No active suppliers
+        console.log('[DEBUG] openCreateRFQModal:no-active', {total:fournisseurs.length});
+        // #endregion
         containerCheck.innerHTML = '<p style="color:#64748b;text-align:center;padding:2rem;"><i class="fas fa-info-circle"></i> Aucun fournisseur actif disponible</p>';
         return;
       }
@@ -957,13 +1045,13 @@
             <label style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;border:2px solid #e5e7eb;border-radius:12px;margin-bottom:0.5rem;cursor:pointer;transition:all 0.2s;background:white;" 
                    onmouseover="this.style.background='#f9fafb';this.style.borderColor='#2563eb'" 
                    onmouseout="this.style.background='white';this.style.borderColor='#e5e7eb'"
-                   onclick="this.querySelector('input[type=checkbox]').checked = !this.querySelector('input[type=checkbox]').checked">
-              <input type="checkbox" name="fournisseur_ids" value="${f.id}" style="cursor:pointer;width:18px;height:18px;accent-color:#2563eb;" 
-                     onchange="this.closest('label').style.borderColor = this.checked ? '#2563eb' : '#e5e7eb'; this.closest('label').style.background = this.checked ? '#eff6ff' : 'white'">
-              <div style="flex:1;">
-                <strong style="color:#1e293b;font-size:1rem;">${nom}</strong>
+                   onclick="const cb = this.querySelector('input[type=checkbox]'); cb.checked = !cb.checked; cb.dispatchEvent(new Event('change'));">
+              <input type="checkbox" name="fournisseur_ids" value="${f.id}" style="cursor:pointer;width:20px;height:20px;accent-color:#2563eb;flex-shrink:0;" 
+                     onchange="const label = this.closest('label'); label.style.borderColor = this.checked ? '#2563eb' : '#e5e7eb'; label.style.background = this.checked ? '#eff6ff' : 'white'; label.style.borderWidth = this.checked ? '2px' : '2px';">
+              <div style="flex:1;min-width:0;">
+                <strong style="color:#1e293b;font-size:1rem;display:block;">${nom}</strong>
                 ${secteur ? `<div style="font-size:0.875rem;color:#64748b;margin-top:0.25rem;"><i class="fas fa-industry" style="color:#94a3b8;"></i> ${secteur}</div>` : ''}
-                <div style="display:flex;gap:1rem;margin-top:0.5rem;font-size:0.85rem;color:#64748b;">
+                <div style="display:flex;gap:1rem;margin-top:0.5rem;font-size:0.85rem;color:#64748b;flex-wrap:wrap;">
                   ${email ? `<span><i class="fas fa-envelope" style="color:#94a3b8;"></i> ${email}</span>` : ''}
                   ${telephone ? `<span><i class="fas fa-phone" style="color:#94a3b8;"></i> ${telephone}</span>` : ''}
                 </div>
@@ -974,34 +1062,66 @@
         .filter(html => html !== '')
         .join('');
       
+      // #region agent log - Before innerHTML
+      console.log('[DEBUG] openCreateRFQModal:before-innerHTML', {containerExists:!!containerCheck,htmlContentLength:htmlContent?.length,fournisseursCount:fournisseurs.length});
+      // #endregion
+      
       containerCheck.innerHTML = htmlContent || '<p style="color:#64748b;text-align:center;padding:2rem;">Aucun fournisseur disponible</p>';
+      
+      // #region agent log - After innerHTML
+      console.log('[DEBUG] openCreateRFQModal:after-innerHTML', {containerInnerHTML:containerCheck.innerHTML?.substring(0,100)});
+      // #endregion
       
       // Afficher un message de succès
       console.log(`✅ ${fournisseurs.length} fournisseur(s) chargé(s)`);
     } catch (e) {
+      // #region agent log - Catch error
+      console.log('[DEBUG] openCreateRFQModal:catch-error', {error:e.message,stack:e.stack?.substring(0,300),name:e.name});
+      // #endregion
       console.error('Erreur lors du chargement des fournisseurs:', e);
       if (window.Toast) Toast.error('Erreur lors du chargement des fournisseurs: ' + (e.message || 'Erreur inconnue'));
       const containerError = $('fournisseurs-list');
       if (containerError) {
         containerError.innerHTML = `<p style="color:#ef4444;text-align:center;padding:1rem;">Erreur lors du chargement des fournisseurs<br><small>${escapeHtml(e.message || 'Erreur inconnue')}</small></p>`;
+      } else {
+        // #region agent log - Container missing in error
+        console.log('[DEBUG] openCreateRFQModal:container-missing-error', {error:e.message});
+        // #endregion
       }
     }
   };
 
   window.submitCreateRFQ = async function submitCreateRFQ(event) {
     event.preventDefault();
+    console.log('[DEBUG] submitCreateRFQ:entry', {currentDemandeId,stateSelectedId:state.selectedId});
+    
     if (!currentDemandeId) {
       // Fallback: essayer de récupérer depuis state.selectedId
       if (state.selectedId) {
         currentDemandeId = state.selectedId;
+        console.log('[DEBUG] submitCreateRFQ:using-state-id', {currentDemandeId});
       } else {
-      if (window.Toast) Toast.error('ID demande manquant');
-      return;
+        console.log('[DEBUG] submitCreateRFQ:no-demand-id');
+        if (window.Toast) Toast.error('ID demande manquant');
+        return;
       }
     }
-    const checkboxes = document.querySelectorAll('input[name="fournisseur_ids"]:checked');
-    const fournisseur_ids = Array.from(checkboxes).map((cb) => parseInt(cb.value)).filter((n) => Number.isFinite(n));
+    
+    // Récupérer tous les checkboxes (cochés et non cochés pour debug)
+    const allCheckboxes = document.querySelectorAll('input[name="fournisseur_ids"]');
+    const checkedCheckboxes = document.querySelectorAll('input[name="fournisseur_ids"]:checked');
+    console.log('[DEBUG] submitCreateRFQ:checkboxes', {total:allCheckboxes.length,checked:checkedCheckboxes.length});
+    
+    const fournisseur_ids = Array.from(checkedCheckboxes).map((cb) => {
+      const val = parseInt(cb.value);
+      console.log('[DEBUG] submitCreateRFQ:checkbox-value', {value:cb.value,parsed:val,checked:cb.checked});
+      return val;
+    }).filter((n) => Number.isFinite(n));
+    
+    console.log('[DEBUG] submitCreateRFQ:fournisseur-ids', {fournisseur_ids,count:fournisseur_ids.length});
+    
     if (fournisseur_ids.length === 0) {
+      console.log('[DEBUG] submitCreateRFQ:no-suppliers-selected');
       if (window.Toast) Toast.error('Veuillez sélectionner au moins un fournisseur');
       return;
     }
