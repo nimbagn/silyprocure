@@ -450,6 +450,14 @@
     const resp = await apiCall(`/api/contact/demandes/${id}`);
     if (!resp || !resp.ok) throw new Error('Erreur chargement détail');
     const demande = await resp.json();
+    // #region agent log - selectDemande demande loaded
+    console.log('[DEBUG] selectDemande:demande-loaded', {
+      id:demande.id,
+      statut:demande.statut,
+      nom:demande.nom,
+      isEligible:demande.statut === 'nouvelle' || demande.statut === 'en_cours'
+    });
+    // #endregion
     state.selectedDemande = demande;
     renderDetail(demande);
 
