@@ -956,9 +956,22 @@
     // #endregion
     
     try {
-      console.log('[DEBUG] openCreateRFQModal:api-call-start', {url,timestamp:Date.now()});
+      const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+      console.log('[DEBUG] openCreateRFQModal:api-call-start', {
+        url,
+        fullUrl,
+        origin:window.location.origin,
+        hostname:window.location.hostname,
+        isProduction:window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1',
+        timestamp:Date.now()
+      });
       const response = await apiCall(url);
-      console.log('[DEBUG] openCreateRFQModal:api-call-complete', {responseExists:!!response,timestamp:Date.now()});
+      console.log('[DEBUG] openCreateRFQModal:api-call-complete', {
+        responseExists:!!response,
+        responseStatus:response?.status,
+        responseOk:response?.ok,
+        timestamp:Date.now()
+      });
       
       // #region agent log - API response received
       console.log('[DEBUG] openCreateRFQModal:api-response', {responseExists:!!response,responseOk:response?.ok,responseStatus:response?.status,responseStatusText:response?.statusText,responseType:response?.type});
@@ -966,9 +979,22 @@
       
       if (!response) {
         // #region agent log - No response
-        console.log('[DEBUG] openCreateRFQModal:no-response');
+        console.error('[DEBUG] openCreateRFQModal:no-response', {
+          url,
+          hasToken:!!token,
+          tokenLength:token?.length,
+          windowLocation:window.location.href,
+          isAuthenticated:!!localStorage.getItem('token')
+        });
         // #endregion
-        throw new Error('Aucune réponse de l\'API. Vérifiez votre connexion.');
+        
+        // Vérifier si c'est un problème d'authentification
+        const isAuthenticated = !!localStorage.getItem('token');
+        if (!isAuthenticated) {
+          throw new Error('Session expirée. Veuillez vous reconnecter.');
+        }
+        
+        throw new Error('Aucune réponse de l\'API. Vérifiez votre connexion et que vous êtes bien connecté.');
       }
       
       if (!response.ok) {
@@ -1085,23 +1111,55 @@
       console.log(`✅ ${fournisseurs.length} fournisseur(s) chargé(s)`);
     } catch (e) {
       // #region agent log - Catch error
-      console.error('[DEBUG] openCreateRFQModal:catch-error', {error:e.message,stack:e.stack?.substring(0,500),name:e.name,errorString:String(e)});
+      console.error('[DEBUG] openCreateRFQModal:catch-error', {
+        error:e.message,
+        stack:e.stack?.substring(0,500),
+        name:e.name,
+        errorString:String(e),
+        url,
+        hasToken:!!token,
+        windowLocation:window.location.href,
+        isProduction:window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+      });
       // #endregion
       console.error('❌ Erreur lors du chargement des fournisseurs:', e);
       
       const containerError = $('fournisseurs-list');
-      const errorMessage = e.message || 'Erreur inconnue';
+      let errorMessage = e.message || 'Erreur inconnue';
+      
+      // Messages d'erreur plus spécifiques
+      if (errorMessage.includes('Session expirée') || errorMessage.includes('authentification')) {
+        errorMessage = 'Votre session a expiré. Veuillez vous reconnecter.';
+        // Rediriger vers la page de connexion après 2 secondes
+        setTimeout(() => {
+          if (typeof logout === 'function') {
+            logout();
+          } else {
+            window.location.href = 'login.html';
+          }
+        }, 2000);
+      } else if (errorMessage.includes('connexion') || errorMessage.includes('réseau')) {
+        errorMessage = 'Problème de connexion. Vérifiez votre connexion internet.';
+      }
       
       if (containerError) {
         containerError.innerHTML = `
           <div style="color:#ef4444;text-align:center;padding:2rem;border:2px solid #ef4444;border-radius:8px;background:#fef2f2;">
             <i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:1rem;"></i>
             <p style="font-weight:bold;margin-bottom:0.5rem;">Erreur lors du chargement des fournisseurs</p>
-            <p style="font-size:0.9rem;color:#991b1b;"><small>${escapeHtml(errorMessage)}</small></p>
-            <button onclick="window.openCreateRFQModal(${currentDemandeId || state.selectedId || ''})" 
-                    style="margin-top:1rem;padding:0.5rem 1rem;background:#ef4444;color:white;border:none;border-radius:4px;cursor:pointer;">
-              <i class="fas fa-redo"></i> Réessayer
-            </button>
+            <p style="font-size:0.9rem;color:#991b1b;margin-bottom:1rem;"><small>${escapeHtml(errorMessage)}</small></p>
+            <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+              <button onclick="window.openCreateRFQModal(${currentDemandeId || state.selectedId || ''})" 
+                      style="padding:0.5rem 1rem;background:#ef4444;color:white;border:none;border-radius:4px;cursor:pointer;">
+                <i class="fas fa-redo"></i> Réessayer
+              </button>
+              ${errorMessage.includes('Session expirée') ? '' : `
+              <button onclick="window.location.reload()" 
+                      style="padding:0.5rem 1rem;background:#64748b;color:white;border:none;border-radius:4px;cursor:pointer;">
+                <i class="fas fa-sync-alt"></i> Recharger la page
+              </button>
+              `}
+            </div>
           </div>
         `;
       } else {
@@ -1111,7 +1169,7 @@
       }
       
       if (window.Toast) {
-        Toast.error('Erreur lors du chargement des fournisseurs: ' + errorMessage);
+        Toast.error(errorMessage);
       }
     }
   };
