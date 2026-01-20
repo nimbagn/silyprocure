@@ -540,18 +540,41 @@
         
         // Ouvrir automatiquement le modal RFQ si l'ID est dans l'URL
         // Attendre que la demande soit chargée avant d'ouvrir le modal
-        setTimeout(() => {
-          console.log('[DEBUG] init:auto-opening-rfq-modal', {id,stateSelectedDemande:state.selectedDemande?.id});
-          if (state.selectedDemande && (state.selectedDemande.statut === 'nouvelle' || state.selectedDemande.statut === 'en_cours')) {
-            if (typeof window.openCreateRFQModal === 'function') {
-              window.openCreateRFQModal(id);
+        // Utiliser une fonction récursive avec retry pour s'assurer que la demande est chargée
+        let retryCount = 0;
+        const maxRetries = 10;
+        const checkAndOpenModal = () => {
+          retryCount++;
+          console.log('[DEBUG] init:check-and-open-modal', {
+            retryCount,
+            hasSelectedDemande:!!state.selectedDemande,
+            statut:state.selectedDemande?.statut,
+            id:state.selectedDemande?.id,
+            openCreateRFQModalAvailable:typeof window.openCreateRFQModal === 'function'
+          });
+          
+          if (state.selectedDemande) {
+            const statut = state.selectedDemande.statut;
+            if (statut === 'nouvelle' || statut === 'en_cours') {
+              if (typeof window.openCreateRFQModal === 'function') {
+                console.log('[DEBUG] init:opening-rfq-modal-auto', {id,statut});
+                window.openCreateRFQModal(id);
+              } else {
+                console.error('[DEBUG] init:openCreateRFQModal-not-available');
+              }
             } else {
-              console.error('[DEBUG] init:openCreateRFQModal-not-available');
+              console.log('[DEBUG] init:demande-not-eligible', {statut,id:state.selectedDemande.id});
             }
+          } else if (retryCount < maxRetries) {
+            // Réessayer après 200ms si la demande n'est pas encore chargée
+            setTimeout(checkAndOpenModal, 200);
           } else {
-            console.log('[DEBUG] init:demande-not-eligible', {statut:state.selectedDemande?.statut});
+            console.error('[DEBUG] init:demande-not-loaded-after-retries', {retryCount,id});
           }
-        }, 500);
+        };
+        
+        // Démarrer la vérification après un court délai initial
+        setTimeout(checkAndOpenModal, 300);
       } else {
         // #region agent log - Invalid ID
         console.log('[DEBUG] init:invalid-id', {demandeIdFromUrl,parsedId:id,isNaN:isNaN(id)});
