@@ -98,32 +98,55 @@ router.get('/:id', validateId, async (req, res) => {
         const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
         const placeholder = usePostgreSQL ? '$1' : '?';
 
-        const [rfqs] = await pool.execute(
-            `SELECT r.*, 
-                    e1.nom as emetteur_nom, e1.email as emetteur_email,
-                    e2.nom as destinataire_nom, e2.email as destinataire_email
-             FROM rfq r
-             LEFT JOIN entreprises e1 ON r.emetteur_id = e1.id
-             LEFT JOIN entreprises e2 ON r.destinataire_id = e2.id
-             WHERE r.id = ${placeholder}`,
-            [id]
-        );
+        let rfqs;
+        try {
+            const result = await pool.execute(
+                `SELECT r.*, 
+                        e1.nom as emetteur_nom, e1.email as emetteur_email,
+                        e2.nom as destinataire_nom, e2.email as destinataire_email
+                 FROM rfq r
+                 LEFT JOIN entreprises e1 ON r.emetteur_id = e1.id
+                 LEFT JOIN entreprises e2 ON r.destinataire_id = e2.id
+                 WHERE r.id = ${placeholder}`,
+                [id]
+            );
+            // Pour PostgreSQL, pool.execute retourne [rows, mockResult]
+            // Pour MySQL, pool.execute retourne [rows, fields]
+            rfqs = Array.isArray(result[0]) ? result[0] : result;
+        } catch (sqlError) {
+            console.error('Erreur SQL récupération RFQ:', sqlError.message);
+            console.error('Query:', `SELECT r.* FROM rfq r WHERE r.id = ${placeholder}`);
+            console.error('Params:', [id]);
+            console.error('usePostgreSQL:', usePostgreSQL);
+            throw sqlError;
+        }
 
-        if (rfqs.length === 0) {
+        if (!rfqs || rfqs.length === 0) {
             return res.status(404).json({ error: 'RFQ non trouvée' });
         }
 
         const rfq = rfqs[0];
 
         // Récupérer les lignes
-        const [lignes] = await pool.execute(
-            `SELECT * FROM rfq_lignes WHERE rfq_id = ${placeholder} ORDER BY ordre`,
-            [id]
-        );
-        rfq.lignes = lignes;
+        let lignes;
+        try {
+            const lignesResult = await pool.execute(
+                `SELECT * FROM rfq_lignes WHERE rfq_id = ${placeholder} ORDER BY ordre`,
+                [id]
+            );
+            // Pour PostgreSQL, pool.execute retourne [rows, mockResult]
+            // Pour MySQL, pool.execute retourne [rows, fields]
+            lignes = Array.isArray(lignesResult[0]) ? lignesResult[0] : lignesResult;
+        } catch (sqlError) {
+            console.error('Erreur SQL récupération lignes RFQ:', sqlError.message);
+            lignes = []; // Continuer même si les lignes ne peuvent pas être chargées
+        }
+        
+        rfq.lignes = lignes || [];
 
         res.json(rfq);
     } catch (error) {
+        console.error('Erreur récupération RFQ:', error);
         res.status(500).json({ error: error.message });
     }
 });
