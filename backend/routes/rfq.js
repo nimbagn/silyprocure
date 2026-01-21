@@ -11,9 +11,13 @@ async function generateRFQNumber() {
     const year = new Date().getFullYear();
     const prefix = `RFQ-${year}-`;
     
+    // Détecter le type de base de données
+    const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+    const placeholder = usePostgreSQL ? '$1' : '?';
+    
     // Trouver le dernier numéro de l'année
     const [lastRFQ] = await pool.execute(
-        `SELECT numero FROM rfq WHERE numero LIKE ? ORDER BY numero DESC LIMIT 1`,
+        `SELECT numero FROM rfq WHERE numero LIKE ${placeholder} ORDER BY numero DESC LIMIT 1`,
         [`${prefix}%`]
     );
     
@@ -42,6 +46,10 @@ router.get('/generate-number', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const { statut, emetteur_id, destinataire_id } = req.query;
+        
+        // Détecter le type de base de données
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        
         let query = `
             SELECT r.*, 
                    e1.nom as emetteur_nom,
@@ -52,20 +60,24 @@ router.get('/', async (req, res) => {
             WHERE 1=1
         `;
         const params = [];
+        let paramIndex = 1;
 
         if (statut) {
-            query += ' AND r.statut = ?';
+            query += usePostgreSQL ? ` AND r.statut = $${paramIndex}` : ' AND r.statut = ?';
             params.push(statut);
+            paramIndex++;
         }
 
         if (emetteur_id) {
-            query += ' AND r.emetteur_id = ?';
+            query += usePostgreSQL ? ` AND r.emetteur_id = $${paramIndex}` : ' AND r.emetteur_id = ?';
             params.push(emetteur_id);
+            paramIndex++;
         }
 
         if (destinataire_id) {
-            query += ' AND r.destinataire_id = ?';
+            query += usePostgreSQL ? ` AND r.destinataire_id = $${paramIndex}` : ' AND r.destinataire_id = ?';
             params.push(destinataire_id);
+            paramIndex++;
         }
 
         query += ' ORDER BY r.date_emission DESC';
@@ -82,6 +94,10 @@ router.get('/:id', validateId, async (req, res) => {
     try {
         const { id } = req.params;
 
+        // Détecter le type de base de données
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        const placeholder = usePostgreSQL ? '$1' : '?';
+
         const [rfqs] = await pool.execute(
             `SELECT r.*, 
                     e1.nom as emetteur_nom, e1.email as emetteur_email,
@@ -89,7 +105,7 @@ router.get('/:id', validateId, async (req, res) => {
              FROM rfq r
              LEFT JOIN entreprises e1 ON r.emetteur_id = e1.id
              LEFT JOIN entreprises e2 ON r.destinataire_id = e2.id
-             WHERE r.id = ?`,
+             WHERE r.id = ${placeholder}`,
             [id]
         );
 
@@ -101,7 +117,7 @@ router.get('/:id', validateId, async (req, res) => {
 
         // Récupérer les lignes
         const [lignes] = await pool.execute(
-            'SELECT * FROM rfq_lignes WHERE rfq_id = ? ORDER BY ordre',
+            `SELECT * FROM rfq_lignes WHERE rfq_id = ${placeholder} ORDER BY ordre`,
             [id]
         );
         rfq.lignes = lignes;
@@ -130,7 +146,10 @@ router.post('/', validateRFQ, async (req, res) => {
         // (la table rfq.emetteur_id référence utilisateurs.id, pas entreprises.id)
         const emetteur_id = req.user.id;
 
-        // Convertir tous les paramètres undefined en null pour MySQL
+        // Détecter le type de base de données
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+
+        // Convertir tous les paramètres undefined en null
         const params = [
             numero || null,
             date_emission || null,
@@ -148,22 +167,32 @@ router.post('/', validateRFQ, async (req, res) => {
             centre_cout_id || null
         ];
 
-        const [rfqRows, rfqResult] = await pool.execute(
-            `INSERT INTO rfq (numero, date_emission, date_limite_reponse, emetteur_id, destinataire_id, 
+        const insertQuery = usePostgreSQL
+            ? `INSERT INTO rfq (numero, date_emission, date_limite_reponse, emetteur_id, destinataire_id, 
               contact_destinataire_id, categorie_id, description, lieu_livraison_id, date_livraison_souhaitee,
               incoterms, conditions_paiement, projet_id, centre_cout_id, statut)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'brouillon')`,
-            params
-        );
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'brouillon') RETURNING id`
+            : `INSERT INTO rfq (numero, date_emission, date_limite_reponse, emetteur_id, destinataire_id, 
+              contact_destinataire_id, categorie_id, description, lieu_livraison_id, date_livraison_souhaitee,
+              incoterms, conditions_paiement, projet_id, centre_cout_id, statut)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'brouillon')`;
 
-        const rfq_id = rfqResult.insertId;
+        const [rfqRows, rfqResult] = await pool.execute(insertQuery, params);
+
+        // Récupérer l'ID selon le type de base de données
+        const rfq_id = usePostgreSQL 
+            ? (rfqResult.rows && rfqResult.rows[0] ? rfqResult.rows[0].id : rfqResult[0]?.id)
+            : rfqResult.insertId;
 
         // Insérer les lignes
         if (lignes && lignes.length > 0) {
+            const lignePlaceholder = usePostgreSQL 
+                ? '($1, $2, $3, $4, $5, $6, $7, $8)'
+                : '(?, ?, ?, ?, ?, ?, ?, ?)';
+            
             for (const ligne of lignes) {
-                // Convertir undefined en null pour MySQL
                 await pool.execute(
-                    'INSERT INTO rfq_lignes (rfq_id, produit_id, reference, description, quantite, unite, specifications, ordre) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                    `INSERT INTO rfq_lignes (rfq_id, produit_id, reference, description, quantite, unite, specifications, ordre) VALUES ${lignePlaceholder}`,
                     [
                         rfq_id,
                         ligne.produit_id || null,
@@ -194,13 +223,18 @@ router.put('/:id', validateId, validateRFQ, async (req, res) => {
             incoterms, conditions_paiement, projet_id, centre_cout_id, lignes
         } = req.body;
 
+        // Détecter le type de base de données
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        const placeholder = usePostgreSQL ? '$1' : '?';
+        const idPlaceholder = usePostgreSQL ? '$13' : '?';
+
         // Mettre à jour la RFQ
         await pool.execute(
             `UPDATE rfq SET 
-                date_emission = ?, date_limite_reponse = ?, destinataire_id = ?, contact_destinataire_id = ?,
-                categorie_id = ?, description = ?, lieu_livraison_id = ?, date_livraison_souhaitee = ?,
-                incoterms = ?, conditions_paiement = ?, projet_id = ?, centre_cout_id = ?
-             WHERE id = ?`,
+                date_emission = ${usePostgreSQL ? '$1' : '?'}, date_limite_reponse = ${usePostgreSQL ? '$2' : '?'}, destinataire_id = ${usePostgreSQL ? '$3' : '?'}, contact_destinataire_id = ${usePostgreSQL ? '$4' : '?'},
+                categorie_id = ${usePostgreSQL ? '$5' : '?'}, description = ${usePostgreSQL ? '$6' : '?'}, lieu_livraison_id = ${usePostgreSQL ? '$7' : '?'}, date_livraison_souhaitee = ${usePostgreSQL ? '$8' : '?'},
+                incoterms = ${usePostgreSQL ? '$9' : '?'}, conditions_paiement = ${usePostgreSQL ? '$10' : '?'}, projet_id = ${usePostgreSQL ? '$11' : '?'}, centre_cout_id = ${usePostgreSQL ? '$12' : '?'}
+             WHERE id = ${idPlaceholder}`,
             [
                 date_emission, date_limite_reponse, destinataire_id, contact_destinataire_id,
                 categorie_id, description, lieu_livraison_id, date_livraison_souhaitee,
@@ -209,13 +243,17 @@ router.put('/:id', validateId, validateRFQ, async (req, res) => {
         );
 
         // Supprimer les anciennes lignes
-        await pool.execute('DELETE FROM rfq_lignes WHERE rfq_id = ?', [id]);
+        await pool.execute(`DELETE FROM rfq_lignes WHERE rfq_id = ${placeholder}`, [id]);
 
         // Insérer les nouvelles lignes
         if (lignes && lignes.length > 0) {
+            const lignePlaceholder = usePostgreSQL 
+                ? '($1, $2, $3, $4, $5, $6, $7, $8)'
+                : '(?, ?, ?, ?, ?, ?, ?, ?)';
+            
             for (const ligne of lignes) {
                 await pool.execute(
-                    'INSERT INTO rfq_lignes (rfq_id, produit_id, reference, description, quantite, unite, specifications, ordre) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                    `INSERT INTO rfq_lignes (rfq_id, produit_id, reference, description, quantite, unite, specifications, ordre) VALUES ${lignePlaceholder}`,
                     [id, ligne.produit_id, ligne.reference, ligne.description, ligne.quantite, ligne.unite || 'unité', ligne.specifications, ligne.ordre || 0]
                 );
             }
@@ -233,7 +271,12 @@ router.patch('/:id/statut', validateId, async (req, res) => {
         const { id } = req.params;
         const { statut } = req.body;
 
-        await pool.execute('UPDATE rfq SET statut = ? WHERE id = ?', [statut, id]);
+        // Détecter le type de base de données
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        const placeholder1 = usePostgreSQL ? '$1' : '?';
+        const placeholder2 = usePostgreSQL ? '$2' : '?';
+
+        await pool.execute(`UPDATE rfq SET statut = ${placeholder1} WHERE id = ${placeholder2}`, [statut, id]);
         res.json({ message: 'Statut mis à jour avec succès' });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -245,11 +288,15 @@ router.delete('/:id', validateId, async (req, res) => {
     try {
         const { id } = req.params;
         
+        // Détecter le type de base de données
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        const placeholder = usePostgreSQL ? '$1' : '?';
+        
         // Supprimer d'abord les lignes
-        await pool.execute('DELETE FROM rfq_lignes WHERE rfq_id = ?', [id]);
+        await pool.execute(`DELETE FROM rfq_lignes WHERE rfq_id = ${placeholder}`, [id]);
         
         // Puis supprimer la RFQ
-        await pool.execute('DELETE FROM rfq WHERE id = ?', [id]);
+        await pool.execute(`DELETE FROM rfq WHERE id = ${placeholder}`, [id]);
         
         res.json({ message: 'RFQ supprimée avec succès' });
     } catch (error) {

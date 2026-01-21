@@ -300,19 +300,11 @@ if (process.env.DATABASE_URL) {
         // IMPORTANT: La regex doit capturer les placeholders dans l'ordre, y compris $10, $11, etc.
         const hasPostgresPlaceholders = /\$\d+/.test(query);
         if (hasPostgresPlaceholders) {
-            // #region agent log
-            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'database.js:300',message:'convertPostgresToMySQL entry',data:{queryLength:query?.length,queryPreview:query?.substring(0,200),paramsCount:params?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
-            
             // Extraire tous les placeholders PostgreSQL dans l'ordre d'apparition
             // Utiliser une regex globale pour trouver tous les placeholders
             // NOTE: placeholdersOrder est déjà déclaré au début de la fonction, ne pas le redéclarer ici
             const placeholderRegex = /\$(\d+)/g;
             let match;
-            
-            // #region agent log
-            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'database.js:308',message:'Before placeholder extraction',data:{queryFull:query,hasNewlines:query?.includes('\n')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
             
             // D'abord, trouver tous les placeholders pour connaître l'ordre
             // Utiliser matchAll() pour une extraction plus fiable (ES2020)
@@ -333,14 +325,6 @@ if (process.env.DATABASE_URL) {
                 }
             }
             
-            // #region agent log
-            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'database.js:332',message:'After matchAll extraction',data:{placeholdersOrder,count:placeholdersOrder.length,queryContainsDollar10:query.includes('$10'),queryContainsDollar14:query.includes('$14'),queryLength:query.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
-            
-            // #region agent log
-            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'database.js:319',message:'Placeholders extracted',data:{placeholdersOrder,count:placeholdersOrder.length,queryLength:query.length,queryEnd:query.substring(Math.max(0,query.length-200)),maxPlaceholder:placeholdersOrder.length>0?Math.max(...placeholdersOrder):0,paramsCount:params?.length,queryHasDollar10:query.includes('$10'),queryHasDollar14:query.includes('$14')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
-            
             // Ensuite, remplacer tous les placeholders par ?
             // Utiliser une fonction de remplacement pour s'assurer que tous sont remplacés
             mysqlQuery = mysqlQuery.replace(/\$(\d+)/g, '?');
@@ -348,14 +332,6 @@ if (process.env.DATABASE_URL) {
             // Compter les ? dans la requête convertie
             const questionMarkCount = (mysqlQuery.match(/\?/g) || []).length;
             
-            // #region agent log
-            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'database.js:333',message:'After placeholder replacement',data:{questionMarkCount,placeholdersOrderLength:placeholdersOrder.length,expectedQuestionMarks:placeholdersOrder.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
-            
-            // Debug: afficher les placeholders trouvés
-            if (placeholdersOrder.length > 0) {
-                console.log('🔍 Placeholders trouvés:', placeholdersOrder, 'Max:', Math.max(...placeholdersOrder), 'Params fournis:', params?.length || 0);
-            }
             
             // Réorganiser les paramètres selon l'ordre des placeholders
             if (params && params.length > 0 && placeholdersOrder.length > 0) {
@@ -380,11 +356,6 @@ if (process.env.DATABASE_URL) {
                     throw new Error(`Placeholder $${idx} (index ${paramIndex}) hors limites. ${params.length} paramètre(s) fourni(s), mais placeholder $${idx} demandé.`);
                 });
                 
-                // #region agent log
-                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'database.js:352',message:'Parameter mapping result',data:{placeholdersOrder,paramsLength:params.length,mysqlParamsLength:mysqlParams.length,expectedCount:placeholdersOrder.length,mysqlParamsPreview:mysqlParams.slice(0,5)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
-                
-                console.log('🔍 Paramètres convertis:', mysqlParams.length, 'sur', params.length, 'originaux');
             } else if (!params || params.length === 0) {
                 mysqlParams = [];
             } else {
@@ -459,11 +430,6 @@ if (process.env.DATABASE_URL) {
     
     // Wrapper pour convertir les requêtes PostgreSQL en MySQL
     mysqlPool.execute = async (query, params) => {
-        // Debug: vérifier que le wrapper est appelé
-        if (typeof query === 'string' && query.includes('$1')) {
-            console.log('🔧 Wrapper MySQL appelé avec placeholder $1');
-        }
-        
         const { mysqlQuery, mysqlParams, isInsert, hasPostgresPlaceholders, placeholdersOrder } = convertPostgresToMySQL(query, params);
         
         // Debug: afficher la requête convertie si nécessaire
@@ -497,17 +463,6 @@ if (process.env.DATABASE_URL) {
                     mysqlParams = mysqlParams.slice(0, questionMarkCount);
                 }
             }
-            
-            console.log('🔧 MySQL Conversion:', {
-                original: query.substring(0, 300) + (query.length > 300 ? '...' : ''),
-                converted: mysqlQuery.substring(0, 300) + (mysqlQuery.length > 300 ? '...' : ''),
-                paramsCount: params?.length || 0,
-                mysqlParamsCount: mysqlParams.length,
-                questionMarkCount: questionMarkCount,
-                placeholdersFound: placeholdersOrder,
-                mysqlParams: mysqlParams,
-                allParams: params
-            });
         }
         
         // Vérification finale avant exécution

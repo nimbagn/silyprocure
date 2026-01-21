@@ -229,10 +229,11 @@ class FileUploadManager {
         if (mimeType && mimeType.startsWith('text/')) return icons['text'];
         return icons[mimeType] || '<i class="fas fa-file"></i>';
     }
-    
-    // Exposer la classe globalement
-    window.FileUploadManager = FileUploadManager;
 }
+
+// Exposer la classe globalement
+window.FileUploadManager = FileUploadManager;
+} // Fermeture du bloc if (typeof FileUploadManager === 'undefined')
 
 // Fonction helper pour initialiser le gestionnaire de fichiers
 function initFileUpload(typeDocument, documentId, containerId) {
@@ -244,4 +245,7 @@ function initFileUpload(typeDocument, documentId, containerId) {
     window.fileUploadManager.render(containerId);
     return window.fileUploadManager;
 }
+
+// Exposer la fonction globalement
+window.initFileUpload = initFileUpload;
 

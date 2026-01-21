@@ -110,15 +110,6 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
             const villeCol = usePostgreSQL ? 'ville_livraison' : 'ville';
             const paysCol = usePostgreSQL ? 'pays_livraison' : 'pays';
             
-            console.log('🔍 Détection DB:', {
-                DATABASE_URL: !!process.env.DATABASE_URL,
-                DB_TYPE: process.env.DB_TYPE,
-                usePostgreSQL,
-                adresseCol,
-                villeCol,
-                paysCol
-            });
-            
             // Créer ou récupérer le client dans la table clients
             let clientId = null;
             
@@ -151,8 +142,6 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                 // Créer un nouveau client
                 const insertSQL = `INSERT INTO clients (nom, email, telephone, entreprise, ${adresseCol}, ${villeCol}, ${paysCol}, date_derniere_demande, nombre_demandes, statut)
                      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), 1, 'prospect') RETURNING id`;
-                console.log('🔍 SQL INSERT clients:', insertSQL);
-                console.log('🔍 Colonnes utilisées:', { adresseCol, villeCol, paysCol });
                 
                 const [clientRows, clientResult] = await connection.execute(
                     insertSQL,
@@ -166,7 +155,6 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
             // (peu importe MySQL ou PostgreSQL)
             const demandeInsertSQL = `INSERT INTO demandes_devis (client_id, nom, email, telephone, entreprise, message, adresse_livraison, ville_livraison, pays_livraison, latitude, longitude, statut, reference, token_suivi, mode_notification)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`;
-            console.log('🔍 SQL INSERT demandes_devis:', demandeInsertSQL);
             
             const [demandeRows, demandeResult] = await connection.execute(
                 demandeInsertSQL,
@@ -267,13 +255,10 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
 
             // Récupérer la demande créée avec ses lignes
             // Utiliser GROUP_CONCAT pour MySQL, STRING_AGG pour PostgreSQL
-            console.log('🔍🔍🔍 DÉBUT RÉCUPÉRATION DEMANDE - usePostgreSQL:', usePostgreSQL, 'demandeId:', demandeId);
-            
             let articlesQuery;
             let queryParams;
             
             if (usePostgreSQL) {
-                console.log('🔍🔍🔍 UTILISATION POSTGRESQL - STRING_AGG');
                 articlesQuery = `SELECT d.*, 
                         STRING_AGG(
                             l.description || ' (' || l.quantite || ' ' || l.unite || ' - ' || COALESCE(l.secteur, '') || ')',
@@ -285,7 +270,6 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                  GROUP BY d.id`;
                 queryParams = [demandeId];
             } else {
-                console.log('🔍🔍🔍 UTILISATION MYSQL - GROUP_CONCAT');
                 // MySQL: utiliser GROUP_CONCAT avec CONCAT et IFNULL
                 articlesQuery = `SELECT d.*, 
                         GROUP_CONCAT(
@@ -298,10 +282,6 @@ router.post('/devis-request', upload.array('fichiers', 10), async (req, res) => 
                  GROUP BY d.id`;
                 queryParams = [demandeId];
             }
-            
-            console.log('🔍🔍🔍 QUERY FINALE:', articlesQuery.substring(0, 200));
-            console.log('🔍🔍🔍 Contient STRING_AGG?', articlesQuery.includes('STRING_AGG'));
-            console.log('🔍🔍🔍 Contient GROUP_CONCAT?', articlesQuery.includes('GROUP_CONCAT'));
             
             const [demandes] = await pool.execute(articlesQuery, queryParams);
             const demande = demandes[0];
@@ -457,22 +437,6 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
     try {
         const { statut, page = 1, limit = 50 } = req.query;
         
-        // #region agent log - Début route /demandes
-        const fs = require('fs');
-        const logPath = '/Users/dantawi/Documents/SilyProcure/.cursor/debug.log';
-        try {
-            fs.appendFileSync(logPath, JSON.stringify({
-                location: 'backend/routes/contact.js:/demandes:start',
-                message: 'Route /demandes appelée',
-                data: { statut, page, limit, user: req.user?.email },
-                timestamp: Date.now(),
-                sessionId: 'debug-session',
-                runId: 'demandes-backend',
-                hypothesisId: 'A'
-            }) + '\n');
-        } catch (logErr) {}
-        // #endregion
-        
         // S'assurer que page et limit sont des nombres entiers valides
         const pageNum = Math.max(1, parseInt(page) || 1);
         const limitNum = Math.max(1, Math.min(1000, parseInt(limit) || 50)); // Limiter à 1000 max
@@ -505,61 +469,15 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
         // Note: LIMIT et OFFSET ne peuvent pas être des paramètres préparés dans certaines versions MySQL
         // Utiliser l'interpolation directe après validation
         query += ` ORDER BY d.date_creation DESC LIMIT ${limitNum} OFFSET ${offset}`;
-
-        console.log('🔍🔍🔍 Route /demandes - Query SQL:', query.substring(0, 300));
-        console.log('🔍🔍🔍 Route /demandes - usePostgreSQL:', usePostgreSQL, 'params:', params);
-
-        // #region agent log - Avant exécution SQL
-        try {
-            fs.appendFileSync(logPath, JSON.stringify({
-                location: 'backend/routes/contact.js:/demandes:before-sql',
-                message: 'Avant exécution SQL',
-                data: { query: query.substring(0, 200), params, limitNum, offset },
-                timestamp: Date.now(),
-                sessionId: 'debug-session',
-                runId: 'demandes-backend',
-                hypothesisId: 'B'
-            }) + '\n');
-        } catch (logErr) {}
-        // #endregion
-
-        console.log('🔍🔍🔍 Route /demandes - AVANT EXÉCUTION SQL - query:', query.substring(0, 400));
-        console.log('🔍🔍🔍 Route /demandes - AVANT EXÉCUTION SQL - params:', params);
-        console.log('🔍🔍🔍 Route /demandes - AVANT EXÉCUTION SQL - usePostgreSQL:', usePostgreSQL);
-        console.log('🔍🔍🔍 Route /demandes - AVANT EXÉCUTION SQL - placeholder:', placeholder);
         
         let demandes;
         try {
-            console.log('🔍🔍🔍 Route /demandes - APPEL pool.execute...');
             const result = await pool.execute(query, params);
             demandes = result[0];
-            console.log('🔍🔍🔍 Route /demandes - SQL EXÉCUTÉ AVEC SUCCÈS - nbDemandes:', demandes?.length || 0);
-            if (demandes && demandes.length > 0) {
-                console.log('🔍🔍🔍 Route /demandes - Première demande ID:', demandes[0].id);
-            } else {
-                console.log('🔍🔍🔍 Route /demandes - AUCUNE DEMANDE TROUVÉE');
-            }
         } catch (sqlError) {
-            console.error('🔍🔍🔍 Route /demandes - ERREUR SQL:', sqlError.message);
-            console.error('🔍🔍🔍 Route /demandes - ERREUR SQL - code:', sqlError.code);
-            console.error('🔍🔍🔍 Route /demandes - ERREUR SQL - sqlState:', sqlError.sqlState);
-            console.error('🔍🔍🔍 Route /demandes - ERREUR SQL - sql:', sqlError.sql?.substring(0, 500));
+            console.error('Erreur SQL récupération demandes:', sqlError.message);
             throw sqlError;
         }
-        
-        // #region agent log - Après exécution SQL
-        try {
-            fs.appendFileSync(logPath, JSON.stringify({
-                location: 'backend/routes/contact.js:/demandes:after-sql',
-                message: 'SQL exécuté avec succès',
-                data: { nbDemandes: demandes?.length || 0 },
-                timestamp: Date.now(),
-                sessionId: 'debug-session',
-                runId: 'demandes-backend',
-                hypothesisId: 'C'
-            }) + '\n');
-        } catch (logErr) {}
-        // #endregion
 
         // Compter le total
         // Réutiliser usePostgreSQL et placeholder déjà déclarés plus haut
@@ -570,14 +488,8 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
             countParams.push(statut);
         }
         
-        console.log('🔍🔍🔍 Route /demandes - COUNT QUERY:', countQuery);
-        console.log('🔍🔍🔍 Route /demandes - COUNT PARAMS:', countParams);
-        
         const [countResult] = await pool.execute(countQuery, countParams);
         const total = countResult[0].total;
-
-        console.log('🔍🔍🔍 Route /demandes - TOTAL:', total);
-        console.log('🔍🔍🔍 Route /demandes - AVANT res.json - demandes.length:', demandes?.length || 0);
 
         const responseData = {
             demandes,
@@ -589,31 +501,9 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
             }
         };
         
-        console.log('🔍🔍🔍 Route /demandes - ENVOI RÉPONSE - pagination:', responseData.pagination);
         res.json(responseData);
 
     } catch (error) {
-        // #region agent log - Erreur catchée
-        const fs = require('fs');
-        const logPath = '/Users/dantawi/Documents/SilyProcure/.cursor/debug.log';
-        try {
-            fs.appendFileSync(logPath, JSON.stringify({
-                location: 'backend/routes/contact.js:/demandes:error',
-                message: 'Erreur catchée',
-                data: { 
-                    error: error.message,
-                    stack: error.stack?.substring(0, 300),
-                    code: error.code,
-                    sqlState: error.sqlState
-                },
-                timestamp: Date.now(),
-                sessionId: 'debug-session',
-                runId: 'demandes-backend',
-                hypothesisId: 'D'
-            }) + '\n');
-        } catch (logErr) {}
-        // #endregion
-        
         console.error('Erreur récupération demandes:', error);
         res.status(500).json({ error: error.message });
     }
@@ -660,9 +550,6 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
     try {
         const { id } = req.params;
         const { fournisseur_ids, date_limite_reponse, date_livraison_souhaitee, incoterms, conditions_paiement } = req.body;
-        // #region agent log
-        fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'contact.js:474',message:'POST /create-rfq - Entry',data:{demandeId:id,fournisseursCount:fournisseur_ids?.length},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
 
         // Vérifier que la demande existe
         const [demandes] = await pool.execute(
@@ -817,9 +704,6 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
 
             await connection.commit();
             // commit() libère déjà le client, pas besoin de release()
-            // #region agent log
-            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'contact.js:630',message:'RFQ créées avec succès',data:{demandeId:id,rfqsCreated:rfqsCreated.length,rfqs:rfqsCreated.map(r=>r.numero)},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-            // #endregion
 
             // Notifier les fournisseurs par WhatsApp (en arrière-plan)
             for (const rfq of rfqsCreated) {
