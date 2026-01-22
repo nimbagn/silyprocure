@@ -459,33 +459,66 @@
         
         try {
           console.log(`[Frontend] Appel API /api/contact/demandes/${id}`);
-          const resp = await apiCall(`/api/contact/demandes/${id}`);
+          
+          // Ajouter un timeout pour éviter que ça tourne indéfiniment
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Timeout: La requête a pris trop de temps (>10s)')), 10000);
+          });
+          
+          const apiPromise = apiCall(`/api/contact/demandes/${id}`);
+          const resp = await Promise.race([apiPromise, timeoutPromise]);
+          
           console.log(`[Frontend] Réponse API reçue:`, { exists: !!resp, ok: resp?.ok, status: resp?.status });
+          
       if (!resp) {
-        const errorMsg = 'Pas de réponse du serveur. Vérifiez votre connexion.';
+        const errorMsg = 'Pas de réponse du serveur. Vérifiez votre connexion et que vous êtes bien connecté.';
         console.error('[ERROR] selectDemande:no-response', {id});
         if (window.Toast) Toast.error(errorMsg);
-        const panel = $('detail-panel-body') || $('detail-modal-body');
-        if (panel) {
-          panel.innerHTML = `<div class="p-8 text-center text-red-600"><i class="fas fa-exclamation-triangle text-3xl mb-4"></i><p>${errorMsg}</p></div>`;
-        }
+        const desktopPanel = $('detail-panel-body');
+        const mobilePanel = $('detail-modal-body');
+        const errorHtml = `<div class="p-8 text-center text-red-600"><i class="fas fa-exclamation-triangle text-3xl mb-4"></i><p class="font-semibold mb-2">${errorMsg}</p><p class="text-sm text-red-500">Vérifiez votre connexion internet et réessayez.</p></div>`;
+        if (desktopPanel) desktopPanel.innerHTML = errorHtml;
+        if (mobilePanel) mobilePanel.innerHTML = errorHtml;
         return;
       }
       
       if (!resp.ok) {
         let errorMsg = 'Erreur lors du chargement des détails';
+        let errorDetails = '';
         try {
           const errorData = await resp.json();
           errorMsg = errorData.error || errorMsg;
+          errorDetails = errorData.message || '';
         } catch (e) {
           errorMsg = `Erreur HTTP ${resp.status}: ${resp.statusText}`;
+          if (resp.status === 401) {
+            errorMsg = 'Session expirée. Veuillez vous reconnecter.';
+            errorDetails = 'Vous allez être redirigé vers la page de connexion...';
+            setTimeout(() => {
+              if (window.logout) window.logout();
+            }, 2000);
+          } else if (resp.status === 403) {
+            errorMsg = 'Accès refusé. Vous n\'avez pas les permissions nécessaires.';
+          } else if (resp.status === 404) {
+            errorMsg = 'Demande non trouvée.';
+            errorDetails = `La demande avec l'ID ${id} n'existe pas ou a été supprimée.`;
+          } else if (resp.status === 500) {
+            errorMsg = 'Erreur serveur.';
+            errorDetails = 'Le serveur a rencontré une erreur. Veuillez réessayer plus tard.';
+          }
         }
-        console.error('[ERROR] selectDemande:api-error', {id, status: resp.status, errorMsg});
+        console.error('[ERROR] selectDemande:api-error', {id, status: resp.status, errorMsg, errorDetails});
         if (window.Toast) Toast.error(errorMsg);
-        const panel = $('detail-panel-body') || $('detail-modal-body');
-        if (panel) {
-          panel.innerHTML = `<div class="p-8 text-center text-red-600"><i class="fas fa-exclamation-triangle text-3xl mb-4"></i><p>${errorMsg}</p></div>`;
-        }
+        const desktopPanel = $('detail-panel-body');
+        const mobilePanel = $('detail-modal-body');
+        const errorHtml = `<div class="p-8 text-center text-red-600">
+          <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
+          <p class="font-semibold mb-2">${errorMsg}</p>
+          ${errorDetails ? `<p class="text-sm text-red-500">${errorDetails}</p>` : ''}
+          <p class="text-xs text-red-400 mt-4">Code d'erreur: ${resp.status}</p>
+        </div>`;
+        if (desktopPanel) desktopPanel.innerHTML = errorHtml;
+        if (mobilePanel) mobilePanel.innerHTML = errorHtml;
         return;
       }
       
@@ -517,12 +550,30 @@
       }
     } catch (error) {
       console.error('[ERROR] selectDemande:exception', {id, error: error.message, stack: error.stack});
-      const errorMsg = error.message || 'Erreur lors du chargement des détails';
-      if (window.Toast) Toast.error(errorMsg);
-      const panel = $('detail-panel-body') || $('detail-modal-body');
-      if (panel) {
-        panel.innerHTML = `<div class="p-8 text-center text-red-600"><i class="fas fa-exclamation-triangle text-3xl mb-4"></i><p>${errorMsg}</p></div>`;
+      let errorMsg = error.message || 'Erreur lors du chargement des détails';
+      
+      // Messages d'erreur plus spécifiques
+      if (error.message && error.message.includes('Timeout')) {
+        errorMsg = 'La requête a pris trop de temps. Le serveur ne répond pas.';
+      } else if (error.message && error.message.includes('Failed to fetch')) {
+        errorMsg = 'Impossible de contacter le serveur. Vérifiez votre connexion internet.';
+      } else if (error.message && error.message.includes('NetworkError')) {
+        errorMsg = 'Erreur réseau. Vérifiez votre connexion internet.';
       }
+      
+      if (window.Toast) Toast.error(errorMsg);
+      const desktopPanel = $('detail-panel-body');
+      const mobilePanel = $('detail-modal-body');
+      const errorHtml = `<div class="p-8 text-center text-red-600">
+        <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
+        <p class="font-semibold mb-2">${errorMsg}</p>
+        <p class="text-sm text-red-500 mt-2">ID demandé: ${id}</p>
+        <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+          <i class="fas fa-sync-alt mr-2"></i> Recharger la page
+        </button>
+      </div>`;
+      if (desktopPanel) desktopPanel.innerHTML = errorHtml;
+      if (mobilePanel) mobilePanel.innerHTML = errorHtml;
     }
   }
 
