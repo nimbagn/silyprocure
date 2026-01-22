@@ -511,7 +511,10 @@
         }, 50);
       }
 
-      if (isMobile() && opts.openModal) openOverlayModal('detailModal');
+      // Ouvrir le modal si demandé (mobile ou desktop avec ID dans URL)
+      if (opts.openModal) {
+        openOverlayModal('detailModal');
+      }
     } catch (error) {
       console.error('[ERROR] selectDemande:exception', {id, error: error.message, stack: error.stack});
       const errorMsg = error.message || 'Erreur lors du chargement des détails';
@@ -592,46 +595,66 @@
         // #endregion
         console.log('📋 ID de demande trouvé dans l\'URL:', id);
         state.selectedId = id;
+        
+        // Ouvrir le modal automatiquement quand un ID est dans l'URL (pour mobile et desktop)
+        // Cela permet d'afficher les détails même si le panneau desktop n'est pas visible
+        const shouldOpenModal = true; // Toujours ouvrir le modal quand un ID est dans l'URL
+        
         // Charger la demande
-        await selectDemande(id, { openModal: false });
-        
-        // Ouvrir automatiquement le modal RFQ si l'ID est dans l'URL
-        // Attendre que la demande soit chargée avant d'ouvrir le modal
-        // Utiliser une fonction récursive avec retry pour s'assurer que la demande est chargée
-        let retryCount = 0;
-        const maxRetries = 10;
-        const checkAndOpenModal = () => {
-          retryCount++;
-          console.log('[DEBUG] init:check-and-open-modal', {
-            retryCount,
-            hasSelectedDemande:!!state.selectedDemande,
-            statut:state.selectedDemande?.statut,
-            id:state.selectedDemande?.id,
-            openCreateRFQModalAvailable:typeof window.openCreateRFQModal === 'function'
-          });
+        try {
+          await selectDemande(id, { openModal: shouldOpenModal });
           
-          if (state.selectedDemande) {
-            const statut = state.selectedDemande.statut;
-            if (statut === 'nouvelle' || statut === 'en_cours') {
-              if (typeof window.openCreateRFQModal === 'function') {
-                console.log('[DEBUG] init:opening-rfq-modal-auto', {id,statut});
-                window.openCreateRFQModal(id);
-              } else {
-                console.error('[DEBUG] init:openCreateRFQModal-not-available');
-              }
-            } else {
-              console.log('[DEBUG] init:demande-not-eligible', {statut,id:state.selectedDemande.id});
+          // S'assurer que le panneau desktop est aussi visible si on est sur desktop
+          if (!isMobile() && state.selectedDemande) {
+            const detailPane = document.querySelector('.dd-detail-pane');
+            if (detailPane) {
+              detailPane.classList.remove('hidden');
             }
-          } else if (retryCount < maxRetries) {
-            // Réessayer après 200ms si la demande n'est pas encore chargée
-            setTimeout(checkAndOpenModal, 200);
-          } else {
-            console.error('[DEBUG] init:demande-not-loaded-after-retries', {retryCount,id});
           }
-        };
-        
-        // Démarrer la vérification après un court délai initial
-        setTimeout(checkAndOpenModal, 300);
+          
+          // Ouvrir automatiquement le modal RFQ si l'ID est dans l'URL et que la demande est éligible
+          // Attendre que la demande soit chargée avant d'ouvrir le modal
+          let retryCount = 0;
+          const maxRetries = 10;
+          const checkAndOpenRFQModal = () => {
+            retryCount++;
+            console.log('[DEBUG] init:check-and-open-rfq-modal', {
+              retryCount,
+              hasSelectedDemande:!!state.selectedDemande,
+              statut:state.selectedDemande?.statut,
+              id:state.selectedDemande?.id,
+              openCreateRFQModalAvailable:typeof window.openCreateRFQModal === 'function'
+            });
+            
+            if (state.selectedDemande) {
+              const statut = state.selectedDemande.statut;
+              if (statut === 'nouvelle' || statut === 'en_cours') {
+                if (typeof window.openCreateRFQModal === 'function') {
+                  console.log('[DEBUG] init:opening-rfq-modal-auto', {id,statut});
+                  // Attendre un peu avant d'ouvrir le modal RFQ pour que l'utilisateur voie d'abord les détails
+                  setTimeout(() => {
+                    window.openCreateRFQModal(id);
+                  }, 500);
+                } else {
+                  console.error('[DEBUG] init:openCreateRFQModal-not-available');
+                }
+              } else {
+                console.log('[DEBUG] init:demande-not-eligible', {statut,id:state.selectedDemande.id});
+              }
+            } else if (retryCount < maxRetries) {
+              // Réessayer après 200ms si la demande n'est pas encore chargée
+              setTimeout(checkAndOpenRFQModal, 200);
+            } else {
+              console.error('[DEBUG] init:demande-not-loaded-after-retries', {retryCount,id});
+            }
+          };
+          
+          // Démarrer la vérification après un court délai initial
+          setTimeout(checkAndOpenRFQModal, 300);
+        } catch (error) {
+          console.error('[ERROR] init:selectDemande-failed', {id, error: error.message});
+          // L'erreur est déjà gérée dans selectDemande, mais on peut ajouter un log supplémentaire
+        }
       } else {
         // #region agent log - Invalid ID
         console.log('[DEBUG] init:invalid-id', {demandeIdFromUrl,parsedId:id,isNaN:isNaN(id)});
