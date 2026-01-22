@@ -444,12 +444,23 @@
     // #region agent log - selectDemande entry
     console.log('[DEBUG] selectDemande:entry', {id,idType:typeof id,opts,stateSelectedId:state.selectedId});
     // #endregion
-    state.selectedId = Number(id);
-    renderList();
-    renderDetailPlaceholder();
-    
-    try {
-      const resp = await apiCall(`/api/contact/demandes/${id}`);
+        state.selectedId = Number(id);
+        renderList();
+        
+        // Mettre à jour les deux panneaux (desktop et mobile) avec un indicateur de chargement
+        const desktopPanel = $('detail-panel-body');
+        const mobilePanel = $('detail-modal-body');
+        if (desktopPanel) {
+          desktopPanel.innerHTML = '<div class="p-8 text-center"><div class="loading-spinner"></div><p class="text-slate-500 mt-4">Chargement des détails...</p></div>';
+        }
+        if (mobilePanel) {
+          mobilePanel.innerHTML = '<div class="p-8 text-center"><div class="loading-spinner"></div><p class="text-slate-500 mt-4">Chargement des détails...</p></div>';
+        }
+        
+        try {
+          console.log(`[Frontend] Appel API /api/contact/demandes/${id}`);
+          const resp = await apiCall(`/api/contact/demandes/${id}`);
+          console.log(`[Frontend] Réponse API reçue:`, { exists: !!resp, ok: resp?.ok, status: resp?.status });
       if (!resp) {
         const errorMsg = 'Pas de réponse du serveur. Vérifiez votre connexion.';
         console.error('[ERROR] selectDemande:no-response', {id});
