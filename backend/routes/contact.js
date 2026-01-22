@@ -513,10 +513,12 @@ router.get('/demandes', requireRole('admin', 'superviseur'), async (req, res) =>
 router.get('/demandes/:id', requireRole('admin', 'superviseur'), validateId, async (req, res) => {
     try {
         const { id } = req.params;
+        console.log(`[API] GET /api/contact/demandes/${id} - User: ${req.user?.email}, Role: ${req.user?.role}`);
 
         // Détecter le type de base de données
         const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
         const placeholder = usePostgreSQL ? '$1' : '?';
+        console.log(`[API] GET /api/contact/demandes/${id} - usePostgreSQL: ${usePostgreSQL}, placeholder: ${placeholder}`);
 
         let demandes;
         try {
@@ -541,10 +543,12 @@ router.get('/demandes/:id', requireRole('admin', 'superviseur'), validateId, asy
         }
 
         if (!demandes || demandes.length === 0) {
+            console.log(`[API] GET /api/contact/demandes/${id} - Demande non trouvée`);
             return res.status(404).json({ error: 'Demande non trouvée' });
         }
 
         const demande = demandes[0];
+        console.log(`[API] GET /api/contact/demandes/${id} - Demande trouvée: ${demande.reference || demande.id}`);
 
         // Récupérer les lignes d'articles
         let lignes;
@@ -562,11 +566,13 @@ router.get('/demandes/:id', requireRole('admin', 'superviseur'), validateId, asy
         }
         
         demande.articles = lignes || [];
+        console.log(`[API] GET /api/contact/demandes/${id} - Succès: ${demande.articles.length} articles`);
 
         res.json(demande);
 
     } catch (error) {
-        console.error('Erreur récupération demande:', error);
+        console.error(`[API] GET /api/contact/demandes/${id} - Erreur:`, error.message);
+        console.error('Stack:', error.stack?.substring(0, 200));
         res.status(500).json({ error: error.message });
     }
 });
