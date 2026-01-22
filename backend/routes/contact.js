@@ -514,28 +514,54 @@ router.get('/demandes/:id', requireRole('admin', 'superviseur'), validateId, asy
     try {
         const { id } = req.params;
 
-        const [demandes] = await pool.execute(
-            `SELECT d.*, 
-                    u.nom as traite_par_nom, 
-                    u.prenom as traite_par_prenom
-             FROM demandes_devis d
-             LEFT JOIN utilisateurs u ON d.traite_par = u.id
-             WHERE d.id = $1`,
-            [id]
-        );
+        // Détecter le type de base de données
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        const placeholder = usePostgreSQL ? '$1' : '?';
 
-        if (demandes.length === 0) {
+        let demandes;
+        try {
+            const result = await pool.execute(
+                `SELECT d.*, 
+                        u.nom as traite_par_nom, 
+                        u.prenom as traite_par_prenom
+                 FROM demandes_devis d
+                 LEFT JOIN utilisateurs u ON d.traite_par = u.id
+                 WHERE d.id = ${placeholder}`,
+                [id]
+            );
+            // Pour PostgreSQL, pool.execute retourne [rows, mockResult]
+            // Pour MySQL, pool.execute retourne [rows, fields]
+            demandes = Array.isArray(result[0]) ? result[0] : result;
+        } catch (sqlError) {
+            console.error('Erreur SQL récupération demande:', sqlError.message);
+            console.error('Query:', `SELECT d.* FROM demandes_devis d WHERE d.id = ${placeholder}`);
+            console.error('Params:', [id]);
+            console.error('usePostgreSQL:', usePostgreSQL);
+            throw sqlError;
+        }
+
+        if (!demandes || demandes.length === 0) {
             return res.status(404).json({ error: 'Demande non trouvée' });
         }
 
         const demande = demandes[0];
 
         // Récupérer les lignes d'articles
-        const [lignes] = await pool.execute(
-            'SELECT * FROM demandes_devis_lignes WHERE demande_devis_id = $1 ORDER BY ordre',
-            [id]
-        );
-        demande.articles = lignes;
+        let lignes;
+        try {
+            const lignesResult = await pool.execute(
+                `SELECT * FROM demandes_devis_lignes WHERE demande_devis_id = ${placeholder} ORDER BY ordre`,
+                [id]
+            );
+            // Pour PostgreSQL, pool.execute retourne [rows, mockResult]
+            // Pour MySQL, pool.execute retourne [rows, fields]
+            lignes = Array.isArray(lignesResult[0]) ? lignesResult[0] : lignesResult;
+        } catch (sqlError) {
+            console.error('Erreur SQL récupération lignes demande:', sqlError.message);
+            lignes = []; // Continuer même si les lignes ne peuvent pas être chargées
+        }
+        
+        demande.articles = lignes || [];
 
         res.json(demande);
 

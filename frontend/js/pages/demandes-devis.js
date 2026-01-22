@@ -447,31 +447,69 @@
     state.selectedId = Number(id);
     renderList();
     renderDetailPlaceholder();
-    const resp = await apiCall(`/api/contact/demandes/${id}`);
-    if (!resp || !resp.ok) throw new Error('Erreur chargement détail');
-    const demande = await resp.json();
-    // #region agent log - selectDemande demande loaded
-    console.log('[DEBUG] selectDemande:demande-loaded', {
-      id:demande.id,
-      statut:demande.statut,
-      nom:demande.nom,
-      isEligible:demande.statut === 'nouvelle' || demande.statut === 'en_cours'
-    });
-    // #endregion
-    state.selectedDemande = demande;
-    renderDetail(demande);
+    
+    try {
+      const resp = await apiCall(`/api/contact/demandes/${id}`);
+      if (!resp) {
+        const errorMsg = 'Pas de réponse du serveur. Vérifiez votre connexion.';
+        console.error('[ERROR] selectDemande:no-response', {id});
+        if (window.Toast) Toast.error(errorMsg);
+        const panel = $('detail-panel-body') || $('detail-modal-body');
+        if (panel) {
+          panel.innerHTML = `<div class="p-8 text-center text-red-600"><i class="fas fa-exclamation-triangle text-3xl mb-4"></i><p>${errorMsg}</p></div>`;
+        }
+        return;
+      }
+      
+      if (!resp.ok) {
+        let errorMsg = 'Erreur lors du chargement des détails';
+        try {
+          const errorData = await resp.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch (e) {
+          errorMsg = `Erreur HTTP ${resp.status}: ${resp.statusText}`;
+        }
+        console.error('[ERROR] selectDemande:api-error', {id, status: resp.status, errorMsg});
+        if (window.Toast) Toast.error(errorMsg);
+        const panel = $('detail-panel-body') || $('detail-modal-body');
+        if (panel) {
+          panel.innerHTML = `<div class="p-8 text-center text-red-600"><i class="fas fa-exclamation-triangle text-3xl mb-4"></i><p>${errorMsg}</p></div>`;
+        }
+        return;
+      }
+      
+      const demande = await resp.json();
+      // #region agent log - selectDemande demande loaded
+      console.log('[DEBUG] selectDemande:demande-loaded', {
+        id:demande.id,
+        statut:demande.statut,
+        nom:demande.nom,
+        isEligible:demande.statut === 'nouvelle' || demande.statut === 'en_cours'
+      });
+      // #endregion
+      state.selectedDemande = demande;
+      renderDetail(demande);
 
-    // Charger les fichiers joints
-    loadFichiersDemande(demande.id);
+      // Charger les fichiers joints
+      loadFichiersDemande(demande.id);
 
-    // Carte si géolocalisation
-    if (demande.latitude && demande.longitude) {
-      setTimeout(() => {
-        loadMapForDemande(demande.id, parseFloat(demande.latitude), parseFloat(demande.longitude));
-      }, 50);
+      // Carte si géolocalisation
+      if (demande.latitude && demande.longitude) {
+        setTimeout(() => {
+          loadMapForDemande(demande.id, parseFloat(demande.latitude), parseFloat(demande.longitude));
+        }, 50);
+      }
+
+      if (isMobile() && opts.openModal) openOverlayModal('detailModal');
+    } catch (error) {
+      console.error('[ERROR] selectDemande:exception', {id, error: error.message, stack: error.stack});
+      const errorMsg = error.message || 'Erreur lors du chargement des détails';
+      if (window.Toast) Toast.error(errorMsg);
+      const panel = $('detail-panel-body') || $('detail-modal-body');
+      if (panel) {
+        panel.innerHTML = `<div class="p-8 text-center text-red-600"><i class="fas fa-exclamation-triangle text-3xl mb-4"></i><p>${errorMsg}</p></div>`;
+      }
     }
-
-    if (isMobile() && opts.openModal) openOverlayModal('detailModal');
   }
 
   function bindEvents() {
