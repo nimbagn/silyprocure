@@ -20,20 +20,26 @@ const authenticate = async (req, res, next) => {
         // Vérifier le token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
+        // Détecter le type de base de données
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        const placeholder = usePostgreSQL ? '$1' : '?';
+        
         // Récupérer l'utilisateur
         let result, users;
-        if (pool.execute) {
-            result = await pool.execute(
-                'SELECT id, email, nom, prenom, role, actif FROM utilisateurs WHERE id = ? AND actif = ?',
-                [decoded.userId, true]
-            );
-            users = result[0] || result.rows || [];
-        } else {
+        if (usePostgreSQL) {
+            // PostgreSQL
             result = await pool.query(
-                'SELECT id, email, nom, prenom, role, actif FROM utilisateurs WHERE id = $1 AND actif = TRUE',
+                `SELECT id, email, nom, prenom, role, actif FROM utilisateurs WHERE id = ${placeholder} AND actif = TRUE`,
                 [decoded.userId]
             );
             users = result.rows || [];
+        } else {
+            // MySQL
+            result = await pool.execute(
+                `SELECT id, email, nom, prenom, role, actif FROM utilisateurs WHERE id = ${placeholder} AND actif = ${placeholder}`,
+                [decoded.userId, true]
+            );
+            users = Array.isArray(result[0]) ? result[0] : result;
         }
 
         if (!users || users.length === 0) {
