@@ -882,9 +882,7 @@
                         <div id="fournisseurs-list-${rfqId}" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.75rem; background: #f9fafb;">
                             ${allRFQs.map(rfq => `
                                 <label class="fournisseur-item-${rfqId}" 
-                                       style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: white; border-radius: 6px; margin-bottom: 0.5rem; border: 2px solid #2563eb; cursor: pointer; transition: all 0.2s;"
-                                       onmouseover="this.style.background='#eff6ff'" 
-                                       onmouseout="updateFournisseurItemStyle${rfqId}(this)">
+                                       style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: white; border-radius: 6px; margin-bottom: 0.5rem; border: 2px solid #2563eb; cursor: pointer; transition: all 0.2s;">
                                     <input type="checkbox" name="rfq_ids" value="${rfq.id}" checked 
                                            class="rfq-checkbox-${rfqId}"
                                            onchange="updateSelectedCount${rfqId}(); updateFournisseurItemStyle${rfqId}(this.closest('label'))"
@@ -971,10 +969,21 @@
                 window.updateSelectedCount${rfqId} = updateSelectedCount${rfqId};
                 window.updateFournisseurItemStyle${rfqId} = updateFournisseurItemStyle${rfqId};
                 
-                // Initialiser les styles après le chargement de la modal
+                // Initialiser les styles et les event listeners après le chargement de la modal
                 setTimeout(() => {
                     document.querySelectorAll('.fournisseur-item-${rfqId}').forEach(label => {
                         updateFournisseurItemStyle${rfqId}(label);
+                        
+                        // Ajouter les event listeners pour hover
+                        label.addEventListener('mouseover', function() {
+                            if (!this.querySelector('.rfq-checkbox-${rfqId}').checked) {
+                                this.style.background = '#eff6ff';
+                            }
+                        });
+                        
+                        label.addEventListener('mouseout', function() {
+                            updateFournisseurItemStyle${rfqId}(this);
+                        });
                     });
                 }, 100);
             `;
