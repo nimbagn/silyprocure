@@ -574,6 +574,14 @@
       
       state.selectedDemande = demande;
       
+      // Ouvrir le modal AVANT de rendre les détails pour s'assurer que l'élément existe
+      if (opts.openModal || isMobile()) {
+        console.log(`[Frontend] Ouverture du modal avant renderDetail pour demande ${id}`);
+        openOverlayModal('detailModal');
+        // Attendre un peu pour que le DOM soit mis à jour
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      
       console.log(`[Frontend] Appel renderDetail pour demande ${id}`);
       try {
         renderDetail(demande);
@@ -600,11 +608,6 @@
         setTimeout(() => {
           loadMapForDemande(demande.id, parseFloat(demande.latitude), parseFloat(demande.longitude));
         }, 50);
-      }
-
-      // Ouvrir le modal si demandé (mobile ou desktop avec ID dans URL)
-      if (opts.openModal) {
-        openOverlayModal('detailModal');
       }
     } catch (error) {
       console.error('[ERROR] selectDemande:exception', {id, error: error.message, stack: error.stack});
