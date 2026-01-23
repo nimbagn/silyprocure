@@ -368,10 +368,19 @@
       </div>
     `;
 
-    const target = isMobile() ? $('detail-modal-body') : $('detail-panel-body');
-    if (target) {
-      target.innerHTML = html;
-      // Charger le reste dynamiquement
+    // Mettre à jour les deux panneaux (desktop et mobile) pour éviter les problèmes
+    const desktopPanel = $('detail-panel-body');
+    const mobilePanel = $('detail-modal-body');
+    
+    if (desktopPanel) {
+      desktopPanel.innerHTML = html;
+    }
+    if (mobilePanel) {
+      mobilePanel.innerHTML = html;
+    }
+    
+    // Charger le reste dynamiquement
+    if (desktopPanel || mobilePanel) {
       loadFichiersDemande(demande.id);
       if (demande.latitude) {
         setTimeout(() => loadMapForDemande(demande.id, demande.latitude, demande.longitude), 100);
