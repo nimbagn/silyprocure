@@ -290,6 +290,14 @@
                 const rfq = await response.json();
                 hideLoading();
                 displayRFQDetails(rfq);
+                
+                // Charger les RFQ liées (autres fournisseurs ayant reçu la même demande)
+                loadRelatedRFQs(rfq.id, rfq.date_emission, rfq.emetteur_id, rfq.description).then(relatedRFQs => {
+                    if (relatedRFQs.length > 0) {
+                        displayRelatedRFQs(relatedRFQs, rfq.id);
+                    }
+                });
+                
                 loadDevis(rfqId);
             } catch (error) {
                 hideLoading();
