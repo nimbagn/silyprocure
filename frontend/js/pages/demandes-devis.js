@@ -929,6 +929,64 @@
   window.closeCreateRFQModal = () => closeOverlayModal('createRFQModal');
   window.closeEditModal = () => closeOverlayModal('editModal');
 
+  // Fonctions pour gérer la sélection multiple des fournisseurs
+  window.toggleFournisseur = function toggleFournisseur(labelElement) {
+    const checkbox = labelElement.querySelector('input[type=checkbox]');
+    if (checkbox) {
+      checkbox.checked = !checkbox.checked;
+      checkbox.dispatchEvent(new Event('change'));
+    }
+  };
+
+  window.updateFournisseursCount = function updateFournisseursCount() {
+    const checkboxes = document.querySelectorAll('input[name="fournisseur_ids"]:checked');
+    const count = checkboxes.length;
+    const total = document.querySelectorAll('input[name="fournisseur_ids"]').length;
+    const countElement = document.getElementById('fournisseurs-selected-count');
+    if (countElement) {
+      countElement.textContent = count;
+      countElement.style.color = count > 0 ? '#2563eb' : '#64748b';
+      countElement.style.fontWeight = count > 0 ? '700' : '600';
+    }
+    
+    // Mettre à jour l'affichage des items sélectionnés
+    document.querySelectorAll('.fournisseur-item').forEach(item => {
+      const checkbox = item.querySelector('input[type=checkbox]');
+      const checkIcon = item.querySelector('.check-icon');
+      if (checkbox && checkbox.checked) {
+        item.style.borderColor = '#2563eb';
+        item.style.background = '#eff6ff';
+        item.style.borderWidth = '2px';
+        if (checkIcon) checkIcon.style.display = 'flex';
+      } else {
+        item.style.borderColor = '#e5e7eb';
+        item.style.background = 'white';
+        item.style.borderWidth = '2px';
+        if (checkIcon) checkIcon.style.display = 'none';
+      }
+    });
+  };
+
+  window.selectAllFournisseurs = function selectAllFournisseurs() {
+    const checkboxes = document.querySelectorAll('input[name="fournisseur_ids"]');
+    checkboxes.forEach(cb => {
+      if (!cb.checked) {
+        cb.checked = true;
+        cb.dispatchEvent(new Event('change'));
+      }
+    });
+    updateFournisseursCount();
+  };
+
+  window.deselectAllFournisseurs = function deselectAllFournisseurs() {
+    const checkboxes = document.querySelectorAll('input[name="fournisseur_ids"]:checked');
+    checkboxes.forEach(cb => {
+      cb.checked = false;
+      cb.dispatchEvent(new Event('change'));
+    });
+    updateFournisseursCount();
+  };
+
   // Compat: filtre inline éventuel
   window.filterDemandes = function filterDemandes() {
     const searchEl = $('search-input');
