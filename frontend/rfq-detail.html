@@ -910,71 +910,73 @@
                             `).join('')}
                         </div>
                     </div>
-                    <script>
-                        // Fonctions pour gérer la sélection multiple
-                        function selectAllFournisseurs${rfqId}() {
-                            const checkboxes = document.querySelectorAll('.rfq-checkbox-${rfqId}');
-                            checkboxes.forEach(cb => {
-                                cb.checked = true;
-                                updateFournisseurItemStyle${rfqId}(cb.closest('label'));
-                            });
-                            updateSelectedCount${rfqId}();
-                        }
-                        
-                        function deselectAllFournisseurs${rfqId}() {
-                            const checkboxes = document.querySelectorAll('.rfq-checkbox-${rfqId}');
-                            checkboxes.forEach(cb => {
-                                cb.checked = false;
-                                updateFournisseurItemStyle${rfqId}(cb.closest('label'));
-                            });
-                            updateSelectedCount${rfqId}();
-                        }
-                        
-                        function updateSelectedCount${rfqId}() {
-                            const checkboxes = document.querySelectorAll('.rfq-checkbox-${rfqId}:checked');
-                            const count = checkboxes.length;
-                            const countEl = document.getElementById('selected-count-${rfqId}');
-                            if (countEl) countEl.textContent = count;
-                            
-                            // Mettre à jour le bouton de génération
-                            const submitBtn = document.querySelector('#modal-generate-links-all .btn-primary');
-                            if (submitBtn) {
-                                submitBtn.innerHTML = '<i class="fas fa-link"></i> Générer les liens (' + count + ')';
-                            }
-                        }
-                        
-                        function updateFournisseurItemStyle${rfqId}(labelEl) {
-                            if (!labelEl) return;
-                            const checkbox = labelEl.querySelector('.rfq-checkbox-${rfqId}');
-                            const checkIcon = labelEl.querySelector('.check-icon-${rfqId}');
-                            
-                            if (checkbox && checkbox.checked) {
-                                labelEl.style.borderColor = '#2563eb';
-                                labelEl.style.background = '#eff6ff';
-                                labelEl.style.borderWidth = '2px';
-                                if (checkIcon) checkIcon.style.display = 'flex';
-                            } else {
-                                labelEl.style.borderColor = '#e5e7eb';
-                                labelEl.style.background = 'white';
-                                labelEl.style.borderWidth = '2px';
-                                if (checkIcon) checkIcon.style.display = 'none';
-                            }
-                        }
-                        
-                        // Initialiser les styles après le chargement de la modal
-                        setTimeout(() => {
-                            document.querySelectorAll('.fournisseur-item-${rfqId}').forEach(label => {
-                                updateFournisseurItemStyle${rfqId}(label);
-                            });
-                        }, 100);
-                        
-                        // Exposer les fonctions globalement
-                        window.selectAllFournisseurs${rfqId} = selectAllFournisseurs${rfqId};
-                        window.deselectAllFournisseurs${rfqId} = deselectAllFournisseurs${rfqId};
-                        window.updateSelectedCount${rfqId} = updateSelectedCount${rfqId};
-                        window.updateFournisseurItemStyle${rfqId} = updateFournisseurItemStyle${rfqId};
-                    </script>
                 </form>
+            `;
+            
+            // Ajouter le script après la création de la modal
+            const scriptContent = `
+                // Fonctions pour gérer la sélection multiple
+                function selectAllFournisseurs${rfqId}() {
+                    const checkboxes = document.querySelectorAll('.rfq-checkbox-${rfqId}');
+                    checkboxes.forEach(cb => {
+                        cb.checked = true;
+                        updateFournisseurItemStyle${rfqId}(cb.closest('label'));
+                    });
+                    updateSelectedCount${rfqId}();
+                }
+                
+                function deselectAllFournisseurs${rfqId}() {
+                    const checkboxes = document.querySelectorAll('.rfq-checkbox-${rfqId}');
+                    checkboxes.forEach(cb => {
+                        cb.checked = false;
+                        updateFournisseurItemStyle${rfqId}(cb.closest('label'));
+                    });
+                    updateSelectedCount${rfqId}();
+                }
+                
+                function updateSelectedCount${rfqId}() {
+                    const checkboxes = document.querySelectorAll('.rfq-checkbox-${rfqId}:checked');
+                    const count = checkboxes.length;
+                    const countEl = document.getElementById('selected-count-${rfqId}');
+                    if (countEl) countEl.textContent = count;
+                    
+                    // Mettre à jour le bouton de génération
+                    const submitBtn = document.querySelector('#modal-generate-links-all .btn-primary');
+                    if (submitBtn) {
+                        submitBtn.innerHTML = '<i class="fas fa-link"></i> Générer les liens (' + count + ')';
+                    }
+                }
+                
+                function updateFournisseurItemStyle${rfqId}(labelEl) {
+                    if (!labelEl) return;
+                    const checkbox = labelEl.querySelector('.rfq-checkbox-${rfqId}');
+                    const checkIcon = labelEl.querySelector('.check-icon-${rfqId}');
+                    
+                    if (checkbox && checkbox.checked) {
+                        labelEl.style.borderColor = '#2563eb';
+                        labelEl.style.background = '#eff6ff';
+                        labelEl.style.borderWidth = '2px';
+                        if (checkIcon) checkIcon.style.display = 'flex';
+                    } else {
+                        labelEl.style.borderColor = '#e5e7eb';
+                        labelEl.style.background = 'white';
+                        labelEl.style.borderWidth = '2px';
+                        if (checkIcon) checkIcon.style.display = 'none';
+                    }
+                }
+                
+                // Exposer les fonctions globalement
+                window.selectAllFournisseurs${rfqId} = selectAllFournisseurs${rfqId};
+                window.deselectAllFournisseurs${rfqId} = deselectAllFournisseurs${rfqId};
+                window.updateSelectedCount${rfqId} = updateSelectedCount${rfqId};
+                window.updateFournisseurItemStyle${rfqId} = updateFournisseurItemStyle${rfqId};
+                
+                // Initialiser les styles après le chargement de la modal
+                setTimeout(() => {
+                    document.querySelectorAll('.fournisseur-item-${rfqId}').forEach(label => {
+                        updateFournisseurItemStyle${rfqId}(label);
+                    });
+                }, 100);
             `;
 
             const footer = `
