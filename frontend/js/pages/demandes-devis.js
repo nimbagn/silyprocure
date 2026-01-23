@@ -1412,6 +1412,32 @@
       
       fournisseurs = fournisseursActifs;
       
+      // Ajouter un en-tête avec compteur et boutons de sélection
+      const headerHtml = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding:0.75rem;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <span style="font-size:0.875rem;font-weight:600;color:#475569;">
+              <i class="fas fa-check-square" style="color:#2563eb;"></i> 
+              <span id="fournisseurs-selected-count">0</span> sélectionné(s) sur ${fournisseurs.length}
+            </span>
+          </div>
+          <div style="display:flex;gap:0.5rem;">
+            <button type="button" onclick="selectAllFournisseurs()" 
+                    style="padding:0.5rem 1rem;font-size:0.875rem;background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500;transition:all 0.2s;"
+                    onmouseover="this.style.background='#1d4ed8'" 
+                    onmouseout="this.style.background='#2563eb'">
+              <i class="fas fa-check-double"></i> Tout sélectionner
+            </button>
+            <button type="button" onclick="deselectAllFournisseurs()" 
+                    style="padding:0.5rem 1rem;font-size:0.875rem;background:#64748b;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500;transition:all 0.2s;"
+                    onmouseover="this.style.background='#475569'" 
+                    onmouseout="this.style.background='#64748b'">
+              <i class="fas fa-times"></i> Tout désélectionner
+            </button>
+          </div>
+        </div>
+      `;
+      
       const htmlContent = fournisseurs
         .map((f) => {
           if (!f || !f.id) {
@@ -1423,12 +1449,13 @@
           const telephone = f.telephone ? escapeHtml(f.telephone) : null;
           
           return `
-            <label style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;border:2px solid #e5e7eb;border-radius:12px;margin-bottom:0.5rem;cursor:pointer;transition:all 0.2s;background:white;" 
-                   onmouseover="this.style.background='#f9fafb';this.style.borderColor='#2563eb'" 
-                   onmouseout="this.style.background='white';this.style.borderColor='#e5e7eb'"
-                   onclick="const cb = this.querySelector('input[type=checkbox]'); cb.checked = !cb.checked; cb.dispatchEvent(new Event('change'));">
-              <input type="checkbox" name="fournisseur_ids" value="${f.id}" style="cursor:pointer;width:20px;height:20px;accent-color:#2563eb;flex-shrink:0;" 
-                     onchange="const label = this.closest('label'); label.style.borderColor = this.checked ? '#2563eb' : '#e5e7eb'; label.style.background = this.checked ? '#eff6ff' : 'white'; label.style.borderWidth = this.checked ? '2px' : '2px';">
+            <label class="fournisseur-item" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;border:2px solid #e5e7eb;border-radius:12px;margin-bottom:0.5rem;cursor:pointer;transition:all 0.2s;background:white;position:relative;" 
+                   onmouseover="if(!this.querySelector('input[type=checkbox]').checked){this.style.background='#f9fafb';this.style.borderColor='#2563eb';}" 
+                   onmouseout="if(!this.querySelector('input[type=checkbox]').checked){this.style.background='white';this.style.borderColor='#e5e7eb';}"
+                   onclick="toggleFournisseur(this);">
+              <input type="checkbox" name="fournisseur_ids" value="${f.id}" class="fournisseur-checkbox" 
+                     style="cursor:pointer;width:20px;height:20px;accent-color:#2563eb;flex-shrink:0;" 
+                     onchange="updateFournisseursCount(); const label = this.closest('label'); if(this.checked){label.style.borderColor='#2563eb';label.style.background='#eff6ff';label.style.borderWidth='2px';}else{label.style.borderColor='#e5e7eb';label.style.background='white';label.style.borderWidth='2px';}">
               <div style="flex:1;min-width:0;">
                 <strong style="color:#1e293b;font-size:1rem;display:block;">${nom}</strong>
                 ${secteur ? `<div style="font-size:0.875rem;color:#64748b;margin-top:0.25rem;"><i class="fas fa-industry" style="color:#94a3b8;"></i> ${secteur}</div>` : ''}
@@ -1437,17 +1464,25 @@
                   ${telephone ? `<span><i class="fas fa-phone" style="color:#94a3b8;"></i> ${telephone}</span>` : ''}
                 </div>
               </div>
+              <div class="check-icon" style="position:absolute;top:0.5rem;right:0.5rem;width:24px;height:24px;background:#2563eb;border-radius:50%;display:none;align-items:center;justify-content:center;color:white;font-size:0.75rem;">
+                <i class="fas fa-check"></i>
+              </div>
             </label>
           `;
         })
         .filter(html => html !== '')
         .join('');
       
+      const fullHtml = headerHtml + htmlContent;
+      
       // #region agent log - Before innerHTML
       console.log('[DEBUG] openCreateRFQModal:before-innerHTML', {containerExists:!!containerCheck,htmlContentLength:htmlContent?.length,fournisseursCount:fournisseurs.length});
       // #endregion
       
-      containerCheck.innerHTML = htmlContent || '<p style="color:#64748b;text-align:center;padding:2rem;">Aucun fournisseur disponible</p>';
+      containerCheck.innerHTML = fullHtml || '<p style="color:#64748b;text-align:center;padding:2rem;">Aucun fournisseur disponible</p>';
+      
+      // Initialiser le compteur
+      updateFournisseursCount();
       
       // #region agent log - After innerHTML
       console.log('[DEBUG] openCreateRFQModal:after-innerHTML', {containerInnerHTML:containerCheck.innerHTML?.substring(0,100)});
