@@ -103,7 +103,8 @@ router.get('/:id', validateId, async (req, res) => {
             const result = await pool.execute(
                 `SELECT r.*, 
                         e1.nom as emetteur_nom, e1.email as emetteur_email,
-                        e2.nom as destinataire_nom, e2.email as destinataire_email
+                        e2.nom as destinataire_nom, e2.email as destinataire_email, 
+                        e2.telephone as destinataire_telephone, e2.secteur_activite as destinataire_secteur
                  FROM rfq r
                  LEFT JOIN entreprises e1 ON r.emetteur_id = e1.id
                  LEFT JOIN entreprises e2 ON r.destinataire_id = e2.id

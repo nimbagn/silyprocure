@@ -622,7 +622,18 @@
                 </button>
             `;
 
-            Modal.show('generate-link', 'Générer un lien externe', content, footer);
+            // Utiliser la classe Modal correctement (méthode d'instance, pas statique)
+            if (typeof Modal !== 'undefined') {
+                const modal = new Modal('generate-link', 'Générer un lien externe', content, footer);
+                modal.show();
+            } else {
+                console.error('Modal class not available');
+                if (window.Toast) {
+                    Toast.error('Erreur: système de modales non disponible');
+                } else {
+                    alert('Erreur: système de modales non disponible');
+                }
+            }
         }
 
         async function handleGenerateLink(event, rfqId, fournisseurId) {
@@ -751,7 +762,14 @@
                 </button>
             `;
 
-            Modal.show('import-devis', 'Importer un devis depuis Excel', content, footer);
+            // Utiliser la classe Modal correctement
+            if (typeof Modal !== 'undefined') {
+                const modal = new Modal('import-devis', 'Importer un devis depuis Excel', content, footer);
+                modal.show();
+            } else {
+                console.error('Modal class not available');
+                alert('Erreur: système de modales non disponible');
+            }
             
             // Initialiser la date d'émission
             const dateInput = document.querySelector('#import-devis-form input[name="date_emission"]');
