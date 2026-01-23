@@ -989,6 +989,13 @@
             if (typeof Modal !== 'undefined') {
                 const modal = new Modal('generate-links-all', 'Générer des liens pour tous les fournisseurs', content, footer);
                 modal.show();
+                
+                // Injecter le script après l'affichage de la modal
+                setTimeout(() => {
+                    const script = document.createElement('script');
+                    script.textContent = scriptContent;
+                    document.body.appendChild(script);
+                }, 100);
             } else {
                 console.error('Modal class not available');
                 if (window.Toast) {
