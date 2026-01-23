@@ -298,8 +298,104 @@
             }
         }
 
+        async function loadRelatedRFQs(rfqId, rfqDate, emetteurId, description) {
+            try {
+                // Charger toutes les RFQ créées le même jour par le même émetteur
+                const response = await apiCall(`/api/rfq?emetteur_id=${emetteurId}`);
+                if (!response.ok) return [];
+                
+                const allRFQs = await response.json();
+                const rfqDateStr = rfqDate ? new Date(rfqDate).toISOString().split('T')[0] : null;
+                
+                // Filtrer les RFQ créées le même jour avec une description similaire
+                const relatedRFQs = allRFQs.filter(r => {
+                    if (r.id === rfqId) return false; // Exclure la RFQ actuelle
+                    if (!rfqDateStr) return false;
+                    const rDateStr = r.date_emission ? new Date(r.date_emission).toISOString().split('T')[0] : null;
+                    if (rDateStr !== rfqDateStr) return false;
+                    if (r.emetteur_id !== emetteurId) return false;
+                    // Vérifier si la description est similaire (commence par la même phrase)
+                    if (description && r.description) {
+                        const desc1 = description.substring(0, 50).toLowerCase();
+                        const desc2 = r.description.substring(0, 50).toLowerCase();
+                        return desc1 === desc2;
+                    }
+                    return true;
+                });
+                
+                return relatedRFQs;
+            } catch (error) {
+                console.error('Erreur chargement RFQ liées:', error);
+                return [];
+            }
+        }
+
+        function displayRelatedRFQs(relatedRFQs, currentRfqId) {
+            const section = document.getElementById('related-rfqs-section');
+            if (!section || relatedRFQs.length === 0) return;
+            
+            // Inclure aussi la RFQ actuelle dans la liste
+            const allRFQs = [...relatedRFQs];
+            
+            section.innerHTML = `
+                <div class="card" style="border-left: 4px solid #10b981; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+                    <div class="card-header" style="background: transparent; border-bottom: 2px solid #86efac;">
+                        <h2 class="card-title" style="color: #059669;">
+                            <i class="fas fa-users"></i> Tous les fournisseurs ayant reçu cette demande
+                            <span class="badge badge-success" style="margin-left: 0.5rem; background: #10b981; color: white;">
+                                ${allRFQs.length + 1} fournisseur(s)
+                            </span>
+                        </h2>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+                            ${allRFQs.map(rfq => `
+                                <div style="padding: 1rem; background: white; border-radius: 8px; border: 2px solid ${rfq.id === currentRfqId ? '#2563eb' : '#e5e7eb'}; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s;">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+                                        <div>
+                                            <div style="font-weight: 700; color: #1e293b; font-size: 1rem; margin-bottom: 0.25rem;">
+                                                <i class="fas fa-building" style="color: #2563eb; margin-right: 0.5rem;"></i>
+                                                ${rfq.destinataire_nom || 'Non spécifié'}
+                                            </div>
+                                            <div style="font-size: 0.875rem; color: #64748b; margin-top: 0.25rem;">
+                                                <i class="fas fa-hashtag" style="color: #94a3b8;"></i> ${rfq.numero || 'RFQ-' + rfq.id}
+                                            </div>
+                                        </div>
+                                        ${rfq.id === currentRfqId ? `
+                                            <span class="badge" style="background: #2563eb; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem;">
+                                                <i class="fas fa-check-circle"></i> Actuelle
+                                            </span>
+                                        ` : ''}
+                                    </div>
+                                    ${rfq.destinataire_email ? `
+                                        <div style="font-size: 0.875rem; color: #475569; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                            <i class="fas fa-envelope" style="color: #2563eb;"></i> 
+                                            <a href="mailto:${rfq.destinataire_email}" style="color: #2563eb; text-decoration: none;">${rfq.destinataire_email}</a>
+                                        </div>
+                                    ` : ''}
+                                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e5e7eb;">
+                                        <button class="btn btn-sm btn-primary" onclick="window.location.href='rfq-detail.html?id=${rfq.id}'" style="width: 100%; font-size: 0.875rem; padding: 0.5rem;">
+                                            <i class="fas fa-eye"></i> Voir cette RFQ
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         function displayRFQDetails(rfq) {
             const container = document.getElementById('rfq-details');
+            
+            // Charger les RFQ liées en arrière-plan
+            loadRelatedRFQs(rfq.id, rfq.date_emission, rfq.emetteur_id, rfq.description).then(relatedRFQs => {
+                if (relatedRFQs.length > 0) {
+                    displayRelatedRFQs(relatedRFQs, rfq.id);
+                }
+            });
+            
             container.innerHTML = `
                 <div class="card">
                     <div class="card-header">
