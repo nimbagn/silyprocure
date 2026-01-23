@@ -182,6 +182,17 @@
   }
 
   function renderDetail(demande) {
+    console.log(`[Frontend] renderDetail appelé pour demande ${demande?.id}`, { 
+      hasDemande: !!demande, 
+      nom: demande?.nom,
+      articlesCount: demande?.articles?.length || 0 
+    });
+    
+    if (!demande) {
+      console.error('[ERROR] renderDetail: demande est null ou undefined');
+      return;
+    }
+    
     // Rendu des articles si présents
     let articlesRows = '<p class="text-slate-400 italic text-sm">Aucun article.</p>';
     if (demande.articles && demande.articles.length > 0) {
@@ -372,11 +383,24 @@
     const desktopPanel = $('detail-panel-body');
     const mobilePanel = $('detail-modal-body');
     
+    console.log(`[Frontend] renderDetail: Mise à jour des panneaux`, { 
+      desktopPanelExists: !!desktopPanel, 
+      mobilePanelExists: !!mobilePanel,
+      htmlLength: html.length 
+    });
+    
     if (desktopPanel) {
       desktopPanel.innerHTML = html;
+      console.log(`[Frontend] renderDetail: Panneau desktop mis à jour`);
+    } else {
+      console.warn(`[Frontend] renderDetail: Panneau desktop (detail-panel-body) non trouvé`);
     }
+    
     if (mobilePanel) {
       mobilePanel.innerHTML = html;
+      console.log(`[Frontend] renderDetail: Panneau mobile mis à jour`);
+    } else {
+      console.warn(`[Frontend] renderDetail: Panneau mobile (detail-modal-body) non trouvé`);
     }
     
     // Charger le reste dynamiquement
@@ -385,6 +409,8 @@
       if (demande.latitude) {
         setTimeout(() => loadMapForDemande(demande.id, demande.latitude, demande.longitude), 100);
       }
+    } else {
+      console.error(`[ERROR] renderDetail: Aucun panneau trouvé pour mettre à jour le contenu`);
     }
   }
 
@@ -540,8 +566,31 @@
         isEligible:demande.statut === 'nouvelle' || demande.statut === 'en_cours'
       });
       // #endregion
+      console.log(`[Frontend] Données reçues pour demande ${id}:`, { 
+        id: demande.id, 
+        nom: demande.nom, 
+        articlesCount: demande.articles?.length || 0 
+      });
+      
       state.selectedDemande = demande;
-      renderDetail(demande);
+      
+      console.log(`[Frontend] Appel renderDetail pour demande ${id}`);
+      try {
+        renderDetail(demande);
+        console.log(`[Frontend] renderDetail terminé pour demande ${id}`);
+      } catch (renderError) {
+        console.error(`[ERROR] Erreur dans renderDetail pour demande ${id}:`, renderError);
+        const desktopPanel = $('detail-panel-body');
+        const mobilePanel = $('detail-modal-body');
+        const errorHtml = `<div class="p-8 text-center text-red-600">
+          <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
+          <p class="font-semibold mb-2">Erreur lors de l'affichage des détails</p>
+          <p class="text-sm text-red-500">${renderError.message}</p>
+        </div>`;
+        if (desktopPanel) desktopPanel.innerHTML = errorHtml;
+        if (mobilePanel) mobilePanel.innerHTML = errorHtml;
+        throw renderError;
+      }
 
       // Charger les fichiers joints
       loadFichiersDemande(demande.id);
