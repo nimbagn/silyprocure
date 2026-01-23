@@ -844,6 +844,209 @@
             Toast.success('Lien copié dans le presse-papiers');
         }
 
+        // Fonction pour générer des liens pour tous les fournisseurs
+        async function showGenerateLinksForAllModal(rfqId) {
+            // Récupérer toutes les RFQ liées (incluant la RFQ actuelle)
+            const allRFQs = [currentRFQ, ...relatedRFQsList].filter(r => r && r.id);
+            
+            if (allRFQs.length === 0) {
+                Toast.error('Aucun fournisseur trouvé pour cette demande');
+                return;
+            }
+
+            const content = `
+                <form id="generate-links-all-form" onsubmit="handleGenerateLinksForAll(event, ${rfqId})">
+                    <div class="form-group">
+                        <label>Durée de validité du lien (en jours)</label>
+                        <input type="number" name="jours" min="1" max="365" value="30" required>
+                        <small style="color: #666; font-size: 0.85rem;">
+                            Le lien expirera après le nombre de jours spécifié pour tous les fournisseurs
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label style="margin-bottom: 0.75rem; font-weight: 600;">
+                            <i class="fas fa-users"></i> Fournisseurs sélectionnés (${allRFQs.length})
+                        </label>
+                        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.75rem; background: #f9fafb;">
+                            ${allRFQs.map(rfq => `
+                                <div style="padding: 0.75rem; background: white; border-radius: 6px; margin-bottom: 0.5rem; border: 2px solid #e5e7eb; display: flex; align-items: center; gap: 0.75rem;">
+                                    <input type="checkbox" name="rfq_ids" value="${rfq.id}" checked 
+                                           style="width: 20px; height: 20px; cursor: pointer; accent-color: #2563eb;">
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; color: #1e293b;">
+                                            <i class="fas fa-building" style="color: #2563eb; margin-right: 0.5rem;"></i>
+                                            ${rfq.destinataire_nom || 'Non spécifié'}
+                                        </div>
+                                        <div style="font-size: 0.875rem; color: #64748b; margin-top: 0.25rem;">
+                                            <i class="fas fa-hashtag" style="color: #94a3b8;"></i> ${rfq.numero || 'RFQ-' + rfq.id}
+                                        </div>
+                                        ${rfq.destinataire_email ? `
+                                            <div style="font-size: 0.875rem; color: #475569; margin-top: 0.25rem;">
+                                                <i class="fas fa-envelope" style="color: #2563eb;"></i> ${rfq.destinataire_email}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </form>
+            `;
+
+            const footer = `
+                <button class="btn btn-secondary" onclick="Modal.hide('generate-links-all')">Annuler</button>
+                <button class="btn btn-primary" onclick="document.getElementById('generate-links-all-form').requestSubmit()">
+                    <i class="fas fa-link"></i> Générer les liens (${allRFQs.length})
+                </button>
+            `;
+
+            if (typeof Modal !== 'undefined') {
+                const modal = new Modal('generate-links-all', 'Générer des liens pour tous les fournisseurs', content, footer);
+                modal.show();
+            } else {
+                console.error('Modal class not available');
+                if (window.Toast) {
+                    Toast.error('Erreur: système de modales non disponible');
+                } else {
+                    alert('Erreur: système de modales non disponible');
+                }
+            }
+        }
+
+        async function handleGenerateLinksForAll(event, currentRfqId) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const jours = parseInt(formData.get('jours')) || 30;
+            const selectedRfqIds = formData.getAll('rfq_ids').map(id => parseInt(id));
+            
+            if (selectedRfqIds.length === 0) {
+                Toast.error('Veuillez sélectionner au moins un fournisseur');
+                return;
+            }
+
+            try {
+                Modal.hide('generate-links-all');
+                showLoading(`Génération de ${selectedRfqIds.length} lien(s)...`);
+                
+                const results = [];
+                const errors = [];
+                
+                // Générer un lien pour chaque RFQ sélectionnée
+                for (const rfqId of selectedRfqIds) {
+                    try {
+                        // Récupérer les infos de la RFQ pour obtenir le fournisseur_id
+                        const rfqResponse = await apiCall(`/api/rfq/${rfqId}`);
+                        if (!rfqResponse || !rfqResponse.ok) {
+                            errors.push({ rfqId, error: 'RFQ non trouvée' });
+                            continue;
+                        }
+                        
+                        const rfq = await rfqResponse.json();
+                        if (!rfq.destinataire_id) {
+                            errors.push({ rfqId, error: 'Fournisseur non trouvé' });
+                            continue;
+                        }
+                        
+                        // Générer le lien
+                        const linkResponse = await apiCall(`/api/liens-externes/rfq/${rfqId}/generate-link`, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                fournisseur_id: rfq.destinataire_id,
+                                email_envoye: rfq.destinataire_email || null,
+                                date_expiration_jours: jours
+                            })
+                        });
+                        
+                        if (linkResponse && linkResponse.ok) {
+                            const linkData = await linkResponse.json();
+                            results.push({
+                                rfqId,
+                                rfqNumero: rfq.numero,
+                                fournisseurNom: rfq.destinataire_nom,
+                                link: linkData.link,
+                                expiration: linkData.expiration
+                            });
+                        } else {
+                            const errorData = await linkResponse.json();
+                            errors.push({ rfqId, error: errorData.error || 'Erreur inconnue' });
+                        }
+                    } catch (error) {
+                        errors.push({ rfqId, error: error.message });
+                    }
+                }
+                
+                hideLoading();
+                
+                // Afficher les résultats
+                const linkSection = document.getElementById('external-links-section');
+                let html = '<div style="margin-top: 1rem;">';
+                
+                if (results.length > 0) {
+                    html += `
+                        <div class="card" style="background: #f0f9ff; border: 1px solid #3B82F6; margin-bottom: 1rem;">
+                            <h4 style="margin-bottom: 1rem;">
+                                <i class="fas fa-check-circle" style="color: #10B981;"></i> 
+                                ${results.length} lien(s) généré(s) avec succès
+                            </h4>
+                            <div style="display: grid; gap: 1rem;">
+                                ${results.map(r => `
+                                    <div style="padding: 1rem; background: white; border-radius: 6px; border: 1px solid #cbd5e1;">
+                                        <div style="font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;">
+                                            <i class="fas fa-building" style="color: #2563eb;"></i> ${r.fournisseurNom} (${r.rfqNumero})
+                                        </div>
+                                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                                            <input type="text" value="${r.link}" readonly 
+                                                   style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.875rem;">
+                                            <button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText('${r.link}').then(() => { if(window.Toast) Toast.success('Lien copié'); })">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">
+                                            Expire le : ${new Date(r.expiration).toLocaleDateString('fr-FR')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (errors.length > 0) {
+                    html += `
+                        <div class="card" style="background: #fef2f2; border: 1px solid #ef4444; margin-bottom: 1rem;">
+                            <h4 style="margin-bottom: 1rem; color: #dc2626;">
+                                <i class="fas fa-exclamation-triangle"></i> 
+                                ${errors.length} erreur(s)
+                            </h4>
+                            <ul style="list-style: none; padding: 0;">
+                                ${errors.map(e => `<li style="padding: 0.5rem; color: #991b1b;">RFQ ${e.rfqId}: ${e.error}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+                linkSection.innerHTML = html;
+                
+                if (results.length > 0) {
+                    Toast.success(`${results.length} lien(s) généré(s) avec succès`);
+                }
+                if (errors.length > 0) {
+                    Toast.error(`${errors.length} erreur(s) lors de la génération`);
+                }
+                
+                // Recharger les liens externes
+                loadExternalLinks(currentRfqId);
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur de connexion');
+                console.error('Erreur:', error);
+            }
+        }
+
+        window.showGenerateLinksForAllModal = showGenerateLinksForAllModal;
+        window.handleGenerateLinksForAll = handleGenerateLinksForAll;
+
         function exportRFQToExcel(rfqId) {
             window.open(`/api/excel/rfq/${rfqId}`, '_blank');
             Toast.success('Export Excel en cours...');
