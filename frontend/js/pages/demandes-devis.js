@@ -1730,11 +1730,30 @@
         throw new Error(error.error || 'Erreur lors de la création des RFQ');
       }
       const result = await response.json();
-      if (window.Toast) Toast.success(result.message || `${result.rfqs?.length || 0} RFQ créée(s)`);
+      const rfqsCount = result.rfqs?.length || 0;
+      const message = result.message || `${rfqsCount} RFQ créée(s) avec succès`;
+      
+      if (window.Toast) Toast.success(message);
+      
+      console.log('[RFQ] RFQ créées avec succès', { 
+        count: rfqsCount, 
+        rfqs: result.rfqs,
+        demande_id: result.demande_id 
+      });
+      
+      // Fermer les modals
       closeOverlayModal('createRFQModal');
       if (isMobile()) closeOverlayModal('detailModal');
+      
+      // Recharger les données
       await loadDemandes();
       loadStats();
+      
+      // Rediriger vers rfq.html après 1.5 secondes pour voir le message de succès
+      setTimeout(() => {
+        console.log('[RFQ] Redirection vers rfq.html');
+        window.location.href = 'rfq.html';
+      }, 1500);
     } catch (e) {
       console.error(e);
       if (window.Toast) Toast.error(e.message || 'Erreur lors de la création des RFQ');
