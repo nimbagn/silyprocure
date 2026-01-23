@@ -270,10 +270,10 @@
           <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             ${statutBadge(demande.statut)}
             <div class="flex items-center gap-2">
-              <button onclick="editDemande(${demande.id})" class="btn-primary !py-2 !px-4 !rounded-xl !text-sm">
+              <button onclick="if(typeof window.editDemande==='function'){window.editDemande(${demande.id});}else{console.error('🔴 [Edit] editDemande non disponible');if(window.Toast){Toast.error('Erreur: fonction non disponible');}else{alert('Erreur: fonction non disponible');}}" class="btn-primary !py-2 !px-4 !rounded-xl !text-sm">
                 <i class="fas fa-edit mr-1.5"></i> Modifier Statut
               </button>
-              <button onclick="if(typeof window.openCreateRFQModal==='function'){window.openCreateRFQModal(${demande.id});}else{console.error('🔴 [RFQ] openCreateRFQModal non disponible');alert('Erreur: fonction non disponible');}" class="btn-secondary !py-2 !px-4 !rounded-xl !text-sm !border-slate-200">
+              <button onclick="if(typeof window.openCreateRFQModal==='function'){window.openCreateRFQModal(${demande.id});}else{console.error('🔴 [RFQ] openCreateRFQModal non disponible');if(window.Toast){Toast.error('Erreur: fonction non disponible');}else{alert('Erreur: fonction non disponible');}}" class="btn-secondary !py-2 !px-4 !rounded-xl !text-sm !border-slate-200">
                 <i class="fas fa-file-contract mr-1.5"></i> Lancer RFQ
               </button>
             </div>
@@ -1002,31 +1002,76 @@
   }
 
   window.previewFile = function previewFile(fichierId, nomFichier, typeMime) {
+    console.log('[Preview] previewFile appelé', { fichierId, nomFichier, typeMime });
+    
+    // Parser les paramètres si ce sont des strings JSON
+    let nom = nomFichier;
+    let mime = typeMime || '';
+    
+    try {
+      // Si les paramètres sont des strings JSON (passés depuis loadFichiersDemande)
+      if (typeof nomFichier === 'string' && nomFichier.startsWith('"') && nomFichier.endsWith('"')) {
+        nom = JSON.parse(nomFichier);
+      }
+      if (typeof typeMime === 'string' && typeMime.startsWith('"') && typeMime.endsWith('"')) {
+        mime = JSON.parse(typeMime);
+      }
+    } catch (e) {
+      // Si le parsing échoue, utiliser les valeurs originales
+      console.warn('[Preview] Erreur parsing JSON, utilisation valeurs originales', e);
+    }
+    
     const previewTitle = $('preview-title');
     const previewContent = $('preview-content');
-    if (previewTitle) previewTitle.textContent = nomFichier || 'Prévisualisation';
-    if (previewContent) previewContent.innerHTML = '<div class="loading">Chargement de la prévisualisation...</div>';
+    
+    if (!previewTitle || !previewContent) {
+      console.error('[Preview] Éléments modal non trouvés', { previewTitle: !!previewTitle, previewContent: !!previewContent });
+      if (window.Toast) Toast.error('Erreur: modal de prévisualisation non trouvé');
+      return;
+    }
+    
+    // Mettre à jour le titre
+    const titleText = nom || 'Prévisualisation';
+    if (previewTitle.querySelector('i')) {
+      previewTitle.innerHTML = `<i class="fas fa-eye"></i> ${escapeHtml(titleText)}`;
+    } else {
+      previewTitle.textContent = titleText;
+    }
+    
+    // Afficher le chargement
+    previewContent.innerHTML = '<div class="p-8 text-center"><div class="loading-spinner"></div><p class="text-slate-500 mt-4">Chargement de la prévisualisation...</p></div>';
+    
+    // Ouvrir le modal
     openOverlayModal('previewModal');
-
+    
     const fileUrl = `/api/fichiers/download/${fichierId}`;
-    if (!previewContent) return;
+    console.log('[Preview] URL fichier:', fileUrl, 'Type MIME:', mime);
 
-    const mime = typeMime || '';
+    // Gérer selon le type de fichier
     if (mime.startsWith('image/')) {
       previewContent.innerHTML = `
         <div class="p-3 text-center">
-          <img src="${fileUrl}" alt="${escapeHtml(nomFichier || '')}" style="max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <img src="${fileUrl}" 
+               alt="${escapeHtml(nom || '')}" 
+               style="max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
+               onerror="this.parentElement.innerHTML='<div class=\\'p-8 text-center text-red-600\\'><i class=\\'fas fa-exclamation-triangle text-3xl mb-4\\'></i><p>Erreur lors du chargement de l\\'image</p><a href=\\'${fileUrl}\\' class=\\'btn btn-primary mt-4\\' download><i class=\\'fas fa-download\\'></i> Télécharger</a></div>'">
         </div>
       `;
     } else if (mime === 'application/pdf') {
       previewContent.innerHTML = `
-        <div style="width: 100%; height: 70vh;">
-          <iframe src="${fileUrl}" style="width: 100%; height: 100%; border: none; border-radius: 8px;"></iframe>
+        <div style="width: 100%; height: 70vh; position: relative;">
+          <iframe src="${fileUrl}" 
+                  style="width: 100%; height: 100%; border: none; border-radius: 8px;"
+                  onerror="this.parentElement.innerHTML='<div class=\\'p-8 text-center text-red-600\\'><i class=\\'fas fa-exclamation-triangle text-3xl mb-4\\'></i><p>Impossible de prévisualiser le PDF</p><a href=\\'${fileUrl}\\' class=\\'btn btn-primary mt-4\\' download><i class=\\'fas fa-download\\'></i> Télécharger</a></div>'">
+          </iframe>
         </div>
       `;
     } else if (mime.startsWith('text/')) {
       fetch(fileUrl)
-        .then((r) => r.text())
+        .then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+          return r.text();
+        })
         .then((text) => {
           previewContent.innerHTML = `
             <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; max-height: 70vh; overflow-y: auto;">
@@ -1034,35 +1079,78 @@
             </div>
           `;
         })
-        .catch(() => {
-          previewContent.innerHTML = `<p style="color: #b91c1c; padding: 1rem; text-align: center;">Erreur lors du chargement du fichier texte</p>`;
+        .catch((error) => {
+          console.error('[Preview] Erreur chargement fichier texte', error);
+          previewContent.innerHTML = `
+            <div class="p-8 text-center text-red-600">
+              <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
+              <p class="font-semibold mb-2">Erreur lors du chargement du fichier texte</p>
+              <p class="text-sm text-red-500 mb-4">${escapeHtml(error.message || 'Erreur inconnue')}</p>
+              <a href="${fileUrl}" class="btn btn-primary" download>
+                <i class="fas fa-download"></i> Télécharger le fichier
+              </a>
+            </div>
+          `;
         });
     } else {
       previewContent.innerHTML = `
-        <div class="p-6 text-center">
-          <i class="fas fa-file text-4xl text-gray-400 mb-3" aria-hidden="true"></i>
-          <p class="text-gray-600 mb-4">Prévisualisation non disponible pour ce type de fichier</p>
-          <a href="${fileUrl}" class="btn btn-primary" download><i class="fas fa-download"></i> Télécharger</a>
+        <div class="p-8 text-center">
+          <i class="fas fa-file text-5xl text-gray-400 mb-4" aria-hidden="true"></i>
+          <p class="text-gray-600 mb-2 font-semibold">Prévisualisation non disponible</p>
+          <p class="text-sm text-gray-500 mb-4">Ce type de fichier (${escapeHtml(mime || 'inconnu')}) ne peut pas être prévisualisé</p>
+          <a href="${fileUrl}" class="btn btn-primary inline-flex items-center gap-2" download>
+            <i class="fas fa-download"></i> Télécharger le fichier
+          </a>
         </div>
       `;
     }
   };
 
   window.editDemande = async function editDemande(id) {
+    console.log('[Edit] editDemande appelé', { id, idType: typeof id });
+    
+    if (!id) {
+      console.error('[Edit] ID manquant');
+      if (window.Toast) Toast.error('ID de demande manquant');
+      return;
+    }
+    
     try {
       const response = await apiCall(`/api/contact/demandes/${id}`);
-      if (!response || !response.ok) throw new Error('Erreur chargement');
-      const demande = await response.json();
-      const editIdEl = $('edit-id');
-      if (editIdEl) {
-        editIdEl.value = demande.id;
+      if (!response || !response.ok) {
+        const errorMsg = response ? `Erreur HTTP ${response.status}` : 'Pas de réponse du serveur';
+        throw new Error(errorMsg);
       }
-      $('edit-statut').value = demande.statut;
-      $('edit-notes').value = demande.notes_internes || '';
+      
+      const demande = await response.json();
+      console.log('[Edit] Demande chargée', { id: demande.id, statut: demande.statut });
+      
+      const editIdEl = $('edit-id');
+      const editStatutEl = $('edit-statut');
+      const editNotesEl = $('edit-notes');
+      
+      if (!editIdEl || !editStatutEl || !editNotesEl) {
+        console.error('[Edit] Éléments formulaire non trouvés', {
+          editId: !!editIdEl,
+          editStatut: !!editStatutEl,
+          editNotes: !!editNotesEl
+        });
+        if (window.Toast) Toast.error('Erreur: formulaire de modification non trouvé');
+        return;
+      }
+      
+      editIdEl.value = demande.id;
+      editStatutEl.value = demande.statut || 'nouvelle';
+      editNotesEl.value = demande.notes_internes || '';
+      
+      // Ouvrir le modal
       openOverlayModal('editModal');
+      console.log('[Edit] Modal ouvert');
     } catch (e) {
-      console.error(e);
-      if (window.Toast) Toast.error('Erreur lors du chargement');
+      console.error('[Edit] Erreur', e);
+      if (window.Toast) {
+        Toast.error(e.message || 'Erreur lors du chargement de la demande');
+      }
     }
   };
 
