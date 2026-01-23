@@ -931,14 +931,19 @@
 
   // Fonctions pour gérer la sélection multiple des fournisseurs
   window.toggleFournisseur = function toggleFournisseur(labelElement) {
+    console.log('[Fournisseurs] toggleFournisseur appelé', { labelElement });
     const checkbox = labelElement.querySelector('input[type=checkbox]');
     if (checkbox) {
       checkbox.checked = !checkbox.checked;
       checkbox.dispatchEvent(new Event('change'));
+      console.log('[Fournisseurs] Checkbox basculé', { checked: checkbox.checked, value: checkbox.value });
+    } else {
+      console.error('[Fournisseurs] Checkbox non trouvé dans labelElement');
     }
   };
 
   window.updateFournisseursCount = function updateFournisseursCount() {
+    console.log('[Fournisseurs] updateFournisseursCount appelé');
     const checkboxes = document.querySelectorAll('input[name="fournisseur_ids"]:checked');
     const count = checkboxes.length;
     const total = document.querySelectorAll('input[name="fournisseur_ids"]').length;
@@ -968,23 +973,31 @@
   };
 
   window.selectAllFournisseurs = function selectAllFournisseurs() {
+    console.log('[Fournisseurs] selectAllFournisseurs appelé');
     const checkboxes = document.querySelectorAll('input[name="fournisseur_ids"]');
+    console.log('[Fournisseurs] Checkboxes trouvés:', checkboxes.length);
     checkboxes.forEach(cb => {
       if (!cb.checked) {
         cb.checked = true;
         cb.dispatchEvent(new Event('change'));
       }
     });
-    updateFournisseursCount();
+    if (typeof window.updateFournisseursCount === 'function') {
+      window.updateFournisseursCount();
+    }
   };
 
   window.deselectAllFournisseurs = function deselectAllFournisseurs() {
+    console.log('[Fournisseurs] deselectAllFournisseurs appelé');
     const checkboxes = document.querySelectorAll('input[name="fournisseur_ids"]:checked');
+    console.log('[Fournisseurs] Checkboxes cochés trouvés:', checkboxes.length);
     checkboxes.forEach(cb => {
       cb.checked = false;
       cb.dispatchEvent(new Event('change'));
     });
-    updateFournisseursCount();
+    if (typeof window.updateFournisseursCount === 'function') {
+      window.updateFournisseursCount();
+    }
   };
 
   // Compat: filtre inline éventuel
@@ -1524,13 +1537,13 @@
             </span>
           </div>
           <div style="display:flex;gap:0.5rem;">
-            <button type="button" onclick="selectAllFournisseurs()" 
+            <button type="button" onclick="if(typeof window.selectAllFournisseurs==='function'){window.selectAllFournisseurs();}else{console.error('selectAllFournisseurs non disponible');if(window.Toast){Toast.error('Fonction non disponible');}else{alert('Erreur: fonction non disponible');}}" 
                     style="padding:0.5rem 1rem;font-size:0.875rem;background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500;transition:all 0.2s;"
                     onmouseover="this.style.background='#1d4ed8'" 
                     onmouseout="this.style.background='#2563eb'">
               <i class="fas fa-check-double"></i> Tout sélectionner
             </button>
-            <button type="button" onclick="deselectAllFournisseurs()" 
+            <button type="button" onclick="if(typeof window.deselectAllFournisseurs==='function'){window.deselectAllFournisseurs();}else{console.error('deselectAllFournisseurs non disponible');if(window.Toast){Toast.error('Fonction non disponible');}else{alert('Erreur: fonction non disponible');}}" 
                     style="padding:0.5rem 1rem;font-size:0.875rem;background:#64748b;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500;transition:all 0.2s;"
                     onmouseover="this.style.background='#475569'" 
                     onmouseout="this.style.background='#64748b'">
@@ -1554,10 +1567,10 @@
             <label class="fournisseur-item" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;border:2px solid #e5e7eb;border-radius:12px;margin-bottom:0.5rem;cursor:pointer;transition:all 0.2s;background:white;position:relative;" 
                    onmouseover="if(!this.querySelector('input[type=checkbox]').checked){this.style.background='#f9fafb';this.style.borderColor='#2563eb';}" 
                    onmouseout="if(!this.querySelector('input[type=checkbox]').checked){this.style.background='white';this.style.borderColor='#e5e7eb';}"
-                   onclick="toggleFournisseur(this);">
+                   onclick="if(typeof window.toggleFournisseur==='function'){window.toggleFournisseur(this);}else{const cb = this.querySelector('input[type=checkbox]'); if(cb){cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'));}}">
               <input type="checkbox" name="fournisseur_ids" value="${f.id}" class="fournisseur-checkbox" 
                      style="cursor:pointer;width:20px;height:20px;accent-color:#2563eb;flex-shrink:0;" 
-                     onchange="updateFournisseursCount(); const label = this.closest('label'); if(this.checked){label.style.borderColor='#2563eb';label.style.background='#eff6ff';label.style.borderWidth='2px';}else{label.style.borderColor='#e5e7eb';label.style.background='white';label.style.borderWidth='2px';}">
+                     onchange="if(typeof window.updateFournisseursCount==='function'){window.updateFournisseursCount();} const label = this.closest('label'); if(this.checked){label.style.borderColor='#2563eb';label.style.background='#eff6ff';label.style.borderWidth='2px';}else{label.style.borderColor='#e5e7eb';label.style.background='white';label.style.borderWidth='2px';}">
               <div style="flex:1;min-width:0;">
                 <strong style="color:#1e293b;font-size:1rem;display:block;">${nom}</strong>
                 ${secteur ? `<div style="font-size:0.875rem;color:#64748b;margin-top:0.25rem;"><i class="fas fa-industry" style="color:#94a3b8;"></i> ${secteur}</div>` : ''}
