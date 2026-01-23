@@ -415,15 +415,39 @@
   }
 
   window.switchTab = function(tabName) {
+    console.log('[Tabs] switchTab appelé', { tabName });
+    
+    // Désactiver tous les boutons d'onglets
     document.querySelectorAll('.dd-tab-btn').forEach(btn => {
-      const isMatch = (tabName === 'overview' && btn.textContent.toLowerCase().includes('info')) ||
-                      (tabName === 'articles' && btn.textContent.toLowerCase().includes('article')) ||
-                      (tabName === 'files' && btn.textContent.toLowerCase().includes('fichier'));
-      btn.classList.toggle('active', isMatch);
+      btn.classList.remove('active');
     });
+    
+    // Activer le bon bouton
+    document.querySelectorAll('.dd-tab-btn').forEach(btn => {
+      const btnText = btn.textContent.toLowerCase();
+      const isMatch = 
+        (tabName === 'overview' && (btnText.includes('info') || btnText.includes('informations'))) ||
+        (tabName === 'articles' && btnText.includes('article')) ||
+        (tabName === 'files' && (btnText.includes('fichier') || btnText.includes('file')));
+      
+      if (isMatch) {
+        btn.classList.add('active');
+      }
+    });
+    
+    // Masquer tous les panneaux
     document.querySelectorAll('.tab-pane').forEach(pane => {
-      pane.classList.toggle('hidden', !pane.id.endsWith(tabName));
+      pane.classList.add('hidden');
     });
+    
+    // Afficher le bon panneau
+    const targetPane = document.getElementById(`tab-content-${tabName}`);
+    if (targetPane) {
+      targetPane.classList.remove('hidden');
+      console.log('[Tabs] Panneau affiché', { tabName, paneId: targetPane.id });
+    } else {
+      console.warn('[Tabs] Panneau non trouvé', { tabName, paneId: `tab-content-${tabName}` });
+    }
   }
 
   async function loadDemandes() {
