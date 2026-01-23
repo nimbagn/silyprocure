@@ -374,7 +374,12 @@
         </div>
 
         <div id="tab-content-files" class="tab-pane hidden">
-           <div id="fichiers-joints-${demande.id}">Chargement...</div>
+           <div id="fichiers-joints-${demande.id}" class="space-y-2">
+             <div class="p-8 text-center">
+               <div class="loading-spinner"></div>
+               <p class="text-slate-500 mt-4">Chargement des fichiers...</p>
+             </div>
+           </div>
         </div>
       </div>
     `;
@@ -403,12 +408,26 @@
       console.warn(`[Frontend] renderDetail: Panneau mobile (detail-modal-body) non trouvé`);
     }
     
-    // Charger le reste dynamiquement
+    // Charger le reste dynamiquement avec délais pour que le DOM soit prêt
     if (desktopPanel || mobilePanel) {
-      loadFichiersDemande(demande.id);
-      if (demande.latitude) {
-        setTimeout(() => loadMapForDemande(demande.id, demande.latitude, demande.longitude), 100);
+      // Charger les fichiers joints après un court délai
+      setTimeout(() => {
+        loadFichiersDemande(demande.id);
+      }, 100);
+      
+      // Carte si géolocalisation
+      if (demande.latitude && demande.longitude) {
+        setTimeout(() => {
+          loadMapForDemande(demande.id, parseFloat(demande.latitude), parseFloat(demande.longitude));
+        }, 150);
       }
+      
+      // S'assurer que l'onglet "Informations" est actif par défaut
+      setTimeout(() => {
+        if (typeof window.switchTab === 'function') {
+          window.switchTab('overview');
+        }
+      }, 50);
     } else {
       console.error(`[ERROR] renderDetail: Aucun panneau trouvé pour mettre à jour le contenu`);
     }
