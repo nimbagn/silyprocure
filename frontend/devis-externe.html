@@ -345,28 +345,46 @@
                         </div>
                     </div>
 
-                    <div class="form-group" style="margin-top: 1.5rem;">
-                        <label for="devis-conditions-paiement">Conditions de paiement</label>
-                        <textarea id="devis-conditions-paiement" name="conditions_paiement" rows="2" 
-                                  placeholder="Ex: 30% à la commande, 70% à la livraison"></textarea>
-                    </div>
+                    <div style="padding: 1rem; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 12px; margin-top: 2rem; border: 1px solid #e2e8f0;">
+                        <h3 style="margin: 0 0 1rem 0; color: #1e293b; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-file-contract" style="color: #2563eb;"></i>
+                            Informations complémentaires
+                        </h3>
+                        <div class="form-group">
+                            <label for="devis-conditions-paiement" style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-credit-card" style="color: #64748b;"></i>
+                                Conditions de paiement
+                            </label>
+                            <textarea id="devis-conditions-paiement" name="conditions_paiement" rows="2" 
+                                      placeholder="Ex: 30% à la commande, 70% à la livraison"></textarea>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="devis-garanties">Garanties</label>
-                        <textarea id="devis-garanties" name="garanties" rows="2" 
-                                  placeholder="Garanties offertes..."></textarea>
-                    </div>
+                        <div class="form-group">
+                            <label for="devis-garanties" style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-shield-alt" style="color: #64748b;"></i>
+                                Garanties
+                            </label>
+                            <textarea id="devis-garanties" name="garanties" rows="2" 
+                                      placeholder="Garanties offertes..."></textarea>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="devis-certifications">Certifications</label>
-                        <textarea id="devis-certifications" name="certifications" rows="2" 
-                                  placeholder="Certifications disponibles..."></textarea>
-                    </div>
+                        <div class="form-group">
+                            <label for="devis-certifications" style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-certificate" style="color: #64748b;"></i>
+                                Certifications
+                            </label>
+                            <textarea id="devis-certifications" name="certifications" rows="2" 
+                                      placeholder="Certifications disponibles..."></textarea>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="devis-notes">Notes</label>
-                        <textarea id="devis-notes" name="notes" rows="3" 
-                                  placeholder="Informations complémentaires..."></textarea>
+                        <div class="form-group">
+                            <label for="devis-notes" style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-sticky-note" style="color: #64748b;"></i>
+                                Notes
+                            </label>
+                            <textarea id="devis-notes" name="notes" rows="3" 
+                                      placeholder="Informations complémentaires..."></textarea>
+                        </div>
                     </div>
 
                     <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
