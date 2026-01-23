@@ -864,15 +864,32 @@
                         </small>
                     </div>
                     <div class="form-group">
-                        <label style="margin-bottom: 0.75rem; font-weight: 600;">
-                            <i class="fas fa-users"></i> Fournisseurs sélectionnés (${allRFQs.length})
-                        </label>
-                        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.75rem; background: #f9fafb;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <label style="font-weight: 600; margin: 0;">
+                                <i class="fas fa-users"></i> Fournisseurs (<span id="selected-count-${rfqId}">${allRFQs.length}</span> sélectionné(s) sur ${allRFQs.length})
+                            </label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button type="button" onclick="selectAllFournisseurs${rfqId}()" 
+                                        style="padding: 0.375rem 0.75rem; font-size: 0.875rem; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                                    <i class="fas fa-check-double"></i> Tout sélectionner
+                                </button>
+                                <button type="button" onclick="deselectAllFournisseurs${rfqId}()" 
+                                        style="padding: 0.375rem 0.75rem; font-size: 0.875rem; background: #64748b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                                    <i class="fas fa-times"></i> Tout désélectionner
+                                </button>
+                            </div>
+                        </div>
+                        <div id="fournisseurs-list-${rfqId}" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.75rem; background: #f9fafb;">
                             ${allRFQs.map(rfq => `
-                                <div style="padding: 0.75rem; background: white; border-radius: 6px; margin-bottom: 0.5rem; border: 2px solid #e5e7eb; display: flex; align-items: center; gap: 0.75rem;">
+                                <label class="fournisseur-item-${rfqId}" 
+                                       style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: white; border-radius: 6px; margin-bottom: 0.5rem; border: 2px solid #2563eb; cursor: pointer; transition: all 0.2s;"
+                                       onmouseover="this.style.background='#eff6ff'" 
+                                       onmouseout="updateFournisseurItemStyle${rfqId}(this)">
                                     <input type="checkbox" name="rfq_ids" value="${rfq.id}" checked 
-                                           style="width: 20px; height: 20px; cursor: pointer; accent-color: #2563eb;">
-                                    <div style="flex: 1;">
+                                           class="rfq-checkbox-${rfqId}"
+                                           onchange="updateSelectedCount${rfqId}(); updateFournisseurItemStyle${rfqId}(this.closest('label'))"
+                                           style="width: 20px; height: 20px; cursor: pointer; accent-color: #2563eb; flex-shrink: 0;">
+                                    <div style="flex: 1; min-width: 0;">
                                         <div style="font-weight: 600; color: #1e293b;">
                                             <i class="fas fa-building" style="color: #2563eb; margin-right: 0.5rem;"></i>
                                             ${rfq.destinataire_nom || 'Non spécifié'}
@@ -886,10 +903,77 @@
                                             </div>
                                         ` : ''}
                                     </div>
-                                </div>
+                                    <div class="check-icon-${rfqId}" style="width: 24px; height: 24px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; flex-shrink: 0;">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                </label>
                             `).join('')}
                         </div>
                     </div>
+                    <script>
+                        // Fonctions pour gérer la sélection multiple
+                        function selectAllFournisseurs${rfqId}() {
+                            const checkboxes = document.querySelectorAll('.rfq-checkbox-${rfqId}');
+                            checkboxes.forEach(cb => {
+                                cb.checked = true;
+                                updateFournisseurItemStyle${rfqId}(cb.closest('label'));
+                            });
+                            updateSelectedCount${rfqId}();
+                        }
+                        
+                        function deselectAllFournisseurs${rfqId}() {
+                            const checkboxes = document.querySelectorAll('.rfq-checkbox-${rfqId}');
+                            checkboxes.forEach(cb => {
+                                cb.checked = false;
+                                updateFournisseurItemStyle${rfqId}(cb.closest('label'));
+                            });
+                            updateSelectedCount${rfqId}();
+                        }
+                        
+                        function updateSelectedCount${rfqId}() {
+                            const checkboxes = document.querySelectorAll('.rfq-checkbox-${rfqId}:checked');
+                            const count = checkboxes.length;
+                            const countEl = document.getElementById('selected-count-${rfqId}');
+                            if (countEl) countEl.textContent = count;
+                            
+                            // Mettre à jour le bouton de génération
+                            const submitBtn = document.querySelector('#modal-generate-links-all .btn-primary');
+                            if (submitBtn) {
+                                submitBtn.innerHTML = \`<i class="fas fa-link"></i> Générer les liens (\${count})\`;
+                            }
+                        }
+                        
+                        function updateFournisseurItemStyle${rfqId}(labelEl) {
+                            if (!labelEl) return;
+                            const checkbox = labelEl.querySelector('.rfq-checkbox-${rfqId}');
+                            const checkIcon = labelEl.querySelector('.check-icon-${rfqId}');
+                            
+                            if (checkbox && checkbox.checked) {
+                                labelEl.style.borderColor = '#2563eb';
+                                labelEl.style.background = '#eff6ff';
+                                labelEl.style.borderWidth = '2px';
+                                if (checkIcon) checkIcon.style.display = 'flex';
+                            } else {
+                                labelEl.style.borderColor = '#e5e7eb';
+                                labelEl.style.background = 'white';
+                                labelEl.style.borderWidth = '2px';
+                                if (checkIcon) checkIcon.style.display = 'none';
+                            }
+                        }
+                        
+                        // Initialiser les styles après le chargement de la modal
+                        setTimeout(() => {
+                            document.querySelectorAll('.fournisseur-item-${rfqId}').forEach(label => {
+                                updateFournisseurItemStyle${rfqId}(label);
+                            });
+                        }, 100);
+                        
+                        // Exposer les fonctions globalement
+                        window.selectAllFournisseurs${rfqId} = selectAllFournisseurs${rfqId};
+                        window.deselectAllFournisseurs${rfqId} = deselectAllFournisseurs${rfqId};
+                        window.updateSelectedCount${rfqId} = updateSelectedCount${rfqId};
+                        window.updateFournisseurItemStyle${rfqId} = updateFournisseurItemStyle${rfqId};
+                    </script>
                 </form>
             `;
 
