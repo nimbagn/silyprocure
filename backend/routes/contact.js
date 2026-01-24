@@ -683,7 +683,10 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
 
                 const numero = await generateRFQNumber(connection);
 
-                // Créer la RFQ
+                // Créer la RFQ avec référence de la demande dans la description
+                const demandeReference = demande.reference || `DEV-${demande.id}`;
+                const descriptionWithRef = `[Demande: ${demandeReference}] ${demande.message || `Demande de devis pour : ${demande.nom}${demande.entreprise ? ' (' + demande.entreprise + ')' : ''}`}`;
+                
                 const [rfqRows, rfqResult] = await connection.execute(
                     `INSERT INTO rfq (numero, date_emission, date_limite_reponse, emetteur_id, destinataire_id,
                       description, lieu_livraison_id, date_livraison_souhaitee, incoterms, conditions_paiement, statut)
@@ -694,7 +697,7 @@ router.post('/demandes/:id/create-rfq', requireRole('admin', 'superviseur'), val
                         date_limite_reponse || null,
                         emetteur_id,
                         fournisseur_id,
-                        demande.message || `Demande de devis pour : ${demande.nom}${demande.entreprise ? ' (' + demande.entreprise + ')' : ''}`,
+                        descriptionWithRef,
                         null, // lieu_livraison_id - peut être ajouté plus tard
                         date_livraison_souhaitee || null,
                         incoterms || null,

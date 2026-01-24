@@ -73,26 +73,64 @@ router.get('/:id', validateId, async (req, res) => {
 
         const commande = commandes[0];
         
-        // Récupérer le client (entreprise) depuis la demande de devis si disponible
+        // Récupérer le client (entreprise) et la référence de la demande depuis la demande de devis si disponible
         // commande -> devis -> demandes_devis -> clients -> entreprises
         if (commande.devis_id) {
             try {
                 const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
                 const placeholder = usePostgreSQL ? '$1' : '?';
                 
-                const [clientData] = await pool.execute(
-                    `SELECT cl.entreprise_id as client_entreprise_id, cl.id as client_id
-                     FROM commandes c 
-                     LEFT JOIN devis d ON c.devis_id = d.id 
-                     LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id
-                     LEFT JOIN clients cl ON dd.client_id = cl.id
-                     WHERE c.id = ${placeholder}`,
-                    [id]
-                );
+                let clientData = [];
+                try {
+                    // Essayer avec demande_devis_id direct
+                    [clientData] = await pool.execute(
+                        `SELECT cl.entreprise_id as client_entreprise_id, 
+                                cl.id as client_id,
+                                dd.id as demande_devis_id,
+                                dd.reference as demande_reference,
+                                dd.nom as demande_client_nom
+                         FROM commandes c 
+                         LEFT JOIN devis d ON c.devis_id = d.id 
+                         LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id
+                         LEFT JOIN clients cl ON dd.client_id = cl.id
+                         WHERE c.id = ${placeholder}`,
+                        [id]
+                    );
+                } catch (err) {
+                    // Si demande_devis_id n'existe pas, essayer via RFQ description
+                    if (err.code === 'ER_BAD_FIELD_ERROR' && err.message.includes('demande_devis_id')) {
+                        [clientData] = await pool.execute(
+                            `SELECT cl.entreprise_id as client_entreprise_id, 
+                                    cl.id as client_id,
+                                    dd.id as demande_devis_id,
+                                    dd.reference as demande_reference,
+                                    dd.nom as demande_client_nom
+                             FROM commandes c 
+                             LEFT JOIN devis d ON c.devis_id = d.id 
+                             LEFT JOIN rfq r ON d.rfq_id = r.id
+                             LEFT JOIN demandes_devis dd ON r.description LIKE CONCAT('%[Demande: ', dd.reference, ']%') 
+                                OR r.description LIKE CONCAT('%Demande: ', dd.reference, '%')
+                                OR (dd.reference IS NOT NULL AND r.description LIKE CONCAT('%', dd.reference, '%'))
+                             LEFT JOIN clients cl ON dd.client_id = cl.id
+                             WHERE c.id = ${placeholder}
+                             LIMIT 1`,
+                            [id]
+                        );
+                    } else {
+                        throw err;
+                    }
+                }
                 
-                if (clientData && clientData.length > 0 && clientData[0].client_entreprise_id) {
-                    commande.client_entreprise_id = clientData[0].client_entreprise_id;
-                    commande.client_id = clientData[0].client_id;
+                if (clientData && clientData.length > 0) {
+                    if (clientData[0].client_entreprise_id) {
+                        commande.client_entreprise_id = clientData[0].client_entreprise_id;
+                        commande.client_id = clientData[0].client_id;
+                    }
+                    if (clientData[0].demande_devis_id) {
+                        commande.demande_devis_id = clientData[0].demande_devis_id;
+                        commande.demande_reference = clientData[0].demande_reference;
+                        commande.demande_client_nom = clientData[0].demande_client_nom;
+                    }
                 }
             } catch (err) {
                 // Si les colonnes n'existent pas, ignorer silencieusement

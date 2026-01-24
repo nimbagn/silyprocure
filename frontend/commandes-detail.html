@@ -1409,6 +1409,43 @@
                 <!-- Colonne Gauche - Contenu Principal -->
                 <div class="fade-in" style="display: flex; flex-direction: column; gap: 2rem;">
                     
+                    ${commande.demande_reference ? `
+                        <!-- Section Traçabilité -->
+                        <div class="card" style="border-left: 4px solid #3b82f6; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+                            <div class="card-header" style="background: transparent; border-bottom: 2px solid #93c5fd;">
+                                <h2 class="card-title" style="color: #1e40af; margin: 0;">
+                                    <i class="fas fa-search-location"></i> Traçabilité - Demande Initiale
+                                </h2>
+                            </div>
+                            <div class="card-body" style="padding: 1.5rem;">
+                                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                                    <div style="flex: 1; min-width: 200px;">
+                                        <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.5rem;">
+                                            <i class="fas fa-barcode"></i> Référence de la demande
+                                        </div>
+                                        <div style="font-size: 1.25rem; font-weight: 700; color: #1e40af;">
+                                            ${commande.demande_reference}
+                                        </div>
+                                        ${commande.demande_client_nom ? `
+                                            <div style="font-size: 0.875rem; color: #475569; margin-top: 0.5rem;">
+                                                <i class="fas fa-user"></i> ${commande.demande_client_nom}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    ${commande.demande_devis_id ? `
+                                        <div>
+                                            <a href="demandes-devis.html?id=${commande.demande_devis_id}" 
+                                               class="btn btn-primary" 
+                                               style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+                                                <i class="fas fa-arrow-left"></i> Voir la demande initiale
+                                            </a>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
                     <!-- Info Générales -->
                     <div class="card">
                         <div class="card-header">

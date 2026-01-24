@@ -58,16 +58,66 @@ router.get('/:id', validateId, async (req, res) => {
         const { id } = req.params;
         console.log('🔵 GET /api/devis/:id - ID:', id, 'User:', req.user?.id, 'Role:', req.user?.role);
 
-        const [devis] = await pool.execute(
-            `SELECT d.*, 
-                    r.numero as rfq_numero,
-                    e.nom as fournisseur_nom
-             FROM devis d
-             LEFT JOIN rfq r ON d.rfq_id = r.id
-             LEFT JOIN entreprises e ON d.fournisseur_id = e.id
-             WHERE d.id = $1`,
-            [id]
-        );
+        // Récupérer le devis avec la référence de la demande si disponible
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        const placeholder = usePostgreSQL ? '$1' : '?';
+        
+        let devis = [];
+        try {
+            // Essayer avec demande_devis_id direct
+            [devis] = await pool.execute(
+                `SELECT d.*, 
+                        r.numero as rfq_numero,
+                        e.nom as fournisseur_nom,
+                        dd.id as demande_devis_id,
+                        dd.reference as demande_reference,
+                        dd.nom as demande_client_nom
+                 FROM devis d
+                 LEFT JOIN rfq r ON d.rfq_id = r.id
+                 LEFT JOIN entreprises e ON d.fournisseur_id = e.id
+                 LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id
+                 WHERE d.id = ${placeholder}`,
+                [id]
+            );
+        } catch (err) {
+            // Si demande_devis_id n'existe pas, essayer via RFQ description
+            if (err.code === 'ER_BAD_FIELD_ERROR' && err.message.includes('demande_devis_id')) {
+                try {
+                    [devis] = await pool.execute(
+                        `SELECT d.*, 
+                                r.numero as rfq_numero,
+                                r.description as rfq_description,
+                                e.nom as fournisseur_nom,
+                                dd.id as demande_devis_id,
+                                dd.reference as demande_reference,
+                                dd.nom as demande_client_nom
+                         FROM devis d
+                         LEFT JOIN rfq r ON d.rfq_id = r.id
+                         LEFT JOIN entreprises e ON d.fournisseur_id = e.id
+                         LEFT JOIN demandes_devis dd ON r.description LIKE CONCAT('%[Demande: ', dd.reference, ']%') 
+                            OR r.description LIKE CONCAT('%Demande: ', dd.reference, '%')
+                            OR (dd.reference IS NOT NULL AND r.description LIKE CONCAT('%', dd.reference, '%'))
+                         WHERE d.id = ${placeholder}
+                         LIMIT 1`,
+                        [id]
+                    );
+                } catch (err2) {
+                    // Fallback : récupération sans demande
+                    [devis] = await pool.execute(
+                        `SELECT d.*, 
+                                r.numero as rfq_numero,
+                                e.nom as fournisseur_nom
+                         FROM devis d
+                         LEFT JOIN rfq r ON d.rfq_id = r.id
+                         LEFT JOIN entreprises e ON d.fournisseur_id = e.id
+                         WHERE d.id = ${placeholder}`,
+                        [id]
+                    );
+                }
+            } else {
+                throw err;
+            }
+        }
 
         if (devis.length === 0) {
             console.error('❌ Devis non trouvé:', id);

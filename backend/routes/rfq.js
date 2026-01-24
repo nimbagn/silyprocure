@@ -100,15 +100,24 @@ router.get('/:id', validateId, async (req, res) => {
 
         let rfqs;
         try {
+            // Essayer de récupérer la demande via la description (qui contient [Demande: REF])
             const result = await pool.execute(
                 `SELECT r.*, 
                         e1.nom as emetteur_nom, e1.email as emetteur_email,
                         e2.nom as destinataire_nom, e2.email as destinataire_email, 
-                        e2.telephone as destinataire_telephone, e2.secteur_activite as destinataire_secteur
+                        e2.telephone as destinataire_telephone, e2.secteur_activite as destinataire_secteur,
+                        dd.id as demande_devis_id,
+                        dd.reference as demande_reference,
+                        dd.nom as demande_client_nom,
+                        dd.entreprise as demande_client_entreprise
                  FROM rfq r
                  LEFT JOIN entreprises e1 ON r.emetteur_id = e1.id
                  LEFT JOIN entreprises e2 ON r.destinataire_id = e2.id
-                 WHERE r.id = ${placeholder}`,
+                 LEFT JOIN demandes_devis dd ON r.description LIKE CONCAT('%[Demande: ', dd.reference, ']%') 
+                    OR r.description LIKE CONCAT('%Demande: ', dd.reference, '%')
+                    OR (dd.reference IS NOT NULL AND r.description LIKE CONCAT('%', dd.reference, '%'))
+                 WHERE r.id = ${placeholder}
+                 LIMIT 1`,
                 [id]
             );
             // Pour PostgreSQL, pool.execute retourne [rows, mockResult]
@@ -116,10 +125,23 @@ router.get('/:id', validateId, async (req, res) => {
             rfqs = Array.isArray(result[0]) ? result[0] : result;
         } catch (sqlError) {
             console.error('Erreur SQL récupération RFQ:', sqlError.message);
-            console.error('Query:', `SELECT r.* FROM rfq r WHERE r.id = ${placeholder}`);
-            console.error('Params:', [id]);
-            console.error('usePostgreSQL:', usePostgreSQL);
-            throw sqlError;
+            // Fallback : récupération sans la jointure demande
+            try {
+                const result = await pool.execute(
+                    `SELECT r.*, 
+                            e1.nom as emetteur_nom, e1.email as emetteur_email,
+                            e2.nom as destinataire_nom, e2.email as destinataire_email, 
+                            e2.telephone as destinataire_telephone, e2.secteur_activite as destinataire_secteur
+                     FROM rfq r
+                     LEFT JOIN entreprises e1 ON r.emetteur_id = e1.id
+                     LEFT JOIN entreprises e2 ON r.destinataire_id = e2.id
+                     WHERE r.id = ${placeholder}`,
+                    [id]
+                );
+                rfqs = Array.isArray(result[0]) ? result[0] : result;
+            } catch (err2) {
+                throw sqlError;
+            }
         }
 
         if (!rfqs || rfqs.length === 0) {
