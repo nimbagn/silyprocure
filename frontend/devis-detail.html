@@ -278,11 +278,29 @@
         };
 
         // Définir les fonctions AVANT de charger les détails
+        let isProcessingAccept = false; // Protection contre les doubles clics
+        
         async function accepterDevis(id) {
             console.log('accepterDevis appelé avec id:', id);
+            
+            // Protection contre les doubles clics
+            if (isProcessingAccept) {
+                console.log('⚠️ Traitement déjà en cours, ignore le clic');
+                return;
+            }
+            
             if (!confirm('Voulez-vous accepter ce devis et créer une commande ?')) {
                 return;
             }
+            
+            // Désactiver le bouton pendant le traitement
+            const btnAccepter = document.getElementById(`btn-accepter-${id}`);
+            if (btnAccepter) {
+                btnAccepter.disabled = true;
+                btnAccepter.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
+            }
+            
+            isProcessingAccept = true;
             
             try {
                 showLoading('Création de la commande...');
@@ -293,11 +311,31 @@
                     hideLoading();
                     const errorData = await devisResponse.json().catch(() => ({ error: 'Erreur lors de la récupération du devis' }));
                     Toast.error(errorData.error || 'Erreur lors de la récupération du devis');
+                    isProcessingAccept = false;
+                    if (btnAccepter) {
+                        btnAccepter.disabled = false;
+                        btnAccepter.innerHTML = '<i class="fas fa-check"></i> Accepter';
+                    }
                     return;
                 }
                 
                 const devis = await devisResponse.json();
                 console.log('Devis récupéré:', devis);
+                
+                // Vérifier si le devis est déjà accepté
+                if (devis.statut === 'accepte' || devis.statut === 'accepté') {
+                    hideLoading();
+                    Toast.warning('Ce devis a déjà été accepté. Une commande a peut-être déjà été créée.');
+                    isProcessingAccept = false;
+                    if (btnAccepter) {
+                        btnAccepter.disabled = false;
+                        btnAccepter.innerHTML = '<i class="fas fa-check"></i> Accepter';
+                    }
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                    return;
+                }
                 
                 // Créer la commande depuis le devis
                 const commandeData = {
@@ -351,6 +389,7 @@
                         console.log('✅ Commande créée:', commandeData);
                         console.log('✅ Statut devis mis à jour:', statutData);
                         Toast.success('Devis accepté et commande créée avec succès');
+                        isProcessingAccept = false;
                         setTimeout(() => {
                             window.location.reload();
                         }, 1500);
@@ -358,6 +397,7 @@
                         const errorStatut = await statutResponse.json().catch(() => ({ error: 'Erreur inconnue' }));
                         console.error('❌ Erreur mise à jour statut:', errorStatut);
                         Toast.warning('Commande créée mais erreur lors de la mise à jour du statut du devis: ' + (errorStatut.error || 'Erreur inconnue'));
+                        isProcessingAccept = false;
                         setTimeout(() => {
                             window.location.reload();
                         }, 2000);
@@ -365,11 +405,30 @@
                 } else {
                     const errorData = await commandeResponse.json().catch(() => ({ error: 'Erreur inconnue' }));
                     console.error('Erreur création commande:', errorData);
-                    Toast.error(errorData.error || 'Erreur lors de la création de la commande');
+                    
+                    // Si une commande existe déjà, afficher un message spécifique
+                    if (commandeResponse.status === 409 && errorData.existing_commande) {
+                        Toast.warning(`Une commande existe déjà pour ce devis : ${errorData.existing_commande.numero}`);
+                        setTimeout(() => {
+                            window.location.href = `commandes-detail.html?id=${errorData.existing_commande.id}`;
+                        }, 2000);
+                    } else {
+                        Toast.error(errorData.error || errorData.message || 'Erreur lors de la création de la commande');
+                    }
+                    isProcessingAccept = false;
+                    if (btnAccepter) {
+                        btnAccepter.disabled = false;
+                        btnAccepter.innerHTML = '<i class="fas fa-check"></i> Accepter';
+                    }
                 }
             } catch (error) {
                 console.error('Erreur:', error);
                 Toast.error('Erreur de connexion: ' + error.message);
+                isProcessingAccept = false;
+                if (btnAccepter) {
+                    btnAccepter.disabled = false;
+                    btnAccepter.innerHTML = '<i class="fas fa-check"></i> Accepter';
+                }
             } finally {
                 hideLoading();
             }

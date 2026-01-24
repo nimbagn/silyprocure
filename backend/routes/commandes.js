@@ -103,6 +103,37 @@ router.post('/', validateCommande, async (req, res) => {
         fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'commandes.js:90',message:'POST /commandes - Entry',data:{numero,type_commande,fournisseur_id,devis_id,rfq_id,lignesCount:lignes?.length},timestamp:Date.now(),sessionId:'test-complet',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
         // #endregion
 
+        // Vérifier si une commande existe déjà pour ce devis
+        if (devis_id) {
+            const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+            const placeholder = usePostgreSQL ? '$1' : '?';
+            
+            try {
+                const [existingCommandes] = await pool.execute(
+                    `SELECT id, numero, statut FROM commandes WHERE devis_id = ${placeholder} LIMIT 1`,
+                    [devis_id]
+                );
+                
+                if (existingCommandes && existingCommandes.length > 0) {
+                    const existingCommande = existingCommandes[0];
+                    return res.status(409).json({ 
+                        error: `Une commande existe déjà pour ce devis`,
+                        existing_commande: {
+                            id: existingCommande.id,
+                            numero: existingCommande.numero,
+                            statut: existingCommande.statut
+                        },
+                        message: `La commande ${existingCommande.numero} a déjà été créée pour ce devis.`
+                    });
+                }
+            } catch (err) {
+                // Si la colonne devis_id n'existe pas, continuer
+                if (err.code !== 'ER_BAD_FIELD_ERROR') {
+                    console.error('Erreur vérification commande existante:', err);
+                }
+            }
+        }
+
         // Calculer les totaux
         let total_ht = 0;
         let total_tva = 0;
