@@ -607,6 +607,9 @@
             try {
                 showLoading('Chargement des données...');
                 
+                // S'assurer que margeParDefaut est un nombre
+                const margeParDefautNum = parseFloat(margeParDefaut) || 20;
+                
                 // Charger les détails de la commande avec ses lignes
                 const commandeResponse = await apiCall(`/api/commandes/${commandeId}`);
                 if (!commandeResponse || !commandeResponse.ok) {
@@ -662,8 +665,8 @@
                                     ${commande.lignes.map((ligne, index) => {
                                         const prixAchatHT = parseFloat(ligne.prix_unitaire_ht || 0);
                                         const quantite = parseFloat(ligne.quantite || 0);
-                                        const prixVenteHT = prixAchatHT * (1 + margeParDefaut / 100);
-                                        const marge = margeParDefaut;
+                                        const prixVenteHT = prixAchatHT * (1 + margeParDefautNum / 100);
+                                        const marge = margeParDefautNum;
                                         const totalHT = prixVenteHT * quantite;
                                         
                                         return `
@@ -718,7 +721,7 @@
                         <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                             <div class="form-group">
                                 <label>Marge commerciale (%) *</label>
-                                <input type="number" id="proforma-marge" class="form-control" value="${margeParDefaut}" min="0" max="100" step="0.01" required 
+                                <input type="number" id="proforma-marge" class="form-control" value="${margeParDefautNum}" min="0" max="100" step="0.01" required 
                                        onchange="if(typeof window.applyGlobalMarge==='function'){window.applyGlobalMarge(${commandeId});}">
                                 <small style="color: #666;">Pourcentage à ajouter au prix d'achat</small>
                             </div>
@@ -943,14 +946,8 @@
         
         // Fonction pour prévisualiser le PDF d'une commande
         async function previewPDFCommande(commandeId) {
-            // #region agent log
-            fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'commandes-detail.html:945',message:'previewPDFCommande appelé',data:{commandeId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
             try {
                 const token = localStorage.getItem('token');
-                // #region agent log
-                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'commandes-detail.html:950',message:'Token récupéré',data:{hasToken:!!token,tokenLength:token?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
                 if (!token) {
                     Toast.error('Vous devez être connecté pour prévisualiser le PDF');
                     return;
@@ -964,15 +961,8 @@
                     baseUrl = window.location.origin;
                 }
                 
-                // #region agent log
-                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'commandes-detail.html:960',message:'Base URL déterminée',data:{baseUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
-                
                 // Utiliser fetch pour récupérer le PDF avec authentification, puis créer un blob URL
                 const url = `${baseUrl}/api/pdf/commande/${commandeId}?preview=true`;
-                // #region agent log
-                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'commandes-detail.html:965',message:'Tentative de récupération du PDF',data:{url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                // #endregion
                 
                 const response = await fetch(url, {
                     method: 'GET',
@@ -981,15 +971,8 @@
                     }
                 });
                 
-                // #region agent log
-                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'commandes-detail.html:975',message:'Réponse reçue',data:{status:response.status,statusText:response.statusText,ok:response.ok,contentType:response.headers.get('content-type')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                // #endregion
-                
                 if (!response.ok) {
                     const errorText = await response.text();
-                    // #region agent log
-                    fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'commandes-detail.html:980',message:'Erreur réponse',data:{status:response.status,errorText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                    // #endregion
                     if (response.status === 401) {
                         Toast.error('Session expirée. Veuillez vous reconnecter.');
                         window.location.href = 'index.html';
@@ -1001,18 +984,12 @@
                 
                 // Récupérer le blob
                 const blob = await response.blob();
-                // #region agent log
-                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'commandes-detail.html:990',message:'Blob créé',data:{blobSize:blob.size,blobType:blob.type},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                // #endregion
                 
                 // Créer un blob URL pour l'affichage
                 const blobUrl = window.URL.createObjectURL(blob);
                 
                 // Ouvrir le PDF dans un nouvel onglet
                 const newWindow = window.open(blobUrl, '_blank');
-                // #region agent log
-                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'commandes-detail.html:996',message:'Fenêtre ouverte',data:{windowOpened:!!newWindow,blobUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                // #endregion
                 
                 if (!newWindow) {
                     Toast.error('Veuillez autoriser les pop-ups pour prévisualiser le PDF');
@@ -1026,9 +1003,6 @@
                 }, 1000);
                 
             } catch (error) {
-                // #region agent log
-                fetch('http://127.0.0.1:7244/ingest/4b4f730e-c02b-49d5-b562-4d5fc3dd49d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'commandes-detail.html:1010',message:'Exception capturée',data:{error:error.message,stack:error.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                // #endregion
                 console.error('Erreur prévisualisation PDF:', error);
                 Toast.error('Erreur lors de la prévisualisation du PDF: ' + error.message);
             }
