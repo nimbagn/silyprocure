@@ -44,20 +44,31 @@ router.get('/analyze-quotes/:rfq_id', async (req, res) => {
         }
 
         const pool = require('../config/database');
-        const [analyses] = await pool.execute(
-            `SELECT resultat, date_creation, date_modification 
-             FROM ai_analyses 
-             WHERE rfq_id = ? AND type_analyse = 'quote_analysis'
-             ORDER BY date_modification DESC LIMIT 1`,
-            [rfqId]
-        );
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        const placeholder = usePostgreSQL ? '$1' : '?';
+        
+        try {
+            const [analyses] = await pool.execute(
+                `SELECT resultat, date_creation, date_modification 
+                 FROM ai_analyses 
+                 WHERE rfq_id = ${placeholder} AND type_analyse = 'quote_analysis'
+                 ORDER BY date_modification DESC LIMIT 1`,
+                [rfqId]
+            );
 
-        if (analyses.length === 0) {
-            return res.status(404).json({ error: 'Aucune analyse trouvée' });
+            if (analyses.length === 0) {
+                return res.status(404).json({ error: 'Aucune analyse trouvée' });
+            }
+
+            const result = JSON.parse(analyses[0].resultat);
+            res.json(result);
+        } catch (err) {
+            // Si la table n'existe pas, retourner 404 au lieu d'erreur 500
+            if (err.code === 'ER_NO_SUCH_TABLE' || err.code === '42P01') {
+                return res.status(404).json({ error: 'Aucune analyse trouvée' });
+            }
+            throw err;
         }
-
-        const result = JSON.parse(analyses[0].resultat);
-        res.json(result);
     } catch (error) {
         console.error('Erreur récupération analyse:', error);
         res.status(500).json({ error: error.message });
