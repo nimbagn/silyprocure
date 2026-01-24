@@ -131,9 +131,10 @@ async function notifyClientDemandeDevis(demande) {
 async function notifyFournisseurDemandeDevis(fournisseur, rfq) {
     try {
         // Récupérer le téléphone du fournisseur
+        // Note: La table contacts n'a pas de colonne type_contact, on récupère simplement le premier contact
         const [contacts] = await pool.execute(
-            'SELECT telephone FROM contacts WHERE entreprise_id = $1 AND type_contact = $2 LIMIT 1',
-            [fournisseur.id, 'principal']
+            'SELECT telephone FROM contacts WHERE entreprise_id = $1 LIMIT 1',
+            [fournisseur.id]
         );
         
         let phone = fournisseur.telephone;

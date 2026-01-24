@@ -67,6 +67,7 @@ router.get('/devis/:id', validateId, async (req, res) => {
         const { id } = req.params;
 
         // Récupérer le devis avec ses lignes et informations complètes
+        // Note: Le client est récupéré via la RFQ (emetteur_id -> utilisateurs -> entreprises)
         const [devisList] = await pool.execute(
             `SELECT d.*, 
                     e.nom as fournisseur_nom,
@@ -82,7 +83,9 @@ router.get('/devis/:id', validateId, async (req, res) => {
              FROM devis d
              LEFT JOIN entreprises e ON d.fournisseur_id = e.id
              LEFT JOIN adresses ae ON e.id = ae.entreprise_id AND ae.type_adresse = 'siege'
-             LEFT JOIN entreprises c ON d.client_id = c.id
+             LEFT JOIN rfq r ON d.rfq_id = r.id
+             LEFT JOIN utilisateurs u ON r.emetteur_id = u.id
+             LEFT JOIN entreprises c ON u.entreprise_id = c.id
              LEFT JOIN adresses ac ON c.id = ac.entreprise_id AND ac.type_adresse = 'siege'
              WHERE d.id = ?`,
             [id]

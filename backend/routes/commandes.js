@@ -132,6 +132,35 @@ router.post('/', validateCommande, async (req, res) => {
             total_ttc
         });
 
+        // Convertir tous les undefined en null pour éviter les erreurs SQL
+        const params = [
+            numero || null,
+            type_commande || null,
+            date_commande || null,
+            date_livraison_souhaitee || null,
+            commandeur_id || null,
+            fournisseur_id || null,
+            contact_fournisseur_id || null,
+            devis_id || null,
+            rfq_id || null,
+            adresse_livraison_id || null,
+            contact_livraison || null,
+            telephone_livraison || null,
+            heure_livraison || null,
+            incoterms || null,
+            mode_transport || null,
+            instructions_livraison || null,
+            conditions_paiement || null,
+            delai_paiement_jours || null,
+            mode_paiement || null,
+            projet_id || null,
+            centre_cout_id || null,
+            budget_approuve || null,
+            total_ht || 0,
+            total_tva || 0,
+            total_ttc || 0
+        ];
+
         const [commandeRows, commandeResult] = await pool.execute(
             `INSERT INTO commandes (numero, type_commande, date_commande, date_livraison_souhaitee,
               commandeur_id, fournisseur_id, contact_fournisseur_id, devis_id, rfq_id,
@@ -140,12 +169,7 @@ router.post('/', validateCommande, async (req, res) => {
               delai_paiement_jours, mode_paiement, projet_id, centre_cout_id, budget_approuve,
               total_ht, total_tva, total_ttc, statut)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, 'brouillon') RETURNING id`,
-            [numero, type_commande, date_commande, date_livraison_souhaitee,
-             commandeur_id, fournisseur_id, contact_fournisseur_id, devis_id, rfq_id,
-             adresse_livraison_id, contact_livraison, telephone_livraison, heure_livraison,
-             incoterms, mode_transport, instructions_livraison, conditions_paiement,
-             delai_paiement_jours, mode_paiement, projet_id, centre_cout_id, budget_approuve,
-             total_ht, total_tva, total_ttc]
+            params
         );
 
         console.log('🟦 Résultat insertion commande:', {
