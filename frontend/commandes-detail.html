@@ -731,12 +731,20 @@
                             ${clients.length > 0 ? `
                             <select id="proforma-client-id" class="form-control" required>
                                 <option value="">-- Sélectionnez un client --</option>
-                                ${clients.map(c => `<option value="${c.id}">${c.nom}</option>`).join('')}
+                                ${clients.map(c => {
+                                    // Pré-sélectionner le client si disponible depuis la commande
+                                    const isSelected = commande.client_entreprise_id && commande.client_entreprise_id == c.id ? 'selected' : '';
+                                    return `<option value="${c.id}" ${isSelected}>${c.nom}</option>`;
+                                }).join('')}
                             </select>
-                            <small style="color: #666;">Sélectionnez le client pour qui la facture proforma sera créée</small>
+                            <small style="color: #666;">
+                                ${commande.client_entreprise_id ? 
+                                    '<i class="fas fa-check-circle" style="color: var(--color-success);"></i> Client pré-sélectionné depuis la demande initiale' : 
+                                    'Sélectionnez le client pour qui la facture proforma sera créée'}
+                            </small>
                             ` : `
                             <div style="padding: 1rem; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
-                                <p style="margin: 0; color: #856404;"><i class="fas fa-exclamation-triangle"></i> Aucun client trouvé. Veuillez d'abord créer des entreprises de type "acheteur" dans la section Entreprises.</p>
+                                <p style="margin: 0; color: #856404;"><i class="fas fa-exclamation-triangle"></i> Aucun client trouvé. Veuillez d'abord créer des entreprises de type "acheteur" ou "client" dans la section Entreprises.</p>
                             </div>
                             `}
                         </div>

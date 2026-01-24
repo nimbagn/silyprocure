@@ -72,6 +72,35 @@ router.get('/:id', validateId, async (req, res) => {
         }
 
         const commande = commandes[0];
+        
+        // Récupérer le client (entreprise) depuis la demande de devis si disponible
+        // commande -> devis -> demandes_devis -> clients -> entreprises
+        if (commande.devis_id) {
+            try {
+                const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+                const placeholder = usePostgreSQL ? '$1' : '?';
+                
+                const [clientData] = await pool.execute(
+                    `SELECT cl.entreprise_id as client_entreprise_id, cl.id as client_id
+                     FROM commandes c 
+                     LEFT JOIN devis d ON c.devis_id = d.id 
+                     LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id
+                     LEFT JOIN clients cl ON dd.client_id = cl.id
+                     WHERE c.id = ${placeholder}`,
+                    [id]
+                );
+                
+                if (clientData && clientData.length > 0 && clientData[0].client_entreprise_id) {
+                    commande.client_entreprise_id = clientData[0].client_entreprise_id;
+                    commande.client_id = clientData[0].client_id;
+                }
+            } catch (err) {
+                // Si les colonnes n'existent pas, ignorer silencieusement
+                if (err.code !== 'ER_BAD_FIELD_ERROR') {
+                    console.warn('⚠️ Erreur récupération client depuis commande:', err.message);
+                }
+            }
+        }
 
         // Récupérer les lignes
         const [lignes] = await pool.execute(
