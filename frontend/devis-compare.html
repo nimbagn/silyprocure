@@ -354,8 +354,10 @@
             `;
 
             // Trouver le meilleur prix
-            const meilleurPrix = Math.min(...devis.map(d => d.total_ttc));
-            const meilleurDevis = devis.find(d => d.total_ttc === meilleurPrix);
+            // Filtrer les devis valides avec total_ttc
+            const devisValides = devis.filter(d => d && d.total_ttc != null && !isNaN(parseFloat(d.total_ttc)));
+            const meilleurPrix = devisValides.length > 0 ? Math.min(...devisValides.map(d => parseFloat(d.total_ttc))) : null;
+            const meilleurDevis = meilleurPrix != null ? devisValides.find(d => parseFloat(d.total_ttc) === meilleurPrix) : null;
 
             // Section Analyse IA
             if (aiAnalysis && aiAnalysis.scores && aiAnalysis.scores.length > 0) {
@@ -411,15 +413,20 @@
             html += `
                 <div style="margin-top: 2rem; padding: 1.5rem; background: var(--color-background-blue); border-radius: 8px;">
                     <h3 style="margin-bottom: 1rem;"><i class="fas fa-trophy"></i> Recommandation</h3>
-                    <p><strong>Meilleur prix:</strong> ${meilleurDevis.fournisseur_nom} - ${formatCurrency(meilleurPrix)}</p>
+                    ${meilleurDevis && meilleurPrix != null ? `
+                        <p><strong>Meilleur prix:</strong> ${meilleurDevis.fournisseur_nom || 'N/A'} - ${formatCurrency(meilleurPrix)}</p>
+                    ` : `
+                        <p style="color: #666;"><i class="fas fa-info-circle"></i> Impossible de déterminer le meilleur prix (données manquantes)</p>
+                    `}
                     <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-                        ${devis.map(d => {
+                        ${devis.filter(d => d && d.id).map(d => {
                             const aiScore = aiAnalysis && aiAnalysis.scores ? aiAnalysis.scores.find(s => s.devis_id === d.id) : null;
-                            const isBestAI = aiScore && aiAnalysis.scores[0] && aiScore.devis_id === aiAnalysis.scores[0].devis_id;
+                            const isBestAI = aiScore && aiAnalysis.scores && aiAnalysis.scores[0] && aiScore.devis_id === aiAnalysis.scores[0].devis_id;
+                            const isBestPrice = meilleurDevis && d.id === meilleurDevis.id;
                             return `
-                            <button class="btn ${d.id === meilleurDevis.id || isBestAI ? 'btn-success' : 'btn-secondary'}" 
-                                    onclick="accepterDevis(${d.id})">
-                                ${d.id === meilleurDevis.id || isBestAI ? '<i class="fas fa-check"></i> ' : ''}Accepter ${d.fournisseur_nom}
+                            <button class="btn ${isBestPrice || isBestAI ? 'btn-success' : 'btn-secondary'}" 
+                                    onclick="if(typeof accepterDevis==='function'){accepterDevis(${d.id});}else{alert('Fonction non disponible');}">
+                                ${isBestPrice || isBestAI ? '<i class="fas fa-check"></i> ' : ''}Accepter ${d.fournisseur_nom || 'Devis ' + d.id}
                                 ${aiScore ? ` <span style="font-size: 0.8em; opacity: 0.8;">(${aiScore.total_score}/100)</span>` : ''}
                             </button>
                         `;

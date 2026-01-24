@@ -14,15 +14,20 @@ class QuoteAnalyzer {
     async analyzeQuotes(rfqId) {
         try {
             // Récupérer tous les devis de la RFQ
+            // Note: ville et pays sont dans la table adresses, pas entreprises
+            const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+            const placeholder = usePostgreSQL ? '$1' : '?';
+            
             const [devis] = await pool.execute(
                 `SELECT d.*, 
                         e.nom as fournisseur_nom,
                         e.secteur_activite,
-                        e.ville,
-                        e.pays
+                        a.ville,
+                        a.pays
                  FROM devis d
                  LEFT JOIN entreprises e ON d.fournisseur_id = e.id
-                 WHERE d.rfq_id = ? AND d.statut != 'refuse'
+                 LEFT JOIN adresses a ON e.id = a.entreprise_id AND a.type_adresse = 'siege'
+                 WHERE d.rfq_id = ${placeholder} AND d.statut != 'refuse'
                  ORDER BY d.date_emission DESC`,
                 [rfqId]
             );

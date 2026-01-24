@@ -71,28 +71,58 @@ router.get('/devis/:id', validateId, async (req, res) => {
         const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
         const placeholder = usePostgreSQL ? '$1' : '?';
         
-        const [devisList] = await pool.execute(
-            `SELECT d.*, 
-                    e.nom as fournisseur_nom,
-                    e.telephone as fournisseur_telephone,
-                    e.email as fournisseur_email,
-                    ae.adresse_ligne1 as fournisseur_adresse,
-                    ae.ville as fournisseur_ville,
-                    c.nom as client_nom,
-                    c.telephone as client_telephone,
-                    c.email as client_email,
-                    ac.adresse_ligne1 as client_adresse,
-                    ac.ville as client_ville
-             FROM devis d
-             LEFT JOIN entreprises e ON d.fournisseur_id = e.id
-             LEFT JOIN adresses ae ON e.id = ae.entreprise_id AND ae.type_adresse = 'siege'
-             LEFT JOIN rfq r ON d.rfq_id = r.id
-             LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id
-             LEFT JOIN entreprises c ON dd.client_id = c.id
-             LEFT JOIN adresses ac ON c.id = ac.entreprise_id AND ac.type_adresse = 'siege'
-             WHERE d.id = ${placeholder}`,
-            [id]
-        );
+        let devisList = [];
+        try {
+            // Essayer d'abord avec demande_devis_id (PostgreSQL)
+            [devisList] = await pool.execute(
+                `SELECT d.*, 
+                        e.nom as fournisseur_nom,
+                        e.telephone as fournisseur_telephone,
+                        e.email as fournisseur_email,
+                        ae.adresse_ligne1 as fournisseur_adresse,
+                        ae.ville as fournisseur_ville,
+                        c.nom as client_nom,
+                        c.telephone as client_telephone,
+                        c.email as client_email,
+                        ac.adresse_ligne1 as client_adresse,
+                        ac.ville as client_ville
+                 FROM devis d
+                 LEFT JOIN entreprises e ON d.fournisseur_id = e.id
+                 LEFT JOIN adresses ae ON e.id = ae.entreprise_id AND ae.type_adresse = 'siege'
+                 LEFT JOIN rfq r ON d.rfq_id = r.id
+                 LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id
+                 LEFT JOIN clients cl ON dd.client_id = cl.id
+                 LEFT JOIN entreprises c ON cl.entreprise_id = c.id
+                 LEFT JOIN adresses ac ON c.id = ac.entreprise_id AND ac.type_adresse = 'siege'
+                 WHERE d.id = ${placeholder}`,
+                [id]
+            );
+        } catch (err) {
+            // Si demande_devis_id n'existe pas, récupérer sans les infos client
+            if (err.code === 'ER_BAD_FIELD_ERROR' && err.message.includes('demande_devis_id')) {
+                console.log('⚠️ Colonne demande_devis_id non disponible, récupération sans infos client');
+                [devisList] = await pool.execute(
+                    `SELECT d.*, 
+                            e.nom as fournisseur_nom,
+                            e.telephone as fournisseur_telephone,
+                            e.email as fournisseur_email,
+                            ae.adresse_ligne1 as fournisseur_adresse,
+                            ae.ville as fournisseur_ville,
+                            NULL as client_nom,
+                            NULL as client_telephone,
+                            NULL as client_email,
+                            NULL as client_adresse,
+                            NULL as client_ville
+                     FROM devis d
+                     LEFT JOIN entreprises e ON d.fournisseur_id = e.id
+                     LEFT JOIN adresses ae ON e.id = ae.entreprise_id AND ae.type_adresse = 'siege'
+                     WHERE d.id = ${placeholder}`,
+                    [id]
+                );
+            } else {
+                throw err;
+            }
+        }
 
         if (devisList.length === 0) {
             return res.status(404).json({ error: 'Devis non trouvé' });
