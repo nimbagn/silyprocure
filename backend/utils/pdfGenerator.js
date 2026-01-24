@@ -994,10 +994,12 @@ async function generateDevisPDF(devis, outputPath) {
             
             // Destinataire (client ou fournisseur selon le contexte)
             // Pour un devis, le destinataire est généralement le client
-            if (devis.client_nom || devis.fournisseur_nom) {
+            // Utiliser client_entreprise si disponible, sinon client_nom
+            const devisClientNom = devis.client_entreprise || devis.client_nom || devis.fournisseur_nom;
+            if (devisClientNom) {
                 currentY = drawRecipient(doc, {
-                    nom: devis.client_nom || devis.fournisseur_nom || '-',
-                    contact: devis.client_contact || devis.fournisseur_telephone || '',
+                    nom: devisClientNom,
+                    contact: devis.client_telephone || devis.client_email || devis.fournisseur_telephone || '',
                     adresse: devis.client_adresse || devis.fournisseur_adresse || '',
                     ville: devis.client_ville || devis.fournisseur_ville || '',
                     nif: devis.client_nif || devis.fournisseur_nif || ''
