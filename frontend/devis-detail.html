@@ -559,7 +559,7 @@
             const statut = (devis.statut || '').toString().toLowerCase().trim();
             
             let actionsHTML = `
-                <button onclick="downloadPDFDevis(${devis.id})" class="btn btn-secondary btn-sm">
+                <button id="btn-pdf-${devis.id}" data-devis-id="${devis.id}" class="btn btn-secondary btn-sm">
                     <i class="fas fa-file-pdf"></i> PDF
                 </button>
             `;
@@ -572,7 +572,7 @@
                 `;
             } else if (statut === 'envoye' || statut === 'envoyé') {
                 actionsHTML = `
-                    <button onclick="downloadPDFDevis(${devis.id})" class="btn btn-secondary btn-sm">
+                    <button id="btn-pdf-${devis.id}" data-devis-id="${devis.id}" class="btn btn-secondary btn-sm">
                         <i class="fas fa-file-pdf"></i> PDF
                     </button>
                     <button id="btn-accepter-${devis.id}" data-devis-id="${devis.id}" class="btn btn-success btn-sm">
@@ -590,7 +590,7 @@
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
                 if (user.role === 'admin' || user.role === 'superviseur') {
                     actionsHTML = `
-                        <button onclick="downloadPDFDevis(${devis.id})" class="btn btn-secondary btn-sm">
+                        <button id="btn-pdf-${devis.id}" data-devis-id="${devis.id}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-file-pdf"></i> PDF
                         </button>
                         <button id="btn-accepter-${devis.id}" data-devis-id="${devis.id}" class="btn btn-success btn-sm">
@@ -627,44 +627,84 @@
         }
         
         function attachButtonListeners(devis) {
-            requestAnimationFrame(() => {
+            // Utiliser setTimeout pour s'assurer que le DOM est complètement rendu
+            setTimeout(() => {
+                const btnPDF = document.getElementById(`btn-pdf-${devis.id}`);
                 const btnAccepter = document.getElementById(`btn-accepter-${devis.id}`);
                 const btnRefuser = document.getElementById(`btn-refuser-${devis.id}`);
                 
-                if (btnAccepter) {
-                    const newBtnAccepter = btnAccepter.cloneNode(true);
-                    btnAccepter.parentNode.replaceChild(newBtnAccepter, btnAccepter);
-                    
-                    newBtnAccepter.addEventListener('click', async function(e) {
+                console.log('🔘 Attachement des listeners pour devis:', devis.id);
+                console.log('🔘 Boutons trouvés:', { btnPDF: !!btnPDF, btnAccepter: !!btnAccepter, btnRefuser: !!btnRefuser });
+                
+                // Bouton PDF
+                if (btnPDF) {
+                    btnPDF.addEventListener('click', async function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        const id = parseInt(newBtnAccepter.getAttribute('data-devis-id') || devis.id);
+                        const id = parseInt(btnPDF.getAttribute('data-devis-id') || devis.id);
+                        console.log('🔘 Clic sur bouton PDF pour devis:', id);
                         try {
-                            await accepterDevis(id);
+                            if (typeof downloadPDFDevis === 'function') {
+                                await downloadPDFDevis(id);
+                            } else {
+                                console.error('❌ downloadPDFDevis n\'est pas définie');
+                                Toast.error('Fonction de téléchargement PDF non disponible');
+                            }
+                        } catch (error) {
+                            console.error('❌ Erreur lors du téléchargement du PDF:', error);
+                            Toast.error('Erreur lors du téléchargement du PDF: ' + (error.message || 'Erreur inconnue'));
+                        }
+                    });
+                } else {
+                    console.warn('⚠️ Bouton PDF non trouvé pour devis:', devis.id);
+                }
+                
+                // Bouton Accepter
+                if (btnAccepter) {
+                    btnAccepter.addEventListener('click', async function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const id = parseInt(btnAccepter.getAttribute('data-devis-id') || devis.id);
+                        console.log('🔘 Clic sur bouton Accepter pour devis:', id);
+                        try {
+                            if (typeof accepterDevis === 'function') {
+                                await accepterDevis(id);
+                            } else {
+                                console.error('❌ accepterDevis n\'est pas définie');
+                                Toast.error('Fonction d\'acceptation non disponible');
+                            }
                         } catch (error) {
                             console.error('❌ Erreur lors de l\'acceptation du devis:', error);
                             Toast.error('Erreur lors de l\'acceptation du devis: ' + (error.message || 'Erreur inconnue'));
                         }
                     });
+                } else {
+                    console.warn('⚠️ Bouton Accepter non trouvé pour devis:', devis.id);
                 }
                 
+                // Bouton Refuser
                 if (btnRefuser) {
-                    const newBtnRefuser = btnRefuser.cloneNode(true);
-                    btnRefuser.parentNode.replaceChild(newBtnRefuser, btnRefuser);
-                    
-                    newBtnRefuser.addEventListener('click', async function(e) {
+                    btnRefuser.addEventListener('click', async function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        const id = parseInt(newBtnRefuser.getAttribute('data-devis-id') || devis.id);
+                        const id = parseInt(btnRefuser.getAttribute('data-devis-id') || devis.id);
+                        console.log('🔘 Clic sur bouton Refuser pour devis:', id);
                         try {
-                            await refuserDevis(id);
+                            if (typeof refuserDevis === 'function') {
+                                await refuserDevis(id);
+                            } else {
+                                console.error('❌ refuserDevis n\'est pas définie');
+                                Toast.error('Fonction de refus non disponible');
+                            }
                         } catch (error) {
                             console.error('❌ Erreur lors du refus du devis:', error);
                             Toast.error('Erreur lors du refus du devis: ' + (error.message || 'Erreur inconnue'));
                         }
                     });
+                } else {
+                    console.warn('⚠️ Bouton Refuser non trouvé pour devis:', devis.id);
                 }
-            });
+            }, 100);
         }
         
         function displayDevisDetails(devis) {
