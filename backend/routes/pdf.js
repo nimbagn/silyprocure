@@ -74,6 +74,7 @@ router.get('/devis/:id', validateId, async (req, res) => {
         let devisList = [];
         try {
             // Essayer d'abord avec demande_devis_id (PostgreSQL)
+            // Utiliser COALESCE pour prioriser entreprise, sinon utiliser les champs directs de demandes_devis
             [devisList] = await pool.execute(
                 `SELECT d.*, 
                         e.nom as fournisseur_nom,
@@ -81,11 +82,12 @@ router.get('/devis/:id', validateId, async (req, res) => {
                         e.email as fournisseur_email,
                         ae.adresse_ligne1 as fournisseur_adresse,
                         ae.ville as fournisseur_ville,
-                        c.nom as client_nom,
-                        c.telephone as client_telephone,
-                        c.email as client_email,
-                        ac.adresse_ligne1 as client_adresse,
-                        ac.ville as client_ville
+                        COALESCE(c.nom, dd.nom) as client_nom,
+                        COALESCE(c.telephone, dd.telephone) as client_telephone,
+                        COALESCE(c.email, dd.email) as client_email,
+                        COALESCE(ac.adresse_ligne1, dd.adresse_livraison) as client_adresse,
+                        COALESCE(ac.ville, dd.ville_livraison) as client_ville,
+                        dd.entreprise as client_entreprise
                  FROM devis d
                  LEFT JOIN entreprises e ON d.fournisseur_id = e.id
                  LEFT JOIN adresses ae ON e.id = ae.entreprise_id AND ae.type_adresse = 'siege'
@@ -98,27 +100,55 @@ router.get('/devis/:id', validateId, async (req, res) => {
                 [id]
             );
         } catch (err) {
-            // Si demande_devis_id n'existe pas, récupérer sans les infos client
+            // Si demande_devis_id n'existe pas, essayer via RFQ -> demandes_devis
             if (err.code === 'ER_BAD_FIELD_ERROR' && err.message.includes('demande_devis_id')) {
-                console.log('⚠️ Colonne demande_devis_id non disponible, récupération sans infos client');
-                [devisList] = await pool.execute(
-                    `SELECT d.*, 
-                            e.nom as fournisseur_nom,
-                            e.telephone as fournisseur_telephone,
-                            e.email as fournisseur_email,
-                            ae.adresse_ligne1 as fournisseur_adresse,
-                            ae.ville as fournisseur_ville,
-                            NULL as client_nom,
-                            NULL as client_telephone,
-                            NULL as client_email,
-                            NULL as client_adresse,
-                            NULL as client_ville
-                     FROM devis d
-                     LEFT JOIN entreprises e ON d.fournisseur_id = e.id
-                     LEFT JOIN adresses ae ON e.id = ae.entreprise_id AND ae.type_adresse = 'siege'
-                     WHERE d.id = ${placeholder}`,
-                    [id]
-                );
+                console.log('⚠️ Colonne demande_devis_id non disponible, tentative via RFQ');
+                try {
+                    [devisList] = await pool.execute(
+                        `SELECT d.*, 
+                                e.nom as fournisseur_nom,
+                                e.telephone as fournisseur_telephone,
+                                e.email as fournisseur_email,
+                                ae.adresse_ligne1 as fournisseur_adresse,
+                                ae.ville as fournisseur_ville,
+                                dd.nom as client_nom,
+                                dd.telephone as client_telephone,
+                                dd.email as client_email,
+                                dd.adresse_livraison as client_adresse,
+                                dd.ville_livraison as client_ville,
+                                dd.entreprise as client_entreprise
+                         FROM devis d
+                         LEFT JOIN entreprises e ON d.fournisseur_id = e.id
+                         LEFT JOIN adresses ae ON e.id = ae.entreprise_id AND ae.type_adresse = 'siege'
+                         LEFT JOIN rfq r ON d.rfq_id = r.id
+                         LEFT JOIN demandes_devis dd ON r.description LIKE CONCAT('%', dd.reference, '%') OR r.description LIKE CONCAT('%', dd.nom, '%')
+                         WHERE d.id = ${placeholder}
+                         LIMIT 1`,
+                        [id]
+                    );
+                } catch (err2) {
+                    // Si ça échoue aussi, récupérer sans les infos client
+                    console.log('⚠️ Impossible de récupérer les infos client');
+                    [devisList] = await pool.execute(
+                        `SELECT d.*, 
+                                e.nom as fournisseur_nom,
+                                e.telephone as fournisseur_telephone,
+                                e.email as fournisseur_email,
+                                ae.adresse_ligne1 as fournisseur_adresse,
+                                ae.ville as fournisseur_ville,
+                                NULL as client_nom,
+                                NULL as client_telephone,
+                                NULL as client_email,
+                                NULL as client_adresse,
+                                NULL as client_ville,
+                                NULL as client_entreprise
+                         FROM devis d
+                         LEFT JOIN entreprises e ON d.fournisseur_id = e.id
+                         LEFT JOIN adresses ae ON e.id = ae.entreprise_id AND ae.type_adresse = 'siege'
+                         WHERE d.id = ${placeholder}`,
+                        [id]
+                    );
+                }
             } else {
                 throw err;
             }
@@ -252,24 +282,60 @@ router.get('/facture/:id', validateId, async (req, res) => {
         const { id } = req.params;
 
         // Récupérer la facture avec ses lignes et informations complètes
-        const [factures] = await pool.execute(
-            `SELECT f.*, 
-                    e1.nom as facturier_nom,
-                    a1.adresse_ligne1 as facturier_adresse,
-                    a1.ville as facturier_ville,
-                    e2.nom as client_nom,
-                    e2.telephone as client_telephone,
-                    e2.email as client_email,
-                    a2.adresse_ligne1 as client_adresse,
-                    a2.ville as client_ville
-             FROM factures f
-             LEFT JOIN entreprises e1 ON f.facturier_id = e1.id
-             LEFT JOIN adresses a1 ON e1.id = a1.entreprise_id AND a1.type_adresse = 'siege'
-             LEFT JOIN entreprises e2 ON f.client_id = e2.id
-             LEFT JOIN adresses a2 ON e2.id = a2.entreprise_id AND a2.type_adresse = 'siege'
-             WHERE f.id = ?`,
-            [id]
-        );
+        // Utiliser COALESCE pour prioriser entreprise, sinon utiliser les champs directs de demandes_devis
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        const placeholder = usePostgreSQL ? '$1' : '?';
+        
+        let factures = [];
+        try {
+            [factures] = await pool.execute(
+                `SELECT f.*, 
+                        e1.nom as facturier_nom,
+                        a1.adresse_ligne1 as facturier_adresse,
+                        a1.ville as facturier_ville,
+                        COALESCE(e2.nom, dd.nom) as client_nom,
+                        COALESCE(e2.telephone, dd.telephone) as client_telephone,
+                        COALESCE(e2.email, dd.email) as client_email,
+                        COALESCE(a2.adresse_ligne1, dd.adresse_livraison) as client_adresse,
+                        COALESCE(a2.ville, dd.ville_livraison) as client_ville,
+                        dd.entreprise as client_entreprise
+                 FROM factures f
+                 LEFT JOIN entreprises e1 ON f.facturier_id = e1.id
+                 LEFT JOIN adresses a1 ON e1.id = a1.entreprise_id AND a1.type_adresse = 'siege'
+                 LEFT JOIN entreprises e2 ON f.client_id = e2.id
+                 LEFT JOIN adresses a2 ON e2.id = a2.entreprise_id AND a2.type_adresse = 'siege'
+                 LEFT JOIN commandes c ON f.commande_id = c.id
+                 LEFT JOIN devis d ON c.devis_id = d.id
+                 LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id
+                 WHERE f.id = ${placeholder}`,
+                [id]
+            );
+        } catch (err) {
+            // Si demande_devis_id n'existe pas, récupérer sans les infos de demandes_devis
+            if (err.code === 'ER_BAD_FIELD_ERROR' && err.message.includes('demande_devis_id')) {
+                console.log('⚠️ Colonne demande_devis_id non disponible, récupération sans infos demandes_devis');
+                [factures] = await pool.execute(
+                    `SELECT f.*, 
+                            e1.nom as facturier_nom,
+                            a1.adresse_ligne1 as facturier_adresse,
+                            a1.ville as facturier_ville,
+                            e2.nom as client_nom,
+                            e2.telephone as client_telephone,
+                            e2.email as client_email,
+                            a2.adresse_ligne1 as client_adresse,
+                            a2.ville as client_ville
+                     FROM factures f
+                     LEFT JOIN entreprises e1 ON f.facturier_id = e1.id
+                     LEFT JOIN adresses a1 ON e1.id = a1.entreprise_id AND a1.type_adresse = 'siege'
+                     LEFT JOIN entreprises e2 ON f.client_id = e2.id
+                     LEFT JOIN adresses a2 ON e2.id = a2.entreprise_id AND a2.type_adresse = 'siege'
+                     WHERE f.id = ${placeholder}`,
+                    [id]
+                );
+            } else {
+                throw err;
+            }
+        }
 
         if (factures.length === 0) {
             return res.status(404).json({ error: 'Facture non trouvée' });

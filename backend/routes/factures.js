@@ -460,15 +460,46 @@ router.post('/proforma-from-commande/:commande_id', validateCommandeId, async (r
 
         // Récupérer la commande avec ses lignes et le client_id via devis -> demande_devis
         // Note: On utilise client_id de demandes_devis, pas entreprise_id (qui peut ne pas exister)
-        const [commandes] = await pool.execute(
-            `SELECT c.*, e.nom as fournisseur_nom, dd.client_id, dd.id as demande_devis_id
-             FROM commandes c
-             LEFT JOIN entreprises e ON c.fournisseur_id = e.id
-             LEFT JOIN devis d ON c.devis_id = d.id
-             LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id
-             WHERE c.id = $1`,
-            [commande_id]
-        );
+        // Récupérer aussi les infos directes du client depuis demandes_devis (nom, email, telephone, entreprise)
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        const placeholder = usePostgreSQL ? '$1' : '?';
+        
+        let commandes = [];
+        try {
+            [commandes] = await pool.execute(
+                `SELECT c.*, 
+                        e.nom as fournisseur_nom, 
+                        dd.client_id, 
+                        dd.id as demande_devis_id,
+                        dd.nom as demande_client_nom,
+                        dd.email as demande_client_email,
+                        dd.telephone as demande_client_telephone,
+                        dd.entreprise as demande_client_entreprise,
+                        dd.adresse_livraison as demande_client_adresse,
+                        dd.ville_livraison as demande_client_ville
+                 FROM commandes c
+                 LEFT JOIN entreprises e ON c.fournisseur_id = e.id
+                 LEFT JOIN devis d ON c.devis_id = d.id
+                 LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id
+                 WHERE c.id = ${placeholder}`,
+                [commande_id]
+            );
+        } catch (err) {
+            // Si demande_devis_id n'existe pas, récupérer sans les infos client
+            if (err.code === 'ER_BAD_FIELD_ERROR' && err.message.includes('demande_devis_id')) {
+                console.log('⚠️ Colonne demande_devis_id non disponible');
+                [commandes] = await pool.execute(
+                    `SELECT c.*, 
+                            e.nom as fournisseur_nom
+                     FROM commandes c
+                     LEFT JOIN entreprises e ON c.fournisseur_id = e.id
+                     WHERE c.id = ${placeholder}`,
+                    [commande_id]
+                );
+            } else {
+                throw err;
+            }
+        }
 
         if (commandes.length === 0) {
             console.error('❌ Commande non trouvée:', commande_id);
