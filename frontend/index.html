@@ -32,6 +32,36 @@
             color: #2563eb; /* primary-600 */
         }
 
+        /* Amélioration du bouton toggle password */
+        #toggle-password {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #toggle-password:hover {
+            background-color: rgba(37, 99, 235, 0.08);
+        }
+
+        #toggle-password:active {
+            transform: scale(0.95);
+        }
+
+        #toggle-password:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        #toggle-password-icon {
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        #toggle-password:hover #toggle-password-icon {
+            transform: scale(1.1);
+        }
+
+        #toggle-password:active #toggle-password-icon {
+            transform: scale(0.9);
+        }
+
         .sr-only {
             position: absolute;
             width: 1px;
@@ -179,15 +209,16 @@
                             <i class="fas fa-lock text-gray-400 transition-colors"></i>
                         </div>
                         <input type="password" id="password" name="password" required 
-                            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all sm:text-sm font-medium" 
+                            class="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl leading-5 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all sm:text-sm font-medium" 
                             placeholder="••••••••"
                             autocomplete="current-password">
                         <button type="button"
                                 id="toggle-password"
-                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary-600 transition-colors min-w-[44px] justify-end"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center justify-center text-gray-400 hover:text-primary-600 active:text-primary-700 transition-all duration-200 min-w-[44px] min-h-[44px] rounded-r-xl hover:bg-gray-100 active:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                                 aria-label="Afficher le mot de passe"
-                                onclick="togglePasswordVisibility()">
-                            <i class="fas fa-eye" aria-hidden="true"></i>
+                                onclick="togglePasswordVisibility()"
+                                tabindex="0">
+                            <i class="fas fa-eye text-lg" id="toggle-password-icon" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
@@ -261,11 +292,24 @@
         window.togglePasswordVisibility = function togglePasswordVisibility() {
             const input = document.getElementById('password');
             const btn = document.getElementById('toggle-password');
-            if (!input || !btn) return;
+            const icon = document.getElementById('toggle-password-icon');
+            if (!input || !btn || !icon) return;
+            
             const isPassword = input.type === 'password';
             input.type = isPassword ? 'text' : 'password';
+            
+            // Mettre à jour l'aria-label
             btn.setAttribute('aria-label', isPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
-            btn.innerHTML = isPassword ? '<i class="fas fa-eye-slash" aria-hidden="true"></i>' : '<i class="fas fa-eye" aria-hidden="true"></i>';
+            
+            // Mettre à jour l'icône avec animation
+            icon.classList.remove(isPassword ? 'fa-eye' : 'fa-eye-slash');
+            icon.classList.add(isPassword ? 'fa-eye-slash' : 'fa-eye');
+            
+            // Ajouter une animation de transition
+            icon.style.transform = 'scale(0.8)';
+            setTimeout(() => {
+                icon.style.transform = 'scale(1)';
+            }, 150);
         }
 
         async function handleLogin(e) {
