@@ -304,13 +304,33 @@ router.patch('/:id/statut', validateId, async (req, res) => {
         }
 
         // Vérifier que le devis existe et récupérer les infos
-        const [devis] = await pool.execute(
-            `SELECT d.*, dd.client_id, dd.reference as demande_reference 
-             FROM devis d 
-             LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id 
-             WHERE d.id = $1`, 
-            [id]
-        );
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        const placeholder = usePostgreSQL ? '$1' : '?';
+        
+        let devis = [];
+        try {
+            [devis] = await pool.execute(
+                `SELECT d.*, dd.client_id, dd.reference as demande_reference 
+                 FROM devis d 
+                 LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id 
+                 WHERE d.id = ${placeholder}`, 
+                [id]
+            );
+        } catch (err) {
+            // Si la colonne demande_devis_id n'existe pas, récupérer le devis sans la jointure
+            if (err.code === 'ER_BAD_FIELD_ERROR' && err.message.includes('demande_devis_id')) {
+                console.log('⚠️ Colonne demande_devis_id non disponible, récupération sans jointure');
+                [devis] = await pool.execute(
+                    `SELECT d.* 
+                     FROM devis d 
+                     WHERE d.id = ${placeholder}`, 
+                    [id]
+                );
+            } else {
+                throw err;
+            }
+        }
+        
         if (devis.length === 0) {
             console.error('❌ Devis non trouvé:', id);
             return res.status(404).json({ error: 'Devis non trouvé' });

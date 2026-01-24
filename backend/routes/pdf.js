@@ -67,7 +67,10 @@ router.get('/devis/:id', validateId, async (req, res) => {
         const { id } = req.params;
 
         // Récupérer le devis avec ses lignes et informations complètes
-        // Note: Le client est récupéré via la RFQ (emetteur_id -> utilisateurs -> entreprises)
+        // Note: Le client est récupéré via la demande de devis si disponible, sinon via la RFQ
+        const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+        const placeholder = usePostgreSQL ? '$1' : '?';
+        
         const [devisList] = await pool.execute(
             `SELECT d.*, 
                     e.nom as fournisseur_nom,
@@ -84,10 +87,10 @@ router.get('/devis/:id', validateId, async (req, res) => {
              LEFT JOIN entreprises e ON d.fournisseur_id = e.id
              LEFT JOIN adresses ae ON e.id = ae.entreprise_id AND ae.type_adresse = 'siege'
              LEFT JOIN rfq r ON d.rfq_id = r.id
-             LEFT JOIN utilisateurs u ON r.emetteur_id = u.id
-             LEFT JOIN entreprises c ON u.entreprise_id = c.id
+             LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id
+             LEFT JOIN entreprises c ON dd.client_id = c.id
              LEFT JOIN adresses ac ON c.id = ac.entreprise_id AND ac.type_adresse = 'siege'
-             WHERE d.id = ?`,
+             WHERE d.id = ${placeholder}`,
             [id]
         );
 

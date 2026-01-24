@@ -190,13 +190,29 @@ router.post('/', validateCommande, async (req, res) => {
         // Enregistrer dans l'historique du client si la commande est liée à une demande client
         if (devis_id) {
             try {
-                const [devisData] = await pool.execute(
-                    `SELECT dd.client_id, d.numero as devis_numero 
-                     FROM devis d 
-                     LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id 
-                     WHERE d.id = $1`,
-                    [devis_id]
-                );
+                const usePostgreSQL = !!(process.env.DATABASE_URL || process.env.DB_TYPE === 'postgresql');
+                const placeholder = usePostgreSQL ? '$1' : '?';
+                
+                // Vérifier si la colonne demande_devis_id existe dans la table devis
+                // Si elle n'existe pas, on ne peut pas récupérer le client_id
+                let devisData = [];
+                try {
+                    [devisData] = await pool.execute(
+                        `SELECT dd.client_id, d.numero as devis_numero 
+                         FROM devis d 
+                         LEFT JOIN demandes_devis dd ON d.demande_devis_id = dd.id 
+                         WHERE d.id = ${placeholder}`,
+                        [devis_id]
+                    );
+                } catch (err) {
+                    // Si la colonne demande_devis_id n'existe pas, ignorer silencieusement
+                    if (err.code === 'ER_BAD_FIELD_ERROR' && err.message.includes('demande_devis_id')) {
+                        console.log('⚠️ Colonne demande_devis_id non disponible, historique client ignoré');
+                        devisData = [];
+                    } else {
+                        throw err;
+                    }
+                }
                 
                 if (devisData.length > 0 && devisData[0].client_id) {
                     await enregistrerInteraction({
