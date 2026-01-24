@@ -180,8 +180,8 @@ async function notifyReceptionDevis(devis, fournisseur) {
 
         // Notifier le fournisseur de la réception
         const [contacts] = await pool.execute(
-            'SELECT telephone FROM contacts WHERE entreprise_id = $1 AND type_contact = $2 LIMIT 1',
-            [fournisseur.id, 'principal']
+            'SELECT telephone FROM contacts WHERE entreprise_id = $1 AND principal = true LIMIT 1',
+            [fournisseur.id]
         );
         
         let phone = fournisseur.telephone;
@@ -213,8 +213,8 @@ async function notifyClientFactureProforma(facture, client) {
         // Si client est une entreprise, chercher dans contacts
         if (client.type_entreprise) {
             const [contacts] = await pool.execute(
-                'SELECT telephone FROM contacts WHERE entreprise_id = $1 AND type_contact = $2 LIMIT 1',
-                [client.id, 'principal']
+                'SELECT telephone FROM contacts WHERE entreprise_id = $1 AND principal = true LIMIT 1',
+                [client.id]
             );
             if (contacts && contacts.length > 0 && contacts[0].telephone) {
                 phone = contacts[0].telephone;
@@ -263,8 +263,8 @@ async function notifyClientLivraison(bl, commande, client) {
         
         if (client.type_entreprise) {
             const [contacts] = await pool.execute(
-                'SELECT telephone FROM contacts WHERE entreprise_id = $1 AND type_contact = $2 LIMIT 1',
-                [client.id, 'principal']
+                'SELECT telephone FROM contacts WHERE entreprise_id = $1 AND principal = true LIMIT 1',
+                [client.id]
             );
             if (contacts && contacts.length > 0 && contacts[0].telephone) {
                 phone = contacts[0].telephone;
@@ -296,8 +296,8 @@ async function notifyClientFactureDefinitive(facture, client) {
         
         if (client.type_entreprise) {
             const [contacts] = await pool.execute(
-                'SELECT telephone FROM contacts WHERE entreprise_id = $1 AND type_contact = $2 LIMIT 1',
-                [client.id, 'principal']
+                'SELECT telephone FROM contacts WHERE entreprise_id = $1 AND principal = true LIMIT 1',
+                [client.id]
             );
             if (contacts && contacts.length > 0 && contacts[0].telephone) {
                 phone = contacts[0].telephone;
@@ -340,8 +340,8 @@ async function notifyInscriptionEntreprise(entreprise, type) {
         let phone = entreprise.telephone;
         
         const [contacts] = await pool.execute(
-            'SELECT telephone FROM contacts WHERE entreprise_id = $1 AND type_contact = $2 LIMIT 1',
-            [entreprise.id, 'principal']
+            'SELECT telephone FROM contacts WHERE entreprise_id = $1 AND principal = true LIMIT 1',
+            [entreprise.id]
         );
         if (contacts && contacts.length > 0 && contacts[0].telephone) {
             phone = contacts[0].telephone;
