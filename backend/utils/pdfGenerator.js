@@ -1434,9 +1434,11 @@ async function generateFacturePDF(facture, outputPath) {
             currentY += 20; // Espacement après le séparateur
             
             // Destinataire (client)
-            if (facture.client_nom) {
+            // Utiliser client_entreprise si disponible, sinon client_nom
+            const clientNom = facture.client_entreprise || facture.client_nom;
+            if (clientNom) {
                 currentY = drawRecipient(doc, {
-                    nom: facture.client_nom,
+                    nom: clientNom,
                     contact: facture.client_telephone || facture.client_email || '',
                     adresse: facture.client_adresse || '',
                     ville: facture.client_ville || '',
