@@ -60,7 +60,21 @@ router.get('/analyze-quotes/:rfq_id', async (req, res) => {
                 return res.status(404).json({ error: 'Aucune analyse trouvée' });
             }
 
-            const result = JSON.parse(analyses[0].resultat);
+            // Gérer le cas où resultat est déjà un objet ou une chaîne JSON
+            let result;
+            if (typeof analyses[0].resultat === 'string') {
+                try {
+                    result = JSON.parse(analyses[0].resultat);
+                } catch (parseErr) {
+                    console.error('Erreur parsing JSON resultat:', parseErr);
+                    return res.status(500).json({ error: 'Format d\'analyse invalide' });
+                }
+            } else if (typeof analyses[0].resultat === 'object' && analyses[0].resultat !== null) {
+                result = analyses[0].resultat;
+            } else {
+                return res.status(500).json({ error: 'Format d\'analyse invalide' });
+            }
+            
             res.json(result);
         } catch (err) {
             // Si la table n'existe pas, retourner 404 au lieu d'erreur 500
