@@ -725,27 +725,6 @@
             loadRFQ();
         }
     </script>
-        // Menu mobile
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobile-menu');
-            const button = document.getElementById('mobile-menu-button');
-            if (menu && button) {
-                const isHidden = menu.classList.contains('hidden');
-                menu.classList.toggle('hidden');
-                button.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
-                const icon = button.querySelector('i');
-                if (icon) {
-                    if (isHidden) {
-                        icon.classList.remove('fa-bars');
-                        icon.classList.add('fa-times');
-                    } else {
-                        icon.classList.remove('fa-times');
-                        icon.classList.add('fa-bars');
-                    }
-                }
-            }
-        }
-        window.toggleMobileMenu = toggleMobileMenu;
 </body>
 </html>
 
