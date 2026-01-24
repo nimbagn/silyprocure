@@ -627,34 +627,38 @@
                 }
                 
                 // Charger les clients (entreprises de type acheteur ou client) pour la sélection
+                // Faire les deux appels en parallèle pour plus d'efficacité
                 let clients = [];
                 try {
-                    // Essayer d'abord avec "acheteur"
-                    const clientsResponseAcheteur = await apiCall('/api/entreprises?type=acheteur');
-                    if (clientsResponseAcheteur && clientsResponseAcheteur.ok) {
-                        const clientsAcheteur = await clientsResponseAcheteur.json();
+                    const [clientsResponseAcheteur, clientsResponseClient] = await Promise.allSettled([
+                        apiCall('/api/entreprises?type=acheteur'),
+                        apiCall('/api/entreprises?type=client')
+                    ]);
+                    
+                    // Traiter les résultats de type "acheteur"
+                    if (clientsResponseAcheteur.status === 'fulfilled' && 
+                        clientsResponseAcheteur.value && 
+                        clientsResponseAcheteur.value.ok) {
+                        const clientsAcheteur = await clientsResponseAcheteur.value.json();
                         clients = clients.concat(clientsAcheteur);
                     }
-                } catch (error) {
-                    console.warn('Impossible de charger les clients (acheteur):', error);
-                }
-                
-                try {
-                    // Ensuite avec "client"
-                    const clientsResponseClient = await apiCall('/api/entreprises?type=client');
-                    if (clientsResponseClient && clientsResponseClient.ok) {
-                        const clientsClient = await clientsResponseClient.json();
+                    
+                    // Traiter les résultats de type "client"
+                    if (clientsResponseClient.status === 'fulfilled' && 
+                        clientsResponseClient.value && 
+                        clientsResponseClient.value.ok) {
+                        const clientsClient = await clientsResponseClient.value.json();
                         // Éviter les doublons si une entreprise a les deux types (ne devrait pas arriver)
                         const existingIds = new Set(clients.map(c => c.id));
                         const newClients = clientsClient.filter(c => !existingIds.has(c.id));
                         clients = clients.concat(newClients);
                     }
+                    
+                    // Trier par nom pour faciliter la sélection
+                    clients.sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
                 } catch (error) {
-                    console.warn('Impossible de charger les clients (client):', error);
+                    console.warn('Impossible de charger les clients:', error);
                 }
-                
-                // Trier par nom pour faciliter la sélection
-                clients.sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
                 
                 hideLoading();
                 
