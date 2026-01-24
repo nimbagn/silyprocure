@@ -626,16 +626,35 @@
                     return;
                 }
                 
-                // Charger les clients (entreprises de type acheteur) pour la sélection si nécessaire
+                // Charger les clients (entreprises de type acheteur ou client) pour la sélection
                 let clients = [];
                 try {
-                    const clientsResponse = await apiCall('/api/entreprises?type=acheteur');
-                    if (clientsResponse && clientsResponse.ok) {
-                        clients = await clientsResponse.json();
+                    // Essayer d'abord avec "acheteur"
+                    const clientsResponseAcheteur = await apiCall('/api/entreprises?type=acheteur');
+                    if (clientsResponseAcheteur && clientsResponseAcheteur.ok) {
+                        const clientsAcheteur = await clientsResponseAcheteur.json();
+                        clients = clients.concat(clientsAcheteur);
                     }
                 } catch (error) {
-                    console.warn('Impossible de charger les clients:', error);
+                    console.warn('Impossible de charger les clients (acheteur):', error);
                 }
+                
+                try {
+                    // Ensuite avec "client"
+                    const clientsResponseClient = await apiCall('/api/entreprises?type=client');
+                    if (clientsResponseClient && clientsResponseClient.ok) {
+                        const clientsClient = await clientsResponseClient.json();
+                        // Éviter les doublons si une entreprise a les deux types (ne devrait pas arriver)
+                        const existingIds = new Set(clients.map(c => c.id));
+                        const newClients = clientsClient.filter(c => !existingIds.has(c.id));
+                        clients = clients.concat(newClients);
+                    }
+                } catch (error) {
+                    console.warn('Impossible de charger les clients (client):', error);
+                }
+                
+                // Trier par nom pour faciliter la sélection
+                clients.sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
                 
                 hideLoading();
                 
