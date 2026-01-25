@@ -392,6 +392,133 @@ router.post('/validate-facture', async (req, res) => {
     }
 });
 
+// Récupérer les informations d'une commande via un token (pour la page publique de validation)
+router.get('/commande-by-token/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        // Récupérer le lien externe
+        const [liens] = await pool.execute(
+            `SELECT l.*, c.*, e.nom as client_nom, e.email as client_email, e.telephone as client_telephone
+             FROM liens_externes l
+             JOIN commandes c ON l.commande_id = c.id
+             LEFT JOIN entreprises e ON l.client_id = e.id
+             WHERE l.token = $1 AND l.type_lien = 'commande' AND l.utilise = FALSE`,
+            [token]
+        );
+
+        if (liens.length === 0) {
+            return res.status(404).json({ error: 'Lien invalide ou déjà utilisé' });
+        }
+
+        const lien = liens[0];
+
+        // Vérifier l'expiration
+        if (lien.date_expiration && new Date(lien.date_expiration) < new Date()) {
+            return res.status(410).json({ error: 'Ce lien a expiré' });
+        }
+
+        // Récupérer les lignes de la commande
+        const [lignes] = await pool.execute(
+            'SELECT * FROM commande_lignes WHERE commande_id = $1 ORDER BY ordre',
+            [lien.commande_id]
+        );
+
+        res.json({
+            commande: {
+                id: lien.commande_id,
+                numero: lien.numero,
+                type_commande: lien.type_commande,
+                date_commande: lien.date_commande,
+                date_livraison_souhaitee: lien.date_livraison_souhaitee,
+                total_ht: lien.total_ht,
+                total_tva: lien.total_tva,
+                total_ttc: lien.total_ttc,
+                statut: lien.statut,
+                conditions_paiement: lien.conditions_paiement,
+                delai_paiement_jours: lien.delai_paiement_jours,
+                mode_paiement: lien.mode_paiement,
+                instructions_livraison: lien.instructions_livraison,
+                lignes: lignes
+            },
+            client: {
+                id: lien.client_id,
+                nom: lien.client_nom,
+                email: lien.client_email,
+                telephone: lien.client_telephone
+            },
+            token: token
+        });
+    } catch (error) {
+        console.error('Erreur récupération commande par token:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Valider/signer une commande depuis le formulaire public
+router.post('/validate-commande', async (req, res) => {
+    try {
+        const { token, signature_nom, signature_date, commentaire } = req.body;
+
+        // Vérifier le token
+        const [liens] = await pool.execute(
+            'SELECT * FROM liens_externes WHERE token = $1 AND type_lien = $2 AND utilise = FALSE',
+            [token, 'commande']
+        );
+
+        if (liens.length === 0) {
+            return res.status(404).json({ error: 'Lien invalide ou déjà utilisé' });
+        }
+
+        const lien = liens[0];
+
+        // Vérifier l'expiration
+        if (lien.date_expiration && new Date(lien.date_expiration) < new Date()) {
+            return res.status(410).json({ error: 'Ce lien a expiré' });
+        }
+
+        // Récupérer la commande
+        const [commandes] = await pool.execute(
+            'SELECT * FROM commandes WHERE id = $1',
+            [lien.commande_id]
+        );
+
+        if (commandes.length === 0) {
+            return res.status(404).json({ error: 'Commande non trouvée' });
+        }
+
+        const commande = commandes[0];
+
+        // Vérifier que la commande n'est pas déjà validée
+        if (commande.statut === 'accepte' || commande.statut === 'envoye') {
+            return res.status(400).json({ error: 'Cette commande a déjà été validée' });
+        }
+
+        // Mettre à jour le statut de la commande
+        await pool.execute(
+            'UPDATE commandes SET statut = $1, date_acceptation = $2 WHERE id = $3',
+            ['accepte', new Date().toISOString().split('T')[0], lien.commande_id]
+        );
+
+        // Marquer le lien comme utilisé
+        await pool.execute(
+            `UPDATE liens_externes 
+             SET utilise = TRUE, date_utilisation = NOW(), ip_utilisation = $1 
+             WHERE id = $2`,
+            [req.ip || req.connection.remoteAddress, lien.id]
+        );
+
+        res.status(200).json({
+            message: 'Commande validée avec succès',
+            commande_id: lien.commande_id,
+            commande_numero: commande.numero
+        });
+    } catch (error) {
+        console.error('Erreur validation commande:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ============================================
 // ROUTES PROTÉGÉES (nécessitent authentification)
 // ============================================

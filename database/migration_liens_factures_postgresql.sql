@@ -18,7 +18,11 @@ BEGIN
         SELECT 1 FROM information_schema.columns 
         WHERE table_name = 'liens_externes' AND column_name = 'type_lien'
     ) THEN
-        ALTER TABLE liens_externes ADD COLUMN type_lien VARCHAR(20) DEFAULT 'rfq' CHECK (type_lien IN ('rfq', 'facture'));
+        ALTER TABLE liens_externes ADD COLUMN type_lien VARCHAR(20) DEFAULT 'rfq' CHECK (type_lien IN ('rfq', 'facture', 'commande'));
+    ELSE
+        -- Modifier le CHECK si la colonne existe déjà pour inclure 'commande'
+        ALTER TABLE liens_externes DROP CONSTRAINT IF EXISTS liens_externes_type_lien_check;
+        ALTER TABLE liens_externes ADD CONSTRAINT liens_externes_type_lien_check CHECK (type_lien IN ('rfq', 'facture', 'commande'));
     END IF;
 
     -- Ajouter client_id
@@ -28,12 +32,21 @@ BEGIN
     ) THEN
         ALTER TABLE liens_externes ADD COLUMN client_id INTEGER NULL;
     END IF;
+
+    -- Ajouter commande_id
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'liens_externes' AND column_name = 'commande_id'
+    ) THEN
+        ALTER TABLE liens_externes ADD COLUMN commande_id INTEGER NULL;
+    END IF;
 END $$;
 
 -- Créer les index s'ils n'existent pas
 CREATE INDEX IF NOT EXISTS idx_liens_externes_facture_id ON liens_externes(facture_id);
 CREATE INDEX IF NOT EXISTS idx_liens_externes_type_lien ON liens_externes(type_lien);
 CREATE INDEX IF NOT EXISTS idx_liens_externes_client_id ON liens_externes(client_id);
+CREATE INDEX IF NOT EXISTS idx_liens_externes_commande_id ON liens_externes(commande_id);
 
 -- Ajouter les contraintes de clé étrangère si elles n'existent pas
 DO $$
@@ -57,12 +70,22 @@ BEGIN
         ADD CONSTRAINT fk_liens_externes_client 
         FOREIGN KEY (client_id) REFERENCES entreprises(id) ON DELETE CASCADE;
     END IF;
+
+    -- Contrainte pour commande_id
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'fk_liens_externes_commande'
+    ) THEN
+        ALTER TABLE liens_externes 
+        ADD CONSTRAINT fk_liens_externes_commande 
+        FOREIGN KEY (commande_id) REFERENCES commandes(id) ON DELETE CASCADE;
+    END IF;
 END $$;
 
 -- Modifier rfq_id pour qu'il soit nullable
 ALTER TABLE liens_externes ALTER COLUMN rfq_id DROP NOT NULL;
 
--- Modifier fournisseur_id pour qu'il soit nullable (pour les liens de facture on a client_id)
+-- Modifier fournisseur_id pour qu'il soit nullable (pour les liens de facture/commande on a client_id)
 DO $$
 BEGIN
     IF EXISTS (
@@ -75,5 +98,5 @@ BEGIN
     END IF;
 END $$;
 
-SELECT '✅ Migration liens_externes pour factures appliquée avec succès' AS message;
+SELECT '✅ Migration liens_externes pour factures et commandes appliquée avec succès' AS message;
 

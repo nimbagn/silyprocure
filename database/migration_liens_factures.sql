@@ -114,7 +114,7 @@ EXECUTE createIndexIfNotExists2;
 DEALLOCATE PREPARE createIndexIfNotExists2;
 
 SET @indexname3 = 'idx_client_id';
-SET @preparedStatement6 = (SELECT IF(
+SET @preparedStatement7 = (SELECT IF(
   (
     SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
     WHERE
@@ -125,14 +125,30 @@ SET @preparedStatement6 = (SELECT IF(
   'SELECT 1',
   CONCAT('CREATE INDEX ', @indexname3, ' ON ', @tablename, ' (client_id)')
 ));
-PREPARE createIndexIfNotExists3 FROM @preparedStatement6;
+PREPARE createIndexIfNotExists3 FROM @preparedStatement7;
 EXECUTE createIndexIfNotExists3;
 DEALLOCATE PREPARE createIndexIfNotExists3;
+
+SET @indexname4 = 'idx_commande_id';
+SET @preparedStatement8 = (SELECT IF(
+  (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+    WHERE
+      (table_name = @tablename)
+      AND (table_schema = @dbname)
+      AND (index_name = @indexname4)
+  ) > 0,
+  'SELECT 1',
+  CONCAT('CREATE INDEX ', @indexname4, ' ON ', @tablename, ' (commande_id)')
+));
+PREPARE createIndexIfNotExists4 FROM @preparedStatement8;
+EXECUTE createIndexIfNotExists4;
+DEALLOCATE PREPARE createIndexIfNotExists4;
 
 -- Ajouter les contraintes de clé étrangère si elles n'existent pas
 -- Note: MySQL ne supporte pas IF NOT EXISTS pour les contraintes, on utilise un bloc conditionnel
 SET @constraintname1 = 'fk_liens_externes_facture';
-SET @preparedStatement7 = (SELECT IF(
+SET @preparedStatement9 = (SELECT IF(
   (
     SELECT COUNT(*) FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
     WHERE
@@ -143,12 +159,12 @@ SET @preparedStatement7 = (SELECT IF(
   'SELECT 1',
   CONCAT('ALTER TABLE ', @tablename, ' ADD CONSTRAINT ', @constraintname1, ' FOREIGN KEY (facture_id) REFERENCES factures(id) ON DELETE CASCADE')
 ));
-PREPARE addConstraintIfNotExists1 FROM @preparedStatement7;
+PREPARE addConstraintIfNotExists1 FROM @preparedStatement9;
 EXECUTE addConstraintIfNotExists1;
 DEALLOCATE PREPARE addConstraintIfNotExists1;
 
 SET @constraintname2 = 'fk_liens_externes_client';
-SET @preparedStatement8 = (SELECT IF(
+SET @preparedStatement10 = (SELECT IF(
   (
     SELECT COUNT(*) FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
     WHERE
@@ -159,9 +175,25 @@ SET @preparedStatement8 = (SELECT IF(
   'SELECT 1',
   CONCAT('ALTER TABLE ', @tablename, ' ADD CONSTRAINT ', @constraintname2, ' FOREIGN KEY (client_id) REFERENCES entreprises(id) ON DELETE CASCADE')
 ));
-PREPARE addConstraintIfNotExists2 FROM @preparedStatement8;
+PREPARE addConstraintIfNotExists2 FROM @preparedStatement10;
 EXECUTE addConstraintIfNotExists2;
 DEALLOCATE PREPARE addConstraintIfNotExists2;
+
+SET @constraintname3 = 'fk_liens_externes_commande';
+SET @preparedStatement11 = (SELECT IF(
+  (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+    WHERE
+      (table_name = @tablename)
+      AND (table_schema = @dbname)
+      AND (constraint_name = @constraintname3)
+  ) > 0,
+  'SELECT 1',
+  CONCAT('ALTER TABLE ', @tablename, ' ADD CONSTRAINT ', @constraintname3, ' FOREIGN KEY (commande_id) REFERENCES commandes(id) ON DELETE CASCADE')
+));
+PREPARE addConstraintIfNotExists3 FROM @preparedStatement11;
+EXECUTE addConstraintIfNotExists3;
+DEALLOCATE PREPARE addConstraintIfNotExists3;
 
 SELECT '✅ Migration liens_externes pour factures appliquée avec succès' AS message;
 

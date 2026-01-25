@@ -1292,6 +1292,16 @@
                 </button>
             `;
             
+            // Bouton pour générer lien de validation pour les commandes clients (statut brouillon)
+            // Une commande client est identifiée par le fait qu'elle a un client_id (via demande_devis) ou que fournisseur_id pointe vers un client
+            if (commande.statut === 'brouillon' && (commande.demande_devis_id || commande.client_entreprise_id)) {
+                actionsHTML += `
+                    <button class="btn btn-info btn-sm" onclick="showGenerateCommandeValidationLinkModal(${commande.id}, ${commande.client_entreprise_id || 'null'})">
+                        <i class="fas fa-link"></i> Générer lien de validation
+                    </button>
+                `;
+            }
+            
             if (commande.statut === 'brouillon') {
                 actionsHTML += `
                     <button class="btn btn-primary btn-sm" onclick="editCommande(${commande.id})">

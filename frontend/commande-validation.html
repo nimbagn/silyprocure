@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validation Bon de Commande - SilyProcure</title>
+    
+    <!-- CSS Charte Graphique Pro Confiance -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/tailwind.css">
+    
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Dashboard Theme CSS -->
+    <link rel="stylesheet" href="css/dashboard-theme.css">
+    <link rel="stylesheet" href="css/modern-theme.css">
+    
+    <style>
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif !important;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%) !important;
+            min-height: 100vh;
+        }
+        
+        .text-primary-600, .text-primary-500 { color: #2563eb !important; }
+        .bg-primary-600, .bg-primary-500 { background-color: #2563eb !important; }
+        .border-primary-500 { border-color: #2563eb !important; }
+        
+        .card {
+            border-radius: 1.5rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            background: white !important;
+        }
+        
+        .public-header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .public-header .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+        
+        .public-header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+        
+        #commande-info {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-left: 4px solid #f59e0b;
+        }
+        
+        #commande-info h2 {
+            color: #1e293b;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .validation-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-validate {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .btn-validate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
+        }
+        
+        .btn-validate:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="public-header">
+        <div class="logo">SilyProcure</div>
+        <div class="subtitle">Validation et signature de bon de commande</div>
+    </div>
+
+    <div class="container" style="max-width: 1000px; margin: 0 auto; padding: 0 1rem;">
+        <!-- État de chargement -->
+        <div id="loading-state" class="card" style="text-align: center; padding: 3rem;">
+            <div class="loading-spinner" style="margin: 0 auto 1rem;"></div>
+            <p>Chargement du bon de commande...</p>
+        </div>
+
+        <!-- État d'erreur -->
+        <div id="error-state" class="card" style="display: none; text-align: center; padding: 3rem; background: #fee2e2; border-left: 4px solid #ef4444;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>
+            <h2 style="color: #991b1b; margin-bottom: 1rem;">Erreur</h2>
+            <p id="error-text" style="color: #7f1d1d;"></p>
+        </div>
+
+        <!-- État de succès -->
+        <div id="success-state" class="card" style="display: none; text-align: center; padding: 3rem; background: #fffbeb; border-left: 4px solid #f59e0b;">
+            <i class="fas fa-check-circle" style="font-size: 3rem; color: #f59e0b; margin-bottom: 1rem;"></i>
+            <h2 style="color: #92400e; margin-bottom: 1rem;">Bon de commande validé avec succès !</h2>
+            <p style="color: #78350f; margin-bottom: 1.5rem;">
+                Votre bon de commande a été validé et signé. Vous recevrez une confirmation par email.
+            </p>
+            <p style="color: #64748b; font-size: 0.9rem;">
+                Vous pouvez fermer cette page.
+            </p>
+        </div>
+
+        <!-- Formulaire de validation -->
+        <div id="form-state" style="display: none;">
+            <div id="commande-info" class="card" style="margin-bottom: 1.5rem;">
+                <h2><i class="fas fa-shopping-cart"></i> Bon de Commande</h2>
+                <div id="commande-details"></div>
+            </div>
+
+            <div class="card validation-form">
+                <div class="card-header" style="background: transparent; border-bottom: 2px solid #e5e7eb; margin-bottom: 1.5rem;">
+                    <h2 class="card-title" style="color: #1e293b;">
+                        <i class="fas fa-signature"></i> Validation et signature
+                    </h2>
+                </div>
+
+                <form id="validation-form" onsubmit="handleValidation(event)">
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; color: #1e293b; font-weight: 600; margin-bottom: 0.5rem;">
+                            <i class="fas fa-user" style="color: #f59e0b;"></i>
+                            Nom du signataire *
+                        </label>
+                        <input type="text" id="signature-nom" class="form-control" 
+                               placeholder="Votre nom complet" required>
+                        <small style="color: #64748b; font-size: 0.85rem; margin-top: 0.25rem; display: block;">
+                            Nom de la personne qui valide ce bon de commande
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; color: #1e293b; font-weight: 600; margin-bottom: 0.5rem;">
+                            <i class="fas fa-calendar" style="color: #f59e0b;"></i>
+                            Date de signature *
+                        </label>
+                        <input type="date" id="signature-date" class="form-control" required>
+                        <small style="color: #64748b; font-size: 0.85rem; margin-top: 0.25rem; display: block;">
+                            Date à laquelle vous validez ce bon de commande
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; color: #1e293b; font-weight: 600; margin-bottom: 0.5rem;">
+                            <i class="fas fa-comment" style="color: #f59e0b;"></i>
+                            Commentaire (optionnel)
+                        </label>
+                        <textarea id="commentaire" class="form-control" rows="4" 
+                                  placeholder="Ajoutez un commentaire ou des notes si nécessaire..."></textarea>
+                        <small style="color: #64748b; font-size: 0.85rem; margin-top: 0.25rem; display: block;">
+                            Commentaires ou remarques sur ce bon de commande
+                        </small>
+                    </div>
+
+                    <div style="margin-top: 2rem; padding: 1rem; background: #fffbeb; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                        <p style="margin: 0; color: #1e293b; font-size: 0.9rem;">
+                            <i class="fas fa-info-circle" style="color: #f59e0b; margin-right: 0.5rem;"></i>
+                            En validant ce bon de commande, vous confirmez que vous acceptez les conditions et montants indiqués.
+                        </p>
+                    </div>
+
+                    <button type="submit" class="btn-validate" id="btn-validate">
+                        <i class="fas fa-check-circle"></i> Valider et signer le bon de commande
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    <script src="js/components.js?v=20260116"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        let commandeData = null;
+
+        // Initialiser la date de signature à aujourd'hui
+        const today = new Date();
+        document.getElementById('signature-date').valueAsDate = today;
+
+        function showError(message) {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('form-state').style.display = 'none';
+            document.getElementById('error-state').style.display = 'block';
+            document.getElementById('error-text').textContent = message;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('fr-FR', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount) + ' GNF';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        function displayCommande(data) {
+            const commande = data.commande;
+            const client = data.client;
+
+            const details = `
+                <div style="margin-top: 1rem;">
+                    <p>
+                        <strong><i class="fas fa-hashtag" style="color: #f59e0b; margin-right: 0.5rem;"></i> Numéro de commande</strong>
+                        <span style="color: #1e293b; font-weight: 600; font-size: 1.1rem;">${commande.numero || 'N/A'}</span>
+                    </p>
+                    <p>
+                        <strong><i class="fas fa-calendar-alt" style="color: #f59e0b; margin-right: 0.5rem;"></i> Date de commande</strong>
+                        <span style="color: #1e293b;">${formatDate(commande.date_commande)}</span>
+                    </p>
+                    ${commande.date_livraison_souhaitee ? `
+                        <p>
+                            <strong><i class="fas fa-truck" style="color: #f59e0b; margin-right: 0.5rem;"></i> Date de livraison souhaitée</strong>
+                            <span style="color: #1e293b; font-weight: 600;">${formatDate(commande.date_livraison_souhaitee)}</span>
+                        </p>
+                    ` : ''}
+                    ${client ? `
+                        <p>
+                            <strong><i class="fas fa-building" style="color: #f59e0b; margin-right: 0.5rem;"></i> Client</strong>
+                            <span style="color: #1e293b;">${client.nom || 'N/A'}</span>
+                        </p>
+                    ` : ''}
+                </div>
+            `;
+
+            document.getElementById('commande-details').innerHTML = details;
+
+            // Afficher les lignes de commande
+            if (commande.lignes && commande.lignes.length > 0) {
+                let lignesHTML = `
+                    <div style="margin-top: 1.5rem;">
+                        <h3 style="color: #1e293b; margin-bottom: 1rem; font-size: 1.2rem;">
+                            <i class="fas fa-list" style="color: #f59e0b; margin-right: 0.5rem;"></i>
+                            Articles (${commande.lignes.length})
+                        </h3>
+                        <div class="table-container" style="overflow-x: auto;">
+                            <table class="table" style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #fffbeb; border-bottom: 2px solid #f59e0b;">
+                                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #1e293b;">Référence</th>
+                                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #1e293b;">Description</th>
+                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #1e293b;">Qté</th>
+                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #1e293b;">P.U. HT</th>
+                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #1e293b;">Total HT</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+
+                commande.lignes.forEach(ligne => {
+                    const prixUnitaire = parseFloat(ligne.prix_unitaire_ht || 0);
+                    const quantite = parseFloat(ligne.quantite || 0);
+                    const remise = parseFloat(ligne.remise || 0);
+                    const totalHT = prixUnitaire * quantite * (1 - remise / 100);
+
+                    lignesHTML += `
+                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                            <td style="padding: 0.75rem;">${ligne.reference || '-'}</td>
+                            <td style="padding: 0.75rem;">${ligne.description || '-'}</td>
+                            <td style="padding: 0.75rem; text-align: right;">${quantite} ${ligne.unite || ''}</td>
+                            <td style="padding: 0.75rem; text-align: right;">${formatCurrency(prixUnitaire)}</td>
+                            <td style="padding: 0.75rem; text-align: right; font-weight: 600;">${formatCurrency(totalHT)}</td>
+                        </tr>
+                    `;
+                });
+
+                lignesHTML += `
+                                </tbody>
+                                <tfoot style="background: #fffbeb; border-top: 2px solid #f59e0b;">
+                                    <tr>
+                                        <td colspan="4" style="padding: 0.75rem; text-align: right; font-weight: 600; color: #1e293b;">Total HT</td>
+                                        <td style="padding: 0.75rem; text-align: right; font-weight: 700; font-size: 1.1rem; color: #d97706;">${formatCurrency(commande.total_ht || 0)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4" style="padding: 0.75rem; text-align: right; font-weight: 600; color: #1e293b;">TVA</td>
+                                        <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #d97706;">${formatCurrency(commande.total_tva || 0)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4" style="padding: 0.75rem; text-align: right; font-weight: 700; font-size: 1.2rem; color: #1e293b;">Total TTC</td>
+                                        <td style="padding: 0.75rem; text-align: right; font-weight: 700; font-size: 1.3rem; color: #d97706;">${formatCurrency(commande.total_ttc || 0)}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('commande-details').innerHTML += lignesHTML;
+            }
+
+            // Afficher les conditions de paiement si disponibles
+            if (commande.conditions_paiement) {
+                const conditionsHTML = `
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #fffbeb; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                        <h4 style="color: #1e293b; margin-bottom: 0.5rem; font-size: 1rem;">
+                            <i class="fas fa-credit-card" style="color: #f59e0b; margin-right: 0.5rem;"></i>
+                            Conditions de paiement
+                        </h4>
+                        <p style="margin: 0; color: #475569;">${commande.conditions_paiement}</p>
+                        ${commande.delai_paiement_jours ? `<p style="margin: 0.5rem 0 0 0; color: #64748b; font-size: 0.9rem;"><strong>Délai:</strong> ${commande.delai_paiement_jours} jours</p>` : ''}
+                        ${commande.mode_paiement ? `<p style="margin: 0.5rem 0 0 0; color: #64748b; font-size: 0.9rem;"><strong>Mode:</strong> ${commande.mode_paiement}</p>` : ''}
+                    </div>
+                `;
+                document.getElementById('commande-details').innerHTML += conditionsHTML;
+            }
+
+            // Afficher les instructions de livraison si disponibles
+            if (commande.instructions_livraison) {
+                const instructionsHTML = `
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #2563eb;">
+                        <h4 style="color: #1e293b; margin-bottom: 0.5rem; font-size: 1rem;">
+                            <i class="fas fa-truck" style="color: #2563eb; margin-right: 0.5rem;"></i>
+                            Instructions de livraison
+                        </h4>
+                        <p style="margin: 0; color: #475569;">${commande.instructions_livraison}</p>
+                    </div>
+                `;
+                document.getElementById('commande-details').innerHTML += instructionsHTML;
+            }
+        }
+
+        async function handleValidation(event) {
+            event.preventDefault();
+
+            const signatureNom = document.getElementById('signature-nom').value;
+            const signatureDate = document.getElementById('signature-date').value;
+            const commentaire = document.getElementById('commentaire').value;
+
+            if (!signatureNom || !signatureDate) {
+                if (typeof Toast !== 'undefined') {
+                    Toast.error('Veuillez remplir tous les champs obligatoires');
+                } else {
+                    alert('Veuillez remplir tous les champs obligatoires');
+                }
+                return;
+            }
+
+            try {
+                showLoading('Validation du bon de commande...');
+
+                const response = await fetch('/api/liens-externes/validate-commande', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        token: token,
+                        signature_nom: signatureNom,
+                        signature_date: signatureDate,
+                        commentaire: commentaire || null
+                    })
+                });
+
+                hideLoading();
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    if (typeof Toast !== 'undefined') {
+                        Toast.error(error.error || 'Erreur lors de la validation');
+                    } else {
+                        alert(error.error || 'Erreur lors de la validation');
+                    }
+                    return;
+                }
+
+                // Afficher le message de succès
+                document.getElementById('form-state').style.display = 'none';
+                document.getElementById('success-state').style.display = 'block';
+            } catch (error) {
+                hideLoading();
+                console.error('Erreur validation commande:', error);
+                if (typeof Toast !== 'undefined') {
+                    Toast.error('Erreur de connexion');
+                } else {
+                    alert('Erreur de connexion');
+                }
+            }
+        }
+
+        function showLoading(message) {
+            const btn = document.getElementById('btn-validate');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validation en cours...';
+            }
+        }
+
+        function hideLoading() {
+            const btn = document.getElementById('btn-validate');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Valider et signer le bon de commande';
+            }
+        }
+
+        // Fonction pour charger la commande
+        async function loadCommande() {
+            try {
+                const response = await fetch(`/api/liens-externes/commande-by-token/${token}`);
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    showError(error.error || 'Erreur lors du chargement du bon de commande');
+                    return;
+                }
+
+                const data = await response.json();
+                commandeData = data;
+                
+                // Vérifier si la commande est déjà validée
+                if (data.commande.statut === 'accepte' || data.commande.statut === 'envoye') {
+                    showError('Ce bon de commande a déjà été validé');
+                    return;
+                }
+
+                displayCommande(data);
+                
+                // Afficher le formulaire
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('form-state').style.display = 'block';
+            } catch (error) {
+                console.error('Erreur chargement commande:', error);
+                showError('Erreur de connexion au serveur');
+            }
+        }
+
+        // Charger la commande au chargement de la page si le token est présent
+        if (!token) {
+            showError('Token manquant dans l\'URL');
+        } else {
+            loadCommande();
+        }
+    </script>
+</body>
+</html>
+
