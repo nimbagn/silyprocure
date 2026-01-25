@@ -395,37 +395,13 @@
                 }
                 
                 if (commandeResponse.ok) {
-                    // Mettre à jour le statut du devis à "accepte"
-                    console.log('🟢 Commande créée, mise à jour du statut du devis...');
-                    const statutResponse = await apiCall(`/api/devis/${id}/statut`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ statut: 'accepte' })
-                    });
-                    
-                    console.log('🟢 Réponse statut:', statutResponse);
-                    
-                    if (statutResponse && statutResponse.ok) {
-                        const commandeData = await commandeResponse.json();
-                        const statutData = await statutResponse.json();
-                        console.log('✅ Commande créée:', commandeData);
-                        console.log('✅ Statut devis mis à jour:', statutData);
-                        Toast.success('Devis accepté et commande créée avec succès');
-                        isProcessingAccept = false;
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1500);
-                    } else {
-                        const errorStatut = await statutResponse.json().catch(() => ({ error: 'Erreur inconnue' }));
-                        console.error('❌ Erreur mise à jour statut:', errorStatut);
-                        Toast.warning('Commande créée mais erreur lors de la mise à jour du statut du devis: ' + (errorStatut.error || 'Erreur inconnue'));
-                        isProcessingAccept = false;
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 2000);
-                    }
+                    const commandeData = await commandeResponse.json();
+                    console.log('✅ Commande créée:', commandeData);
+                    Toast.success('Devis accepté et commande créée avec succès');
+                    isProcessingAccept = false;
+                    setTimeout(() => {
+                        window.location.href = `commandes-detail.html?id=${commandeData.id}`;
+                    }, 1500);
                 } else {
                     const errorData = await commandeResponse.json().catch(() => ({ error: 'Erreur inconnue' }));
                     console.error('Erreur création commande:', errorData);
