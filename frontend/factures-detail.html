@@ -326,9 +326,12 @@
                 </button>
             `;
             
-            // Si c'est une facture proforma et qu'elle est envoyée, afficher le bouton pour valider et créer le BL
+            // Si c'est une facture proforma, afficher le bouton pour générer/envoyer le lien de validation
             if (facture.type_facture === 'proforma' && facture.statut === 'envoyee') {
                 actionsHTML += `
+                    <button class="btn btn-primary" onclick="showGenerateValidationLinkModal(${facture.id}, ${facture.client_id || 'null'})" style="margin-right: 0.5rem;">
+                        <i class="fas fa-link"></i> Générer lien de validation
+                    </button>
                     <button class="btn btn-success" onclick="if(typeof window.validerProforma==='function'){window.validerProforma(${facture.id});}else{alert('Fonction non disponible, rechargement...');window.location.reload();}">
                         <i class="fas fa-check-circle"></i> Valider la proforma et créer le bon de livraison
                     </button>
@@ -912,6 +915,213 @@
         
         // Exposer la fonction globalement
         window.validerProforma = validerProforma;
+
+        // Fonction pour afficher le modal de génération de lien de validation
+        async function showGenerateValidationLinkModal(factureId, clientId) {
+            try {
+                showLoading('Chargement...');
+                
+                // Récupérer les informations du client si disponible
+                let clientInfo = null;
+                if (clientId) {
+                    try {
+                        const clientResponse = await apiCall(`/api/entreprises/${clientId}`);
+                        if (clientResponse && clientResponse.ok) {
+                            clientInfo = await clientResponse.json();
+                        }
+                    } catch (err) {
+                        console.warn('Impossible de charger les infos client:', err);
+                    }
+                }
+                
+                hideLoading();
+                
+                const modalContent = `
+                    <form id="generate-link-form" onsubmit="handleGenerateValidationLink(event, ${factureId}, ${clientId || 'null'})">
+                        <div class="form-group">
+                            <label>Client *</label>
+                            ${clientInfo ? `
+                                <input type="text" class="form-control" value="${clientInfo.nom || ''}" readonly>
+                                <input type="hidden" id="link-client-id" value="${clientId}">
+                                <small style="color: #666;">Client associé à la facture</small>
+                            ` : `
+                                <select id="link-client-id" class="form-control" required>
+                                    <option value="">-- Sélectionnez un client --</option>
+                                </select>
+                                <small style="color: #666;">Sélectionnez le client qui recevra le lien de validation</small>
+                            `}
+                        </div>
+                        <div class="form-group">
+                            <label>Email du client (optionnel)</label>
+                            <input type="email" id="link-email" class="form-control" 
+                                   placeholder="client@example.com"
+                                   value="${clientInfo?.email || ''}">
+                            <small style="color: #666;">Email pour envoyer le lien (optionnel)</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Durée de validité (jours)</label>
+                            <input type="number" id="link-expiration-days" class="form-control" 
+                                   value="30" min="1" max="365">
+                            <small style="color: #666;">Nombre de jours avant expiration du lien (défaut: 30 jours)</small>
+                        </div>
+                        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                            <button type="button" class="btn btn-secondary" onclick="Modal.hide('generate-link')">Annuler</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-link"></i> Générer le lien
+                            </button>
+                        </div>
+                    </form>
+                `;
+
+                const modal = new Modal('generate-link', 'Générer un lien de validation/signature', modalContent);
+                modal.show();
+                
+                // Si pas de client pré-sélectionné, charger la liste des clients
+                if (!clientId) {
+                    try {
+                        const [clientsResponse, clientsResponse2] = await Promise.allSettled([
+                            apiCall('/api/entreprises?type=client'),
+                            apiCall('/api/entreprises?type=acheteur')
+                        ]);
+                        
+                        const clients = [];
+                        if (clientsResponse.status === 'fulfilled' && clientsResponse.value && clientsResponse.value.ok) {
+                            const clients1 = await clientsResponse.value.json();
+                            clients.push(...clients1);
+                        }
+                        if (clientsResponse2.status === 'fulfilled' && clientsResponse2.value && clientsResponse2.value.ok) {
+                            const clients2 = await clientsResponse2.value.json();
+                            const existingIds = new Set(clients.map(c => c.id));
+                            clients.push(...clients2.filter(c => !existingIds.has(c.id)));
+                        }
+                        
+                        const select = document.getElementById('link-client-id');
+                        if (select && clients.length > 0) {
+                            clients.forEach(client => {
+                                const option = document.createElement('option');
+                                option.value = client.id;
+                                option.textContent = client.nom;
+                                select.appendChild(option);
+                            });
+                        }
+                    } catch (err) {
+                        console.error('Erreur chargement clients:', err);
+                    }
+                }
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur: ' + error.message);
+                console.error('Erreur:', error);
+            }
+        }
+
+        // Fonction pour gérer la génération du lien
+        async function handleGenerateValidationLink(event, factureId, defaultClientId) {
+            event.preventDefault();
+            
+            const clientId = document.getElementById('link-client-id').value || defaultClientId;
+            const email = document.getElementById('link-email').value;
+            const expirationDays = parseInt(document.getElementById('link-expiration-days').value) || 30;
+            
+            if (!clientId) {
+                Toast.error('Veuillez sélectionner un client');
+                return;
+            }
+            
+            try {
+                showLoading('Génération du lien...');
+                
+                const response = await apiCall(`/api/liens-externes/facture/${factureId}/generate-link`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        client_id: clientId,
+                        email_envoye: email || null,
+                        date_expiration_jours: expirationDays
+                    })
+                });
+                
+                if (!response || !response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+                    hideLoading();
+                    Toast.error(errorData.error || 'Erreur lors de la génération du lien');
+                    return;
+                }
+                
+                const data = await response.json();
+                hideLoading();
+                
+                // Afficher le lien généré dans un modal
+                const linkModalContent = `
+                    <div style="padding: 1rem;">
+                        <div class="alert alert-success" style="margin-bottom: 1rem;">
+                            <i class="fas fa-check-circle"></i> Lien généré avec succès !
+                        </div>
+                        <div class="form-group">
+                            <label>Lien de validation/signature</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="text" id="generated-link" class="form-control" 
+                                       value="${data.link}" readonly style="flex: 1;">
+                                <button class="btn btn-secondary" onclick="copyLinkToClipboard()" title="Copier">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                            <small style="color: #666;">Expire le: ${new Date(data.expiration).toLocaleDateString('fr-FR')}</small>
+                        </div>
+                        <div style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-radius: 8px;">
+                            <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;"><i class="fas fa-info-circle"></i> Instructions</h4>
+                            <ol style="margin: 0; padding-left: 1.5rem; font-size: 0.9rem; color: #475569;">
+                                <li>Copiez le lien ci-dessus</li>
+                                <li>Envoyez-le au client par email ou WhatsApp</li>
+                                <li>Le client pourra valider/signer la facture proforma via ce lien</li>
+                                <li>Le lien expire automatiquement après ${expirationDays} jours</li>
+                            </ol>
+                        </div>
+                        ${email ? `
+                            <div style="margin-top: 1rem;">
+                                <button class="btn btn-primary" onclick="sendLinkByEmail('${data.link}', '${email}', ${factureId})" style="width: 100%;">
+                                    <i class="fas fa-envelope"></i> Envoyer le lien par email
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                const linkModal = new Modal('generated-link-modal', 'Lien généré', linkModalContent);
+                linkModal.show();
+                
+                Modal.hide('generate-link');
+                
+                // Fonction pour copier le lien
+                window.copyLinkToClipboard = function() {
+                    const linkInput = document.getElementById('generated-link');
+                    linkInput.select();
+                    document.execCommand('copy');
+                    Toast.success('Lien copié dans le presse-papiers !');
+                };
+                
+                // Fonction pour envoyer par email
+                window.sendLinkByEmail = async function(link, email, factureId) {
+                    try {
+                        showLoading('Envoi de l\'email...');
+                        const subject = encodeURIComponent('Lien de validation - Facture Proforma');
+                        const body = encodeURIComponent(`Bonjour,\n\nVeuillez valider votre facture proforma en cliquant sur le lien suivant :\n\n${link}\n\nCordialement`);
+                        window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+                        hideLoading();
+                        Toast.success('Client email ouvert. Le lien a été copié dans le presse-papiers.');
+                    } catch (error) {
+                        hideLoading();
+                        Toast.error('Erreur: ' + error.message);
+                    }
+                };
+                
+            } catch (error) {
+                hideLoading();
+                Toast.error('Erreur: ' + error.message);
+                console.error('Erreur:', error);
+            }
+        }
+        
+        window.showGenerateValidationLinkModal = showGenerateValidationLinkModal;
 
         loadFactureDetails();
     </script>
