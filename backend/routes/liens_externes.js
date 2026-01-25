@@ -419,9 +419,10 @@ router.post('/facture/:facture_id/generate-link', requireSupervisor, async (req,
         dateExpiration.setDate(dateExpiration.getDate() + expirationDays);
 
         // Créer le lien externe
+        // Pour les liens de facture, fournisseur_id est NULL (on utilise client_id)
         const [result] = await pool.execute(
-            `INSERT INTO liens_externes (facture_id, token, client_id, email_envoye, date_expiration, type_lien)
-             VALUES ($1, $2, $3, $4, $5, 'facture') RETURNING id`,
+            `INSERT INTO liens_externes (facture_id, token, client_id, fournisseur_id, email_envoye, date_expiration, type_lien)
+             VALUES ($1, $2, $3, NULL, $4, $5, 'facture') RETURNING id`,
             [facture_id, token, finalClientId, email_envoye || null, dateExpiration]
         );
 

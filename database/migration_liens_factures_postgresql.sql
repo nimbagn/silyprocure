@@ -62,5 +62,18 @@ END $$;
 -- Modifier rfq_id pour qu'il soit nullable
 ALTER TABLE liens_externes ALTER COLUMN rfq_id DROP NOT NULL;
 
+-- Modifier fournisseur_id pour qu'il soit nullable (pour les liens de facture on a client_id)
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'liens_externes' 
+        AND column_name = 'fournisseur_id'
+        AND is_nullable = 'NO'
+    ) THEN
+        ALTER TABLE liens_externes ALTER COLUMN fournisseur_id DROP NOT NULL;
+    END IF;
+END $$;
+
 SELECT '✅ Migration liens_externes pour factures appliquée avec succès' AS message;
 

@@ -62,6 +62,24 @@ DEALLOCATE PREPARE alterIfNotExists3;
 ALTER TABLE liens_externes
 MODIFY COLUMN rfq_id INT NULL;
 
+-- Modifier fournisseur_id pour qu'il soit nullable (puisque pour les liens de facture on a client_id)
+SET @columnname4 = 'fournisseur_id';
+SET @preparedStatement4 = (SELECT IF(
+  (
+    SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE
+      (table_name = @tablename)
+      AND (table_schema = @dbname)
+      AND (column_name = @columnname4)
+      AND (IS_NULLABLE = 'YES')
+  ) = 'YES',
+  'SELECT 1',
+  CONCAT('ALTER TABLE ', @tablename, ' MODIFY COLUMN ', @columnname4, ' INT NULL')
+));
+PREPARE alterIfNotExists4 FROM @preparedStatement4;
+EXECUTE alterIfNotExists4;
+DEALLOCATE PREPARE alterIfNotExists4;
+
 -- Ajouter les index s'ils n'existent pas
 SET @indexname1 = 'idx_facture_id';
 SET @preparedStatement4 = (SELECT IF(
