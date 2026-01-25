@@ -193,10 +193,46 @@ router.post('/', validateCommande, async (req, res) => {
                         message: `La commande ${existingCommande.numero} a déjà été créée pour ce devis.`
                     });
                 }
+                
+                // Vérifier que le devis est validé par le client (pour les devis clients)
+                // Un devis client a rfq_id = NULL et fournisseur_id = client_id
+                const [devisCheck] = await pool.execute(
+                    `SELECT d.id, d.statut, d.rfq_id, d.fournisseur_id, d.validation_interne,
+                            e.type_entreprise
+                     FROM devis d
+                     LEFT JOIN entreprises e ON d.fournisseur_id = e.id
+                     WHERE d.id = ${placeholder}`,
+                    [devis_id]
+                );
+                
+                if (devisCheck && devisCheck.length > 0) {
+                    const devis = devisCheck[0];
+                    
+                    // Si c'est un devis client (rfq_id est NULL et fournisseur_id pointe vers un client)
+                    if (!devis.rfq_id && (devis.type_entreprise === 'client' || devis.type_entreprise === 'acheteur')) {
+                        // Vérifier que le devis client est accepté
+                        if (devis.statut !== 'accepte' && devis.statut !== 'accepté') {
+                            return res.status(400).json({
+                                error: 'Le devis client doit être accepté avant de créer un bon de commande',
+                                devis_statut: devis.statut,
+                                message: `Le devis n'est pas encore accepté par le client. Statut actuel: ${devis.statut}. Veuillez attendre la validation du client.`
+                            });
+                        }
+                    } else if (devis.rfq_id) {
+                        // Si c'est un devis fournisseur, vérifier qu'il est validé en interne
+                        if (devis.validation_interne !== 'valide_interne') {
+                            return res.status(400).json({
+                                error: 'Le devis fournisseur doit être validé en interne avant de créer un bon de commande',
+                                validation_interne: devis.validation_interne,
+                                message: `Le devis fournisseur n'est pas encore validé en interne. Statut actuel: ${devis.validation_interne || 'en_attente_validation'}. Veuillez valider le devis depuis la page de comparaison.`
+                            });
+                        }
+                    }
+                }
             } catch (err) {
                 // Si la colonne devis_id n'existe pas, continuer
                 if (err.code !== 'ER_BAD_FIELD_ERROR') {
-                    console.error('Erreur vérification commande existante:', err);
+                    console.error('Erreur vérification devis:', err);
                 }
             }
         }
@@ -377,153 +413,6 @@ router.post('/', validateCommande, async (req, res) => {
 
         res.status(201).json({ id: commande_id, message: 'Commande créée avec succès' });
     } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Envoyer le bon de commande au fournisseur
-router.post('/:id/send-to-supplier', validateId, authenticate, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { notes } = req.body;
-
-        // Récupérer la commande avec les informations du fournisseur
-        const [commandes] = await pool.execute(
-            `SELECT c.*, 
-                    e.nom as fournisseur_nom,
-                    e.email as fournisseur_email,
-                    e.telephone as fournisseur_telephone,
-                    e.type_entreprise,
-                    u.email as contact_email,
-                    u.telephone as contact_telephone
-             FROM commandes c
-             LEFT JOIN entreprises e ON c.fournisseur_id = e.id
-             LEFT JOIN contacts ct ON c.contact_fournisseur_id = ct.id
-             LEFT JOIN utilisateurs u ON ct.utilisateur_id = u.id
-             WHERE c.id = $1`,
-            [id]
-        );
-
-        if (commandes.length === 0) {
-            return res.status(404).json({ error: 'Commande non trouvée' });
-        }
-
-        const commande = commandes[0];
-
-        // Vérifier que la commande n'a pas déjà été envoyée
-        if (commande.statut === 'envoye' || commande.statut === 'en_preparation' || commande.statut === 'livre') {
-            return res.status(400).json({ 
-                error: 'Cette commande a déjà été envoyée au fournisseur',
-                statut_actuel: commande.statut
-            });
-        }
-
-        // Mettre à jour le statut de la commande
-        await pool.execute(
-            'UPDATE commandes SET statut = $1 WHERE id = $2',
-            ['envoye', id]
-        );
-
-        // Récupérer les lignes de commande
-        const [lignes] = await pool.execute(
-            'SELECT * FROM commande_lignes WHERE commande_id = $1 ORDER BY ordre',
-            [id]
-        );
-
-        // Préparer le message pour le fournisseur
-        const message = `Bon de Commande ${commande.numero}
-
-Bonjour,
-
-Nous vous informons qu'un bon de commande a été créé pour votre entreprise.
-
-Détails:
-- Numéro: ${commande.numero}
-- Date: ${new Date(commande.date_commande).toLocaleDateString('fr-FR')}
-- Montant HT: ${commande.total_ht?.toLocaleString('fr-FR')} GNF
-- Montant TTC: ${commande.total_ttc?.toLocaleString('fr-FR')} GNF
-- Date de livraison souhaitée: ${commande.date_livraison_souhaitee ? new Date(commande.date_livraison_souhaitee).toLocaleDateString('fr-FR') : 'Non spécifiée'}
-
-${notes ? `Notes: ${notes}\n` : ''}
-
-Veuillez consulter la plateforme pour plus de détails.
-
-Cordialement,
-L'équipe SilyProcure`;
-
-        // Envoyer notification WhatsApp au fournisseur
-        const fournisseurPhone = commande.contact_telephone || commande.fournisseur_telephone;
-        if (fournisseurPhone) {
-            try {
-                const { sendWhatsAppSafe } = require('../utils/whatsappNotifications');
-                await sendWhatsAppSafe(fournisseurPhone, message);
-            } catch (error) {
-                console.error('Erreur envoi WhatsApp fournisseur:', error);
-            }
-        }
-
-        // Envoyer notification email au fournisseur (si disponible)
-        const fournisseurEmail = commande.contact_email || commande.fournisseur_email;
-        if (fournisseurEmail) {
-            try {
-                const { sendEmail } = require('../utils/emailService');
-                await sendEmail({
-                    to: fournisseurEmail,
-                    subject: `Bon de Commande ${commande.numero}`,
-                    text: message,
-                    html: message.replace(/\n/g, '<br>')
-                });
-            } catch (error) {
-                console.error('Erreur envoi email fournisseur:', error);
-            }
-        }
-
-        // Créer une notification dans le système
-        try {
-            await createNotification(
-                req.user.id,
-                'commande_envoyee_fournisseur',
-                `Bon de commande ${commande.numero} envoyé au fournisseur`,
-                `Le bon de commande ${commande.numero} a été envoyé à ${commande.fournisseur_nom || 'le fournisseur'}`,
-                'commande',
-                id
-            );
-        } catch (error) {
-            console.error('Erreur création notification:', error);
-        }
-
-        // Enregistrer dans l'historique si la commande est liée à un client
-        if (commande.client_id) {
-            try {
-                await enregistrerInteraction({
-                    client_id: commande.client_id,
-                    type_interaction: 'commande_envoyee_fournisseur',
-                    reference_document: commande.numero,
-                    document_id: id,
-                    description: `Bon de commande ${commande.numero} envoyé au fournisseur ${commande.fournisseur_nom}`,
-                    utilisateur_id: req.user?.id || null,
-                    metadata: {
-                        commande_id: id,
-                        fournisseur_id: commande.fournisseur_id,
-                        montant_ttc: commande.total_ttc || null
-                    }
-                });
-            } catch (err) {
-                console.error('Erreur enregistrement historique:', err);
-            }
-        }
-
-        res.json({
-            message: 'Bon de commande envoyé au fournisseur avec succès',
-            commande_id: id,
-            statut: 'envoye',
-            notification_sent: {
-                whatsapp: !!fournisseurPhone,
-                email: !!fournisseurEmail
-            }
-        });
-    } catch (error) {
-        console.error('Erreur envoi commande au fournisseur:', error);
         res.status(500).json({ error: error.message });
     }
 });

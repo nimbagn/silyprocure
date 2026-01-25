@@ -427,109 +427,6 @@ router.patch('/:id/statut', validateId, async (req, res) => {
     }
 });
 
-// Valider un devis fournisseur en interne
-router.post('/:id/validate-internal', validateId, authenticate, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { action, commentaire } = req.body; // action: 'valider' ou 'refuser'
-
-        if (!action || !['valider', 'refuser'].includes(action)) {
-            return res.status(400).json({ error: 'Action invalide. Doit être "valider" ou "refuser"' });
-        }
-
-        // Récupérer le devis
-        const [devis] = await pool.execute(
-            'SELECT * FROM devis WHERE id = $1',
-            [id]
-        );
-
-        if (devis.length === 0) {
-            return res.status(404).json({ error: 'Devis non trouvé' });
-        }
-
-        const validation_interne = action === 'valider' ? 'valide_interne' : 'refuse_interne';
-        const date_validation = new Date().toISOString();
-
-        // Mettre à jour le devis
-        await pool.execute(
-            `UPDATE devis 
-             SET validation_interne = $1, 
-                 commentaire_validation_interne = $2,
-                 valide_par_id = $3,
-                 date_validation_interne = $4
-             WHERE id = $5`,
-            [validation_interne, commentaire || null, req.user.id, date_validation, id]
-        );
-
-        // Créer une notification
-        await createNotification(
-            req.user.id,
-            'devis_valide_interne',
-            `Devis ${devis[0].numero} ${action === 'valider' ? 'validé' : 'refusé'} en interne`,
-            'devis',
-            id
-        );
-
-        res.json({
-            message: `Devis ${action === 'valider' ? 'validé' : 'refusé'} en interne avec succès`,
-            validation_interne: validation_interne
-        });
-    } catch (error) {
-        console.error('Erreur validation interne devis:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Valider plusieurs devis en interne simultanément
-router.post('/validate-internal-batch', authenticate, async (req, res) => {
-    try {
-        const { devis_ids, action, commentaire } = req.body; // action: 'valider' ou 'refuser'
-
-        if (!devis_ids || !Array.isArray(devis_ids) || devis_ids.length === 0) {
-            return res.status(400).json({ error: 'Veuillez sélectionner au moins un devis' });
-        }
-
-        if (!action || !['valider', 'refuser'].includes(action)) {
-            return res.status(400).json({ error: 'Action invalide. Doit être "valider" ou "refuser"' });
-        }
-
-        const validation_interne = action === 'valider' ? 'valide_interne' : 'refuse_interne';
-        const date_validation = new Date().toISOString();
-
-        // Mettre à jour tous les devis
-        const placeholders = devis_ids.map((_, i) => `$${i + 1}`).join(',');
-        await pool.execute(
-            `UPDATE devis 
-             SET validation_interne = $1, 
-                 commentaire_validation_interne = $2,
-                 valide_par_id = $3,
-                 date_validation_interne = $4
-             WHERE id IN (${placeholders})`,
-            [validation_interne, commentaire || null, req.user.id, date_validation, ...devis_ids]
-        );
-
-        // Créer des notifications pour chaque devis
-        for (const devis_id of devis_ids) {
-            await createNotification(
-                req.user.id,
-                'devis_valide_interne',
-                `Devis ${action === 'valider' ? 'validé' : 'refusé'} en interne`,
-                'devis',
-                devis_id
-            );
-        }
-
-        res.json({
-            message: `${devis_ids.length} devis ${action === 'valider' ? 'validés' : 'refusés'} en interne avec succès`,
-            validation_interne: validation_interne,
-            count: devis_ids.length
-        });
-    } catch (error) {
-        console.error('Erreur validation interne batch devis:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
 // Créer un devis consolidé pour le client depuis plusieurs devis fournisseurs
 router.post('/create-for-client', authenticate, async (req, res) => {
     try {
@@ -552,27 +449,6 @@ router.post('/create-for-client', authenticate, async (req, res) => {
 
         if (!client_id) {
             return res.status(400).json({ error: 'ID client requis' });
-        }
-
-        // Vérifier que tous les devis fournisseurs sont validés en interne
-        const devisIds = devis_fournisseurs.map(df => df.devis_id);
-        const placeholders = devisIds.map((_, i) => `$${i + 1}`).join(',');
-        const [devisCheck] = await pool.execute(
-            `SELECT id, numero, validation_interne FROM devis WHERE id IN (${placeholders})`,
-            devisIds
-        );
-
-        if (devisCheck.length !== devisIds.length) {
-            return res.status(400).json({ error: 'Un ou plusieurs devis sélectionnés n\'existent pas' });
-        }
-
-        // Vérifier la validation interne
-        const devisNonValides = devisCheck.filter(d => d.validation_interne !== 'valide_interne');
-        if (devisNonValides.length > 0) {
-            return res.status(400).json({ 
-                error: 'Tous les devis doivent être validés en interne avant de créer un devis client',
-                devis_non_valides: devisNonValides.map(d => ({ id: d.id, numero: d.numero, validation_interne: d.validation_interne }))
-            });
         }
 
         // Récupérer la marge active si non fournie
