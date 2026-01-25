@@ -262,6 +262,7 @@
                     await loadAIAnalysis(rfqId);
                 }
                 
+                allDevisForValidation = devis;
                 displayComparison(devis);
             } catch (error) {
                 hideLoading();
@@ -348,6 +349,36 @@
                                 <td><strong>Statut</strong></td>
                                 ${devis.map(d => `<td><span class="badge ${getStatusBadge(d.statut)}">${getStatusLabel(d.statut)}</span></td>`).join('')}
                             </tr>
+                            <tr>
+                                <td><strong>Validation interne</strong></td>
+                                ${devis.map(d => {
+                                    const validationStatus = d.validation_interne || 'en_attente_validation';
+                                    const statusLabels = {
+                                        'en_attente_validation': 'En attente',
+                                        'valide_interne': 'Validé',
+                                        'refuse_interne': 'Refusé'
+                                    };
+                                    const statusColors = {
+                                        'en_attente_validation': '#f59e0b',
+                                        'valide_interne': '#10b981',
+                                        'refuse_interne': '#ef4444'
+                                    };
+                                    const isSelected = selectedDevisForValidation.has(d.id);
+                                    return `<td>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <input type="checkbox" 
+                                                ${isSelected ? 'checked' : ''} 
+                                                onchange="toggleDevisForValidation(${d.id}); updateSelectedDevisDisplay();"
+                                                style="cursor: pointer;">
+                                            <span class="badge" style="background-color: ${statusColors[validationStatus]}; color: white;">
+                                                ${statusLabels[validationStatus]}
+                                            </span>
+                                        </div>
+                                        ${d.date_validation_interne ? `<br><small style="color: #666;">${formatDate(d.date_validation_interne)}</small>` : ''}
+                                        ${d.commentaire_validation_interne ? `<br><small style="color: #666; font-style: italic;">"${d.commentaire_validation_interne}"</small>` : ''}
+                                    </td>`;
+                                }).join('')}
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -433,11 +464,41 @@
                         }).join('')}
                     </div>
                 </div>
+                <div style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; border: 2px solid #f59e0b;">
+                    <h3 style="margin-bottom: 1rem; color: #92400e;"><i class="fas fa-check-circle"></i> Validation interne des devis</h3>
+                    <p style="margin-bottom: 1rem; color: #78350f;">
+                        Validez ou refusez les devis fournisseurs en interne avant de créer le devis majoré pour le client.
+                    </p>
+                    <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-success" onclick="openValidationModal('valider')" style="background: #10b981; border-color: #10b981;">
+                            <i class="fas fa-check"></i> Valider les devis sélectionnés
+                        </button>
+                        <button class="btn btn-danger" onclick="openValidationModal('refuser')" style="background: #ef4444; border-color: #ef4444;">
+                            <i class="fas fa-times"></i> Refuser les devis sélectionnés
+                        </button>
+                    </div>
+                    <div id="selected-devis-validation" style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.5); border-radius: 8px; display: none;">
+                        <p style="margin: 0; font-weight: 600;">Devis sélectionnés: <span id="selected-count">0</span></p>
+                    </div>
+                </div>
                 <div style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 8px; border: 2px solid var(--color-primary);">
                     <h3 style="margin-bottom: 1rem; color: var(--color-primary);"><i class="fas fa-file-invoice-dollar"></i> Créer une facture proforma pour le client</h3>
                     <p style="margin-bottom: 1rem; color: var(--color-neutral);">
                         Sélectionnez les meilleures offres de chaque fournisseur et créez directement une facture proforma pour votre client avec marge commerciale.
                     </p>
+                    ${(() => {
+                        const devisNonValides = devis.filter(d => (d.validation_interne || 'en_attente_validation') !== 'valide_interne');
+                        if (devisNonValides.length > 0) {
+                            return `
+                                <div style="margin-bottom: 1rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                                    <strong><i class="fas fa-exclamation-triangle"></i> Attention:</strong> 
+                                    ${devisNonValides.length} devis ${devisNonValides.length > 1 ? 'ne sont pas' : "n'est pas"} validés en interne. 
+                                    Veuillez valider les devis dans la section ci-dessus avant de créer la facture proforma.
+                                </div>
+                            `;
+                        }
+                        return '';
+                    })()}
                     <button class="btn btn-primary" onclick="openCreateFactureProformaModal([${devis.map(d => d.id).join(',')}])">
                         <i class="fas fa-file-invoice"></i> Créer facture proforma
                     </button>
@@ -505,6 +566,139 @@
                     }
                 }
             );
+        }
+
+        // Variables pour la validation interne
+        let selectedDevisForValidation = new Set();
+        let allDevisForValidation = [];
+
+        // Fonction pour mettre à jour l'affichage des devis sélectionnés
+        function updateSelectedDevisDisplay() {
+            const container = document.getElementById('selected-devis-validation');
+            const countEl = document.getElementById('selected-count');
+            if (container && countEl) {
+                if (selectedDevisForValidation.size > 0) {
+                    container.style.display = 'block';
+                    countEl.textContent = selectedDevisForValidation.size;
+                } else {
+                    container.style.display = 'none';
+                }
+            }
+        }
+
+        // Fonction pour sélectionner/désélectionner un devis pour validation
+        function toggleDevisForValidation(devisId) {
+            if (selectedDevisForValidation.has(devisId)) {
+                selectedDevisForValidation.delete(devisId);
+            } else {
+                selectedDevisForValidation.add(devisId);
+            }
+            updateSelectedDevisDisplay();
+        }
+
+        // Fonction pour ouvrir le modal de validation interne
+        function openValidationModal(action) {
+            if (selectedDevisForValidation.size === 0) {
+                Toast.warning('Veuillez sélectionner au moins un devis');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'validationInterneModal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-${action === 'valider' ? 'check-circle' : 'times-circle'}"></i> ${action === 'valider' ? 'Valider' : 'Refuser'} les devis en interne</h2>
+                        <button class="modal-close" onclick="closeValidationModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="validationInterneForm" onsubmit="submitValidationInterne(event, '${action}')">
+                        <div class="modal-body">
+                            <p style="margin-bottom: 1rem;">
+                                Vous êtes sur le point de <strong>${action === 'valider' ? 'valider' : 'refuser'}</strong> <strong>${selectedDevisForValidation.size}</strong> devis en interne.
+                            </p>
+                            <div class="form-group">
+                                <label for="commentaire_validation">Commentaire (optionnel)</label>
+                                <textarea id="commentaire_validation" name="commentaire" rows="4" 
+                                    placeholder="Ajoutez un commentaire sur cette validation..." 
+                                    class="form-control"></textarea>
+                            </div>
+                            <div style="margin-top: 1rem; padding: 1rem; background: #f3f4f6; border-radius: 8px;">
+                                <strong>Devis concernés:</strong>
+                                <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                                    ${Array.from(selectedDevisForValidation).map(id => {
+                                        const devis = allDevisForValidation.find(d => d.id === id);
+                                        return `<li>${devis ? (devis.numero || `Devis #${id}`) : `Devis #${id}`}</li>`;
+                                    }).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeValidationModal()">Annuler</button>
+                            <button type="submit" class="btn ${action === 'valider' ? 'btn-success' : 'btn-danger'}">
+                                <i class="fas fa-${action === 'valider' ? 'check' : 'times'}"></i> ${action === 'valider' ? 'Valider' : 'Refuser'} les devis
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.style.display = 'flex';
+        }
+
+        // Fonction pour fermer le modal de validation
+        function closeValidationModal() {
+            const modal = document.getElementById('validationInterneModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Fonction pour soumettre la validation interne
+        async function submitValidationInterne(event, action) {
+            event.preventDefault();
+            const commentaire = document.getElementById('commentaire_validation').value;
+
+            if (selectedDevisForValidation.size === 0) {
+                Toast.error('Aucun devis sélectionné');
+                return;
+            }
+
+            try {
+                showLoading(`${action === 'valider' ? 'Validation' : 'Refus'} des devis en cours...`);
+
+                const response = await apiCall('/api/devis/validate-internal-batch', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        devis_ids: Array.from(selectedDevisForValidation),
+                        action: action,
+                        commentaire: commentaire || null
+                    })
+                });
+
+                if (response && response.ok) {
+                    const result = await response.json();
+                    Toast.success(result.message || `${action === 'valider' ? 'Validation' : 'Refus'} effectué avec succès`);
+                    
+                    // Réinitialiser la sélection
+                    selectedDevisForValidation.clear();
+                    updateSelectedDevisDisplay();
+                    
+                    // Recharger les devis pour afficher le nouveau statut
+                    closeValidationModal();
+                    await loadDevisForComparison();
+                } else {
+                    const error = await response.json();
+                    Toast.error(error.error || 'Erreur lors de la validation');
+                }
+            } catch (error) {
+                console.error('Erreur validation interne:', error);
+                Toast.error('Erreur de connexion');
+            } finally {
+                hideLoading();
+            }
         }
 
         // Modal pour créer facture proforma
@@ -819,7 +1013,17 @@
 
                 if (!response.ok) {
                     const error = await response.json();
-                    throw new Error(error.error || 'Erreur lors de la création de la facture proforma');
+                    let errorMessage = error.error || 'Erreur lors de la création de la facture proforma';
+                    
+                    // Message spécial si les devis ne sont pas validés
+                    if (error.devis_non_valides && error.devis_non_valides.length > 0) {
+                        const devisNonValidesList = error.devis_non_valides.map(d => 
+                            `- ${d.numero || 'Devis #' + d.id} (${d.validation_interne === 'en_attente_validation' ? 'En attente de validation' : d.validation_interne === 'refuse_interne' ? 'Refusé' : d.validation_interne})`
+                        ).join('\n');
+                        errorMessage = `Les devis suivants doivent être validés en interne avant de créer une facture proforma:\n\n${devisNonValidesList}\n\nVeuillez valider ces devis dans la section "Validation interne des devis" ci-dessus.`;
+                    }
+                    
+                    throw new Error(errorMessage);
                 }
 
                 const result = await response.json();

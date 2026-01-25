@@ -246,6 +246,27 @@ router.post('/proforma-from-devis', authenticate, async (req, res) => {
             return res.status(400).json({ error: 'ID client requis' });
         }
 
+        // Vérifier que tous les devis fournisseurs sont validés en interne
+        const devisIds = devis_fournisseurs.map(df => df.devis_id);
+        const placeholders = devisIds.map((_, i) => `$${i + 1}`).join(',');
+        const [devisCheck] = await pool.execute(
+            `SELECT id, numero, validation_interne FROM devis WHERE id IN (${placeholders})`,
+            devisIds
+        );
+
+        if (devisCheck.length !== devisIds.length) {
+            return res.status(400).json({ error: 'Un ou plusieurs devis sélectionnés n\'existent pas' });
+        }
+
+        // Vérifier la validation interne
+        const devisNonValides = devisCheck.filter(d => d.validation_interne !== 'valide_interne');
+        if (devisNonValides.length > 0) {
+            return res.status(400).json({ 
+                error: 'Tous les devis doivent être validés en interne avant de créer une facture proforma',
+                devis_non_valides: devisNonValides.map(d => ({ id: d.id, numero: d.numero, validation_interne: d.validation_interne }))
+            });
+        }
+
         // Récupérer la marge active si non fournie
         let marge = marge_pourcentage || 20;
         if (!marge_pourcentage) {
