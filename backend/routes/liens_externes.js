@@ -252,6 +252,146 @@ router.post('/submit-devis-externe', async (req, res) => {
     }
 });
 
+// Récupérer les informations d'une facture via un token (pour la page publique de validation)
+router.get('/facture-by-token/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        // Récupérer le lien externe
+        const [liens] = await pool.execute(
+            `SELECT l.*, f.*, e.nom as client_nom, e.email as client_email, e.telephone as client_telephone
+             FROM liens_externes l
+             JOIN factures f ON l.facture_id = f.id
+             LEFT JOIN entreprises e ON l.client_id = e.id
+             WHERE l.token = $1 AND l.type_lien = 'facture' AND l.utilise = FALSE`,
+            [token]
+        );
+
+        if (liens.length === 0) {
+            return res.status(404).json({ error: 'Lien invalide ou déjà utilisé' });
+        }
+
+        const lien = liens[0];
+
+        // Vérifier l'expiration
+        if (lien.date_expiration && new Date(lien.date_expiration) < new Date()) {
+            return res.status(410).json({ error: 'Ce lien a expiré' });
+        }
+
+        // Récupérer les lignes de la facture
+        const [lignes] = await pool.execute(
+            'SELECT * FROM facture_lignes WHERE facture_id = $1 ORDER BY ordre',
+            [lien.facture_id]
+        );
+
+        // Récupérer les paiements si existants
+        const [paiements] = await pool.execute(
+            'SELECT * FROM paiements WHERE facture_id = $1 ORDER BY date_paiement DESC',
+            [lien.facture_id]
+        );
+
+        res.json({
+            facture: {
+                id: lien.facture_id,
+                numero: lien.numero,
+                type_facture: lien.type_facture,
+                date_emission: lien.date_emission,
+                date_echeance: lien.date_echeance,
+                total_ht: lien.total_ht,
+                total_tva: lien.total_tva,
+                total_ttc: lien.total_ttc,
+                reste_a_payer: lien.reste_a_payer,
+                statut: lien.statut,
+                conditions_paiement: lien.conditions_paiement,
+                delai_paiement_jours: lien.delai_paiement_jours,
+                mode_paiement: lien.mode_paiement,
+                lignes: lignes,
+                paiements: paiements
+            },
+            client: {
+                id: lien.client_id,
+                nom: lien.client_nom,
+                email: lien.client_email,
+                telephone: lien.client_telephone
+            },
+            token: token
+        });
+    } catch (error) {
+        console.error('Erreur récupération facture par token:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Valider/signer une facture proforma depuis le formulaire public
+router.post('/validate-facture', async (req, res) => {
+    try {
+        const { token, signature_nom, signature_date, commentaire } = req.body;
+
+        // Vérifier le token
+        const [liens] = await pool.execute(
+            'SELECT * FROM liens_externes WHERE token = $1 AND type_lien = $2 AND utilise = FALSE',
+            [token, 'facture']
+        );
+
+        if (liens.length === 0) {
+            return res.status(404).json({ error: 'Lien invalide ou déjà utilisé' });
+        }
+
+        const lien = liens[0];
+
+        // Vérifier l'expiration
+        if (lien.date_expiration && new Date(lien.date_expiration) < new Date()) {
+            return res.status(410).json({ error: 'Ce lien a expiré' });
+        }
+
+        // Récupérer la facture
+        const [factures] = await pool.execute(
+            'SELECT * FROM factures WHERE id = $1',
+            [lien.facture_id]
+        );
+
+        if (factures.length === 0) {
+            return res.status(404).json({ error: 'Facture non trouvée' });
+        }
+
+        const facture = factures[0];
+
+        // Vérifier que la facture n'est pas déjà validée
+        if (facture.statut === 'validee' || facture.statut === 'payee') {
+            return res.status(400).json({ error: 'Cette facture a déjà été validée' });
+        }
+
+        // Mettre à jour le statut de la facture
+        await pool.execute(
+            'UPDATE factures SET statut = $1 WHERE id = $2',
+            ['validee', lien.facture_id]
+        );
+
+        // Marquer le lien comme utilisé
+        await pool.execute(
+            `UPDATE liens_externes 
+             SET utilise = TRUE, date_utilisation = NOW(), ip_utilisation = $1 
+             WHERE id = $2`,
+            [req.ip || req.connection.remoteAddress, lien.id]
+        );
+
+        // Enregistrer la signature si fournie
+        if (signature_nom || signature_date) {
+            // Optionnel: créer une table signatures_factures pour stocker les signatures
+            // Pour l'instant, on peut stocker dans un champ JSON ou une table séparée
+        }
+
+        res.status(200).json({
+            message: 'Facture validée avec succès',
+            facture_id: lien.facture_id,
+            facture_numero: facture.numero
+        });
+    } catch (error) {
+        console.error('Erreur validation facture:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ============================================
 // ROUTES PROTÉGÉES (nécessitent authentification)
 // ============================================
@@ -452,146 +592,6 @@ router.post('/facture/:facture_id/generate-link', requireSupervisor, async (req,
         });
     } catch (error) {
         console.error('Erreur génération lien validation facture:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Récupérer les informations d'une facture via un token (pour la page publique de validation)
-router.get('/facture-by-token/:token', async (req, res) => {
-    try {
-        const { token } = req.params;
-
-        // Récupérer le lien externe
-        const [liens] = await pool.execute(
-            `SELECT l.*, f.*, e.nom as client_nom, e.email as client_email, e.telephone as client_telephone
-             FROM liens_externes l
-             JOIN factures f ON l.facture_id = f.id
-             LEFT JOIN entreprises e ON l.client_id = e.id
-             WHERE l.token = $1 AND l.type_lien = 'facture' AND l.utilise = FALSE`,
-            [token]
-        );
-
-        if (liens.length === 0) {
-            return res.status(404).json({ error: 'Lien invalide ou déjà utilisé' });
-        }
-
-        const lien = liens[0];
-
-        // Vérifier l'expiration
-        if (lien.date_expiration && new Date(lien.date_expiration) < new Date()) {
-            return res.status(410).json({ error: 'Ce lien a expiré' });
-        }
-
-        // Récupérer les lignes de la facture
-        const [lignes] = await pool.execute(
-            'SELECT * FROM facture_lignes WHERE facture_id = $1 ORDER BY ordre',
-            [lien.facture_id]
-        );
-
-        // Récupérer les paiements si existants
-        const [paiements] = await pool.execute(
-            'SELECT * FROM paiements WHERE facture_id = $1 ORDER BY date_paiement DESC',
-            [lien.facture_id]
-        );
-
-        res.json({
-            facture: {
-                id: lien.facture_id,
-                numero: lien.numero,
-                type_facture: lien.type_facture,
-                date_emission: lien.date_emission,
-                date_echeance: lien.date_echeance,
-                total_ht: lien.total_ht,
-                total_tva: lien.total_tva,
-                total_ttc: lien.total_ttc,
-                reste_a_payer: lien.reste_a_payer,
-                statut: lien.statut,
-                conditions_paiement: lien.conditions_paiement,
-                delai_paiement_jours: lien.delai_paiement_jours,
-                mode_paiement: lien.mode_paiement,
-                lignes: lignes,
-                paiements: paiements
-            },
-            client: {
-                id: lien.client_id,
-                nom: lien.client_nom,
-                email: lien.client_email,
-                telephone: lien.client_telephone
-            },
-            token: token
-        });
-    } catch (error) {
-        console.error('Erreur récupération facture par token:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Valider/signer une facture proforma depuis le formulaire public
-router.post('/validate-facture', async (req, res) => {
-    try {
-        const { token, signature_nom, signature_date, commentaire } = req.body;
-
-        // Vérifier le token
-        const [liens] = await pool.execute(
-            'SELECT * FROM liens_externes WHERE token = $1 AND type_lien = $2 AND utilise = FALSE',
-            [token, 'facture']
-        );
-
-        if (liens.length === 0) {
-            return res.status(404).json({ error: 'Lien invalide ou déjà utilisé' });
-        }
-
-        const lien = liens[0];
-
-        // Vérifier l'expiration
-        if (lien.date_expiration && new Date(lien.date_expiration) < new Date()) {
-            return res.status(410).json({ error: 'Ce lien a expiré' });
-        }
-
-        // Récupérer la facture
-        const [factures] = await pool.execute(
-            'SELECT * FROM factures WHERE id = $1',
-            [lien.facture_id]
-        );
-
-        if (factures.length === 0) {
-            return res.status(404).json({ error: 'Facture non trouvée' });
-        }
-
-        const facture = factures[0];
-
-        // Vérifier que la facture n'est pas déjà validée
-        if (facture.statut === 'validee' || facture.statut === 'payee') {
-            return res.status(400).json({ error: 'Cette facture a déjà été validée' });
-        }
-
-        // Mettre à jour le statut de la facture
-        await pool.execute(
-            'UPDATE factures SET statut = $1 WHERE id = $2',
-            ['validee', lien.facture_id]
-        );
-
-        // Marquer le lien comme utilisé
-        await pool.execute(
-            `UPDATE liens_externes 
-             SET utilise = TRUE, date_utilisation = NOW(), ip_utilisation = $1 
-             WHERE id = $2`,
-            [req.ip || req.connection.remoteAddress, lien.id]
-        );
-
-        // Enregistrer la signature si fournie
-        if (signature_nom || signature_date) {
-            // Optionnel: créer une table signatures_factures pour stocker les signatures
-            // Pour l'instant, on peut stocker dans un champ JSON ou une table séparée
-        }
-
-        res.status(200).json({
-            message: 'Facture validée avec succès',
-            facture_id: lien.facture_id,
-            facture_numero: facture.numero
-        });
-    } catch (error) {
-        console.error('Erreur validation facture:', error);
         res.status(500).json({ error: error.message });
     }
 });
