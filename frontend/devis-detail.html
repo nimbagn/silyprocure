@@ -337,7 +337,31 @@
                     return;
                 }
                 
-                // Créer la commande depuis le devis
+                // Étape 1 : Mettre à jour le statut du devis à "accepte" (validation client)
+                console.log('🟢 Étape 1: Validation du devis par le client...');
+                const statutResponse = await apiCall(`/api/devis/${id}/statut`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ statut: 'accepte' })
+                });
+                
+                if (!statutResponse || !statutResponse.ok) {
+                    hideLoading();
+                    const errorStatut = await statutResponse.json().catch(() => ({ error: 'Erreur lors de la validation du devis' }));
+                    Toast.error(errorStatut.error || 'Erreur lors de la validation du devis');
+                    isProcessingAccept = false;
+                    if (btnAccepter) {
+                        btnAccepter.disabled = false;
+                        btnAccepter.innerHTML = '<i class="fas fa-check"></i> Accepter';
+                    }
+                    return;
+                }
+                
+                console.log('✅ Devis validé par le client');
+                
+                // Étape 2 : Créer la commande depuis le devis (maintenant validé)
                 const commandeData = {
                     numero: `BC-${new Date().getFullYear()}-${Date.now()}`,
                     type_commande: 'BC',
