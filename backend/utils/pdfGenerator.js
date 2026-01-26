@@ -53,15 +53,21 @@ function checkPageBreak(doc, currentY, neededHeight) {
 }
 
 /**
- * Formate un montant
+ * Formate un montant avec espaces comme séparateurs de milliers
  */
 function formatCurrency(amount) {
     if (amount === undefined || amount === null) return '0 GNF';
-    return new Intl.NumberFormat('fr-FR', {
+    // Utiliser 'fr-FR' qui utilise des espaces comme séparateurs de milliers
+    // et forcer l'utilisation d'espaces avec replace si nécessaire
+    const formatted = new Intl.NumberFormat('fr-FR', {
         style: 'decimal',
         minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    }).format(amount) + ' GNF';
+        maximumFractionDigits: 0,
+        useGrouping: true // Activer le groupage par milliers
+    }).format(amount);
+    
+    // S'assurer que les séparateurs sont bien des espaces (remplacer les virgules par des espaces si nécessaire)
+    return formatted.replace(/,/g, ' ').replace(/\s+/g, ' ') + ' GNF';
 }
 
 // --- COMPOSANTS UI ---
